@@ -67,6 +67,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
         {/* Animated Laser Beam (Only active between adjacent steps) */}
         {currentStep === 2 && <div className="beam-laser-step2" />}
         {currentStep === 3 && <div className="beam-laser-step3" />}
+        {currentStep === 4 && <div className="beam-laser-step4" />}
 
         {/* 4 Step Nodes */}
         <div className="grid grid-cols-4 gap-4 relative z-10">
@@ -125,6 +126,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
 
       {/* MOBILE VERTICAL STEPPER */}
       <div className="sm:hidden space-y-4 relative pl-4 border-l-2 border-stone-200 ml-3 mb-6">
+        {currentStep >= 2 && <div className="beam-laser-vertical" />}
         {steps.map((step) => {
           const isCompleted = step.num < currentStep;
           const isCurrent = step.num === currentStep;

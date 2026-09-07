@@ -20,7 +20,7 @@ export const HeroSection: React.FC = () => {
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>Modern Romantic Collection</span>
             </div>
-            <h1 className="text-3xl sm:text-5xl font-black font-serif tracking-tight leading-tight text-stone-100">
+            <h1 className="text-3xl sm:text-5xl font-black font-heading-b tracking-tight leading-tight text-stone-100">
               Keabadian Romansa Dalam Sentuhan Beludru Kawat Bulu.
             </h1>
             <p className="text-sm sm:text-base text-stone-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
@@ -74,7 +74,7 @@ export const HeroSection: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-100 border border-orange-300 text-orange-700 text-xs font-bold uppercase tracking-wider">
               <span>🌻 Playful Kawaii Atelier</span>
             </div>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight text-orange-950 font-sans">
+            <h1 className="text-3xl sm:text-5xl font-black font-heading-c tracking-tight leading-tight text-orange-950">
               Buket Ceria Bunga Kawat Bulu, Bikin Hari Wisuda Penuh Senyum! ✨
             </h1>
             <p className="text-sm sm:text-base text-stone-600 max-w-xl mx-auto lg:mx-0 leading-relaxed">
@@ -122,7 +122,7 @@ export const HeroSection: React.FC = () => {
             <Sparkles className="w-3.5 h-3.5 text-rose-500" />
             <span>Handcrafted Chenille Flowers • Depok Atelier</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-stone-800 tracking-tight leading-tight">
+          <h1 className="text-3xl sm:text-5xl font-bold font-heading-a text-stone-800 tracking-tight leading-tight">
             Keindahan Buket Kawat Bulu Pastel yang Selalu Mekar Abadi 🌸
           </h1>
           <p className="text-sm sm:text-base text-stone-600 max-w-xl mx-auto lg:mx-0 leading-relaxed">

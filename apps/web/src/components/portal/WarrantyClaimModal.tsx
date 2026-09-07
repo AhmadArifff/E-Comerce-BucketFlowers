@@ -61,7 +61,7 @@ export const WarrantyClaimModal: React.FC<WarrantyClaimModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-50 overflow-y-auto flex min-h-full items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
       <div
         onClick={onClose}
@@ -69,7 +69,7 @@ export const WarrantyClaimModal: React.FC<WarrantyClaimModalProps> = ({
       />
 
       {/* Modal Dialog */}
-      <div className="relative bg-white rounded-3xl shadow-2xl border border-rose-100 max-w-xl w-full p-6 sm:p-8 z-10 animate-in zoom-in-95 duration-200">
+      <div className="relative bg-white rounded-3xl shadow-2xl border border-rose-100 max-w-xl w-full p-6 sm:p-8 z-10 my-auto animate-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
           className="absolute top-5 right-5 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 flex items-center justify-center transition-all"
