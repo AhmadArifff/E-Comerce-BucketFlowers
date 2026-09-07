@@ -902,8 +902,111 @@
       cursor: pointer;
     }
 
+    /* FAQ ACCORDION STYLES */
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 10px;
+      overflow: hidden;
+      background: #fff;
+      transition: all 0.2s ease;
+    }
+    .faq-item.active {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+    .faq-header {
+      padding: 14px 18px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface);
+      user-select: none;
+    }
+    .faq-header:hover {
+      background: var(--surface-subtle);
+      color: var(--primary);
+    }
+    .faq-icon-arrow {
+      font-size: 12px;
+      transition: transform 0.25s ease;
+    }
+    .faq-item.active .faq-icon-arrow {
+      transform: rotate(180deg);
+      color: var(--primary);
+    }
+    .faq-body {
+      padding: 0 18px;
+      max-height: 0;
+      overflow: hidden;
+      transition: all 0.25s ease;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      background: #fff;
+    }
+    .faq-item.active .faq-body {
+      padding: 14px 18px 18px 18px;
+      max-height: 500px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* WARRANTY STEPPER */
+    .warranty-stepper {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin: 16px 0;
+      position: relative;
+    }
+    .w-step-node {
+      text-align: center;
+      position: relative;
+    }
+    .w-step-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #F1F5F9;
+      color: #64748B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 6px auto;
+      font-size: 12px;
+      font-weight: 800;
+      border: 2px solid #CBD5E1;
+      transition: all 0.25s ease;
+    }
+    .w-step-node.completed .w-step-circle {
+      background: #10B981;
+      color: #fff;
+      border-color: #059669;
+    }
+    .w-step-node.active .w-step-circle {
+      background: #F59E0B;
+      color: #fff;
+      border-color: #D97706;
+      box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25);
+    }
+    .w-step-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .w-step-sub {
+      font-size: 9.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
     @media (max-width: 768px) {
       .order-stepper { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+      .warranty-stepper { grid-template-columns: repeat(2, 1fr); gap: 14px; }
       .order-details-grid { grid-template-columns: 1fr; }
       .member-profile-card { flex-direction: column; align-items: flex-start; }
       .member-points-box { width: 100%; text-align: left; }
@@ -1271,6 +1374,152 @@
           </div>
         </div>
       </div>
+
+      <!-- MEMBER WARRANTY CLAIM ACTIVE TRACKER -->
+      <div class="history-card" style="margin-top: 20px; border: 2px solid #FCD34D; background: #FFFDF5;" id="memberWarrantyCard">
+        <div class="history-header">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:20px;">🛡️</span>
+            <div>
+              <div style="font-size:15px; font-weight:800; color:#92400E;">Klaim Garansi 100% Ganti Baru Aktif</div>
+              <div style="font-size:11.5px; color:#B45309; font-weight:600;">Tiket #KMP-20260907-001 • Invoice: INV/20260907/001</div>
+            </div>
+          </div>
+          <span class="status-badge" style="background:#FEF3C7; color:#B45309; border:1px solid #FCD34D; font-weight:800;" id="memberWarrantyStatusBadge">
+            Disetujui - Dirangkai Ulang
+          </span>
+        </div>
+
+        <div style="background:#fff; border:1px solid #FDE68A; border-radius:12px; padding:14px; margin-bottom:14px;">
+          <div style="font-size:12.5px; color:#78350F; font-weight:700;">Kendala: Kelopak Mawar & Tulip Kawat Bulu Tertekan di Kardus Ekspedisi</div>
+          <div style="font-size:12px; color:#92400E; margin-top:4px; line-height:1.4;">
+            Atelier menyetujui penggantian buket baru 100% gratis tanpa perlu retur barang lama. Buket baru saat ini sedang dirangkai oleh tim florist utama.
+          </div>
+          <div style="font-size:11px; color:#059669; font-weight:800; margin-top:8px;">
+            🚚 Estimasi Resi Pengganti: JT99812401ID (J&T Express Kilat)
+          </div>
+        </div>
+
+        <!-- 5-STEP WARRANTY PROGRESS STEPPER -->
+        <div class="warranty-stepper" id="warrantyStepper">
+          <div class="w-step-node completed">
+            <div class="w-step-circle">✓</div>
+            <div class="w-step-title">1. Diajukan</div>
+            <div class="w-step-sub">Video Unboxing</div>
+          </div>
+          <div class="w-step-node completed">
+            <div class="w-step-circle">✓</div>
+            <div class="w-step-title">2. Ditinjau</div>
+            <div class="w-step-sub">Florist Atelier</div>
+          </div>
+          <div class="w-step-node active">
+            <div class="w-step-circle">✂️</div>
+            <div class="w-step-title">3. Dirangkai Baru</div>
+            <div class="w-step-sub">100% Free Repl.</div>
+          </div>
+          <div class="w-step-node">
+            <div class="w-step-circle">🚚</div>
+            <div class="w-step-title">4. Dikirim Kilat</div>
+            <div class="w-step-sub">Resi Terbit</div>
+          </div>
+          <div class="w-step-node">
+            <div class="w-step-circle">🎁</div>
+            <div class="w-step-title">5. Selesai</div>
+            <div class="w-step-sub">Diterima Aman</div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px; border-top:1px solid #FDE68A; padding-top:12px;">
+          <button class="sample-chip" onclick="openCustomerChat('order')">💬 Tanya Status ke Florist</button>
+          <button class="btn-warranty-claim" style="font-size:11.5px; padding:6px 14px;" onclick="openWarrantyModal('INV/20260907/001')">Ajukan Klaim Baru</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         PUSAT BANTUAN & EDUKASI KASUS UMUM PELANGGAN (FAQ KNOWLEDGE BASE)
+         ========================================================================== -->
+    <section class="portal-faq-section" style="margin-top: 30px;">
+      <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:26px 30px; box-shadow:var(--shadow-md);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:14px;">
+          <div>
+            <h3 style="font-size:16px; font-weight:800; color:var(--text-main); display:flex; align-items:center; gap:8px;">
+              <span>📖 Pusat Bantuan & Panduan Cepat Pelanggan (FAQ)</span>
+            </h3>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:3px;">
+              Solusi instan untuk kendala umum: lupa nomor invoice, kelopak kawat bulu tertekuk, hingga tata cara klaim garansi.
+            </p>
+          </div>
+          <span class="hero-badge" style="margin:0; background:#EFF6FF; border-color:#BFDBFE; color:#1E40AF; font-size:11px;">
+            💡 5 Panduan Kasus Pelanggan
+          </span>
+        </div>
+
+        <!-- FAQ Item 1 -->
+        <div class="faq-item active" id="faq1">
+          <div class="faq-header" onclick="toggleFaq('faq1')">
+            <span>🔍 1. Bagaimana jika saya lupa nomor invoice atau nomor resi pesanan?</span>
+            <span class="faq-icon-arrow">▼</span>
+          </div>
+          <div class="faq-body">
+            <p><strong>Solusi Sangat Mudah:</strong> Anda tidak perlu repot menghafal nomor invoice! Cukup beralih ke tab <strong>"Lacak Instan (Guest / No. WA)"</strong> di atas, lalu masukkan nomor WhatsApp yang Anda gunakan saat checkout. Sistem akan otomatis memunculkan seluruh riwayat pesanan buket bunga aktif Anda.</p>
+            <div style="margin-top:8px;">
+              <button class="sample-chip" onclick="fillAndSearch('081298317721')">Coba Simulasi Nomor WhatsApp Sarah Amalia ➔</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ Item 2 -->
+        <div class="faq-item" id="faq2">
+          <div class="faq-header" onclick="toggleFaq('faq2')">
+            <span>🌸 2. Kelopak buket kawat bulu sedikit tertekuk di kardus saat unboxing, apakah rusak?</span>
+            <span class="faq-icon-arrow">▼</span>
+          </div>
+          <div class="faq-body">
+            <p><strong>Buket Anda 100% Aman!</strong> Karakteristik utama bunga kawat bulu (<em>chenille stem</em>) adalah bahannya yang lentur dan fleksibel. Jika kelopak tertekan akibat guncangan kurir, Anda cukup melengkungkan kembali kelopak secara perlahan dengan jempol ke arah luar selama 10 detik. Bunga akan langsung kembali mekar bervolume seperti semula!</p>
+          </div>
+        </div>
+
+        <!-- FAQ Item 3 -->
+        <div class="faq-item" id="faq3">
+          <div class="faq-header" onclick="toggleFaq('faq3')">
+            <span>🌿 3. Bagaimana cara merawat bunga kawat bulu agar tahan bertahun-tahun?</span>
+            <span class="faq-icon-arrow">▼</span>
+          </div>
+          <div class="faq-body">
+            <p>Bunga kawat bulu adalah <em>everlasting flowers</em> (bunga abadi) yang tidak akan layu:</p>
+            <ul style="margin-left:18px; margin-top:4px;">
+              <li><strong>Jangan Disiram Air:</strong> Jauhkan dari cipratan air agar kawat rangka tidak berkarat.</li>
+              <li><strong>Bersihkan Debu:</strong> Bersihkan debu berkala menggunakan kuas make-up halus atau hembusan <em>hair dryer</em> dengan mode angin dingin.</li>
+              <li><strong>Simpan di Ruangan Kering:</strong> Letakkan di meja belajar / lemari kaca ber-AC agar warna bulu chenille tetap cerah.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- FAQ Item 4 -->
+        <div class="faq-item" id="faq4">
+          <div class="faq-header" onclick="toggleFaq('faq4')">
+            <span>⏱️ 4. Berapa lama estimasi waktu pembuatan (Lead Time) buket wisuda?</span>
+            <span class="faq-icon-arrow">▼</span>
+          </div>
+          <div class="faq-body">
+            <p>• <strong>Ready Stock:</strong> Dikirim di hari yang sama jika transaksi diverifikasi sebelum pukul 13.00 WIB.<br>
+            • <strong>Pre-Order (PO) Kustom:</strong> Membutuhkan waktu perangkaian 1-3 hari kerja tergantung antrean slot harian (maks 10 buket/hari). Kami sarankan memesan minimal H-4 sebelum jadwal wisuda.</p>
+          </div>
+        </div>
+
+        <!-- FAQ Item 5 -->
+        <div class="faq-item" id="faq5">
+          <div class="faq-header" onclick="toggleFaq('faq5')">
+            <span>📍 5. Bagaimana prosedur janji temu COD di kampus atau mall?</span>
+            <span class="faq-icon-arrow">▼</span>
+          </div>
+          <div class="faq-body">
+            <p>Saat checkout, pilih salah satu titik temu Google Maps yang telah terverifikasi (misal: Gerbatama UI / Lobby Drop-off Margo City). Staf florist kami akan mengonfirmasi jam temu via chat sistem / WhatsApp 15 menit sebelumnya. Seluruh titik dalam radius 5.0 KM dari atelier bebas ongkos kirim (Rp 0)!</p>
+          </div>
+        </div>
+
+      </div>
     </section>
 
   </main>
@@ -1316,6 +1565,70 @@
         <button class="sample-chip" onclick="closeCustomerProfileModal()">Batal</button>
         <button class="btn-store" onclick="saveCustomerProfile()">Simpan Perubahan</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: KLAIM GARANSI GANTI BARU 100% -->
+  <div class="modal-overlay" id="modalWarrantyClaim" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); z-index:10001; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#fff; border-radius:20px; max-width:520px; width:100%; max-height:90vh; overflow-y:auto; padding:26px; box-shadow:var(--shadow-lg); border:2px solid #FCD34D;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:22px;">🛡️</span>
+          <div>
+            <h3 style="font-size:16px; font-weight:800; color:#92400E;">Klaim Garansi Ganti Baru 100%</h3>
+            <div style="font-size:11px; color:#B45309;">Gratis Penggantian Buket Baru • Tanpa Perlu Retur Barang</div>
+          </div>
+        </div>
+        <button onclick="closeWarrantyModal()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#64748B;">✕</button>
+      </div>
+
+      <div style="background:#FFFBEB; border:1px solid #FCD34D; border-radius:10px; padding:12px; margin-bottom:16px; font-size:11.5px; color:#78350F; line-height:1.45;">
+        💡 <strong>Jaminan Bebas Cemas:</strong> Jika buket kawat bulu Anda patah di kurir ekspedisi atau salah varian, atelier akan langsung merangkai buket pengganti baru dan mengirimkannya via kurir kilat tanpa membebani Anda dengan proses retur barang fisik.
+      </div>
+
+      <form id="formWarrantyClaim" onsubmit="submitWarrantyClaim(event)" style="display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <label style="font-size:12px; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Nomor Invoice Pesanan:</label>
+          <select id="wClaimInvoice" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:12.5px; outline:none; background:#fff;">
+            <option value="INV/20260907/001">INV/20260907/001 - Tulip Pastel Pink Candy + Fairy LED</option>
+            <option value="INV/20260907/002">INV/20260907/002 - Sunshine Daisy Bear Toga Wisuda</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:12px; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Kategori Masalah / Kerusakan:</label>
+          <select id="wClaimCategory" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:12.5px; outline:none; background:#fff;">
+            <option value="TRANSIT_DAMAGE">🌸 Bunga Kawat Bulu Gepeng / Patah di Ekspedisi</option>
+            <option value="WRONG_PRODUCT">🎨 Salah Warna Buket / Bukan Varian Pesanan</option>
+            <option value="ACCESSORY_BROKEN">🧸 Boneka Wisuda Lepas / Aksesoris Rusak</option>
+            <option value="WRONG_CARD">💌 Salah Tulisan Nama Kartu Ucapan Wisuda</option>
+            <option value="PACKAGE_LOST">📦 Paket Hilang / Tidak Bergerak di Ekspedisi</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:12px; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Link Video Unboxing (Maks 1x24 Jam):</label>
+          <input type="text" id="wClaimVideoLink" placeholder="Tempel link Google Drive / Video WA unboxing..." value="https://drive.google.com/file/d/sample-unboxing-video" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:12.5px; outline:none;">
+          <div style="font-size:10.5px; color:var(--text-muted); margin-top:3px;">Rekaman video paket sejak tersegel hingga dibuka untuk verifikasi florist.</div>
+        </div>
+
+        <div>
+          <label style="font-size:12px; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Jelaskan Detail Kendala:</label>
+          <textarea id="wClaimDesc" rows="3" placeholder="Contoh: Kelopak bunga bagian kiri penyok tertekan kardus kurir..." style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:12.5px; outline:none; font-family:inherit;">Kelopak bunga tulip tertekan kardus ekspedisi saat pengiriman sehingga gepeng tidak bisa tegak.</textarea>
+        </div>
+
+        <div>
+          <label style="font-size:12px; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Alamat Kirim Buket Baru Pengganti:</label>
+          <input type="text" id="wClaimAddress" value="Gedung Fakultas Psikologi Universitas Indonesia, Kampus Baru UI Depok" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:12.5px; outline:none;">
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+          <button type="button" class="sample-chip" onclick="closeWarrantyModal()">Batal</button>
+          <button type="submit" class="btn-warranty-claim" style="font-size:12.5px; padding:9px 20px;">
+            🚀 Kirim Klaim Penggantian Baru (Gratis)
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -1683,8 +1996,109 @@
       }, 700);
     }
 
+    /* --------------------------------------------------------------------------
+       GARANSI 100% ANTI-PATAH & FAQ ACCORDION LOGIC
+       -------------------------------------------------------------------------- */
+    function toggleFaq(faqId) {
+      const el = document.getElementById(faqId);
+      if (el) {
+        el.classList.toggle('active');
+      }
+    }
+
+    function openWarrantyModal(invoiceId) {
+      if (invoiceId) {
+        const select = document.getElementById('wClaimInvoice');
+        if (select) select.value = invoiceId;
+      }
+      const modal = document.getElementById('modalWarrantyClaim');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeWarrantyModal() {
+      const modal = document.getElementById('modalWarrantyClaim');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function submitWarrantyClaim(e) {
+      e.preventDefault();
+      const invoice = document.getElementById('wClaimInvoice').value;
+      const category = document.getElementById('wClaimCategory').value;
+      const video = document.getElementById('wClaimVideoLink').value;
+      const desc = document.getElementById('wClaimDesc').value;
+      const address = document.getElementById('wClaimAddress').value;
+
+      if (!desc.trim()) {
+        showToast('Validasi Gagal', 'Harap isi detail kendala buket kawat bulu Anda.', 'warning');
+        return;
+      }
+
+      const claimData = {
+        id: 'KMP-' + Date.now().toString().slice(-6),
+        invoice: invoice,
+        category: category,
+        video: video,
+        desc: desc,
+        address: address,
+        status: 'SUBMITTED',
+        statusText: 'Diajukan - Menunggu Verifikasi',
+        createdAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      const existingClaims = JSON.parse(localStorage.getItem('chenille_warranty_claims') || '[]');
+      existingClaims.unshift(claimData);
+      localStorage.setItem('chenille_warranty_claims', JSON.stringify(existingClaims));
+
+      closeWarrantyModal();
+      showToast('Klaim Garansi Terkirim! 🛡️', 'Florist atelier sedang memverifikasi video unboxing Anda. Buket baru akan dirangkai segera!', 'success');
+      renderWarrantyClaimStatus(claimData);
+    }
+
+    function renderWarrantyClaimStatus(claim) {
+      const card = document.getElementById('memberWarrantyCard');
+      if (!card) return;
+
+      const claims = JSON.parse(localStorage.getItem('chenille_warranty_claims') || '[]');
+      const activeClaim = claim || claims[0];
+      if (!activeClaim) return;
+
+      card.style.display = 'block';
+      const badge = document.getElementById('memberWarrantyStatusBadge');
+      if (badge) {
+        badge.textContent = activeClaim.statusText || 'Diajukan';
+      }
+
+      const stepper = document.getElementById('warrantyStepper');
+      if (stepper) {
+        const nodes = stepper.querySelectorAll('.w-step-node');
+        nodes.forEach(n => {
+          n.classList.remove('completed', 'active');
+        });
+
+        // 5 steps: 0: Diajukan, 1: Ditinjau, 2: Dirangkai Baru, 3: Dikirim Kilat, 4: Selesai
+        if (activeClaim.status === 'SUBMITTED') {
+          nodes[0].classList.add('active');
+        } else if (activeClaim.status === 'REVIEWED') {
+          nodes[0].classList.add('completed');
+          nodes[1].classList.add('active');
+        } else if (activeClaim.status === 'IN_PRODUCTION') {
+          nodes[0].classList.add('completed');
+          nodes[1].classList.add('completed');
+          nodes[2].classList.add('active');
+        } else if (activeClaim.status === 'SHIPPED') {
+          nodes[0].classList.add('completed');
+          nodes[1].classList.add('completed');
+          nodes[2].classList.add('completed');
+          nodes[3].classList.add('active');
+        } else if (activeClaim.status === 'RESOLVED') {
+          nodes.forEach(n => n.classList.add('completed'));
+        }
+      }
+    }
+
     // Auto-search or switch mode on load
     window.addEventListener('DOMContentLoaded', () => {
+      renderWarrantyClaimStatus();
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('mode') === 'member') {
         const memberBtn = document.querySelectorAll('.mode-tab-btn')[1];

@@ -2377,31 +2377,16 @@
             </span>
           </div>
 
-          <!-- Komplain Card Highlight -->
-          <div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 12px; padding: 18px; margin-bottom: 20px; display: flex; gap: 16px; align-items: flex-start;">
-            <div style="color:#D97706;">
-              <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            </div>
-            <div style="flex: 1;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <strong style="font-size: 13.5px; color: #92400E;">Tiket Komplain #KMP-001: Kelopak Tertekan di Kurir Ekspedisi</strong>
-                <span class="status-badge badge-pending">Perlu Solusi Cepat</span>
-              </div>
-              <p style="font-size: 12.5px; color: #78350F; margin: 6px 0;">
-                <em>"Halo min, buket wisudanya sampai tadi siang, tapi pas dibuka kardus agak penyok di bagian samping jadi kelopak tulip mawar kawat bulunya agak miring sedikit."</em>
-              </p>
-              <div style="font-size: 11.5px; color: #B45309;">
-                Pelanggan: <strong>Anisa Rahma</strong> (0813-9821-xxxx) • Invoice: <strong>INV/20260907/003</strong> • Garansi Ganti Baru Aktif
-              </div>
-              <div style="margin-top: 12px; display: flex; gap: 8px;">
-                <button class="btn btn-primary btn-sm" onclick="resolveComplaint('Anisa Rahma', '081398217721')">
-                  Hubungi Pembeli via WhatsApp (Ganti Baru)
-                </button>
-                <button class="btn btn-secondary btn-sm" onclick="showToast('Garansi Disetujui', 'Buket pengganti telah masuk antrean perakitan prioritas.', 'success')">
-                  Setujui Garansi Ganti Baru
-                </button>
-              </div>
-            </div>
+          <!-- Interactive Klaim Garansi 100% Anti-Patah List -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h4 style="font-size:13.5px; font-weight:800; color:var(--text-main); display:flex; align-items:center; gap:8px;">
+              <span>🛡️ Tiket Klaim Garansi 100% Ganti Baru (Bebas Biaya & Retur)</span>
+            </h4>
+            <span style="font-size:11.5px; color:var(--text-muted);">Tersinkronisasi otomatis dengan formulir klaim customer</span>
+          </div>
+
+          <div id="adminWarrantyClaimsContainer" style="display:flex; flex-direction:column; gap:14px; margin-bottom:24px;">
+            <!-- Rendered dynamically by renderAdminWarrantyClaims() -->
           </div>
 
           <div class="table-container">
@@ -3929,6 +3914,174 @@
     }
 
     /* --------------------------------------------------------------------------
+       WARRANTY & COMPLAINT CLAIMS MANAGEMENT (SINKRONISASI CUSTOMER PORTAL)
+       -------------------------------------------------------------------------- */
+    const defaultWarrantyClaims = [
+      {
+        id: 'KMP-20260907-001',
+        invoice: 'INV/20260907/001',
+        customer: 'Sarah Amalia',
+        phone: '081298317721',
+        category: 'TRANSIT_DAMAGE',
+        categoryName: '🌸 Bunga Kawat Bulu Gepeng di Ekspedisi',
+        video: 'https://drive.google.com/file/d/sample-sarah-unboxing',
+        desc: 'Kelopak tulip kawat bulu tertekan kardus ekspedisi saat pengiriman sehingga gepeng tidak bisa tegak.',
+        address: 'Gedung Fakultas Psikologi Universitas Indonesia, Kampus Baru UI Depok',
+        status: 'IN_PRODUCTION',
+        statusText: 'Disetujui - Sedang Dirangkai Baru',
+        createdAt: '14:20 WIB'
+      },
+      {
+        id: 'KMP-20260907-002',
+        invoice: 'INV/20260907/003',
+        customer: 'Anisa Rahma',
+        phone: '081398217721',
+        category: 'WRONG_PRODUCT',
+        categoryName: '🎨 Salah Warna Buket / Bukan Varian Pesanan',
+        video: 'https://drive.google.com/file/d/sample-anisa-unboxing',
+        desc: 'Pesan varian buket mawar burgundy marun wisuda, yang terkirim warna lavender pastel.',
+        address: 'Jl. Margonda Raya No. 450, Beji, Depok',
+        status: 'SUBMITTED',
+        statusText: 'Diajukan - Menunggu Verifikasi',
+        createdAt: '15:10 WIB'
+      }
+    ];
+
+    function getWarrantyClaims() {
+      const stored = localStorage.getItem('chenille_warranty_claims');
+      if (!stored) {
+        localStorage.setItem('chenille_warranty_claims', JSON.stringify(defaultWarrantyClaims));
+        return defaultWarrantyClaims;
+      }
+      try {
+        const parsed = JSON.parse(stored);
+        return parsed.length ? parsed : defaultWarrantyClaims;
+      } catch (e) {
+        return defaultWarrantyClaims;
+      }
+    }
+
+    function saveWarrantyClaims(claims) {
+      localStorage.setItem('chenille_warranty_claims', JSON.stringify(claims));
+      renderAdminWarrantyClaims();
+    }
+
+    function renderAdminWarrantyClaims() {
+      const container = document.getElementById('adminWarrantyClaimsContainer');
+      if (!container) return;
+
+      const claims = getWarrantyClaims();
+      container.innerHTML = '';
+
+      claims.forEach((claim) => {
+        let badgeStyle = 'background:#FEF3C7; color:#B45309; border:1px solid #FCD34D;';
+        let statusBadgeText = claim.statusText || 'Diajukan';
+
+        if (claim.status === 'IN_PRODUCTION') {
+          badgeStyle = 'background:#EFF6FF; color:#1E40AF; border:1px solid #BFDBFE;';
+        } else if (claim.status === 'SHIPPED') {
+          badgeStyle = 'background:#F3E8FF; color:#6B21A8; border:1px solid #DDD6FE;';
+        } else if (claim.status === 'RESOLVED') {
+          badgeStyle = 'background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0;';
+        }
+
+        const card = document.createElement('div');
+        card.style.cssText = 'background:#fff; border:1.5px solid var(--border); border-radius:14px; padding:18px 20px; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:12px; transition:all 0.2s ease;';
+
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:22px;">🛡️</span>
+              <div>
+                <strong style="font-size:14px; color:var(--text-main);">Tiket Klaim: ${claim.id}</strong>
+                <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">
+                  Invoice: <strong>${claim.invoice}</strong> • Diajukan: ${claim.createdAt || 'Hari ini'} • Pelanggan: <strong>${claim.customer || 'Sarah Amalia'}</strong> (${claim.phone || '081298317721'})
+                </div>
+              </div>
+            </div>
+            <span class="status-badge" style="${badgeStyle}; font-weight:800; font-size:11.5px;">
+              ${statusBadgeText}
+            </span>
+          </div>
+
+          <div style="background:var(--surface-subtle); border-radius:10px; padding:12px 14px; border:1px solid var(--border);">
+            <div style="font-size:12px; font-weight:700; color:var(--text-main);">
+              Kategori: <span style="color:#B45309;">${claim.categoryName || claim.category || 'Kerusakan Ekspedisi'}</span>
+            </div>
+            <div style="font-size:12px; color:var(--text-main); margin-top:4px; line-height:1.45;">
+              <em>"${claim.desc}"</em>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:8px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+              <span>📍 Alamat Kirim: <strong>${claim.address || 'Kampus UI Depok'}</strong></span>
+              <a href="${claim.video || '#'}" target="_blank" style="color:var(--primary); font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+                📹 Buka Video Unboxing ↗
+              </a>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; flex-wrap:wrap; border-top:1px solid var(--border); padding-top:10px;">
+            <button class="btn btn-secondary btn-sm" onclick="openCustomerChat('${claim.customer || 'Pelanggan'}', '${claim.phone || '081298317721'}')">
+              💬 Buka Web Chat CS
+            </button>
+            <button class="btn btn-primary btn-sm" style="background:#25D366; border-color:#25D366;" onclick="resolveComplaint('${claim.customer || 'Pelanggan'}', '${claim.phone || '081298317721'}')">
+              📱 WA Pembeli
+            </button>
+            ${claim.status !== 'IN_PRODUCTION' && claim.status !== 'SHIPPED' && claim.status !== 'RESOLVED' ? `
+              <button class="btn btn-primary btn-sm" onclick="approveWarrantyClaim('${claim.id}')">
+                ✂️ Setujui & Rangkai Ulang (100% Free)
+              </button>
+            ` : ''}
+            ${claim.status === 'IN_PRODUCTION' ? `
+              <button class="btn btn-primary btn-sm" style="background:#7C3AED; border-color:#7C3AED;" onclick="shipWarrantyClaim('${claim.id}')">
+                🚚 Kirim Resi Pengganti Kilat
+              </button>
+            ` : ''}
+            ${claim.status === 'SHIPPED' ? `
+              <button class="btn btn-primary btn-sm" style="background:#059669; border-color:#059669;" onclick="completeWarrantyClaim('${claim.id}')">
+                ✓ Selesaikan Klaim (Diterima)
+              </button>
+            ` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function approveWarrantyClaim(claimId) {
+      const claims = getWarrantyClaims();
+      const claim = claims.find(c => c.id === claimId);
+      if (claim) {
+        claim.status = 'IN_PRODUCTION';
+        claim.statusText = 'Disetujui - Sedang Dirangkai Baru';
+        saveWarrantyClaims(claims);
+        showToast('Klaim Garansi Disetujui! 🛡️', `Buket pengganti baru untuk ${claim.customer || 'pelanggan'} masuk antrean perakitan prioritas pengrajin.`, 'success');
+      }
+    }
+
+    function shipWarrantyClaim(claimId) {
+      const claims = getWarrantyClaims();
+      const claim = claims.find(c => c.id === claimId);
+      if (claim) {
+        const resi = 'JT99' + Math.floor(10000000 + Math.random() * 90000000) + 'ID';
+        claim.status = 'SHIPPED';
+        claim.statusText = `Dikirim Kilat (Resi: ${resi})`;
+        saveWarrantyClaims(claims);
+        showToast('Resi Pengganti Diterbitkan 🚚', `Buket pengganti telah dikirim via J&T Express Kilat (${resi}).`, 'success');
+      }
+    }
+
+    function completeWarrantyClaim(claimId) {
+      const claims = getWarrantyClaims();
+      const claim = claims.find(c => c.id === claimId);
+      if (claim) {
+        claim.status = 'RESOLVED';
+        claim.statusText = 'Selesai - Buket Diterima Aman';
+        saveWarrantyClaims(claims);
+        showToast('Klaim Selesai! ⭐', `Buket pengganti telah diterima dengan aman dan pelanggan puas.`, 'success');
+      }
+    }
+
+    /* --------------------------------------------------------------------------
        COD MAPS (GOOGLE MAPS INTEGRATED)
        -------------------------------------------------------------------------- */
     let codPointsData = [
@@ -4360,6 +4513,7 @@
       renderOrdersTables();
       renderProductsTable();
       renderCodPointsList();
+      renderAdminWarrantyClaims();
     });
   </script>
 </body>

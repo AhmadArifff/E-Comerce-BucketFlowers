@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chenille Flowers Atelier — Master Design & Prototype Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #F43F5E;
+      --primary-hover: #E11D48;
+      --primary-light: #FFE4E6;
+      --secondary: #0D9488;
+      --accent: #F59E0B;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --surface-subtle: #F1F5F9;
+      --border: #E2E8F0;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 14px rgba(0,0,0,0.07);
+      --shadow-lg: 0 12px 28px rgba(0,0,0,0.09);
+      --shadow-glow: 0 0 25px rgba(244, 63, 94, 0.22);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background: #F8FAFC;
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.5;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(254, 205, 211, 0.4) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(204, 251, 241, 0.4) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    /* TOP ANNOUNCEMENT */
+    .top-banner {
+      background: linear-gradient(90deg, #BE123C, #F43F5E, #FB7185);
+      color: #fff;
+      font-size: 12.5px;
+      font-weight: 700;
+      text-align: center;
+      padding: 9px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 8px rgba(244, 63, 94, 0.25);
+    }
+    .top-banner-pill {
+      background: rgba(255, 255, 255, 0.25);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* CONTAINER */
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 36px 24px 60px 24px;
+    }
+
+    /* HERO HEADER */
+    .hero-section {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: #FFE4E6;
+      border: 1px solid #FECDD3;
+      border-radius: var(--radius-full);
+      color: #BE123C;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
+      font-weight: 800;
+      color: #0F172A;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, #F43F5E, #FB7185);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      max-width: 780px;
+      margin: 0 auto 24px auto;
+      line-height: 1.6;
+    }
+
+    /* THEME SYNC CONTROLLER BAR */
+    .theme-controller-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+    .controller-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .theme-buttons-wrap {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-theme-select {
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      color: var(--text-main);
+    }
+    .btn-theme-select:hover {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+    .btn-theme-select.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+    }
+
+    /* SECTION TITLE */
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* PROTOTYPE CARDS GRID */
+    .prototype-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    .proto-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .proto-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: #CBD5E1;
+    }
+    .proto-card.featured {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .card-top-badge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .proto-badge {
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-pastel { background: #FFE4E6; color: #BE123C; }
+    .badge-romantic { background: #FEF3C7; color: #92400E; }
+    .badge-kawaii { background: #EDE9FE; color: #6D28D9; }
+    .badge-portal { background: #E0F2FE; color: #0369A1; }
+    .badge-admin { background: #F1F5F9; color: #0F172A; border: 1px solid #CBD5E1; }
+    .badge-auth { background: #DCFCE7; color: #166534; }
+
+    .proto-icon-box {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 16px;
+    }
+
+    .proto-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+    .proto-subtitle {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    .proto-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 16px;
+      flex: 1;
+    }
+
+    .proto-features-list {
+      list-style: none;
+      margin-bottom: 20px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+    .proto-features-list li {
+      font-size: 12px;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .proto-features-list li span {
+      color: #10B981;
+      font-weight: 900;
+    }
+
+    .proto-action-bar {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-proto-primary {
+      flex: 1;
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 10px rgba(244, 63, 94, 0.2);
+    }
+    .btn-proto-primary:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 6px 14px rgba(244, 63, 94, 0.3);
+    }
+    .btn-proto-secondary {
+      background: var(--surface-subtle);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      font-weight: 700;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .btn-proto-secondary:hover {
+      background: #E2E8F0;
+    }
+
+    /* LIVE PREVIEW IFRAME MODAL */
+    .preview-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(6px);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .preview-modal-overlay.show {
+      display: flex;
+    }
+    .preview-modal-content {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 1100px;
+      height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+    }
+    .preview-modal-header {
+      padding: 14px 20px;
+      background: #0F172A;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .preview-modal-frame {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: #fff;
+    }
+
+    /* FOOTER ARCHITECTURE ROADMAP */
+    .roadmap-panel {
+      background: #0F172A;
+      color: #F8FAFC;
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    .roadmap-panel::before {
+      content: '';
+      position: absolute;
+      top: -50px; right: -50px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(244, 63, 94, 0.25) 0%, transparent 70%);
+    }
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      margin-top: 20px;
+    }
+    .roadmap-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .roadmap-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #FDE047;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .roadmap-text {
+      font-size: 12px;
+      color: #94A3B8;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+      .hero-title { font-size: 30px; }
+      .theme-controller-bar { flex-direction: column; align-items: flex-start; }
+      .prototype-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BANNER -->
+  <div class="top-banner">
+    <span class="top-banner-pill">Tahap Pra-Development</span>
+    <span>🌸 Seluruh perancangan tampilan visual, interaksi mikro, dan alur sistem telah diimplementasikan penuh pada prototipe HTML interaktif!</span>
+  </div>
+
+  <div class="container">
+
+    <!-- HERO HEADER -->
+    <header class="hero-section">
+      <div class="hero-badge">
+        <span>✨ E-Commerce Buket Bunga Kawat Bulu (Chenille Atelier)</span>
+      </div>
+      <h1 class="hero-title">Master Design & <span>Prototype Hub</span></h1>
+      <p class="hero-desc">
+        Pusat navigasi dan verifikasi langsung 6 modul antarmuka web interaktif. Dilengkapi fitur simulasi keranjang terbang, 3D tilt, pelacakan pesanan guest & member, klaim garansi 100% anti-patah, live chat sistem, serta Google Maps radius COD.
+      </p>
+    </header>
+
+    <!-- THEME SYNC CONTROLLER -->
+    <div class="theme-controller-bar">
+      <div class="controller-label">
+        <span style="font-size: 20px;">🎨</span>
+        <div>
+          <div style="font-size: 14px; font-weight: 900;">Tema Aktif Global (Storefront & Login Synchronizer)</div>
+          <div style="font-size: 11.5px; color: var(--text-muted); font-weight: 600;">Klik untuk mengganti tema yang tersimpan di localStorage browser</div>
+        </div>
+      </div>
+      <div class="theme-buttons-wrap">
+        <button class="btn-theme-select active" id="btnThemeA" onclick="setMasterTheme('tema-a')">
+          <span>🌸</span> Tema A: Korean Pastel
+        </button>
+        <button class="btn-theme-select" id="btnThemeB" onclick="setMasterTheme('tema-b')">
+          <span>🌹</span> Tema B: Modern Romantic
+        </button>
+        <button class="btn-theme-select" id="btnThemeC" onclick="setMasterTheme('tema-c')">
+          <span>🌻</span> Tema C: Playful Kawaii
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN PROTOTYPES SHOWCASE -->
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">
+          <span>🚀 6 Modul Antarmuka Prototipe Interaktif</span>
+        </h2>
+        <div class="section-sub">Dapat dibuka langsung dalam tab baru atau diuji coba melalui pratinjau instan</div>
+      </div>
+    </div>
+
+    <div class="prototype-grid">
+
+      <!-- CARD 1: TEMA A -->
+      <div class="proto-card featured">
+        <div>
+          <div class="card-top-badge-row">
+            <span class="proto-badge badge-pastel">Tema Etalase 1</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">HTML5 • CSS • JS</span>
+          </div>
+          <div class="proto-icon-box" style="background: #FFE4E6; color: #E11D48;">🌸</div>
+          <h3 class="proto-title">Tema A: Korean Soft Pastel</h3>
+          <div class="proto-subtitle">Aesthetic & Dreamy Graduation Florist</div>
+          <p class="proto-desc">
+            Desain lembut bernuansa soft blush pink dan sage green. Mengadopsi tren buket kawat bulu Korea dengan aksen fairy LED light dan kartu ucapan kustom.
+          </p>
+          <ul class="proto-features-list">
+            <li><span>✓</span> Animasi parabola Magic UI bunga meluncur ke keranjang</li>
+            <li><span>✓</span> Efek 3D Card Tilt interaktif pada etalase produk</li>
+            <li><span>✓</span> Live Chat CS Atelier in-system (tidak langsung direct WA)</li>
+            <li><span>✓</span> Indikator slot kuota harian & Garansi 100% Anti-Patah</li>
+          </ul>
+        </div>
+        <div class="proto-action-bar">
+          <a href="./tema-a-korean-pastel/index.html" class="btn-proto-primary" target="_blank">
+            <span>Buka Halaman ↗</span>
+          </a>
+          <button class="btn-proto-secondary" onclick="openPreviewModal('./tema-a-korean-pastel/index.html', 'Tema A: Korean Pastel')">
+            👁️ Pratinjau
+          </button>
+        </div>
+      </div>
+
+      <!-- CARD 2: TEMA B -->
+      <div class="proto-card">
+        <div>
+          <div class="card-top-badge-row">
+            <span class="proto-badge badge-romantic">Tema Etalase 2</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">HTML5 • CSS • JS</span>
+          </div>
+          <div class="proto-icon-box" style="background: #FEF3C7; color: #92400E;">🌹</div>
+          <h3 class="proto-title">Tema B: Modern Romantic Luxury</h3>
+          <div class="proto-subtitle">Deep Burgundy Velvet & Champagne Gold</div>
+          <p class="proto-desc">
+            Visual mewah elegan untuk momen romantis anniversary, lamaran, dan perayaan wisuda prestisius dengan packaging rigid hardbox atelier.
+          </p>
+          <ul class="proto-features-list">
+            <li><span>✓</span> Palet warna velvet wine, maroon & gold foil accents</li>
+            <li><span>✓</span> Micro-interactions hover elegan dengan golden glow</li>
+            <li><span>✓</span> Modal pemesanan cepat dengan estimasi perangkaian</li>
+            <li><span>✓</span> Tersinkronisasi penuh dengan CS WhatsApp Hub internal</li>
+          </ul>
+        </div>
+        <div class="proto-action-bar">
+          <a href="./tema-b-modern-romantic/index.html" class="btn-proto-primary" target="_blank">
+            <span>Buka Halaman ↗</span>
+          </a>
+          <button class="btn-proto-secondary" onclick="openPreviewModal('./tema-b-modern-romantic/index.html', 'Tema B: Modern Romantic')">
+            👁️ Pratinjau
+          </button>
+        </div>
+      </div>
+
+      <!-- CARD 3: TEMA C -->
+      <div class="proto-card">
+        <div>
+          <div class="card-top-badge-row">
+            <span class="proto-badge badge-kawaii">Tema Etalase 3</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">HTML5 • CSS • JS</span>
+          </div>
+          <div class="proto-icon-box" style="background: #EDE9FE; color: #6D28D9;">🌻</div>
+          <h3 class="proto-title">Tema C: Playful Kawaii Gen-Z</h3>
+          <div class="proto-subtitle">Vibrant Coral, Butter Yellow & Cute Dolls</div>
+          <p class="proto-desc">
+            Gaya ceria energik anak muda dengan fokus buket karakter boneka beruang wisuda toga dan bunga matahari kawat bulu tersenyum.
+          </p>
+          <ul class="proto-features-list">
+            <li><span>✓</span> Tipografi bulat ramah, badge playful dan mikro-animasi bounce</li>
+            <li><span>✓</span> Customizer warna topi toga wisuda & selempang nama</li>
+            <li><span>✓</span> Estimasi ongkir COD kampus instan Rp 0 dalam radius 5KM</li>
+            <li><span>✓</span> Desain mobile-first responsif optimal untuk belanja di ponsel</li>
+          </ul>
+        </div>
+        <div class="proto-action-bar">
+          <a href="./tema-c-playful-kawaii/index.html" class="btn-proto-primary" target="_blank">
+            <span>Buka Halaman ↗</span>
+          </a>
+          <button class="btn-proto-secondary" onclick="openPreviewModal('./tema-c-playful-kawaii/index.html', 'Tema C: Playful Kawaii')">
+            👁️ Pratinjau
+          </button>
+        </div>
+      </div>
+
+      <!-- CARD 4: CUSTOMER PORTAL -->
+      <div class="proto-card featured">
+        <div>
+          <div class="card-top-badge-row">
+            <span class="proto-badge badge-portal">Portal Pelanggan Dual-Mode</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Customer Care Hub</span>
+          </div>
+          <div class="proto-icon-box" style="background: #E0F2FE; color: #0369A1;">📦</div>
+          <h3 class="proto-title">Portal Pelanggan & Lacak Pesanan</h3>
+          <div class="proto-subtitle">Mode 1 (Guest Phone/Invoice) & Mode 2 (Member Hub)</div>
+          <p class="proto-desc">
+            Menjawab tuntas skenario pelanggan: yang ingin cepat tanpa login cukup cari via No. Telp/Invoice, dan member yang login dapat melihat riwayat alamat & klaim garansi.
+          </p>
+          <ul class="proto-features-list">
+            <li><span>✓</span> Modal Klaim Garansi 100% Ganti Baru & 5-Stage Stepper</li>
+            <li><span>✓</span> Pusat Bantuan & FAQ 5 Kasus Umum (Lupa invoice, bunga gepeng, COD)</li>
+            <li><span>✓</span> In-system CS Live Chat terintegrasi konteks nomor pesanan</li>
+            <li><span>✓</span> Header Avatar Profil Pelanggan & Modal Edit Data Akun</li>
+          </ul>
+        </div>
+        <div class="proto-action-bar">
+          <a href="./customer-portal/index.html" class="btn-proto-primary" target="_blank">
+            <span>Buka Halaman ↗</span>
+          </a>
+          <button class="btn-proto-secondary" onclick="openPreviewModal('./customer-portal/index.html', 'Portal Pelanggan')">
+            👁️ Pratinjau
+          </button>
+        </div>
+      </div>
+
+      <!-- CARD 5: LOGIN PORTAL MULTI-TEMA -->
+      <div class="proto-card">
+        <div>
+          <div class="card-top-badge-row">
+            <span class="proto-badge badge-auth">Autentikasi Multi-Tema</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Role Admin & Member</span>
+          </div>
+          <div class="proto-icon-box" style="background: #DCFCE7; color: #166534;">🔐</div>
+          <h3 class="proto-title">Login Multi-Tema & Multi-Role</h3>
+          <div class="proto-subtitle">Korean Pastel • Romantic • Kawaii Sync</div>
+          <p class="proto-desc">
+            Halaman masuk adaptif yang otomatis mengikuti tema aktif toko yang disetel admin atau URL parameter (`?theme=tema-b`), dengan toggle role Super Admin dan Member Pelanggan.
+          </p>
+          <ul class="proto-features-list">
+            <li><span>✓</span> Role switch: Super Admin vs Member Pelanggan</li>
+            <li><span>✓</span> Sinkronisasi visual otomatis dengan tema etalase aktif</li>
+            <li><span>✓</span> Shortcut demo cepat 1-klik untuk testing login instan</li>
+            <li><span>✓</span> Validasi form interaktif dan pesan error kontekstual</li>
+          </ul>
+        </div>
+        <div class="proto-action-bar">
+          <a href="./login/index.html" class="btn-proto-primary" target="_blank">
+            <span>Buka Halaman ↗</span>
+          </a>
+          <button class="btn-proto-secondary" onclick="openPreviewModal('./login/index.html', 'Login Multi-Tema')">
+            👁️ Pratinjau
+          </button>
+        </div>
+      </div>
+
+      <!-- CARD 6: ADMIN DASHBOARD -->
+      <div class="proto-card featured">
+        <div>
+          <div class="card-top-badge-row">
+            <span class="proto-badge badge-admin">Operational Command Center</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">ERP & Toko Online</span>
+          </div>
+          <div class="proto-icon-box" style="background: #0F172A; color: #F8FAFC;">⚙️</div>
+          <h3 class="proto-title">Panel Kontrol Super Admin</h3>
+          <div class="proto-subtitle">HPP, Stok Bahan, COD Maps, CS Hub & Garansi</div>
+          <p class="proto-desc">
+            Sistem tata kelola operasional florist kawat bulu terlengkap. Memungkinkan admin mengendalikan keuangan HPP, titik COD Google Maps, tiket klaim garansi, dan mode pemeliharaan.
+          </p>
+          <ul class="proto-features-list">
+            <li><span>✓</span> Grafik Omzet, HPP Bahan & Laba Bersih profesional (Chart.js)</li>
+            <li><span>✓</span> Bill of Materials (BOM) & kalkulator stok kawat bulu chenille</li>
+            <li><span>✓</span> Manajemen Titik Temu COD Google Maps (Radius 5KM Depok & UI)</li>
+            <li><span>✓</span> CS WhatsApp & WebChat Hub terintegrasi pesan langsung</li>
+            <li><span>✓</span> Mode Pemeliharaan dengan iframe live preview & 8 feature toggles</li>
+            <li><span>✓</span> Penyetujuan Klaim Garansi 100% Ganti Baru live sync</li>
+          </ul>
+        </div>
+        <div class="proto-action-bar">
+          <a href="./admin-dashboard/index.html" class="btn-proto-primary" target="_blank">
+            <span>Buka Halaman ↗</span>
+          </a>
+          <button class="btn-proto-secondary" onclick="openPreviewModal('./admin-dashboard/index.html', 'Admin Dashboard')">
+            👁️ Pratinjau
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ARCHITECTURE & ROADMAP GUIDE -->
+    <div class="roadmap-panel">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        <div>
+          <h3 style="font-size: 18px; font-weight: 900; color: #fff;">🏗️ Panduan Transisi ke Fullstack Monorepo</h3>
+          <p style="font-size: 12.5px; color: #94A3B8; margin-top: 4px;">
+            Struktur modul HTML ini dirancang agar siap dipetakan 1-to-1 ke dalam arsitektur Monorepo Next.js + NestJS/Hono + Prisma:
+          </p>
+        </div>
+        <span style="font-size: 11px; background: rgba(244,63,94,0.25); border: 1px solid #F43F5E; color: #FECDD3; padding: 4px 10px; border-radius: var(--radius-full); font-weight: 800;">
+          Turborepo Architecture
+        </span>
+      </div>
+
+      <div class="roadmap-grid">
+        <div class="roadmap-item">
+          <div class="roadmap-title">🌐 apps/web (Storefront & Portal)</div>
+          <div class="roadmap-text">
+            Mengonversi Tema A, B, C ke dalam Next.js App Router dengan Dynamic Theme Provider (<code>apps/web/app/(shop)/layout.tsx</code>) dan Customer Portal (<code>apps/web/app/portal/page.tsx</code>).
+          </div>
+        </div>
+
+        <div class="roadmap-item">
+          <div class="roadmap-title">⚡ apps/admin (Super Admin ERP)</div>
+          <div class="roadmap-text">
+            Mengonversi seluruh manajemen HPP, stok kawat bulu, pesanan, CS Hub, dan titik COD Google Maps ke dashboard admin Next.js / TanStack Table.
+          </div>
+        </div>
+
+        <div class="roadmap-item">
+          <div class="roadmap-title">🗄️ packages/database (Prisma & Schema)</div>
+          <div class="roadmap-text">
+            Skema PostgreSQL untuk <code>orders</code>, <code>products</code>, <code>materials_bom</code>, <code>warranty_claims</code>, <code>cod_points</code>, dan <code>chat_messages</code> sesuai rancangan di PRD.md.
+          </div>
+        </div>
+
+        <div class="roadmap-item">
+          <div class="roadmap-title">🛡️ packages/ui & shared-types</div>
+          <div class="roadmap-text">
+            Penyatuan tokens warna CSS tema, komponen tombol garansi, stepper status pesanan, dan type safety TypeScript untuk seluruh monorepo.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PREVIEW MODAL -->
+  <div class="preview-modal-overlay" id="previewModal">
+    <div class="preview-modal-content">
+      <div class="preview-modal-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:16px;">👁️</span>
+          <strong id="previewTitle" style="font-size:14px;">Pratinjau Halaman</strong>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <a id="previewNewTabBtn" href="#" target="_blank" style="color:#93C5FD; font-size:12px; text-decoration:none; font-weight:700;">
+            Buka Tab Penuh ↗
+          </a>
+          <button onclick="closePreviewModal()" style="background:none; border:none; color:#CBD5E1; font-size:20px; cursor:pointer; line-height:1;">
+            ✕
+          </button>
+        </div>
+      </div>
+      <iframe id="previewIframe" class="preview-modal-frame" src=""></iframe>
+    </div>
+  </div>
+
+  <script>
+    function setMasterTheme(themeKey) {
+      localStorage.setItem('chenille_active_theme', themeKey);
+      
+      document.querySelectorAll('.btn-theme-select').forEach(btn => btn.classList.remove('active'));
+      if (themeKey === 'tema-a') document.getElementById('btnThemeA')?.classList.add('active');
+      if (themeKey === 'tema-b') document.getElementById('btnThemeB')?.classList.add('active');
+      if (themeKey === 'tema-c') document.getElementById('btnThemeC')?.classList.add('active');
+
+      const themeNames = {
+        'tema-a': 'Tema A: Korean Soft Pastel',
+        'tema-b': 'Tema B: Modern Romantic Luxury',
+        'tema-c': 'Tema C: Playful Kawaii Gen-Z'
+      };
+      
+      console.log(`[Master Showcase] Tema aktif global berhasil disetel ke: ${themeNames[themeKey]}`);
+    }
+
+    function openPreviewModal(url, title) {
+      const modal = document.getElementById('previewModal');
+      const iframe = document.getElementById('previewIframe');
+      const heading = document.getElementById('previewTitle');
+      const newTab = document.getElementById('previewNewTabBtn');
+
+      heading.textContent = title;
+      iframe.src = url;
+      newTab.href = url;
+      modal.classList.add('show');
+    }
+
+    function closePreviewModal() {
+      const modal = document.getElementById('previewModal');
+      const iframe = document.getElementById('previewIframe');
+      iframe.src = '';
+      modal.classList.remove('show');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closePreviewModal();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const active = localStorage.getItem('chenille_active_theme') || 'tema-a';
+      setMasterTheme(active);
+    });
+  </script>
+</body>
+</html>
