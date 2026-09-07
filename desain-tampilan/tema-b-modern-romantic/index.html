@@ -968,68 +968,71 @@
     .timeline {
       list-style: none;
       position: relative;
-      padding-left: 38px;
-      margin-top: 24px;
+      padding: 0;
+      margin: 24px 0 0 0;
     }
-    /* Static Background Track */
+    /* Static Background Track (Centered at x = 11px) */
     .timeline::before {
       content: '';
       position: absolute;
       left: 10px;
-      top: 10px;
-      bottom: 14px;
-      width: 4px;
-      background: linear-gradient(180deg, #E5C07B 0%, #D4AF37 60%, #A7F3D0 100%);
+      top: 11px;
+      bottom: 16px;
+      width: 2px;
+      background: #E5C07B;
       border-radius: 99px;
       z-index: 1;
     }
-    /* Magic UI Animated Glowing Laser Beam Pulse */
+    /* Magic UI Animated Glowing Laser Beam Pulse (Centered at x = 11px) */
     .timeline::after {
       content: '';
       position: absolute;
       left: 8px;
-      top: 10px;
-      width: 8px;
-      height: 60px;
+      top: 11px;
+      width: 6px;
+      height: 48px;
       border-radius: 99px;
-      background: linear-gradient(180deg, transparent, #D4AF37 30%, #10B981 75%, #FFFFFF 95%, transparent);
-      box-shadow: 0 0 14px 4px rgba(212, 175, 55, 0.75), 0 0 22px rgba(16, 185, 129, 0.85);
+      background: linear-gradient(180deg, transparent, #D4AF37 25%, #F59E0B 65%, #FEF3C7 85%, #FFFFFF 98%, transparent);
+      box-shadow: 0 0 8px 1px rgba(212, 175, 55, 0.8), 0 0 16px rgba(245, 158, 11, 0.5);
       pointer-events: none;
       z-index: 2;
       animation: magicBeamVertical 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
     @keyframes magicBeamVertical {
       0% {
-        top: 10px;
+        top: 11px;
         opacity: 0;
       }
-      15% {
+      20% {
         opacity: 1;
       }
-      85% {
+      80% {
         opacity: 1;
       }
       100% {
-        top: calc(100% - 74px);
+        top: calc(100% - 64px);
         opacity: 0;
       }
     }
     .timeline-step {
       position: relative;
+      padding-left: 36px;
       margin-bottom: 24px;
+      list-style: none;
     }
-    /* Ring Node */
+    /* Ring Node (Left: 0, Width: 22px -> Center: 11px) */
     .timeline-step::before {
       content: '';
       position: absolute;
-      left: -36px;
-      top: 1px;
-      width: 20px;
-      height: 20px;
+      left: 0;
+      top: 0;
+      width: 22px;
+      height: 22px;
+      box-sizing: border-box;
       border-radius: 50%;
       background: #FFFFFF;
       border: 3.5px solid #D4AF37;
-      box-shadow: 0 0 0 3px #FEF3C7;
+      box-shadow: 0 0 0 2px #FEF3C7;
       z-index: 3;
       transition: all 0.3s ease;
     }
@@ -1037,17 +1040,17 @@
     .timeline-step.active::before {
       background: #10B981;
       border: 3.5px solid #FFFFFF;
-      box-shadow: 0 0 0 3px #10B981, 0 0 16px rgba(16, 185, 129, 0.7);
+      box-shadow: 0 0 0 3px #10B981, 0 0 14px rgba(16, 185, 129, 0.65);
       animation: pulseTimelineActive 1.8s infinite ease-in-out;
     }
     @keyframes pulseTimelineActive {
       0%, 100% {
-        box-shadow: 0 0 0 3px #10B981, 0 0 10px rgba(16, 185, 129, 0.4);
+        box-shadow: 0 0 0 3px #10B981, 0 0 8px rgba(16, 185, 129, 0.4);
         transform: scale(1);
       }
       50% {
-        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.25), 0 0 22px rgba(16, 185, 129, 0.85);
-        transform: scale(1.12);
+        box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.2), 0 0 18px rgba(16, 185, 129, 0.8);
+        transform: scale(1.1);
       }
     }
 
