@@ -179,20 +179,25 @@
       flex-shrink: 0;
     }
     .btn-nav-cart {
-      background: transparent;
-      border: 1px solid var(--primary);
+      background: #fff;
       color: var(--primary);
-      padding: 8px 16px;
+      border: 1px solid var(--gold);
+      padding: 0 16px;
+      height: 38px;
       border-radius: var(--radius-sm);
       font-size: 11.5px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
-      white-space: nowrap;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      line-height: 1;
       transition: all 0.25s ease;
       position: relative;
     }
@@ -1336,26 +1341,56 @@
     .btn-chat-send:hover {
       background: #4A154B;
     }
+    /* COMMON SVG ICON STYLES */
+    .svg-icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none !important;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .svg-icon-sm {
+      width: 15px;
+      height: 15px;
+    }
     .btn-nav-login {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 7px;
       font-size: 11.5px;
       font-weight: 700;
       letter-spacing: 1px;
       text-transform: uppercase;
       color: var(--text-main);
       text-decoration: none;
-      padding: 8px 14px;
+      padding: 0 16px;
+      height: 38px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
       background: #fff;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      line-height: 1;
       transition: all 0.2s ease;
     }
     .btn-nav-login:hover {
       border-color: var(--gold);
       color: var(--primary);
       background: #FAF7F5;
+    }
+    .btn-nav-login .svg-icon {
+      stroke: var(--text-main) !important;
+      fill: none !important;
+    }
+    .btn-nav-login:hover .svg-icon {
+      stroke: var(--primary) !important;
     }
     @media (max-width: 480px) {
       .theme-chat-modal {
@@ -1502,7 +1537,7 @@
 
       <div class="nav-actions">
         <a href="../login/index.html?theme=tema-b" class="btn-nav-login" title="Masuk / Akun Concierge">
-          <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span>Masuk / Akun</span>
         </a>
         <button class="btn-nav-cart" onclick="toggleCartDrawer(true)">

@@ -193,23 +193,28 @@
     .btn-nav-cart {
       background: var(--primary);
       color: #fff;
-      border: none;
-      padding: 9px 18px;
+      border: 2px solid var(--primary);
+      padding: 0 18px;
+      height: 38px;
       border-radius: 99px;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 800;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
-      white-space: nowrap;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      line-height: 1;
       box-shadow: 0 4px 14px rgba(255, 107, 129, 0.35);
       transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       position: relative;
     }
     .btn-nav-cart:hover {
       background: var(--primary-hover);
-      transform: scale(1.05) translateY(-2px);
+      transform: scale(1.04);
     }
     .cart-badge {
       background: #FFEAA7;
@@ -1348,24 +1353,52 @@
       background: #E03E6F;
       transform: scale(1.08);
     }
+    /* COMMON SVG ICON STYLES */
+    .svg-icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none !important;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .svg-icon-sm {
+      width: 15px;
+      height: 15px;
+    }
     .btn-nav-login {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 7px;
       font-size: 12.5px;
       font-weight: 800;
       color: #FF5D8F;
       text-decoration: none;
-      padding: 8px 14px;
+      padding: 0 16px;
+      height: 38px;
       border-radius: 99px;
       border: 2px solid #FFCCD5;
       background: #FFF;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      line-height: 1;
       transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     .btn-nav-login:hover {
       background: #FFF0F3;
       border-color: #FF5D8F;
+      color: #FF5D8F;
       transform: scale(1.04);
+    }
+    .btn-nav-login .svg-icon {
+      stroke: #FF5D8F !important;
+      fill: none !important;
     }
     @media (max-width: 480px) {
       .theme-chat-modal {
@@ -1516,7 +1549,7 @@
 
       <div class="nav-actions">
         <a href="../login/index.html?theme=tema-c" class="btn-nav-login" title="Masuk / Akun Pelanggan">
-          <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span>Masuk / Akun</span>
         </a>
         <button class="btn-nav-cart" onclick="toggleCartDrawer(true)">
