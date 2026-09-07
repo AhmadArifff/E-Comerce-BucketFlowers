@@ -23,3 +23,11 @@ Thumbs.db
 *.log
 .vscode/
 .idea/
+
+# Turborepo & Build outputs
+.turbo/
+.next/
+dist/
+build/
+coverage/
+

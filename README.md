@@ -2,7 +2,8 @@
 
 > **Aesthetic Chenille Flowers Atelier** — Solusi platform e-commerce dan operasional kerajinan tangan (*handicraft*) buket bunga kawat bulu (*chenille stems*) berstandar Shopify-Grade dengan integrasi Google Maps COD Geofencing, Multi-Theme Design Token Engine, Kalkulator Biaya Bahan Mentah (BOM), In-System Live Web Chat, dan Portal Member Pelanggan.
 
-[![Architecture](https://img.shields.io/badge/Architecture-Unified%20Multi--Theme%20SPA%20%2F%20SSR-E11D48?style=for-the-badge&logo=visualstudiocode)](PRD.md)
+[![Architecture](https://img.shields.io/badge/Architecture-Turborepo%20Monorepo-EF4444?style=for-the-badge&logo=turborepo)](PRD.md)
+[![Turborepo](https://img.shields.io/badge/Workspaces-apps%20%26%20packages-000000?style=for-the-badge&logo=turborepo)](turbo.json)
 [![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL%20%2F%20Prisma-3ECF8E?style=for-the-badge&logo=supabase)](PRD.md)
 [![Design Tokens](https://img.shields.io/badge/Design%20System-CSS%20Custom%20Properties-38BDF8?style=for-the-badge&logo=css3)](PRD.md)
 [![Maps](https://img.shields.io/badge/Maps-Google%20Maps%20Embed%20%26%20Geofencing-EA4335?style=for-the-badge&logo=googlemaps)](PRD.md)
@@ -13,9 +14,11 @@
 
 ## 📑 Daftar Isi
 
+- [🏢 Arsitektur Monorepo (Turborepo)](#-arsitektur-monorepo-turborepo)
 - [✨ Fitur Unggulan Sistem](#-fitur-unggulan-sistem)
 - [📸 Galeri Tangkapan Layar & Verifikasi Tampilan](#-galeri-tangkapan-layar--verifikasi-tampilan)
 - [📁 Struktur Folder & Navigasi Berkas](#-struktur-folder--navigasi-berkas)
+
 - [🎭 Arsitektur Multi-Theme Engine](#-arsitektur-multi-theme-engine)
 - [🗺️ Integrasi Titik Temu COD Google Maps](#️-integrasi-titik-temu-cod-google-maps)
 - [🧵 Bill of Materials (BOM) & Finansial](#-bill-of-materials-bom--finansial)
@@ -23,6 +26,32 @@
 - [🚀 Cara Menjalankan Aplikasi](#-cara-menjalankan-aplikasi)
 - [📄 Spesifikasi Lengkap (PRD)](#-spesifikasi-lengkap-prd)
 - [📜 Lisensi](#-lisensi)
+
+---
+
+## 🏢 Arsitektur Monorepo (Turborepo)
+
+Proyek ini dibangun menggunakan arsitektur **Enterprise Monorepo** berbasis **Turborepo 2.x** dan **npm workspaces**, mengadaptasi standar arsitektur teruji dari proyek referensi [`CrownJobExpiredSupbase`](https://github.com/AhmadArifff/CrownJobExpiredSupbase):
+
+```
+E-Comerce-BucketFlowers/
+├── apps/
+│   ├── web/               # [Frontend] Next.js 15+ (App Router) + Tailwind CSS + Motion
+│   └── api/               # [Backend] Express.js ESM Engine on Vercel Serverless + Prisma ORM
+├── packages/
+│   └── shared/            # [@chenille/shared] Result Pattern, Zod Schemas, DTOs & Constants
+├── desain-tampilan/       # Showcase Prototype Interaktif (Tema A, B, C, Admin, Member Portal, Login)
+├── turbo.json             # Turborepo Pipeline Caching & Task Orchestration
+├── package.json           # Root npm workspaces configuration
+└── .env.example           # Unified environment variables template
+```
+
+### 💡 Keunggulan Arsitektur Monorepo
+1. **End-to-End Type Safety:** Skema validasi Zod dan tipe TypeScript diekspor dari `@chenille/shared` dan dikonsumsi bersama oleh frontend dan backend.
+2. **Result Pattern Standard:** Menggantikan `throw new Error()` dengan objek `Result<T>` (`ok` / `fail`) guna mencegah crash server dan kebocoran stack trace database.
+3. **Pure ESM Compliance:** Backend `apps/api` menggunakan `"type": "module"` murni dengan NodeNext resolution untuk kompatibilitas penuh dengan `better-auth`.
+4. **Supabase Dual-URL Strategy:** `DATABASE_URL` (Port 6543 PgBouncer) untuk serverless pooler + `DIRECT_URL` (Port 5432) untuk Prisma CLI migrations.
+5. **Independent Vercel Deployment:** Frontend (`chenille-flowers-web`) dan backend (`chenille-flowers-api`) dapat di-deploy secara terpisah ke Vercel tanpa konflik symlink.
 
 ---
 
@@ -103,30 +132,37 @@ Dashboard akun pelanggan dengan avatar inisial, stepper 4-tahap pengerjaan buket
 
 ```text
 E-Comerce-BucketFlowers/
-├── PRD.md                           # Dokumen Persyaratan Produk (PRD v2.0)
+├── PRD.md                           # Master Product Requirement Document (PRD v2.1 Monorepo)
 ├── README.md                        # Dokumentasi Utama Repository
-├── .gitignore                       # File Ignored Git
+├── LICENSE                          # Lisensi MIT (2026 Ahmad Arif)
+├── .gitignore                       # File Ignored Git (node_modules, .turbo, dist, .next)
+├── .env.example                     # Template Variabel Lingkungan (Backend & Frontend)
+├── package.json                     # Root Monorepo npm Workspaces
+├── turbo.json                       # Konfigurasi Turborepo Pipeline & Caching
+│
+├── apps/
+│   ├── web/                         # [Frontend] Next.js 15+ App Router, Tailwind, Motion
+│   └── api/                         # [Backend] Express.js ESM, Better Auth, Prisma ORM
+│
+├── packages/
+│   └── shared/                      # [@chenille/shared] Result Pattern, Zod Schemas, DTOs
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── src/
+│           ├── result.ts            # Result<T> pattern class
+│           ├── types/index.ts       # Shared TypeScript types
+│           └── constants/index.ts   # Shared themes & geofencing constants
+│
 ├── docs/
 │   └── screenshots/                 # Tangkapan Layar Verifikasi E2E
 │
 └── desain-tampilan/                 # Prototipe Antarmuka Lengkap
-    ├── login/
-    │   └── index.html               # Halaman Login & Register Multi-Tema Dinamis
-    │
-    ├── admin-dashboard/
-    │   └── index.html               # Dashboard Operasional Admin v2.6
-    │
-    ├── customer-portal/
-    │   └── index.html               # Portal Pelanggan & Tracking Dual-Skenario
-    │
-    ├── tema-a-korean-pastel/
-    │   └── index.html               # Etalase Toko Tema A (Korean Pastel)
-    │
-    ├── tema-b-modern-romantic/
-    │   └── index.html               # Etalase Toko Tema B (Modern Romantic)
-    │
-    └── tema-c-playful-kawaii/
-        └── index.html               # Etalase Toko Tema C (Playful Kawaii)
+    ├── login/index.html             # Halaman Login & Register Multi-Tema Dinamis
+    ├── admin-dashboard/index.html   # Dashboard Operasional Admin v2.6
+    ├── customer-portal/index.html   # Portal Pelanggan & Tracking Dual-Skenario
+    ├── tema-a-korean-pastel/        # Etalase Toko Tema A (Korean Pastel)
+    ├── tema-b-modern-romantic/      # Etalase Toko Tema B (Modern Romantic)
+    └── tema-c-playful-kawaii/       # Etalase Toko Tema C (Playful Kawaii)
 ```
 
 ---
@@ -202,23 +238,32 @@ Pelanggan / Admin Input
 
 ## 🚀 Cara Menjalankan Aplikasi
 
-Aplikasi dapat langsung dijalankan tanpa dependensi build kompleks:
-
-### Opsi 1: Menggunakan Browser Langsung
-Klik dua kali berkas HTML berikut di browser (Chrome / Edge / Safari):
-- `desain-tampilan/login/index.html` (Untuk simulasi login)
-- `desain-tampilan/admin-dashboard/index.html` (Untuk simulasi admin)
-- `desain-tampilan/customer-portal/index.html?mode=member` (Untuk simulasi member)
-- `desain-tampilan/tema-a-korean-pastel/index.html` (Untuk etalase)
-
-### Opsi 2: Menggunakan Local Server (Python)
+### Opsi 1: Workflow Monorepo (Turborepo + npm Workspaces)
 ```bash
-# Di dalam folder root E-Comerce-BucketFlowers:
-python -m http.server 8080
+# 1. Install seluruh dependensi workspaces (apps/* & packages/*)
+npm install
 
-# Buka di browser:
-# http://localhost:8080/desain-tampilan/admin-dashboard/index.html
-# http://localhost:8080/desain-tampilan/login/index.html
+# 2. Jalankan semua apps secara simultan dengan caching Turborepo
+npm run dev
+# atau: npx turbo run dev
+
+# 3. Build semua package dan apps untuk produksi
+npm run build
+# atau: npx turbo run build
+```
+
+### Opsi 2: Preview Cepat Prototipe Showcase (Tanpa Build)
+Klik dua kali berkas HTML berikut di browser (Chrome / Edge / Safari) atau gunakan local server:
+- `desain-tampilan/index.html` (Hub Navigasi Semua Tampilan)
+- `desain-tampilan/login/index.html` (Simulasi Login Multi-Tema)
+- `desain-tampilan/admin-dashboard/index.html` (Simulasi Admin Panel v2.6)
+- `desain-tampilan/customer-portal/index.html?mode=member` (Simulasi Portal Member)
+- `desain-tampilan/tema-a-korean-pastel/index.html` (Etalase Tema Korean Pastel)
+
+```bash
+# Alternatif menggunakan Python HTTP server:
+python -m http.server 8080
+# Buka http://localhost:8080/desain-tampilan/index.html
 ```
 
 ---

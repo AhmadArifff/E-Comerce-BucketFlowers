@@ -1,13 +1,13 @@
 # PRD: E-Commerce & Interactive Multi-Theme Catalog Buket Bunga Kawat Bulu
 
 **Nama Produk:** E-Commerce & Interactive Multi-Theme Catalog Buket Bunga Kawat Bulu (*Aesthetic Chenille Flowers Atelier*)  
-**Arsitektur:** Unified Fullstack Web App (Next.js / Nuxt 3) + Vercel Serverless + Supabase PostgreSQL  
+**Arsitektur:** Enterprise Turborepo Monorepo (`apps/web` + `apps/api` + `packages/shared`) + Vercel Deployment + Supabase PostgreSQL  
 **Standar Operasional:** Shopify-Grade Operations, Google Maps Geofencing, Multi-Theme Engine & Real-Time Logistics  
-**Role / Penulis:** Senior Product Manager & Tech Critic Reviewer  
+**Role / Penulis:** Senior Product Manager, Lead Architect & Tech Critic Reviewer  
 **Tanggal Rilis:** 2026-09-07  
-**Versi:** v2.0 (Multi-Theme Engine, Google Maps COD Hub, BOM Costing, In-System Web Chat, & Customer Member Hub Edition)  
+**Versi:** v2.1 (Turborepo Monorepo Architecture, Shared Packages, ESM Backend Engine, & Battle-Tested CrownJobExpiredSupbase Best Practices)  
 **Status:** Approved for Full Implementation & Git Release  
-**Tech Stack Baseline:** Next.js (App Router) / Nuxt 3 (SSR + Nitro Server), Vanilla CSS Custom Properties (Design Tokens), Supabase PostgreSQL, Prisma ORM (Atomic Inventory Locking), Better Auth (RBAC + Session Rotation), Midtrans Snap SDK (QRIS Dynamic Prioritized), Biteship Logistics API, Google Maps Embed API & URL Schemes, ExcelJS (Financial Streaming Export).
+**Tech Stack Baseline:** Turborepo 2.x, Next.js 15+ (App Router), Express.js (ESM Module on Vercel Serverless), Prisma ORM (Supabase PostgreSQL with PgBouncer Connection Pooling), Better Auth (RBAC & Session Rotation), Tailwind CSS + Design Tokens, Midtrans Snap SDK, Biteship Logistics API, Google Maps Embed & URL Schemes, Result Pattern (`@chenille/shared`), Pino Structured Logging.
 
 ---
 
@@ -22,6 +22,7 @@ Berbeda dengan e-commerce konvensional, bisnis buket kawat bulu memiliki karakte
 4. **Dual-Scenario Pelacakan Pesanan:** Memfasilitasi pembeli cepat tanpa login (*Guest Tracking via No. HP*) serta pembeli loyal pencari rasa aman (*Registered Member Hub* dengan histori, poin reward, dan live 4-step stepper).
 5. **In-System Live Web Chat (Anti-Direct-WA Trap):** Mengarahkan obrolan langsung di dalam sistem terlebih dahulu dengan asisten otomatis, baru diekskalasikan ke WhatsApp jika diperlukan konsultasi buket kustom.
 6. **Dynamic Plug-and-Play Multi-Theme Engine:** Kemampuan berganti tema estetika secara instan antara **Tema A (Korean Pastel)**, **Tema B (Modern Romantic)**, dan **Tema C (Playful Kawaii)** tanpa mengganggu modul bisnis inti (cart, checkout, tracking, inventory).
+7. **Enterprise Monorepo Architecture (Turborepo):** Memisahkan modul frontend storefront/admin (`apps/web`), backend API engine (`apps/api`), dan kontrak validasi/tipe data (`packages/shared`) guna menjamin skalabilitas, *type safety* end-to-end, dan kemudahan deployment independen di Vercel.
 
 ---
 
@@ -30,7 +31,7 @@ Berbeda dengan e-commerce konvensional, bisnis buket kawat bulu memiliki karakte
 ```text
 E-COMMERCE CHENILLE FLOWERS SITEMAP
 │
-├── 🛒 STOREFRONT & CUSTOMER PORTAL
+├── 🛒 STOREFRONT & CUSTOMER PORTAL (apps/web)
 │   ├── Halaman Etalase Multi-Tema (Tema A, Tema B, Tema C)
 │   │   ├── Top Announcement Bar (Promo & Info Kuota Wisuda)
 │   │   ├── Sticky Navbar (Brand, Menu, Search, Link Portal Member, Cart Drawer)
@@ -40,7 +41,7 @@ E-COMMERCE CHENILLE FLOWERS SITEMAP
 │   │   ├── Floating In-System Web Chat CS (Konsultasi buket di web + Eskalasi WA)
 │   │   └── Cart Drawer (Ringkasan belanja, opsi COD vs Ekspedisi, Checkout)
 │   │
-│   ├── Portal Pelanggan & Pelacakan (/customer-portal)
+│   ├── Portal Pelanggan & Pelacakan (/portal)
 │   │   ├── Skenario 1: Guest Tracking (Input No. WhatsApp / Invoice -> Lacak Live)
 │   │   └── Skenario 2: Registered Member Dashboard ("Admin Pelanggan")
 │   │       ├── Header Profile Avatar (Inisial 'SA' / Emoji Kustom)
@@ -56,7 +57,7 @@ E-COMMERCE CHENILLE FLOWERS SITEMAP
 │       ├── Theme Selector Pills (Ubah suasana tema langsung di halaman login)
 │       └── 1-Click Fast Login Demo (Member Sarah Amalia & Super Admin Rania Azzahra)
 │
-└── 🛠️ ADMIN OPERATIONS DASHBOARD (/admin-dashboard)
+└── 🛠️ ADMIN OPERATIONS DASHBOARD (apps/web & apps/api)
     ├── 1. Dashboard & Evaluasi Bisnis (KPI Omzet, Laba Bersih, Slot PO, Rating)
     ├── 2. Grafik Komparasi Finansial (Line Chart SVG: Omzet vs HPP vs Laba Bersih)
     ├── 3. Bill of Materials (BOM) & Biaya Bahan Baku (HPP Kawat Bulu, Cellophane, Pita)
@@ -75,85 +76,343 @@ E-COMMERCE CHENILLE FLOWERS SITEMAP
 
 ---
 
-## 3. Spesifikasi Fitur Unggulan (Detailed Specifications)
+## 3. Arsitektur Monorepo & Workspace Blueprint (Turborepo + npm Workspaces)
 
-### 3.1 Plug-and-Play Multi-Theme Engine
-Sistem mendukung perpindahan suasana visual toko secara instan melalui variabel CSS Token tanpa menyentuh struktur logika aplikasi:
+> **KEPUTUSAN ARSITEKTURAL UTAMA:** Proyek ini mengadopsi struktur **Turborepo Monorepo** yang terinspirasi dari arsitektur teruji pada proyek reference `CrownJobExpiredSupbase`. Pendekatan ini memisahkan layer presentasi, layer backend business-logic, dan layer kontrak data secara modular dan terisolasi.
+
+```
+E-Comerce-BucketFlowers/
+├── README.md                            # Dokumentasi teknis & instalasi monorepo
+├── LICENSE                              # Lisensi MIT (2026 Ahmad Arif)
+├── PRD.md                               # Dokumen Spesifikasi Produk & Arsitektur (Master PRD)
+├── .gitignore                           # Git ignore terpadu untuk node_modules, .turbo, .next, dist
+├── .env.example                         # Template environment variables (Backend API & Frontend Web)
+├── package.json                         # Root package.json (npm workspaces & turbo scripts)
+├── turbo.json                           # Konfigurasi caching, task pipeline, dan dependencies
+│
+├── apps/
+│   ├── web/                             # [Frontend] Next.js 15+ (App Router) + Tailwind CSS + Motion
+│   │   ├── package.json                 # Dependensi: @chenille/shared, next, react, motion, lucide-react
+│   │   ├── next.config.ts               # Next.js config (transpilePackages: ["@chenille/shared"])
+│   │   ├── tailwind.config.js           # Konfigurasi Tailwind & CSS Custom Properties
+│   │   ├── tsconfig.json                # TypeScript config (paths & project references)
+│   │   ├── public/                      # Static assets, logo atelier, favicon
+│   │   └── src/
+│   │       ├── app/                     # Next.js App Router
+│   │       │   ├── layout.tsx           # Root layout dengan Font Injection
+│   │       │   ├── page.tsx             # Storefront Multi-Tema (Tema A, B, C switcher)
+│   │       │   ├── login/page.tsx       # Halaman Login Multi-Tema
+│   │       │   ├── portal/page.tsx      # Customer Member Hub & Tracking Portal
+│   │       │   └── admin/page.tsx       # Admin Operations Dashboard
+│   │       ├── components/              # Modular Reusable Components
+│   │       │   ├── storefront/          # Navbar, Hero, ProductCard, CartDrawer, LiveChatModal
+│   │       │   ├── portal/              # GuestTracker, MemberHeader, OrderStepper, PointsCard
+│   │       │   ├── admin/               # KPIWidgets, FinancialChart, BOMCalculator, CODGoogleMapsModal
+│   │       │   └── shared/              # Toast, ModalOverlay, AvatarRound, Buttons
+│   │       ├── lib/
+│   │       │   ├── api-client.ts        # Axios/Fetch wrapper terintegrasi Result Pattern
+│   │       │   ├── auth-client.ts       # Better Auth Client session hooks
+│   │       │   └── theme-engine.ts      # Logika inject data-theme & CSS variables
+│   │       └── stores/
+│   │           ├── useCartStore.ts      # State cart, kupon diskon, dan kalkulasi COD
+│   │           ├── useThemeStore.ts     # State tema aktif (Tema A/B/C) tersinkron
+│   │           └── useChatStore.ts      # State obrolan live web chat & histori
+│   │
+│   └── api/                             # [Backend] Express.js Engine (Vercel Serverless / Node ESM)
+│       ├── package.json                 # "type": "module", Prisma, Better Auth, Express, Zod, Pino
+│       ├── tsconfig.json                # TypeScript ESM ("module": "NodeNext", "moduleResolution": "NodeNext")
+│       ├── vercel.json                  # Vercel Serverless Function routing config
+│       ├── api/
+│       │   └── index.ts                 # Serverless Entry Point untuk deployment Vercel
+│       ├── prisma/
+│       │   ├── schema.prisma            # PostgreSQL Database Schema (Supabase)
+│       │   └── migrations/              # Riwayat migrasi Prisma
+│       └── src/
+│           ├── app.ts                   # Express application setup & middleware registration
+│           ├── server.ts                # Local development listener (port 4000)
+│           ├── config/
+│           │   ├── env.ts               # Validasi Zod untuk Environment Variables
+│           │   ├── database.ts          # PrismaClient singleton dengan error handling
+│           │   └── cors.ts              # CORS allowlist (Frontend Vercel Domain & Localhost)
+│           ├── routes/
+│           │   ├── index.ts             # Route aggregator (/api/v1/*)
+│           │   ├── auth.routes.ts       # Autentikasi Better Auth (/api/v1/auth/*)
+│           │   ├── products.routes.ts   # Katalog produk & analitik klik
+│           │   ├── bom.routes.ts        # Bill of Materials & HPP calculator
+│           │   ├── orders.routes.ts     # Transaksi, pelacakan pesanan, & status stepper
+│           │   ├── cod.routes.ts        # Titik temu COD Google Maps & kalkulasi radius
+│           │   ├── chat.routes.ts       # Live web chat internal & eskalasi WhatsApp
+│           │   ├── payment.routes.ts    # Midtrans Snap webhook & verifikasi QRIS
+│           │   └── logistics.routes.ts  # Biteship courier dispatch & resi webhook
+│           ├── controllers/             # Handler request/response per domain
+│           ├── services/                # Business logic murni yang mengembalikan Result<T>
+│           ├── middlewares/
+│           │   ├── auth.middleware.ts   # Guard otentikasi role SUPER_ADMIN vs CUSTOMER_MEMBER
+│           │   ├── error.middleware.ts  # Centralized error handler dengan logging Pino
+│           │   └── validate.middleware.ts # Validasi Zod schema dari @chenille/shared
+│           └── lib/
+│               ├── logger.ts            # Pino JSON structured logger
+│               └── result.ts            # Result Pattern helper (self-contained ESM)
+│
+├── packages/
+│   └── shared/                          # [@chenille/shared] Kontrak Data & Shared Utilities
+│       ├── package.json                 # Package metadata & build scripts
+│       ├── tsconfig.json                # TypeScript compiler config (declaration: true, outDir: dist)
+│       └── src/
+│           ├── index.ts                 # Main bundle export
+│           ├── result.ts                # Result<T> pattern class wrapper
+│           ├── types/                   # TypeScript Interfaces & Enums
+│           │   ├── product.types.ts     # Tipe data produk, kategori, & varian
+│           │   ├── bom.types.ts         # Tipe data Bill of Materials & komponen bahan
+│           │   ├── order.types.ts       # Tipe data invoice, fulfillment, & order status
+│           │   ├── cod.types.ts         # Tipe data titik temu COD Google Maps
+│           │   ├── chat.types.ts        # Tipe data sesi obrolan live chat
+│           │   ├── auth.types.ts        # Tipe data User, Role, & Session Token
+│           │   └── theme.types.ts       # Definisi ThemeKey (Tema A, B, C) & Token Warna
+│           ├── schemas/                 # Zod Validation Schemas
+│           │   ├── product.schema.ts    # Validasi input produk baru & kuota PO
+│           │   ├── order.schema.ts      # Validasi checkout (Guest vs Member)
+│           │   ├── cod.schema.ts        # Validasi koordinat & URL link Google Maps
+│           │   └── chat.schema.ts       # Validasi pesan teks & bot prompt
+│           └── constants/               # Nilai Konstanta Bisnis
+│               ├── geofencing.ts        # RADIUS_MAX_FREE_SHIPPING_KM = 5.0
+│               ├── themes.ts            # Definisi palette CSS tokens & font pairings
+│               └── limits.ts            # Batas kuota PO harian & rate limiting
+│
+├── desain-tampilan/                     # Prototype Showcase & Interactive HTML Demonstrators
+│   ├── index.html                       # Hub Navigasi 6 Desain Interaktif
+│   ├── tema-a-korean-pastel/index.html  # Demo Etalase Tema A
+│   ├── tema-b-modern-romantic/index.html# Demo Etalase Tema B
+│   ├── tema-c-playful-kawaii/index.html # Demo Etalase Tema C
+│   ├── admin-dashboard/index.html       # Demo Admin Panel v2.6 (COD Maps, BOM, Charts)
+│   ├── customer-portal/index.html       # Demo Portal Pelanggan (Guest & Member)
+│   └── login/index.html                 # Demo Login & Register Multi-Tema
+│
+└── docs/                                # Bukti Verifikasi & Tangkapan Layar
+    └── screenshots/                     # 14 Tangkapan Layar E2E Playwright Hasil Uji
+```
+
+---
+
+## 4. Pembelajaran Kritis dari Project `CrownJobExpiredSupbase` (Battle-Tested Lessons & Mitigations)
+
+Berdasarkan investigasi menyeluruh pada arsitektur reference `CrownJobExpiredSupbase`, berikut adalah kumpulan solusi nyata atas kendala deployment dan monorepo tooling yang wajib diterapkan pada proyek ini:
+
+### 4.1 Mitigasi Vercel `@vercel/node` Monorepo Symlink Trace Bug (500 Module Not Found)
+* **Masalah Lapangan:** Vercel menggunakan utility `@vercel/nft` (Node File Trace) untuk membungkus serverless function pada `apps/api`. Saat function meng-import package internal `@chenille/shared` via symlink npm workspaces, tracing Vercel kerap gagal mencari file di luar root folder `apps/api`, sehingga menghasilkan runtime error `Cannot find module '@chenille/shared'`.
+* **Solusi Teruji:**
+  1. `packages/shared` dikompilasi secara deterministik ke direktori `dist/` (`tsc -b`) sebelum proses build aplikasi dimulai (`dependsOn: ["^build"]` di `turbo.json`).
+  2. File utility inti seperti `Result<T>` disediakan pula secara mandiri (*self-contained copy*) di `apps/api/src/lib/result.ts` agar backend API tidak lumpuh total saat symlink environment serverless mengalami de-sync.
+  3. Pada dashboard Vercel untuk `apps/api`, opsi **"Include source files outside of the Root Directory"** wajib diset ke **ON (Checked)**.
+
+### 4.2 Standardisasi Pure ESM Module (`"type": "module"`)
+* **Masalah Lapangan:** Library modern seperti `better-auth` dirilis murni sebagai ECMAScript Module (`.mjs` ESM-only). Jika backend `apps/api` menggunakan format CommonJS lama (`require()`), Node.js akan melempar crash `ERR_REQUIRE_ESM`.
+* **Solusi Teruji:**
+  1. `package.json` pada `apps/api` dan `packages/shared` secara eksplisit mendefinisikan `"type": "module"`.
+  2. `tsconfig.json` backend dikonfigurasi dengan `"module": "NodeNext"` dan `"moduleResolution": "NodeNext"`.
+  3. Seluruh import internal lokal wajib menyertakan ekstensi `.js` (contoh: `import { prisma } from "./config/database.js"`).
+
+### 4.3 Dual-URL Supabase PostgreSQL (Connection Pooling vs Direct Migration)
+* **Masalah Lapangan:** Serverless function Next.js dan Express menciptakan koneksi baru secara masif pada lonjakan traffic, yang dengan cepat menyebabkan PostgreSQL crash karena kehabisan slot koneksi (*Connection Pool Exhaustion*). Sebaliknya, tool migrasi Prisma (`prisma migrate`) tidak bisa berjalan di atas PgBouncer dalam mode *transaction pooling*.
+* **Solusi Teruji:**
+  Konfigurasi Prisma wajib menerapkan arsitektur Dual-URL pada `schema.prisma`:
+  ```prisma
+  datasource db {
+    provider  = "postgresql"
+    url       = env("DATABASE_URL") // Port 6543 (PgBouncer Connection Pooling + limit=1)
+    directUrl = env("DIRECT_URL")   // Port 5432 (Direct connection untuk migrasi skema)
+  }
+  ```
+
+### 4.4 Result Pattern untuk Error Handling Tanpa Try-Catch Leak
+* **Prinsip Desain:** Mengeliminasi penggunaan `throw new Error()` yang tidak terkontrol pada business logic. Seluruh service wajib mengembalikan objek `Result<T>`:
+  ```typescript
+  export class Result<T> {
+    public readonly isSuccess: boolean;
+    public readonly isFailure: boolean;
+    public readonly error: string | null;
+    public readonly errorCode?: string;
+    private readonly _value?: T;
+    // ok() & fail() factory constructors
+  }
+  ```
+  Ini mencegah tereksposnya stack trace database/server ke pengguna dan memastikan response HTTP selalu memiliki struktur yang konsisten.
+
+---
+
+## 5. Konfigurasi Root Monorepo & Task Pipeline
+
+### 5.1 Konfigurasi Root `package.json`
+
+```json
+{
+  "name": "e-commerce-bucket-flowers",
+  "private": true,
+  "version": "2.1.0",
+  "packageManager": "npm@10.8.2",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:generate": "turbo run db:generate",
+    "db:push": "turbo run db:push"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+```
+
+### 5.2 Konfigurasi Turborepo Pipeline (`turbo.json`)
+
+```json
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "DIRECT_URL",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
+    "JWT_SECRET",
+    "MIDTRANS_SERVER_KEY",
+    "MIDTRANS_CLIENT_KEY",
+    "BITESHIP_API_KEY",
+    "NEXT_PUBLIC_API_URL",
+    "NEXT_PUBLIC_MIDTRANS_CLIENT_KEY"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "type-check": {
+      "dependsOn": ["^type-check"]
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:push": {
+      "cache": false
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}
+```
+
+---
+
+## 6. Architectural Decision Records (ADR) Monorepo
+
+| # | Keputusan Arsitektural | Opsi Terpilih | Alasan & Rasional |
+|---|------------------------|---------------|-------------------|
+| **ADR-01** | **Monorepo Tooling Engine** | **Turborepo 2.x + npm Workspaces** | Native Vercel integration, zero-config remote caching, execution parallelisasi super cepat, dan dependensi terorganisir rapi. |
+| **ADR-02** | **Pemisahan Frontend & Backend** | **`apps/web` (Next.js) & `apps/api` (Express ESM)** | Frontend fokus pada UI render, CSS tokens, & dynamic layout. Backend fokus pada atomic lock inventory, Midtrans webhook, dan BOM calculation. |
+| **ADR-03** | **Shared Contract Layer** | **`packages/shared`** | Mencegah redundansi skema validasi Zod dan tipe TypeScript antara frontend form dan backend payload request. |
+| **ADR-04** | **Format Modul Backend** | **Pure ECMAScript Module (ESM)** | Menjamin kompatibilitas 100% dengan `better-auth` dan library modern tanpa perlu polyfill Babel/Webpack CommonJS. |
+| **ADR-05** | **Database Connection Strategy** | **Supabase PgBouncer Pooler + Direct URL** | PgBouncer port 6543 mencegah connection limit leak pada serverless, sementara port 5432 menjaga kelancaran migrasi Prisma. |
+| **ADR-06** | **Pola Penanganan Error** | **Result Pattern (`Result<T>`)** | Standarisasi respons tanpa overhead crash/exceptions, memudahkan frontend menampilkan pesan kesalahan ramah pengguna. |
+| **ADR-07** | **In-System Chat Architecture** | **Internal Web Chat + Escalation Token** | Mengatasi masalah pembeli yang langsung lari ke WA tanpa jejak transaksi, sembari tetap menyediakan fallback konsultasi via WhatsApp. |
+
+---
+
+## 7. Spesifikasi Fitur Unggulan (Detailed Specifications)
+
+### 7.1 Plug-and-Play Multi-Theme Engine & Shared Tokens
+Sistem mendukung perpindahan suasana visual toko secara instan melalui variabel CSS Custom Properties tanpa menyentuh struktur logika aplikasi. Definisi token disimpan di `@chenille/shared/constants/themes.ts`:
 * **Tema A: Korean Pastel Atelier**
   - *Palette:* Soft Rose `#E86A82`, Dusty Blush `#FFF0F3`, Cream `#FFF9F7`, Dark Plum `#38252B`.
-  - *Typography:* Outfit & Plus Jakarta Sans.
+  - *Typography:* Cormorant Garamond & Plus Jakarta Sans.
   - *Vibe:* Elegan, lembut, minimalis butik bunga Seoul.
 * **Tema B: Modern Romantic**
   - *Palette:* Velvet Wine `#722F37`, Linen Ivory `#F3ECE2`, Antique Gold `#C5A059`, Dark Burgundy `#2B181E`.
-  - *Typography:* Playfair Display & Plus Jakarta Sans.
+  - *Typography:* Bodoni Moda & Inter.
   - *Vibe:* Mewah, dramatis, editorial Eropa untuk hadiah anniversary & lamaran.
 * **Tema C: Playful Kawaii & Pastel Pop**
   - *Palette:* Coral Pop `#FF6B81`, Warm Butter `#FFF3E0`, Bubblegum Pink `#EC4899`, Slate Navy `#2C3E50`.
-  - *Typography:* Fredoka Rounded & Plus Jakarta Sans.
+  - *Typography:* Nunito Rounded & Outfit.
   - *Vibe:* Ceria, energik, berjiwa muda untuk wisuda sahabat dan kado ulang tahun.
-* **Strategi Penambahan Tema Baru (Tema D, E, dll.):**
-  - Developer cukup mendaftarkan objek tema di `themes.config.js` dan menambahkan atribut `data-theme="tema-d"`.
-  - Seluruh modul inti (keranjang, chat, tracking, login) akan otomatis mewarisi token warna dan tipografi baru secara konsisten.
+* **Strategi Penambahan Tema Baru (Tema D, E, dst.):**
+  - Developer cukup mendaftarkan objek tema baru di `@chenille/shared/constants/themes.ts` dan menambahkan CSS selector `[data-theme="tema-d"]`.
+  - Seluruh modul etalase, portal member, dan login akan otomatis mewarisi warna serta tipografi baru.
 
-### 3.2 In-System Live Web Chat (Anti-Direct-WA Trap)
-* **Problem:** Banyak toko online langsung menaruh tombol `wa.me/..` sehingga percakapan terpental keluar web, pelanggan ragu karena harus simpan nomor, dan sistem kehilangan jejak analitik chat.
-* **Solusi:**
-  - Tombol melayang *"Chat CS Pengrajin"* membuka modal chat internal web.
+### 7.2 In-System Live Web Chat (Anti-Direct-WA Trap)
+* **Problem:** Toko online konvensional menaruh tombol WhatsApp mentah sehingga obrolan terpental keluar website, pengguna harus simpan nomor kontak, dan sistem kehilangan jejak analitik chat.
+* **Solusi Terpadu:**
+  - Tombol melayang *"Chat CS Pengrajin"* membuka modal chat interaktif di browser.
   - Menyediakan *Quick Prompt Chips*: "Tanya Buket Wisuda", "Panduan Pembayaran QRIS", "Titik COD Kampus", "Klaim Garansi Anti Patah".
-  - Bot otomatis memberikan jawaban ramah instan.
-  - Percakapan tersimpan di `localStorage` (`chenille_live_chats`).
-  - Dilengkapi tombol eskalasi resmi: *"Alihkan ke WA Pengrajin"* yang menyertakan rangkuman obrolan dan nomor invoice saat pembeli ingin mengirimkan foto kustom buket.
+  - Bot otomatis memberikan respon cepat 24/7.
+  - Histori obrolan tersimpan di database via endpoint `/api/v1/chat` dan backup `localStorage`.
+  - Tombol eskalasi resmi: *"Alihkan ke WA Pengrajin"* menyertakan token sesi obrolan dan ringkasan konsultasi.
 
-### 3.3 Titik Temu COD Google Maps & Geofencing Atelier
-* **Peta Interaktif Google Maps:** Menggunakan Google Maps Embed interaktif untuk memetakan titik kumpul aman di area kampus dan mall.
+### 7.3 Titik Temu COD Google Maps & Geofencing Atelier
+* **Peta Interaktif Google Maps:** Menggunakan embed resmi Google Maps untuk memetakan titik temu aman di kampus dan pusat perbelanjaan.
 * **Deteksi Otomatis (Auto-Detect Flow):**
-  - Admin dapat menempelkan link Google Maps (`maps.app.goo.gl` atau `google.com/maps`) atau mengetik nama gedung.
-  - Sistem otomatis mengekstrak: **Nama Titik**, **Alamat Lengkap**, **Link Share Google Maps**, dan **Estimasi Jarak (KM)** dari Atelier Pusat (Jl. Margonda Raya No. 108 Depok).
-  - Pratinjau pin live Google Maps tertampil langsung di dalam modal sebelum disimpan.
-* **Preset Populer 1-Klik:** UI Gerbatama, Margo City Mall, Stasiun KRL Pondok Cina, D'Mall Margonda, Gunadarma Kampus D.
-* **Aksi Kartu COD:** Fokus di Peta, Buka di Aplikasi Google Maps (Tab Baru), Salin Link Maps untuk dikirim ke chat, dan Hapus.
+  - Admin dapat menempelkan link Google Maps (`maps.app.goo.gl` atau `google.com/maps`) atau mengetik nama tempat.
+  - Sistem mengekstrak: **Nama Titik**, **Alamat Lengkap**, **Link Share Google Maps**, dan **Estimasi Jarak (KM)** dari Atelier Pusat (Jl. Margonda Raya No. 108 Depok).
+  - Pin peta interaktif tertampil langsung di modal admin sebelum disimpan.
+* **Preset Populer:** Gerbatama UI, Margo City Mall, Stasiun Pondok Cina, D'Mall Margonda, Gunadarma Kampus D.
 * **Geofencing Rule:** Radius maksimum 5.0 KM dari atelier bebas ongkos kirim (Rp 0).
 
-### 3.4 Bill of Materials (BOM) & Kalkulator HPP Kawat Bulu
-* Memecah biaya bahan mentah per buket:
-  - Batang kawat bulu chenille (warna utama, daun, tangkai): Rp 250 / batang.
+### 7.4 Bill of Materials (BOM) & Kalkulator HPP Kawat Bulu
+* Mengurai kalkulasi biaya bahan mentah per buket secara transparan:
+  - Batang kawat bulu chenille: Rp 250 / batang.
   - Boneka mini toga wisuda: Rp 12.000 / pcs.
   - Kertas cellophane motif Korea: Rp 3.500 / lembar.
   - Pita satin premium: Rp 1.500 / meter.
   - Lem tembak & kawat rangka: Rp 1.000 / buket.
   - Lampu LED Fairy Lights (Add-on): Rp 4.500.
-* Sistem menghitung: **Total HPP Bahan Baku**, **Harga Jual Katalog**, **Laba Bersih (Rp)**, dan **Margin Untung Bersih (%)**.
+* Sistem menghitung otomatis: **Total HPP Bahan Baku**, **Harga Jual Katalog**, **Laba Bersih (Rp)**, dan **Margin Untung Bersih (%)**.
 
-### 3.5 Portal Pelanggan Dual-Scenario & Customer Member Hub
-* **Skenario 1 (Guest Checkout):**
+### 7.5 Portal Pelanggan Dual-Scenario & Customer Member Hub
+* **Skenario 1 (Guest Tracking):**
   - Pembeli tidak dipaksa mendaftar akun.
-  - Pelacakan dilakukan via nomor WhatsApp. Jika lupa invoice, sistem otomatis menarik daftar transaksi aktif nomor tersebut.
-* **Skenario 2 (Registered Member / "Admin Pelanggan"):**
+  - Pelacakan dilakukan via nomor WhatsApp / Invoice. Jika lupa resi, sistem otomatis memunculkan transaksi aktif berdasarkan nomor HP terverifikasi OTP.
+* **Skenario 2 (Registered Member Hub / "Admin Pelanggan"):**
   - Header avatar interaktif (`SA`) dengan opsi ganti emoji profil (`🌸`, `🌷`, `🧸`, `👑`, `🎀`).
   - **Embedded Active Order Tracking Stepper:** Menampilkan status pesanan aktif langsung di dashboard:
     1. *Pembayaran Diterima (Lunas via QRIS)*
     2. *Perangkaian Kawat Bulu (Sedang Dirangkai Pengrajin)*
     3. *Quality Control & Foto Buket Selesai*
     4. *Kurir Mengantar / Siap COD*
-  - Saldo Flower Points loyalty untuk diskon pembelian berikutnya.
+  - Saldo Flower Points loyalty untuk ditukarkan dengan kupon diskon.
   - Riwayat lengkap transaksi dan unduh resi digital A6/thermal.
 
-### 3.6 Admin Header Anti-Penyok & Profil Manajemen
-* Header avatar dikunci strictly 1:1 circular (`width: 38px`, `height: 38px`, `aspect-ratio: 1 / 1`, `flex-shrink: 0`).
-* Dropdown profil admin menyediakan:
-  - **Profil Pengrajin & Akun:** Modal edit nama, bio keahlian, nomor kontak resmi.
-  - **Pengaturan Atelier:** Navigasi ke pengaturan toko.
-  - **Ganti Kata Sandi:** Modal validasi kata sandi lama dan baru.
-  - **Keluar / Logout:** Redirect ke halaman login bertema aktif.
+### 7.6 Admin Header Anti-Penyok & Operations Control Center
+* Avatar inisial admin dikunci circular strictly 1:1 (`38px x 38px`, `aspect-ratio: 1/1`, `flex-shrink: 0`).
+* Dropdown profil admin menyediakan: Edit Profil Pengrajin, Pengaturan Atelier, Ganti Sandi, dan Logout aman.
 
 ---
 
-## 4. Skema Database Prisma (PostgreSQL Supabase)
+## 8. Skema Database Prisma (PostgreSQL Supabase)
+
+Skema database tersimpan di `apps/api/prisma/schema.prisma` dan memanfaatkan fitur **Dual URL Connection**:
 
 ```prisma
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -269,17 +528,17 @@ model BillOfMaterial {
 // GOOGLE MAPS COD POINTS & GEOFENCING
 // ------------------------------------------------------
 model CodMeetingPoint {
-  id             String   @id @default(uuid())
-  name           String   // e.g. "Kampus UI Depok (Gerbatama & Rotunda)"
-  full_address   String
-  google_maps_url String  // Link resmi maps.google.com/?q=...
-  embed_query    String?  // Kata kunci pencarian embed iframe
-  distance_km    Decimal  @db.Decimal(4, 1)
-  delivery_notes String?  // "Lobby utama samping Starbucks"
-  is_active      Boolean  @default(true)
-  created_at     DateTime @default(now())
+  id              String   @id @default(uuid())
+  name            String   // e.g. "Kampus UI Depok (Gerbatama & Rotunda)"
+  full_address    String
+  google_maps_url String   // Link resmi maps.google.com/?q=...
+  embed_query     String?  // Kata kunci pencarian embed iframe
+  distance_km     Decimal  @db.Decimal(4, 1)
+  delivery_notes  String?  // "Lobby utama samping Starbucks"
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now())
 
-  orders         Order[]
+  orders          Order[]
 }
 
 // ------------------------------------------------------
@@ -338,17 +597,17 @@ model OrderItem {
 // IN-SYSTEM LIVE WEB CHAT
 // ------------------------------------------------------
 model ChatSession {
-  id             String    @id @default(uuid())
-  user_id        String?
-  user           User?     @relation(fields: [user_id], references: [id])
-  session_token  String    @unique
-  customer_name  String
-  customer_phone String?
-  is_escalated_wa Boolean  @default(false)
-  created_at     DateTime  @default(now())
-  updated_at     DateTime  @updatedAt
+  id              String        @id @default(uuid())
+  user_id         String?
+  user            User?         @relation(fields: [user_id], references: [id])
+  session_token   String        @unique
+  customer_name   String
+  customer_phone  String?
+  is_escalated_wa Boolean       @default(false)
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
 
-  messages       ChatMessage[]
+  messages        ChatMessage[]
 }
 
 model ChatMessage {
@@ -378,22 +637,85 @@ model StoreSetting {
 
 ---
 
-## 5. Non-Functional Requirements & Standar Kualitas (QA P0)
+## 9. Vercel Deployment Strategy & CI/CD Pipeline
 
-1. **Anti-Distortion Geometry:** Semua avatar inisial/gambar wajib mempertahankan aspect ratio 1:1 bulat sempurna pada resolusi layar berapapun (Desktop, Tablet, Mobile) tanpa toleransi distorsi oval.
-2. **Deterministic Layout Flex Stability:** Tidak boleh ada elemen dialog modal yang dirender di luar pembungkus overlay (`.modal-overlay`), guna mencegah kerusakan flow dokumen (*layout rapet*).
-3. **No Direct WA Trap:** Semua akses komunikasi awal pelanggan wajib melalui web chat internal dengan opsi eskalasi manual ke WhatsApp.
-4. **Google Maps Compatibility:** Iframe peta wajib menggunakan embed standar yang dapat dirender instan tanpa ketergantungan API billing berbayar di tahap awal, dengan tombol fallback ke `google.com/maps/search`.
-5. **Zero Data Loss:** Pengaturan tema dan riwayat chat web disinkronkan secara ganda ke `localStorage` dan state database.
-6. **Security & Session RBAC:** Seluruh endpoint `/admin-dashboard` wajib memvalidasi otentikasi peran `SUPER_ADMIN`, dan tombol logout wajib menghapus seluruh token sesi aktif sebelum pengalihan rute.
+Mengadopsi pola deployment multi-project terisolasi seperti yang diterapkan pada `CrownJobExpiredSupbase`:
+
+| Project Aplikasi | Vercel Project Name | Root Directory | Framework Preset | Output Build |
+|------------------|---------------------|----------------|------------------|--------------|
+| **Frontend Web** | `chenille-flowers-web` | `apps/web` | Next.js | `.next` |
+| **Backend API** | `chenille-flowers-api` | `apps/api` | Other / Express | `api/index.js` (Serverless) |
+
+### 9.1 Konfigurasi Dashboard Vercel
+1. **Include Source Files Outside Root Directory:** Wajib diaktifkan (**ON**) pada kedua project agar Vercel dapat meng-akses `packages/shared`.
+2. **Install Command:** Menggunakan root installer: `npm install --prefix=../..` atau `cd ../.. && npm install`.
+3. **Build Command:**
+   - Frontend: `turbo run build --filter=@chenille/web...`
+   - Backend: `turbo run build --filter=@chenille/api...`
 
 ---
 
-## 6. Jadwal Rilis & Roadmap Pengembangan
+## 10. Non-Functional Requirements & Standar Kualitas (QA P0)
 
-* **Fase 1 (Selesai):** Pembuatan 3 Desain Tema Etalase (Korean Pastel, Modern Romantic, Playful Kawaii).
-* **Fase 2 (Selesai):** Admin Operations Dashboard v2.6, 100% SVG Icons, Financial Line Chart, BOM Costing.
-* **Fase 3 (Selesai):** Integrasi Google Maps Titik Temu COD, Auto-Detect Link, dan Geofencing Atelier.
-* **Fase 4 (Selesai):** Portal Member Pelanggan (Avatar Emoji, Active Stepper Tracking, Flower Points).
-* **Fase 5 (Selesai):** Halaman Login & Register Multi-Tema Dinamis dengan 1-Click Fast Login.
-* **Fase 6 (Tahap Selanjutnya):** Migrasi Unified Framework Nuxt 3 / Next.js dengan Prisma Database Supabase, integrasi Midtrans Snap live webhook, dan Biteship live courier dispatch.
+1. **Anti-Distortion Geometry:** Semua avatar inisial/gambar wajib mempertahankan aspect ratio 1:1 bulat sempurna pada resolusi layar berapapun (`aspect-ratio: 1 / 1; flex-shrink: 0;`).
+2. **Deterministic Layout Stability:** Tidak boleh ada elemen modal yang dirender di luar pembungkus overlay (`.modal-overlay`), guna mencegah kerusakan flow layout dokumen.
+3. **Zero Direct WA Trap:** Akses awal konsultasi wajib dialirkan melalui internal live web chat sebelum dieskalasikan ke WhatsApp.
+4. **Resilience & Fault Tolerance:** Apabila integrasi eksternal (Midtrans / Biteship / Google Maps) mengalami gangguan, sistem menyediakan fallback graceful degradation tanpa membuat browser freeze atau server crash.
+5. **Zero Data Loss:** Pengaturan tema dan riwayat chat web disinkronkan secara ganda ke database dan `localStorage`.
+6. **Pure ESM Compliance:** Tidak ada campuran format module CommonJS yang dapat memicu `ERR_REQUIRE_ESM`.
+
+---
+
+## 11. Jadwal Rilis & Roadmap Pengembangan Monorepo
+
+* **Fase 1 (Selesai):** Desain & Verifikasi 6 Antarmuka Interaktif Showcase (Tema A, B, C, Admin Panel, Customer Hub, Login Multi-Tema).
+* **Fase 2 (Selesai):** Perancangan PRD v2.0 (Google Maps COD, Kalkulator HPP BOM, Dual-Scenario Tracking, Web Chat).
+* **Fase 3 (Selesai):** Rilis Berkas Lisensi MIT & Penyiapan Dokumentasi GitHub.
+* **Fase 4 (Aktif - v2.1):** Arsitektur Monorepo Turborepo, Inisialisasi Workspaces (`apps/web`, `apps/api`, `packages/shared`), Penyiapan `turbo.json`, dan Penerapan Best Practices `CrownJobExpiredSupbase`.
+* **Fase 5 (Tahap Selanjutnya):** Migrasi Source Code Aplikasi ke Monorepo Workspaces, Inisialisasi Database Supabase PostgreSQL dengan Prisma Migration, dan Pengujian Integrasi API End-to-End.
+
+---
+
+## 12. Template Environment Variables (`.env.example`)
+
+```env
+# ==============================================================================
+# BACKEND API (apps/api - Local / Vercel Serverless)
+# ==============================================================================
+NODE_ENV="development"
+PORT=4000
+
+# SUPABASE POSTGRESQL (Dual-URL Strategy)
+# DATABASE_URL: Port 6543 dengan PgBouncer Pooling untuk runtime serverless
+DATABASE_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+# DIRECT_URL: Port 5432 koneksi langsung untuk Prisma CLI Migrations
+DIRECT_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+
+# AUTHENTICATION & SECURITY
+BETTER_AUTH_SECRET="chenille-atelier-secret-key-minimum-32-chars-2026"
+BETTER_AUTH_URL="http://localhost:4000"
+JWT_SECRET="chenille-jwt-secret-key-minimum-32-chars-2026"
+
+# CORS
+FRONTEND_URL="http://localhost:3000"
+
+# PAYMENT GATEWAY (MIDTRANS SNAP)
+MIDTRANS_SERVER_KEY="SB-Mid-server-xxxxxxxxxxxxxxxxxxxxxxxx"
+MIDTRANS_CLIENT_KEY="SB-Mid-client-xxxxxxxxxxxxxxxxxxxxxxxx"
+MIDTRANS_IS_PRODUCTION="false"
+
+# LOGISTICS AGGREGATOR (BITESHIP)
+BITESHIP_API_KEY="biteship_test.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# ATELIER GEOLOCATION (TITIK PUSAT DEPOK)
+ATELIER_LATITUDE="-6.3728"
+ATELIER_LONGITUDE="106.8315"
+ATELIER_MAX_COD_RADIUS_KM="5.0"
+
+# ==============================================================================
+# FRONTEND WEB (apps/web - Local / Vercel)
+# ==============================================================================
+NEXT_PUBLIC_API_URL="http://localhost:4000/api/v1"
+NEXT_PUBLIC_MIDTRANS_CLIENT_KEY="SB-Mid-client-xxxxxxxxxxxxxxxxxxxxxxxx"
+NEXT_PUBLIC_DEFAULT_THEME="tema-a"
+```
