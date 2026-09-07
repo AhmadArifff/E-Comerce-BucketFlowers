@@ -31,3 +31,10 @@ dist/
 build/
 coverage/
 
+# Agent skills & configs
+.agents/
+.claude/
+agent/
+skills-lock.json
+
+

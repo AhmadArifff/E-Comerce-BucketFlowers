@@ -5,7 +5,7 @@
 **Standar Operasional:** Shopify-Grade Operations, Google Maps Geofencing, Multi-Theme Engine & Real-Time Logistics  
 **Role / Penulis:** Senior Product Manager, Lead Architect & Tech Critic Reviewer  
 **Tanggal Rilis:** 2026-09-07  
-**Versi:** v2.1 (Turborepo Monorepo Architecture, Shared Packages, ESM Backend Engine, & Battle-Tested CrownJobExpiredSupbase Best Practices)  
+**Versi:** v2.2 (Complete Pre-Development Specification — Checkout Flow, Payment Gateway, Logistics, RBAC, API Contract, Image Storage, Loyalty Points, Search Engine, Notifications & Testing Strategy)  
 **Status:** Approved for Full Implementation & Git Release  
 **Tech Stack Baseline:** Turborepo 2.x, Next.js 15+ (App Router), Express.js (ESM Module on Vercel Serverless), Prisma ORM (Supabase PostgreSQL with PgBouncer Connection Pooling), Better Auth (RBAC & Session Rotation), Tailwind CSS + Design Tokens, Midtrans Snap SDK, Biteship Logistics API, Google Maps Embed & URL Schemes, Result Pattern (`@chenille/shared`), Pino Structured Logging.
 
@@ -521,9 +521,368 @@ Sistem mengadopsi prinsip gerak dinamis *UI/UX Pro Max* untuk menciptakan pengal
 4. **Smooth Stepper Progress Transition:**
    - Pada kartu pelacakan pesanan aktif di portal member, titik indikator dan garis penghubung bertransisi dengan animasi pengisian hijau mulus (*fill bar progress*) dari tahap 1 hingga tahap 4.
 
+
+### 7.12 Spesifikasi Checkout Flow & Cart Logic (Alur Transaksi End-to-End)
+
+Alur checkout dirancang untuk mengakomodasi dua skenario pembeli (Guest & Member) dengan validasi stok real-time dan atomic lock inventory:
+
+1. **Tahap 1 — Cart Review (Cart Drawer di Storefront)**
+   - Pembeli mengklik *"Tambah ke Keranjang"* → item masuk `useCartStore` (Zustand/localStorage).
+   - Cart Drawer menampilkan: daftar produk, qty modifier (+/-), subtotal per item, total keseluruhan.
+   - Validasi stok ringan (soft check) setiap kali drawer dibuka — menampilkan badge *"Stok Menipis: tersisa 3"* jika `stock <= 5`.
+   - Tombol *"Lanjut ke Checkout"* → berpindah ke halaman/modal checkout.
+
+2. **Tahap 2 — Pilih Metode Pengiriman (Fulfillment Selection)**
+   - **Opsi A: COD Titik Temu Kampus/Mall**
+     - Dropdown pilihan titik temu dari `CodMeetingPoint` aktif.
+     - Estimasi jarak otomatis dari atelier pusat (Haversine formula).
+     - Jika radius ≤ 5.0 KM dan `toggle_free_cod_radius = ON` → ongkir Rp 0.
+     - Jika radius > 5.0 KM → tampilkan biaya tambahan atau sarankan ekspedisi.
+   - **Opsi B: Ekspedisi Reguler (Biteship API)**
+     - Input alamat lengkap + kode pos.
+     - Fetch ongkir real-time dari Biteship API → tampilkan 3-5 opsi kurir (JNE REG, J&T Express, SiCepat, AnterAja, GoSend Instant).
+     - Pembeli memilih kurir dan tarif → `shipping_cost` diinject ke order total.
+
+3. **Tahap 3 — Data Pembeli & Kupon**
+   - **Guest Checkout** (`toggle_guest_checkout = ON`):
+     - Field: Nama Lengkap, No. WhatsApp (wajib), Email (opsional), Alamat Pengiriman (jika ekspedisi).
+     - OTP verification via WhatsApp untuk validasi nomor HP.
+   - **Member Checkout** (sudah login):
+     - Data auto-filled dari profil `User` + alamat tersimpan `CustomerAddress`.
+     - Opsi pilih alamat tersimpan atau input alamat baru.
+   - **Kode Kupon**: Input field kupon diskon. Validasi: kode valid, belum expired, kuota belum habis, memenuhi min. pembelian.
+   - **Redeem Flower Points**: Toggle switch untuk menukarkan poin (jika `toggle_flower_points = ON`). Kupon dan poin **tidak bisa di-stack** (pilih salah satu).
+
+4. **Tahap 4 — Atomic Lock Inventory & Create Order**
+   - Saat tombol *"Bayar Sekarang"* diklik:
+     1. Backend menerima request `POST /api/v1/orders`.
+     2. **Atomic Transaction (Prisma `$transaction`)**: Lock stok produk, validasi ketersediaan, decrement `Product.stock`.
+     3. Jika stok habis saat dikunci → return `Result.fail("Stok buket tidak mencukupi")` → frontend menampilkan toast error.
+     4. Jika berhasil → generate `invoice_number` format `INV/YYYYMMDD/XXX` → hitung `total_hpp_cost` dan `net_profit`.
+     5. Cek kuota PO harian jika `toggle_po_limit = ON` dan produk bukan ready stock.
+     6. Buat record `Order` + `OrderItem[]` dalam satu transaksi database.
+
+5. **Tahap 5 — Pembayaran Midtrans Snap (Section 7.13)**
+
+6. **Tahap 6 — Konfirmasi & Notifikasi**
+   - Halaman sukses menampilkan: nomor invoice, ringkasan pesanan, estimasi waktu.
+   - Push notifikasi WhatsApp ke pembeli (jika `toggle_wa_notification = ON`).
+   - Redirect ke halaman tracking portal.
+   - **Timeout Policy**: Jika pembayaran tidak diselesaikan dalam 24 jam → order otomatis dibatalkan (`CANCELLED`) → stok di-restore (increment back).
+
+### 7.13 Spesifikasi Integrasi Payment Gateway Midtrans Snap SDK
+
+Seluruh transaksi pembayaran diproses melalui **Midtrans Snap** (popup overlay) tanpa redirect keluar website:
+
+1. **Arsitektur Flow Pembayaran:**
+   ```
+   [Frontend]                    [Backend API]                [Midtrans Server]
+       │                              │                              │
+       │  POST /api/v1/payment/create │                              │
+       │  { order_id, amount }        │                              │
+       │ ─────────────────────────────>│                              │
+       │                              │  POST /v2/charge (Snap API)  │
+       │                              │ ─────────────────────────────>│
+       │                              │  { token, redirect_url }     │
+       │                              │ <─────────────────────────────│
+       │  { snap_token }              │                              │
+       │ <─────────────────────────────│                              │
+       │                              │                              │
+       │  snap.pay(snap_token)        │                              │
+       │  [Popup Midtrans Muncul]     │                              │
+       │  Pembeli memilih metode      │                              │
+       │  & selesaikan pembayaran     │                              │
+       │                              │                              │
+       │                              │  POST /api/v1/payment/webhook│
+       │                              │ <─────────────────────────────│
+       │                              │  { notification_payload }    │
+       │                              │  Verify signature SHA-512    │
+       │                              │  Update Order.status         │
+       │                              │  Response 200 OK             │
+       │                              │ ─────────────────────────────>│
+   ```
+
+2. **Metode Pembayaran yang Didukung:**
+   | Metode | Kode Midtrans | Batas Waktu | Keterangan |
+   |--------|---------------|:-----------:|------------|
+   | QRIS (Utama) | `gopay`, `shopeepay` | 15 menit | Scan QR di kasir digital |
+   | Transfer Bank VA | `bank_transfer` (BCA, BNI, Mandiri, Permata) | 24 jam | Virtual Account auto-generate |
+   | E-Wallet GoPay | `gopay` | 15 menit | Deeplink ke app GoPay |
+   | E-Wallet ShopeePay | `shopeepay` | 5 menit | Deeplink ke app Shopee |
+
+3. **Webhook Notification Handler (`POST /api/v1/payment/webhook`):**
+   - Validasi **Server Key Signature** (SHA-512 hash dari `order_id + status_code + gross_amount + server_key`).
+   - **Idempotency Guard**: Cek apakah `Order.is_paid` sudah `true` sebelum proses ulang.
+   - Status mapping dari Midtrans ke internal `OrderStepStatus`:
+     - `capture` / `settlement` → Set `is_paid = true`, `paid_at = now()`, status = `PAYMENT_CONFIRMED`.
+     - `pending` → Tetap di status awal (order sudah dibuat tapi belum bayar).
+     - `expire` / `cancel` → Set status = `CANCELLED`, restore stok inventory.
+     - `deny` → Set status = `CANCELLED`, log reason.
+     - `refund` → Buat record refund, update `net_profit`.
+   - Retry mechanism: Midtrans akan retry webhook hingga 5x jika response bukan `200 OK`.
+
+4. **Konfigurasi Sandbox vs Production:**
+   - Kontrol via `MIDTRANS_IS_PRODUCTION` di `.env`.
+   - Sandbox URL: `https://app.sandbox.midtrans.com/snap/snap.js`
+   - Production URL: `https://app.midtrans.com/snap/snap.js`
+
+### 7.14 Spesifikasi Integrasi Logistik Biteship API
+
+Biteship digunakan sebagai aggregator logistik untuk cek ongkir, booking kurir, dan tracking resi otomatis:
+
+1. **Flow Cek Ongkir (Courier Rates):**
+   ```
+   [Frontend Checkout]              [Backend API]              [Biteship API]
+       │                                 │                          │
+       │ POST /api/v1/logistics/rates    │                          │
+       │ { origin_postal, dest_postal,   │                          │
+       │   items: [{ weight, dimension }]│                          │
+       │ }                               │                          │
+       │ ────────────────────────────────>│                          │
+       │                                 │ POST /v1/rates/couriers  │
+       │                                 │ ────────────────────────>│
+       │                                 │ { pricing[] }            │
+       │                                 │ <────────────────────────│
+       │ { couriers: [                   │                          │
+       │   { name: "JNE REG",           │                          │
+       │     price: 12000,              │                          │
+       │     etd: "2-3 hari" },         │                          │
+       │   { name: "SiCepat BEST",      │                          │
+       │     price: 15000,              │                          │
+       │     etd: "1-2 hari" }          │                          │
+       │ ]}                              │                          │
+       │ <────────────────────────────────│                          │
+   ```
+
+2. **Kurir yang Didukung:**
+   | Kurir | Service | Estimasi | Use Case |
+   |-------|---------|:--------:|----------|
+   | JNE | REG / YES | 2-3 / 1 hari | Reguler Jabodetabek & Luar Kota |
+   | J&T Express | EZ | 2-3 hari | Budget-friendly |
+   | SiCepat | BEST / HALU | 1-2 / same day | Cepat & same-day Jabodetabek |
+   | AnterAja | Regular / Same Day | 2-3 / same day | Alternatif reguler |
+   | GoSend | Instant / Same Day | 1-3 jam / 6-8 jam | COD alternatif & urgent delivery |
+
+3. **Booking & Resi Otomatis:**
+   - Setelah order status = `CRAFTING_BOUQUET` selesai, admin klik *"Kirim via Kurir"* di panel → trigger `POST /api/v1/logistics/book`.
+   - Backend memanggil Biteship `POST /v1/orders` → generate AWB (resi).
+   - `Order.shipping_awb` diisi otomatis → status update ke `IN_DELIVERY`.
+
+4. **Webhook Tracking Resi (`POST /api/v1/logistics/webhook`):**
+   - Biteship mengirim update status pengiriman real-time.
+   - Status mapping: `allocated` → `IN_DELIVERY`, `delivered` → `COMPLETED`.
+   - Auto-update `OrderStepStatus` dan kirim notifikasi WA ke pembeli.
+
+5. **Cetak Resi Thermal A6:**
+   - Admin dapat mencetak label pengiriman format thermal A6 (10x15 cm).
+   - Generate PDF via `@react-pdf/renderer` atau HTML-to-PDF library.
+   - Informasi label: barcode AWB, nama pengirim, nama penerima, alamat, berat, kurir.
+
+6. **Fallback Manual (Biteship Down):**
+   - Jika API Biteship tidak merespons (timeout 10 detik), admin dapat input nomor resi manual di panel order.
+   - Tracking status diupdate manual oleh admin pada stepper order.
+
+### 7.15 Spesifikasi Autentikasi, Otorisasi & RBAC Matrix (Better Auth)
+
+Sistem menggunakan **Better Auth** untuk autentikasi berbasis session dengan Role-Based Access Control (RBAC):
+
+1. **Matriks Akses Per Role (RBAC Authorization Matrix):**
+
+   | Endpoint / Fitur | `SUPER_ADMIN` | `FLORIST_STAFF` | `CUSTOMER_MEMBER` | `GUEST` (No Auth) |
+   |-------------------|:-------------:|:---------------:|:------------------:|:-----------------:|
+   | Admin Dashboard (KPI, Grafik) | ✅ Full | ✅ Read-Only | ❌ | ❌ |
+   | Manage Products & BOM | ✅ CRUD | ✅ Read + Edit | ❌ | ❌ |
+   | Manage Orders & Status | ✅ Full | ✅ Update Status | ❌ | ❌ |
+   | Feature Toggles | ✅ Full | ❌ | ❌ | ❌ |
+   | Store Settings & API Keys | ✅ Full | ❌ | ❌ | ❌ |
+   | COD Points Management | ✅ CRUD | ✅ Read | ❌ | ❌ |
+   | CS Web Chat Hub | ✅ Full | ✅ Reply | ❌ | ❌ |
+   | Coupon Management | ✅ CRUD | ✅ Read | ❌ | ❌ |
+   | View Own Orders (Member) | ✅ | ✅ | ✅ | ❌ |
+   | Track Order by Phone/Invoice | ✅ | ✅ | ✅ | ✅ (OTP Verified) |
+   | Checkout & Create Order | ✅ | ✅ | ✅ | ✅ (Guest Checkout) |
+   | Live Web Chat (Customer) | ✅ | ✅ | ✅ | ✅ |
+   | Storefront Browse Products | ✅ | ✅ | ✅ | ✅ |
+   | Member Profile & Points | ✅ | ❌ | ✅ (Own Profile) | ❌ |
+   | Warranty Claim Submission | ✅ | ✅ | ✅ | ✅ (via Phone) |
+
+2. **Session Management (Better Auth Configuration):**
+   - **Session Strategy**: Database-backed sessions (Prisma adapter) dengan cookie `httpOnly`, `secure`, `sameSite: lax`.
+   - **Session Expiry**: 7 hari idle timeout, 30 hari absolute maximum.
+   - **Token Rotation**: Session token dirotasi setiap 24 jam atau setelah perubahan role/password.
+   - **Concurrent Session**: Maksimal 3 sesi aktif per akun. Sesi terlama otomatis di-invalidate saat sesi ke-4 dibuat.
+
+3. **Password & Security Policy:**
+   - Minimum 8 karakter, mengandung huruf dan angka.
+   - Hashing: **bcrypt** (cost factor 12) via Better Auth built-in.
+   - Rate limiting login: Maksimal 5 percobaan gagal per IP dalam 15 menit → cooldown 15 menit, tampilkan pesan *"Terlalu banyak percobaan. Coba lagi dalam 15 menit."*
+   - CSRF protection via Better Auth built-in double-submit cookie.
+
+4. **OTP Verification Flow (Guest Tracking):**
+   - Guest memasukkan No. WhatsApp di portal tracking.
+   - Backend generate OTP 6 digit → simpan hashed di database dengan expiry 5 menit.
+   - Kirim OTP via WhatsApp API gateway.
+   - Guest memasukkan OTP → verifikasi → tampilkan daftar order aktif berdasarkan nomor HP.
+
+### 7.16 Spesifikasi Upload & Manajemen Gambar Produk
+
+1. **Arsitektur Storage:**
+   - **Primary**: Supabase Storage Bucket `product-images` (gratis 1 GB, auto CDN via Supabase).
+   - **Fallback**: Jika kebutuhan melebihi 1 GB, migrasi ke Cloudinary free tier (25 GB) atau Supabase Pro.
+   - **CDN URL Pattern**: `https://[PROJECT_REF].supabase.co/storage/v1/object/public/product-images/[filename]`
+
+2. **Spesifikasi Upload:**
+   - Format yang diterima: `image/jpeg`, `image/png`, `image/webp`.
+   - Maksimal ukuran file: **2 MB** per gambar.
+   - Maksimal gambar per produk: **5 gambar** (1 primary + 4 gallery).
+   - Nama file: Auto-rename ke format `[product_slug]-[timestamp]-[index].webp`.
+
+3. **Image Processing Pipeline:**
+   - Resize otomatis ke 3 ukuran: `thumb` (200x200), `medium` (600x600), `large` (1200x1200).
+   - Kompresi ke format WebP quality 85% untuk performa load.
+   - Generate `blur placeholder` (base64 10x10px) untuk progressive loading.
+
+4. **Admin Panel Upload UX:**
+   - Drag & drop zone atau klik untuk browse file.
+   - Preview thumbnail sebelum upload.
+   - Reorder gambar via drag & drop.
+   - Set gambar primary (ditampilkan di grid katalog).
+   - Tombol hapus per gambar dengan konfirmasi.
+
+### 7.17 Spesifikasi Kupon Diskon & Program Flower Points Loyalty
+
+1. **Mekanisme Kupon Diskon:**
+   - **Tipe Kupon:**
+     - `PERCENT`: Diskon persentase (contoh: 15% off, max potongan Rp 25.000).
+     - `FIXED_AMOUNT`: Diskon nominal tetap (contoh: Rp 10.000 off).
+   - **Validasi Kupon di Checkout:**
+     1. Cek kode kupon ada di database dan `is_active = true`.
+     2. Cek `valid_from <= now() <= valid_until`.
+     3. Cek `usage_count < max_uses` (kuota pemakaian belum habis).
+     4. Cek `subtotal >= min_purchase` (memenuhi minimum pembelian).
+     5. Jika semua valid → kalkulasi diskon, inject ke `Order.discount_amount`.
+   - **Business Rules:**
+     - Satu order hanya bisa memakai **1 kupon ATAU 1 redeem poin** (tidak bisa keduanya).
+     - Kupon khusus member (`member_only = true`) tidak bisa digunakan guest.
+     - Admin membuat kupon di menu *"Pemasaran & Kupon"* di dashboard.
+
+2. **Program Flower Points Loyalty:**
+   - **Mekanisme Pengumpulan Poin:**
+     - Setiap transaksi selesai (`COMPLETED`), member mendapat **1 poin per Rp 10.000** pembelian (dibulatkan ke bawah).
+     - Bonus poin: +10 poin saat pertama kali mendaftar (welcome bonus, sudah ada di `User.flower_points @default(50)`).
+   - **Mekanisme Penukaran Poin:**
+     - **10 poin = Rp 5.000 diskon** (kurs tetap).
+     - Minimum penukaran: 10 poin.
+     - Poin di-redeem saat checkout → `discount_amount` dikalkulasi dari jumlah poin dikali kurs.
+   - **Expiry**: Poin tidak kedaluwarsa (lifetime loyalty).
+   - **Tracking**: Setiap perubahan poin dicatat di tabel `FlowerPointTransaction` untuk audit trail.
+
+### 7.18 Spesifikasi Search & Filter Produk di Storefront
+
+1. **Search (Pencarian Full-Text):**
+   - Input search di navbar melakukan pencarian pada field: `Product.name`, `Product.category`, dan tag/deskripsi.
+   - Implementasi: PostgreSQL `ILIKE` atau `to_tsvector/to_tsquery` untuk full-text search.
+   - Auto-suggest dropdown menampilkan hingga 5 hasil saat mengetik (debounce 300ms).
+   - Pencarian memfilter hanya produk dengan `is_active = true`.
+
+2. **Filter (Penyaringan Multi-Kriteria):**
+   | Filter | Tipe | Nilai |
+   |--------|------|-------|
+   | Kategori | Multi-select checkbox | Wisuda, Romantis, Pastel, Karakter, Mini Pot |
+   | Ketersediaan | Toggle | Semua / Ready Stock Only |
+   | Rentang Harga | Dual range slider | Rp 25.000 — Rp 500.000 |
+   | Promo/Diskon | Toggle | Tampilkan produk diskon saja |
+
+3. **Sort (Pengurutan):**
+   | Opsi Sort | Field Database | Default |
+   |-----------|----------------|:-------:|
+   | Terbaru | `created_at DESC` | ✅ |
+   | Harga Terendah | `price ASC` | |
+   | Harga Tertinggi | `price DESC` | |
+   | Terpopuler | `click_count DESC` | |
+
+4. **Pagination:**
+   - Offset-based pagination (simple, cocok untuk katalog < 1.000 produk).
+   - Default **12 produk per halaman** (grid 3x4 desktop, 2x6 mobile).
+   - URL params: `?page=1&limit=12&category=Wisuda&sort=price_asc&search=buket`.
+
+### 7.19 Spesifikasi Notifikasi WhatsApp & Template Pesan
+
+Notifikasi otomatis dikirim via WhatsApp API gateway (rekomendasi: **Fonnte** — integrasi simpel, harga terjangkau untuk UMKM):
+
+1. **Event Triggers & Template Pesan:**
+
+   | Event | Trigger | Template Pesan |
+   |-------|---------|----------------|
+   | **Order Created** | Setelah payment confirmed | *"🌸 Pesanan #{invoice} berhasil! Buketmu sedang disiapkan pengrajin. Estimasi: {lead_time}. Track: {portal_url}"* |
+   | **Crafting Started** | Admin update ke `CRAFTING_BOUQUET` | *"✂️ Buket #{invoice} sedang dirangkai dengan penuh cinta oleh pengrajin kami! Estimasi selesai: {etd}"* |
+   | **Quality Check** | Admin update ke `QUALITY_CHECK_PASSED` | *"✅ Buketmu sudah selesai & lolos QC! Foto buketmu: {photo_url}. Menunggu pengiriman."* |
+   | **In Delivery** | Status update `IN_DELIVERY` | *"🚚 Buket #{invoice} sedang dalam perjalanan! Resi: {awb}. Track kurir: {tracking_url}"* |
+   | **Completed** | Delivered confirmation | *"🎉 Buket sudah sampai! Semoga momen wisudamu berkesan. Kamu dapat +{points} Flower Points! 💐"* |
+   | **Warranty Submitted** | Klaim garansi diajukan | *"📋 Klaim garansi #{claim_id} diterima. Tim kami akan meninjau dalam 1x24 jam kerja."* |
+   | **Warranty Approved** | Klaim garansi disetujui | *"✅ Klaim disetujui! Buket pengganti baru sedang dirangkai & akan dikirim GRATIS. Resi: {awb}"* |
+
+2. **Konfigurasi API Gateway:**
+   ```env
+   # Tambahkan ke .env.example
+   WA_GATEWAY_API_KEY="fonnte-api-key-xxxxxxxxxxxxxxxx"
+   WA_GATEWAY_URL="https://api.fonnte.com/send"
+   WA_SENDER_DEVICE="081234567890"
+   ```
+
+3. **Retry Policy:**
+   - Jika pengiriman WA gagal (timeout/error), retry hingga **3x** dengan interval 30 detik, 2 menit, 10 menit (exponential backoff).
+   - Jika tetap gagal setelah 3x retry → log warning ke Pino logger, admin mendapat notifikasi di dashboard.
+
 ---
 
-## 8. Skema Database Prisma (PostgreSQL Supabase)
+## 8. Skema Database & Infrastruktur Supabase PostgreSQL
+
+### 8.1 Konfigurasi Database Supabase (Shared Pooler & Connection Details)
+
+Sistem menggunakan database cloud **Supabase PostgreSQL** yang di-host pada region AWS Asia Pacific (Tokyo) dengan arsitektur **Dual-URL Connection Strategy**:
+
+#### 1. Detail Parameter Koneksi
+- **Project Reference ID:** `wpdfxuwhqwvglqoiubfq`
+- **Region:** `ap-northeast-1` (AWS Tokyo, Japan)
+- **Host:** `aws-0-ap-northeast-1.pooler.supabase.com`
+- **Port Shared Pooler (Transaction Mode / PgBouncer):** `6543` (Digunakan untuk runtime API / Serverless connection pooling)
+- **Port Direct Connection (Session Mode):** `5432` (Digunakan untuk Prisma CLI Migrations)
+- **Database Name:** `postgres`
+- **User:** `postgres.wpdfxuwhqwvglqoiubfq`
+- **Database Password:** `HtDqenaSKAmCdQGK`
+- **Supabase Project URL:** `https://wpdfxuwhqwvglqoiubfq.supabase.co`
+
+#### 2. Format Connection Strings
+
+- **Connection String Base (Shared Pooler Template):**
+  ```text
+  postgresql://postgres.wpdfxuwhqwvglqoiubfq:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres
+  ```
+
+- **Runtime Connection String (`DATABASE_URL` — `apps/api` runtime):**
+  ```env
+  DATABASE_URL="postgresql://postgres.wpdfxuwhqwvglqoiubfq:HtDqenaSKAmCdQGK@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+  ```
+  *Rasional:* Port 6543 memanfaatkan PgBouncer Transaction Mode dengan batas koneksi terkontrol (`connection_limit=1`) untuk mencegah terjadinya *connection exhaustion* saat puluhan instance Vercel Serverless Function aktif secara konkuren.
+
+- **Direct Migration String (`DIRECT_URL` — Prisma CLI Migrations):**
+  ```env
+  DIRECT_URL="postgresql://postgres.wpdfxuwhqwvglqoiubfq:HtDqenaSKAmCdQGK@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
+  ```
+  *Rasional:* Port 5432 direct connection (session mode) diwajibkan oleh Prisma CLI (`prisma migrate dev` dan `prisma migrate deploy`) karena operasi DDL migrasi dan skema lock memerlukan session-level advisory locks yang tidak didukung oleh transaction pooler PgBouncer.
+
+#### 3. Supabase Agent Skills Tooling (AI Coding & Automation)
+Framework agen telah dilengkapi dengan official Supabase Agent Skills yang terpasang pada workspace root (`.agents/skills/`):
+- **Command Instalasi:**
+  ```bash
+  npx skills add supabase/agent-skills
+  ```
+- **Skill Terpasang:**
+  1. `supabase`: Best practices produk Supabase (Database, Auth, Storage, Edge Functions, Realtime, Logging, client SDK).
+  2. `supabase-postgres-best-practices`: Aturan baku arsitektur skema PostgreSQL, penulisan migrasi, Row Level Security (RLS) policies, indexing query optimasi, dan pencegahan connection leak.
+
+### 8.2 Skema Prisma ORM (Dual URL Configuration & Models)
 
 Skema database tersimpan di `apps/api/prisma/schema.prisma` dan memanfaatkan fitur **Dual URL Connection**:
 
@@ -808,7 +1167,91 @@ model CustomerFaq {
   is_active  Boolean  @default(true)
   created_at DateTime @default(now())
 }
+
+// ------------------------------------------------------
+// PRODUCT IMAGES & MEDIA GALLERY (Section 7.16)
+// ------------------------------------------------------
+model ProductImage {
+  id           String   @id @default(uuid())
+  product_id   String
+  product      Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  url          String   // Supabase Storage CDN URL
+  thumb_url    String?  // 200x200 thumbnail
+  medium_url   String?  // 600x600 medium
+  alt_text     String?  // SEO alt text
+  blur_hash    String?  // Base64 blur placeholder (10x10px)
+  sort_order   Int      @default(0)
+  is_primary   Boolean  @default(false)
+  created_at   DateTime @default(now())
+}
+
+// ------------------------------------------------------
+// COUPON & DISCOUNT SYSTEM (Section 7.17)
+// ------------------------------------------------------
+enum CouponType {
+  PERCENT
+  FIXED_AMOUNT
+}
+
+model Coupon {
+  id            String     @id @default(uuid())
+  code          String     @unique // e.g. "WISUDA15", "WELCOME10K"
+  type          CouponType @default(PERCENT)
+  value         Decimal    @db.Decimal(10, 2) // 15.00 (%) atau 10000.00 (Rp)
+  max_discount  Decimal?   @db.Decimal(10, 2) // Cap maksimal potongan (untuk PERCENT)
+  min_purchase  Decimal    @default(0) @db.Decimal(10, 2) // Minimum subtotal
+  max_uses      Int        @default(100)  // Kuota pemakaian total
+  usage_count   Int        @default(0)    // Jumlah sudah dipakai
+  member_only   Boolean    @default(false) // Hanya untuk registered member
+  is_active     Boolean    @default(true)
+  valid_from    DateTime   @default(now())
+  valid_until   DateTime
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+
+  orders        Order[]    // Relasi ke order yang memakai kupon ini
+}
+
+// ------------------------------------------------------
+// FLOWER POINTS LOYALTY TRANSACTION LOG (Section 7.17)
+// ------------------------------------------------------
+enum PointTransactionType {
+  EARN       // Dapat poin dari transaksi selesai
+  REDEEM     // Tukar poin jadi diskon
+  BONUS      // Bonus welcome / event
+  EXPIRE     // Poin kedaluwarsa (reserved, saat ini lifetime)
+  ADJUSTMENT // Koreksi manual oleh admin
+}
+
+model FlowerPointTransaction {
+  id         String               @id @default(uuid())
+  user_id    String
+  user       User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  type       PointTransactionType
+  points     Int                  // Positif = tambah, negatif = kurangi
+  balance    Int                  // Saldo poin setelah transaksi ini
+  order_id   String?              // Referensi order (jika EARN/REDEEM)
+  note       String?              // "Pembelian INV/20260907/001" atau "Redeem 20 poin"
+  created_at DateTime             @default(now())
+}
+
+// ------------------------------------------------------
+// OTP VERIFICATION (Section 7.15 - Guest Tracking)
+// ------------------------------------------------------
+model OtpVerification {
+  id           String   @id @default(uuid())
+  phone        String
+  otp_hash     String   // bcrypt hash dari OTP 6 digit
+  attempts     Int      @default(0) // Max 5 attempts
+  is_verified  Boolean  @default(false)
+  expires_at   DateTime // now() + 5 minutes
+  created_at   DateTime @default(now())
+
+  @@index([phone, expires_at])
+}
 ```
+
+> **Catatan Relasi Baru:** Model `Product` perlu ditambahkan field `images ProductImage[]`. Model `User` perlu ditambahkan field `point_transactions FlowerPointTransaction[]`. Model `Order` perlu ditambahkan field `coupon_id String?` dan relasi `coupon Coupon? @relation(fields: [coupon_id], references: [id])`.
 
 ---
 
@@ -846,8 +1289,12 @@ Mengadopsi pola deployment multi-project terisolasi seperti yang diterapkan pada
 * **Fase 1 (Selesai):** Desain & Verifikasi 6 Antarmuka Interaktif Showcase (Tema A, B, C, Admin Panel, Customer Hub, Login Multi-Tema).
 * **Fase 2 (Selesai):** Perancangan PRD v2.0 (Google Maps COD, Kalkulator HPP BOM, Dual-Scenario Tracking, Web Chat).
 * **Fase 3 (Selesai):** Rilis Berkas Lisensi MIT & Penyiapan Dokumentasi GitHub.
-* **Fase 4 (Aktif - v2.1):** Arsitektur Monorepo Turborepo, Inisialisasi Workspaces (`apps/web`, `apps/api`, `packages/shared`), Penyiapan `turbo.json`, dan Penerapan Best Practices `CrownJobExpiredSupbase`.
-* **Fase 5 (Tahap Selanjutnya):** Migrasi Source Code Aplikasi ke Monorepo Workspaces, Inisialisasi Database Supabase PostgreSQL dengan Prisma Migration, dan Pengujian Integrasi API End-to-End.
+* **Fase 4 (Selesai - v2.1):** Arsitektur Monorepo Turborepo, Inisialisasi Workspaces (`apps/web`, `apps/api`, `packages/shared`), Penyiapan `turbo.json`, dan Penerapan Best Practices `CrownJobExpiredSupbase`.
+* **Fase 5 (Selesai - v2.2):** Spesifikasi Pre-Development Lengkap — Checkout Flow, Integrasi Payment Gateway Midtrans, Logistik Biteship, RBAC Authorization Matrix, API Endpoint Contract, Upload & Storage Gambar, Kupon & Loyalty Points, Search & Filter, Notifikasi WhatsApp, dan Testing Strategy.
+* **Fase 6 (Aktif — Development Sprint 1):** Setup monorepo workspace (`apps/web` Next.js 15 + `apps/api` Express ESM), inisialisasi Prisma schema & Supabase database, implementasi `packages/shared` (types, schemas, result pattern), dan autentikasi Better Auth.
+* **Fase 7 (Sprint 2):** Implementasi Core Business — Product CRUD + BOM Calculator + Image Upload, Checkout Flow + Atomic Inventory, Midtrans Payment Integration, dan Customer Portal (Guest Tracking + Member Hub).
+* **Fase 8 (Sprint 3):** Implementasi Operations — Admin Dashboard KPI & Charts, Order Management & Status Stepper, Biteship Logistics Integration, COD Google Maps, Live Web Chat CS, dan Warranty Claims.
+* **Fase 9 (Sprint 4):** Polish & Launch — Multi-Theme Engine Integration, Coupon & Flower Points, WhatsApp Notifications (Fonnte), Search & Filter, Feature Toggles, SEO Optimization, E2E Testing (Playwright), dan Vercel Production Deployment.
 
 ---
 
@@ -860,11 +1307,11 @@ Mengadopsi pola deployment multi-project terisolasi seperti yang diterapkan pada
 NODE_ENV="development"
 PORT=4000
 
-# SUPABASE POSTGRESQL (Dual-URL Strategy)
-# DATABASE_URL: Port 6543 dengan PgBouncer Pooling untuk runtime serverless
-DATABASE_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+# SUPABASE POSTGRESQL (Dual-URL Strategy - Project Ref: wpdfxuwhqwvglqoiubfq | Region: ap-northeast-1)
+# DATABASE_URL: Port 6543 dengan PgBouncer Pooling untuk runtime serverless / API
+DATABASE_URL="postgresql://postgres.wpdfxuwhqwvglqoiubfq:HtDqenaSKAmCdQGK@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
 # DIRECT_URL: Port 5432 koneksi langsung untuk Prisma CLI Migrations
-DIRECT_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+DIRECT_URL="postgresql://postgres.wpdfxuwhqwvglqoiubfq:HtDqenaSKAmCdQGK@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
 
 # AUTHENTICATION & SECURITY
 BETTER_AUTH_SECRET="chenille-atelier-secret-key-minimum-32-chars-2026"
@@ -893,4 +1340,203 @@ ATELIER_MAX_COD_RADIUS_KM="5.0"
 NEXT_PUBLIC_API_URL="http://localhost:4000/api/v1"
 NEXT_PUBLIC_MIDTRANS_CLIENT_KEY="SB-Mid-client-xxxxxxxxxxxxxxxxxxxxxxxx"
 NEXT_PUBLIC_DEFAULT_THEME="tema-a"
+
+# ==============================================================================
+# WHATSAPP NOTIFICATION GATEWAY (Fonnte)
+# ==============================================================================
+WA_GATEWAY_API_KEY="fonnte-api-key-xxxxxxxxxxxxxxxxxxxxxxxx"
+WA_GATEWAY_URL="https://api.fonnte.com/send"
+WA_SENDER_DEVICE="081234567890"
+
+# ==============================================================================
+# IMAGE STORAGE (Supabase Storage)
+# ==============================================================================
+SUPABASE_URL="https://wpdfxuwhqwvglqoiubfq.supabase.co"
+SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxxxxxxxx"
+SUPABASE_STORAGE_BUCKET="product-images"
 ```
+
+---
+
+## 13. Spesifikasi API Endpoint Contract (RESTful API v1)
+
+Seluruh endpoint backend diakses melalui base URL `{API_URL}/api/v1`. Setiap response mengikuti format standar Result Pattern:
+
+```json
+// Success Response
+{
+  "success": true,
+  "data": { ... },
+  "message": "Operation successful"
+}
+
+// Error Response
+{
+  "success": false,
+  "error": "Descriptive error message",
+  "errorCode": "STOCK_INSUFFICIENT"
+}
+```
+
+### 13.1 Authentication Endpoints (`/api/v1/auth`)
+
+| Method | Endpoint | Auth | Description | Request Body | Response |
+|--------|----------|:----:|-------------|-------------|----------|
+| `POST` | `/auth/register` | 🔓 Public | Daftar member baru | `{ name, email, phone, password }` | `{ user, session }` |
+| `POST` | `/auth/login` | 🔓 Public | Login email + password | `{ email, password }` | `{ user, session }` |
+| `POST` | `/auth/logout` | 🔒 Auth | Logout & invalidate session | — | `{ message }` |
+| `GET` | `/auth/me` | 🔒 Auth | Get current user profile | — | `{ user }` |
+| `PATCH` | `/auth/profile` | 🔒 Auth | Update profil & avatar emoji | `{ name?, avatar_emoji? }` | `{ user }` |
+| `PATCH` | `/auth/password` | 🔒 Auth | Ganti password | `{ current_password, new_password }` | `{ message }` |
+
+### 13.2 Product & Catalog Endpoints (`/api/v1/products`)
+
+| Method | Endpoint | Auth | Description | Query/Body | Response |
+|--------|----------|:----:|-------------|-----------|----------|
+| `GET` | `/products` | 🔓 Public | List produk + filter + search + pagination | `?page=1&limit=12&category=Wisuda&sort=price_asc&search=buket` | `{ products[], total, page, totalPages }` |
+| `GET` | `/products/:slug` | 🔓 Public | Detail produk + BOM + images | — | `{ product, bomItems[], images[] }` |
+| `POST` | `/products` | 🔒 Admin | Buat produk baru | `{ name, category, price, stock, ... }` | `{ product }` |
+| `PATCH` | `/products/:id` | 🔒 Admin | Update produk | `{ name?, price?, stock?, ... }` | `{ product }` |
+| `DELETE` | `/products/:id` | 🔒 Admin | Soft delete produk | — | `{ message }` |
+| `POST` | `/products/:id/images` | 🔒 Admin | Upload gambar produk (multipart) | `FormData: file` | `{ image }` |
+| `DELETE` | `/products/:id/images/:imageId` | 🔒 Admin | Hapus gambar produk | — | `{ message }` |
+| `POST` | `/products/:id/click` | 🔓 Public | Increment click count (analytics) | — | `{ click_count }` |
+
+### 13.3 Order & Checkout Endpoints (`/api/v1/orders`)
+
+| Method | Endpoint | Auth | Description | Request Body | Response |
+|--------|----------|:----:|-------------|-------------|----------|
+| `POST` | `/orders` | 🔓 Public* | Create order (guest/member) | `{ items[], fulfillment_type, guest_name?, guest_phone, shipping_address?, cod_point_id?, coupon_code? }` | `{ order, snap_token }` |
+| `GET` | `/orders/:invoice` | 🔒 Auth/OTP | Get order detail by invoice | — | `{ order, items[], tracking }` |
+| `GET` | `/orders/track/:phone` | 🔓 OTP | Track semua order by phone | `?otp=123456` | `{ orders[] }` |
+| `GET` | `/orders/my` | 🔒 Member | List order milik member login | `?page=1&status=COMPLETED` | `{ orders[], total }` |
+| `PATCH` | `/orders/:id/status` | 🔒 Admin | Update status order (stepper) | `{ status: OrderStepStatus }` | `{ order }` |
+| `GET` | `/orders/admin` | 🔒 Admin | List semua order (admin view) | `?page=1&status=PAYMENT_CONFIRMED&date_from&date_to` | `{ orders[], total, summary }` |
+
+### 13.4 Payment Endpoints (`/api/v1/payment`)
+
+| Method | Endpoint | Auth | Description | Request Body | Response |
+|--------|----------|:----:|-------------|-------------|----------|
+| `POST` | `/payment/create` | 🔒 Internal | Create Midtrans transaction | `{ order_id }` | `{ snap_token, redirect_url }` |
+| `POST` | `/payment/webhook` | 🔓 Midtrans | Midtrans notification handler | `{ notification_payload }` | `200 OK` |
+| `GET` | `/payment/:orderId/status` | 🔒 Auth | Check payment status | — | `{ is_paid, method, paid_at }` |
+
+### 13.5 Logistics Endpoints (`/api/v1/logistics`)
+
+| Method | Endpoint | Auth | Description | Request Body | Response |
+|--------|----------|:----:|-------------|-------------|----------|
+| `POST` | `/logistics/rates` | 🔓 Public | Cek ongkir Biteship | `{ origin_postal, dest_postal, weight }` | `{ couriers[] }` |
+| `POST` | `/logistics/book` | 🔒 Admin | Booking kurir & generate AWB | `{ order_id, courier_code, service }` | `{ awb, tracking_url }` |
+| `POST` | `/logistics/webhook` | 🔓 Biteship | Biteship tracking webhook | `{ webhook_payload }` | `200 OK` |
+
+### 13.6 Chat Endpoints (`/api/v1/chat`)
+
+| Method | Endpoint | Auth | Description | Request Body | Response |
+|--------|----------|:----:|-------------|-------------|----------|
+| `POST` | `/chat/session` | 🔓 Public | Start chat session | `{ customer_name, customer_phone? }` | `{ session }` |
+| `POST` | `/chat/message` | 🔓 Public | Send message | `{ session_id, text }` | `{ message, bot_reply? }` |
+| `GET` | `/chat/session/:id` | 🔒 Auth | Get chat history | — | `{ session, messages[] }` |
+| `PATCH` | `/chat/session/:id/escalate` | 🔒 Admin | Escalate to WhatsApp | — | `{ wa_url, escalation_token }` |
+| `GET` | `/chat/admin` | 🔒 Admin | List all chat sessions (CS Hub) | `?status=active&page=1` | `{ sessions[] }` |
+
+### 13.7 COD & Maps Endpoints (`/api/v1/cod-points`)
+
+| Method | Endpoint | Auth | Description | Request Body | Response |
+|--------|----------|:----:|-------------|-------------|----------|
+| `GET` | `/cod-points` | 🔓 Public | List active COD meeting points | — | `{ points[] }` |
+| `POST` | `/cod-points` | 🔒 Admin | Add COD point (auto-detect Maps URL) | `{ name, google_maps_url, delivery_notes? }` | `{ point }` |
+| `PATCH` | `/cod-points/:id` | 🔒 Admin | Update COD point | `{ name?, is_active? }` | `{ point }` |
+| `DELETE` | `/cod-points/:id` | 🔒 Admin | Delete COD point | — | `{ message }` |
+
+### 13.8 Admin Dashboard & Settings Endpoints (`/api/v1/admin`)
+
+| Method | Endpoint | Auth | Description | Response |
+|--------|----------|:----:|-------------|----------|
+| `GET` | `/admin/dashboard` | 🔒 Admin | KPI summary (omzet, laba, slot PO, rating) | `{ kpis, recentOrders[] }` |
+| `GET` | `/admin/financial-chart` | 🔒 Admin | Data grafik finansial (7/30/90 hari) | `{ chartData[] }` |
+| `GET` | `/admin/bom` | 🔒 Admin | BOM raw materials & stock | `{ materials[], totalValue }` |
+| `GET` | `/admin/settings` | 🔒 SuperAdmin | Get store settings | `{ settings }` |
+| `PATCH` | `/admin/settings` | 🔒 SuperAdmin | Update store settings | `{ settings }` |
+| `GET` | `/admin/toggles` | 🔒 Admin | List feature toggles | `{ toggles[] }` |
+| `PATCH` | `/admin/toggles/:key` | 🔒 SuperAdmin | Toggle feature on/off | `{ is_enabled }` |
+
+### 13.9 Coupon & Loyalty Endpoints (`/api/v1/coupons`, `/api/v1/points`)
+
+| Method | Endpoint | Auth | Description | Request Body | Response |
+|--------|----------|:----:|-------------|-------------|----------|
+| `POST` | `/coupons/validate` | 🔓 Public | Validate coupon code at checkout | `{ code, subtotal }` | `{ coupon, discount_amount }` |
+| `GET` | `/coupons` | 🔒 Admin | List all coupons | `?page=1&is_active=true` | `{ coupons[] }` |
+| `POST` | `/coupons` | 🔒 Admin | Create coupon | `{ code, type, value, ... }` | `{ coupon }` |
+| `PATCH` | `/coupons/:id` | 🔒 Admin | Update coupon | `{ is_active?, max_uses? }` | `{ coupon }` |
+| `GET` | `/points/balance` | 🔒 Member | Get flower points balance | — | `{ balance, transactions[] }` |
+| `POST` | `/points/redeem` | 🔒 Member | Redeem points at checkout | `{ points, order_id }` | `{ discount_amount, new_balance }` |
+
+### 13.10 Warranty & Complaint Endpoints (`/api/v1/warranty`)
+
+| Method | Endpoint | Auth | Description | Request Body | Response |
+|--------|----------|:----:|-------------|-------------|----------|
+| `POST` | `/warranty/claim` | 🔓 Public | Submit warranty claim | `{ order_id, phone, issue_category, description, video_proof_url? }` | `{ claim }` |
+| `GET` | `/warranty/claim/:id` | 🔒 Auth/OTP | Get claim detail & status | — | `{ claim, order }` |
+| `PATCH` | `/warranty/claim/:id` | 🔒 Admin | Update claim status | `{ status, admin_notes?, replacement_awb? }` | `{ claim }` |
+| `GET` | `/warranty/admin` | 🔒 Admin | List all claims | `?status=SUBMITTED&page=1` | `{ claims[] }` |
+
+### 13.11 OTP Verification (`/api/v1/otp`)
+
+| Method | Endpoint | Auth | Description | Request Body | Response |
+|--------|----------|:----:|-------------|-------------|----------|
+| `POST` | `/otp/send` | 🔓 Public | Send OTP to WhatsApp | `{ phone }` | `{ message, expires_in }` |
+| `POST` | `/otp/verify` | 🔓 Public | Verify OTP code | `{ phone, otp }` | `{ verified, temp_token }` |
+
+---
+
+## 14. Spesifikasi Testing Strategy & Quality Assurance
+
+Strategi pengujian multi-layer untuk menjamin stabilitas dan keandalan sistem sebelum deployment production:
+
+### 14.1 Unit Tests (Vitest)
+**Target coverage: ≥ 80% pada services layer.**
+
+| Modul | Test Cases | Prioritas |
+|-------|-----------|:---------:|
+| `Result<T>` Pattern | `ok()`, `fail()`, `isSuccess`, `isFailure`, chaining | P0 |
+| BOM Calculator | Kalkulasi HPP per buket, margin untung, edge cases (0 item) | P0 |
+| Geofencing (Haversine) | Kalkulasi jarak, boundary radius 5.0 KM, edge coordinates | P0 |
+| Coupon Validator | Expired, kuota habis, min purchase, member-only, stacking | P0 |
+| Flower Points | Earn calculation, redeem limit, balance tracking | P1 |
+| Invoice Generator | Format `INV/YYYYMMDD/XXX`, uniqueness, timezone WIB | P1 |
+| OTP Service | Hash verification, expiry check, max attempts | P1 |
+| Theme Engine | Token injection, valid theme keys, fallback default | P2 |
+
+**Tooling**: `vitest` + `@vitest/coverage-v8` di `apps/api`.
+
+### 14.2 Integration Tests (Supertest)
+**Target: Seluruh endpoint API memiliki happy path + error path test.**
+
+| Flow | Endpoint(s) | Validasi |
+|------|------------|----------|
+| Auth Flow | `/auth/register` → `/auth/login` → `/auth/me` → `/auth/logout` | Session creation, cookie, role check |
+| Product CRUD | `POST /products` → `GET /products` → `PATCH` → `DELETE` | Zod validation, slug uniqueness |
+| Checkout Flow | `POST /orders` (guest + member) | Atomic lock, stock decrement, invoice format |
+| Payment Webhook | `POST /payment/webhook` | Signature verification, idempotency, status mapping |
+| COD Points | `POST /cod-points` → `GET /cod-points` | Maps URL parsing, distance calculation |
+| Chat Flow | `POST /chat/session` → `POST /chat/message` → escalation | Bot reply, session token, WA escalation |
+
+**Tooling**: `supertest` + `vitest` + Prisma test database (SQLite atau Supabase test project).
+
+### 14.3 End-to-End Tests (Playwright)
+**Target: 5 critical user journeys terotomasi penuh.**
+
+| # | Journey | Steps |
+|---|---------|-------|
+| 1 | **Guest Purchase** | Browse → Add to Cart → Guest Checkout → Midtrans Payment → Track by Phone |
+| 2 | **Member Purchase** | Register → Login → Browse → Add to Cart → Member Checkout → View in Portal |
+| 3 | **Admin Order Management** | Admin Login → Dashboard → View Orders → Update Status Stepper → Cetak Resi |
+| 4 | **Theme Switching** | Browse Tema A → Switch to Tema B → Verify CSS tokens change → Switch Tema C |
+| 5 | **Warranty Claim** | Submit Claim → Admin Review → Approve → Verify Status Update |
+
+**Tooling**: `@playwright/test` di root monorepo, dengan fixture untuk database seeding.
+
+### 14.4 Performance & Load Testing
+- **Lighthouse**: Target score ≥ 90 (Performance, Accessibility, Best Practices, SEO) pada halaman storefront.
+- **Concurrent Checkout Stress Test**: Simulasi 50 user checkout bersamaan → validasi tidak ada oversell (atomic lock bekerja).
+- **Database Query Optimization**: Query produk dengan pagination harus < 100ms pada 1.000 produk.
