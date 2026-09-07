@@ -97,6 +97,20 @@ export type IssueCategory =
   | 'WRONG_GREETING_CARD'
   | 'PACKAGE_LOST_EXPEDITION';
 
+export interface WarrantyClaim {
+  id: string;
+  invoiceNumber: string;
+  customerName: string;
+  customerPhone: string;
+  issueCategory: IssueCategory;
+  description: string;
+  solutionPreference: 'FREE_REPLACEMENT' | 'REFUND';
+  status: WarrantyStatus;
+  photoProofUrl?: string;
+  createdAt: string;
+  adminNote?: string;
+}
+
 export interface WarrantyClaimPayload {
   orderId: string;
   customerPhone: string;

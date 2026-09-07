@@ -9,14 +9,16 @@ import { MemberHeader } from '@/components/portal/MemberHeader';
 import { OrderStepper } from '@/components/portal/OrderStepper';
 import { GuestTracker } from '@/components/portal/GuestTracker';
 import { PointsAndVouchers } from '@/components/portal/PointsAndVouchers';
+import { WarrantyClaimModal } from '@/components/portal/WarrantyClaimModal';
 import { useOrderStore } from '@/stores/useOrderStore';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { Package, Clock, ShieldCheck, MapPin, Truck, ChevronRight, Sparkles } from 'lucide-react';
+import { Package, Clock, ShieldCheck, MapPin, Truck, ChevronRight, Sparkles, AlertCircle } from 'lucide-react';
 
 export default function CustomerPortalPage() {
   const [activeTab, setActiveTab] = useState<'MEMBER' | 'GUEST'>('MEMBER');
   const [searchQuery, setSearchQuery] = useState('');
-  const { orders, activeOrderId, setActiveOrderId } = useOrderStore();
+  const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
+  const { orders, activeOrderId, setActiveOrderId, warrantyClaims } = useOrderStore();
   const { user } = useAuthStore();
 
   const activeOrder = orders.find((o) => o.id === activeOrderId) || orders[0];
@@ -157,6 +159,84 @@ export default function CustomerPortalPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* 100% Warranty Claim Guarantee Action Card */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-white text-rose-600 flex items-center justify-center shadow-sm shrink-0">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-black text-stone-800">
+                        Garansi 100% Anti-Patah & Ganti Baru
+                      </div>
+                      <p className="text-[11px] text-stone-500">
+                        Bunga bengkok atau tertindih kurir saat unboxing? Kami ganti 100% baru tanpa dipungut biaya!
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setIsWarrantyOpen(true)}
+                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-sm shadow-rose-600/20 active:scale-95 transition-all shrink-0 self-start sm:self-auto"
+                  >
+                    Klaim Garansi 100%
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Warranty Claims List (if any) */}
+            {warrantyClaims.length > 0 && (
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-rose-600" />
+                    <h3 className="text-base font-extrabold text-stone-800">
+                      Tiket Klaim Garansi Saya
+                    </h3>
+                  </div>
+                  <span className="text-xs text-rose-600 font-bold">{warrantyClaims.length} Tiket Diajukan</span>
+                </div>
+
+                <div className="space-y-3">
+                  {warrantyClaims.map((claim) => (
+                    <div
+                      key={claim.id}
+                      className="p-4 rounded-2xl border border-stone-200 bg-stone-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-extrabold text-stone-800">{claim.id}</span>
+                          <span className="text-[11px] font-bold text-rose-600 font-mono">({claim.invoiceNumber})</span>
+                          <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                            claim.status === 'APPROVED_REPLACE'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : claim.status === 'REJECTED'
+                              ? 'bg-rose-100 text-rose-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {claim.status === 'APPROVED_REPLACE'
+                              ? 'Disetujui: Ganti Baru 100%'
+                              : claim.status === 'REJECTED'
+                              ? 'Ditolak'
+                              : 'Sedang Diverifikasi Florist'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-stone-600">{claim.description}</p>
+                        {claim.adminNote && (
+                          <div className="text-[11px] text-stone-500 italic bg-white p-2 rounded-xl border border-stone-200 mt-1">
+                            Catatan Atelier: &ldquo;{claim.adminNote}&rdquo;
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="text-right text-[11px] text-stone-400">
+                        {new Date(claim.createdAt).toLocaleDateString('id-ID')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -215,6 +295,14 @@ export default function CustomerPortalPage() {
           </div>
         )}
       </main>
+
+      <WarrantyClaimModal
+        isOpen={isWarrantyOpen}
+        onClose={() => setIsWarrantyOpen(false)}
+        defaultInvoice={activeOrder?.invoiceNumber}
+        customerName={user?.name}
+        customerPhone={user?.phone}
+      />
 
       <Footer />
     </div>

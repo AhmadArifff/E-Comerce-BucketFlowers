@@ -8,9 +8,10 @@ import { useChatStore } from '@/stores/useChatStore';
 
 interface ProductCardProps {
   product: ExtendedProduct;
+  onSelectProduct?: (product: ExtendedProduct) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProduct }) => {
   const { addItem } = useCartStore();
   const { setIsOpen: setChatOpen, sendMessage } = useChatStore();
 
@@ -20,8 +21,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     sendMessage(`Halo kak, saya mau tanya kustomisasi warna buket "${product.name}"`);
   };
 
+  const handleCardClick = () => {
+    if (onSelectProduct) {
+      onSelectProduct(product);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-3xl border border-rose-100/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group card-hover-3d relative">
+    <div
+      onClick={handleCardClick}
+      className="bg-white rounded-3xl border border-rose-100/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group card-hover-3d relative cursor-pointer"
+    >
       {/* Product Image Container */}
       <div className="relative aspect-square w-full overflow-hidden bg-rose-50/50">
         <img
@@ -103,13 +113,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             )}
           </div>
 
-          <button
-            onClick={() => addItem(product, 1)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all"
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            <span>Tambah</span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onSelectProduct) onSelectProduct(product);
+              }}
+              className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 active:scale-95 text-xs font-bold transition-all"
+              title="Intip Rincian Buket"
+            >
+              <Eye className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                addItem(product, 1);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>Tambah</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

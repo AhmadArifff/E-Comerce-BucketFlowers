@@ -1,4 +1,4 @@
-import type { ProductSummary, CodPoint, OrderStepStatus, BomItem, LiveChatMessage } from './types/index.js';
+import type { ProductSummary, CodPoint, OrderStepStatus, BomItem, LiveChatMessage, WarrantyClaim, CustomerFaqItem } from './types/index.js';
 
 export interface ExtendedProduct extends ProductSummary {
   description: string;
@@ -317,3 +317,58 @@ export const MOCK_CHAT_HISTORY: LiveChatMessage[] = [
   { id: 'c-2', sessionId: 'sess-001', sender: 'CUSTOMER', text: 'Halo kak, untuk buket mawar pastel wisuda apakah bisa ganti warna pita jadi navy?', sentAt: '10:01' },
   { id: 'c-3', sessionId: 'sess-001', sender: 'BOT', text: 'Tentu bisa kak! Warna pita dan kertas wrapping bisa disesuaikan dengan warna almamater Anda tanpa biaya tambahan.', sentAt: '10:01' },
 ];
+
+export const MOCK_FAQS: CustomerFaqItem[] = [
+  {
+    id: 'faq-1',
+    category: 'FLOWER_CARE',
+    question: 'Berapa lama buket bunga kawat bulu (chenille stem) dapat bertahan?',
+    answer: 'Buket bunga kawat bulu kami terbuat dari serat sintetis premium dengan inti kawat galvanis anti-karat. Bunga ini tidak akan layu, tidak membutuhkan air, dan dapat bertahan bertahun-tahun sebagai pajangan kamar atau kenang-kenangan wisuda abadi.',
+    sortOrder: 1,
+  },
+  {
+    id: 'faq-2',
+    category: 'FLOWER_CARE',
+    question: 'Bagaimana jika bunga agak gepeng atau kelopak tertekan saat pengiriman ekspedisi?',
+    answer: 'Jangan khawatir! Keunggulan utama kawat bulu adalah sifatnya yang fleksibel dan elastis. Anda cukup merapikan dan memekarkan kembali lekukan kelopak bunga menggunakan ujung jari secara perlahan. Buket akan kembali mekar simetris dan cantik seketika.',
+    sortOrder: 2,
+  },
+  {
+    id: 'faq-3',
+    category: 'COD_RULES',
+    question: 'Bagaimana cara janjian COD (Cash on Delivery) di kampus atau mall?',
+    answer: 'Saat checkout, pilih opsi "COD Titik Temu Google Maps". Anda dapat memilih salah satu titik kumpul terverifikasi (Stasiun UI, Gerbang PNJ, Kampus D Gunadarma, atau Margo City). Kurir atelier kami akan menunggu di lobi titik temu sesuai jadwal yang Anda tentukan.',
+    sortOrder: 3,
+  },
+  {
+    id: 'faq-4',
+    category: 'PO_SCHEDULE',
+    question: 'Apakah bisa request custom warna wisuda atau karakter boneka khusus?',
+    answer: 'Sangat bisa! Silakan manfaatkan widget Live Web Chat kami terlebih dahulu untuk berkonsultasi mengenai kombinasi warna kawat bulu dan aksesoris boneka wisuda. Jika membutuhkan rancangan spesifik, asisten web kami dapat meneruskan detail pesanan ke WhatsApp florist pengrajin.',
+    sortOrder: 4,
+  },
+  {
+    id: 'faq-5',
+    category: 'INVOICE_LOST',
+    question: 'Bagaimana prosedur klaim Garansi 100% Anti-Patah jika buket rusak parah?',
+    answer: 'Jika tangkai kawat bulu patah atau lepas saat Anda membuka paket unboxing, Anda berhak atas Garansi 100% Ganti Baru. Masuk ke halaman Portal Pelanggan, klik tombol "Klaim Garansi 100%", masukkan foto unboxing dan nomor invoice. Tim kami akan memverifikasi dan merangkai buket pengganti baru tanpa biaya tambahan.',
+    sortOrder: 5,
+  },
+];
+
+export const MOCK_WARRANTY_CLAIMS: WarrantyClaim[] = [
+  {
+    id: 'warr-001',
+    invoiceNumber: 'INV-20260905-089',
+    customerName: 'Nadia Rahmawati',
+    customerPhone: '085712345678',
+    issueCategory: 'TRANSIT_DAMAGE_CRUSHED',
+    description: 'Buket tulip tertindih kardus berat saat pengiriman kurir ekspedisi luar kota, tangkai utama penyangga bengkok 90 derajat.',
+    solutionPreference: 'FREE_REPLACEMENT',
+    status: 'UNDER_REVIEW',
+    photoProofUrl: 'https://images.unsplash.com/photo-1520763185298-1b434c919102?auto=format&fit=crop&w=600&q=80',
+    createdAt: '2026-09-06T15:30:00Z',
+    adminNote: 'Sedang diperiksa oleh Lead Florist untuk penjadwalan kirim tangkai ganti baru.',
+  },
+];
+

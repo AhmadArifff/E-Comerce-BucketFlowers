@@ -2,16 +2,19 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { MockOrder } from '@chenille/shared';
-import { MOCK_ORDERS } from '@chenille/shared';
+import type { MockOrder, WarrantyClaim, WarrantyStatus } from '@chenille/shared';
+import { MOCK_ORDERS, MOCK_WARRANTY_CLAIMS } from '@chenille/shared';
 
 interface OrderState {
   orders: MockOrder[];
   activeOrderId: string;
+  warrantyClaims: WarrantyClaim[];
   setActiveOrderId: (id: string) => void;
   updateOrderStep: (orderId: string, step: number) => void;
   findOrderByQuery: (query: string) => MockOrder | null;
   addNewOrder: (order: MockOrder) => void;
+  addWarrantyClaim: (claim: Omit<WarrantyClaim, 'id' | 'createdAt' | 'status'>) => WarrantyClaim;
+  updateWarrantyClaimStatus: (claimId: string, status: WarrantyStatus, adminNote?: string) => void;
 }
 
 export const useOrderStore = create<OrderState>()(
@@ -19,6 +22,7 @@ export const useOrderStore = create<OrderState>()(
     (set, get) => ({
       orders: MOCK_ORDERS,
       activeOrderId: 'ord-101',
+      warrantyClaims: MOCK_WARRANTY_CLAIMS,
 
       setActiveOrderId: (id) => set({ activeOrderId: id }),
 
@@ -81,6 +85,34 @@ export const useOrderStore = create<OrderState>()(
         set((state) => ({
           orders: [order, ...state.orders],
           activeOrderId: order.id,
+        }));
+      },
+
+      addWarrantyClaim: (claimData) => {
+        const newClaim: WarrantyClaim = {
+          ...claimData,
+          id: `warr-${Date.now()}`,
+          status: 'SUBMITTED',
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({
+          warrantyClaims: [newClaim, ...state.warrantyClaims],
+        }));
+        return newClaim;
+      },
+
+      updateWarrantyClaimStatus: (claimId, status, adminNote) => {
+        set((state) => ({
+          warrantyClaims: state.warrantyClaims.map((claim) => {
+            if (claim.id === claimId) {
+              return {
+                ...claim,
+                status,
+                adminNote: adminNote ?? claim.adminNote,
+              };
+            }
+            return claim;
+          }),
         }));
       },
     }),

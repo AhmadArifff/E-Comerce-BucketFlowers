@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   ShoppingBag,
   Package,
+  ShieldCheck,
   Calculator,
   MapPin,
   MessageSquare,
@@ -21,6 +22,7 @@ export type AdminTab =
   | 'OVERVIEW'
   | 'ORDERS'
   | 'PRODUCTS'
+  | 'CLAIMS'
   | 'BOM_CALCULATOR'
   | 'COD_MAPS'
   | 'CS_HUB'
@@ -47,6 +49,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'OVERVIEW', label: 'Ringkasan & KPI', icon: LayoutDashboard },
     { id: 'ORDERS', label: 'Manajemen Pesanan', icon: ShoppingBag },
     { id: 'PRODUCTS', label: 'Katalog & Stok', icon: Package },
+    { id: 'CLAIMS', label: 'Komplain & Garansi 100%', icon: ShieldCheck },
     { id: 'BOM_CALCULATOR', label: 'Kalkulator BOM (HPP)', icon: Calculator },
     { id: 'COD_MAPS', label: 'Geofencing COD Maps', icon: MapPin },
     { id: 'CS_HUB', label: 'CS Webchat Hub', icon: MessageSquare },

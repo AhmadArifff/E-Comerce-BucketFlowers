@@ -7,9 +7,10 @@ import { Flower2 } from 'lucide-react';
 
 interface ProductGridProps {
   products: ExtendedProduct[];
+  onSelectProduct?: (product: ExtendedProduct) => void;
 }
 
-export const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
+export const ProductGrid: React.FC<ProductGridProps> = ({ products, onSelectProduct }) => {
   if (products.length === 0) {
     return (
       <div className="bg-white rounded-3xl border border-rose-100 p-12 text-center my-8 shadow-sm">
@@ -27,7 +28,11 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 my-6">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard
+          key={product.id}
+          product={product}
+          onSelectProduct={onSelectProduct}
+        />
       ))}
     </div>
   );

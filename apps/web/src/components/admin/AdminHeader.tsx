@@ -14,6 +14,7 @@ const TAB_TITLES: Record<AdminTab, { title: string; subtitle: string }> = {
   OVERVIEW: { title: 'Dashboard Operasional', subtitle: 'Ringkasan performa penjualan dan kapasitas atelier' },
   ORDERS: { title: 'Manajemen Pesanan Live', subtitle: 'Pembaruan 4 status progres perangkaian buket' },
   PRODUCTS: { title: 'Katalog & Inventory Bahan', subtitle: 'Stok buket kawat bulu & HPP per produk' },
+  CLAIMS: { title: 'Komplain & Garansi 100% Anti-Patah', subtitle: 'Verifikasi klaim kerusakan buket dan kirim ganti baru' },
   BOM_CALCULATOR: { title: 'Kalkulator Bill of Materials (BOM)', subtitle: 'Kalkulasi HPP detail batang kawat, kain, & pita' },
   COD_MAPS: { title: 'Geofencing Titik Temu COD Depok', subtitle: 'Radius 5 KM bebas ongkir kampus UI & Margo City' },
   CS_HUB: { title: 'Customer Service Webchat Hub', subtitle: 'Respon percakapan langsung pelanggan di website' },

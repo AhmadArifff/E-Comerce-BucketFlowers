@@ -7,9 +7,12 @@ import { HeroSection } from '@/components/storefront/HeroSection';
 import { CapacityWidget } from '@/components/storefront/CapacityWidget';
 import { CategoryFilter } from '@/components/storefront/CategoryFilter';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
+import { ProductDetailModal } from '@/components/storefront/ProductDetailModal';
+import { FAQAccordion } from '@/components/storefront/FAQAccordion';
 import { CartDrawer } from '@/components/storefront/CartDrawer';
 import { LiveChatWidget } from '@/components/storefront/LiveChatWidget';
 import { Footer } from '@/components/storefront/Footer';
+import type { ExtendedProduct } from '@chenille/shared';
 import { MOCK_PRODUCTS } from '@chenille/shared';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -17,6 +20,7 @@ export default function StorefrontPage() {
   const { theme } = useThemeStore();
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState<ExtendedProduct | null>(null);
 
   // Sync data-theme attribute on client mount
   useEffect(() => {
@@ -69,12 +73,26 @@ export default function StorefrontPage() {
             onSelectCategory={setSelectedCategory}
           />
 
-          <ProductGrid products={filteredProducts} />
+          <ProductGrid
+            products={filteredProducts}
+            onSelectProduct={(prod) => setSelectedProduct(prod)}
+          />
         </div>
+
+        {/* Customer FAQ Knowledge Base Accordion */}
+        <FAQAccordion />
       </main>
 
       <CartDrawer />
       <LiveChatWidget />
+
+      {/* Product Quick View Detail Modal */}
+      <ProductDetailModal
+        product={selectedProduct}
+        isOpen={!!selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+      />
+
       <Footer />
     </div>
   );

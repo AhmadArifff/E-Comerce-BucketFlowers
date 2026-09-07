@@ -9,6 +9,7 @@ import { BOMCalculatorModal } from '@/components/admin/BOMCalculatorModal';
 import { CODMapModal } from '@/components/admin/CODMapModal';
 import { CSHubModal } from '@/components/admin/CSHubModal';
 import { FeatureToggles } from '@/components/admin/FeatureToggles';
+import { WarrantyClaimsTable } from '@/components/admin/WarrantyClaimsTable';
 import { MOCK_PRODUCTS } from '@chenille/shared';
 import { Package, Plus, Sparkles, Check, Clock } from 'lucide-react';
 
@@ -150,6 +151,13 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* CLAIMS & WARRANTY TAB */}
+          {activeTab === 'CLAIMS' && (
+            <div className="animate-in fade-in">
+              <WarrantyClaimsTable />
             </div>
           )}
 
