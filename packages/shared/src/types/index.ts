@@ -83,3 +83,65 @@ export interface LiveChatMessage {
   text: string;
   sentAt: string;
 }
+
+export type WarrantyStatus =
+  | 'SUBMITTED'
+  | 'UNDER_REVIEW'
+  | 'APPROVED_REPLACE'
+  | 'REJECTED'
+  | 'RESOLVED';
+
+export type IssueCategory =
+  | 'TRANSIT_DAMAGE_CRUSHED'
+  | 'WRONG_PRODUCT_VARIANT'
+  | 'WRONG_GREETING_CARD'
+  | 'PACKAGE_LOST_EXPEDITION';
+
+export interface WarrantyClaimPayload {
+  orderId: string;
+  customerPhone: string;
+  issueCategory: IssueCategory;
+  description: string;
+  videoProofUrl?: string;
+  photoProofUrl?: string;
+}
+
+export interface FeatureToggleItem {
+  key: string;
+  name: string;
+  description: string;
+  isEnabled: boolean;
+}
+
+export interface CustomerFaqItem {
+  id: string;
+  category: 'INVOICE_LOST' | 'FLOWER_CARE' | 'PO_SCHEDULE' | 'COD_RULES';
+  question: string;
+  answer: string;
+  sortOrder: number;
+}
+
+export interface ThemeDefinition {
+  id: string;
+  name: string;
+  badge: string;
+  colors: {
+    primary: string;
+    primaryLight: string;
+    bgPage: string;
+    bgCard: string;
+    textMain: string;
+    textMuted: string;
+    border: string;
+    accent: string;
+  };
+  typography: {
+    fontHeading: string;
+    fontBody: string;
+  };
+  radii: {
+    card: string;
+    button: string;
+  };
+}
+

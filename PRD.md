@@ -402,6 +402,125 @@ Sistem mendukung perpindahan suasana visual toko secara instan melalui variabel 
 * Avatar inisial admin dikunci circular strictly 1:1 (`38px x 38px`, `aspect-ratio: 1/1`, `flex-shrink: 0`).
 * Dropdown profil admin menyediakan: Edit Profil Pengrajin, Pengaturan Atelier, Ganti Sandi, dan Logout aman.
 
+### 7.7 Skema Garansi 100% Anti-Patah & Alur Klaim Komplain (Fast-Track Replacement Workflow)
+* **Karakteristik & Risiko Produk Buket Kawat Bulu:**
+  Buket kawat bulu tidak akan layu atau mengering seperti bunga asli. Namun, saat transit via ekspedisi reguler (J&T/SiCepat), paket berpotensi tertindih beban berat sehingga kelopak bunga gepeng, rangka kawat bengkok ekstrem, atau wrapping kertas cellophane lecek.
+* **Kebijakan Garansi Toko & Syarat Validasi:**
+  1. **Video Unboxing Tanpa Jeda:** Wajib direkam sejak paket tersegel rapat hingga dibuka, maksimal diajukan dalam 1x24 jam sejak resi berstatus `DELIVERED`.
+  2. **Kategori Kendala Terlindungi:**
+     - *Kerusakan Ekspedisi Parah:* Kawat bulu patah, boneka wisuda lepas/rusak, atau cellophane sobek parah yang tidak bisa dirapikan manual.
+     - *Salah Produk / Varian:* Warna buket tidak sesuai pesanan atau boneka toga bukan pesanan pembeli.
+     - *Salah Kartu Ucapan:* Kesalahan cetak nama wisudawan / pesan ucapan oleh staf atelier.
+     - *Paket Hilang / Tertahan Ekspedisi:* Tidak bergerak > 3 hari kerja melewati estimasi.
+  3. **Fast-Track 100% Free Replacement (Tanpa Repot Retur Fisik):**
+     - Pembeli wisuda memiliki waktu terbatas menjelang hari H. Memaksa pembeli mengembalikan paket rusak ke ekspedisi hanya akan menambah beban dan kekecewaan.
+     - Jika klaim disetujui (verifikasi video unboxing valid via portal), atelier langsung memproduksi buket baru dan mengirimkannya via pengiriman kilat/instant (ongkir 100% ditanggung atelier).
+  4. **Tahapan Stepper Status Klaim Garansi di Portal Pelanggan:**
+     - `SUBMITTED` (Klaim Diajukan Pelanggan)
+     - `UNDER_REVIEW` (Sedang Ditinjau Florist Atelier)
+     - `APPROVED_REPLACE` (Klaim Diterima - Penggantian Baru Sedang Dirangkai)
+     - `DISPATCHED` (Buket Pengganti Sedang Dikirim via Kurir)
+     - `RESOLVED` (Klaim Selesai & Pelanggan Puas)
+
+### 7.8 Pusat Bantuan & Edukasi Pelanggan (Customer Help Center / FAQ Knowledge Base)
+Disediakan di halaman etalase, portal pelanggan, dan terintegrasi dengan quick chips Live Web Chat untuk menyelesaikan 5 skenario friksi utama pembeli:
+1. **Kasus 1: Lupa Nomor Invoice atau Resi Ekspedisi:**
+   - *Solusi:* Pelanggan cukup memasukkan Nomor WhatsApp pada menu pelacakan. Sistem mengirimkan kode OTP instan atau magic link untuk menampilkan seluruh daftar transaksi aktif tanpa perlu mengingat nomor resi yang rumit.
+2. **Kasus 2: Kelopak / Tangkai Kawat Bulu Sedikit Tertekuk Saat Buka Kardus:**
+   - *Solusi:* Kawat bulu (*chenille pipe cleaner*) memiliki sifat elastis dan lentur. Di dalam kardus disertakan kartu panduan + video QR code: pembeli cukup melengkungkan kembali kelopak dengan jempol dan telunjuk tangan secara lembut ke arah luar, maka buket akan kembali mekar sempurna dalam 10 detik.
+3. **Kasus 3: Panduan Perawatan Jangka Panjang (Long-Term Care):**
+   - Tidak memerlukan air atau sinar matahari (dilarang menyiram air agar kawat rangka tidak berkarat).
+   - Simpan di ruangan kering / ber-AC.
+   - Bersihkan debu berkala menggunakan kuas make-up halus atau hembusan hair dryer (mode angin dingin). Bunga kawat bulu dapat bertahan abadi hingga bertahun-tahun.
+4. **Kasus 4: Estimasi Waktu Pembuatan (Lead Time PO Wisuda):**
+   - Produk *Ready Stock*: Dikirim di hari yang sama jika pembayaran terverifikasi sebelum pukul 13.00 WIB.
+   - Produk *Pre-Order (PO) Kustom*: Membutuhkan waktu perangkaian 1-3 hari kerja. Sangat disarankan memesan minimal H-4 sebelum tanggal wisuda atau acara.
+5. **Kasus 5: Panduan Titik Temu COD Kampus & Mall:**
+   - Pelanggan memilih titik kumpul resmi di Google Maps saat checkout (misal: Gerbatama UI / Lobby Margo City).
+   - Staf atelier mengonfirmasi kedatangan via web chat / WhatsApp 15 menit sebelum waktu temu. Gratis ongkir jika berada dalam radius 5.0 KM.
+
+### 7.9 Pusat 10 Sakelar Fitur Bisnis di Admin Panel (Operational Feature Toggles)
+Admin Panel dilengkapi dengan pusat kendali 10 sakelar on/off untuk fleksibilitas operasional harian tanpa perlu deploy ulang kode:
+
+| # | Key Sakelar (ID) | Nama Fitur | Default | Dampak Fungsional & Kasus Bisnis |
+|---|------------------|------------|:-------:|----------------------------------|
+| 1 | `toggle_maintenance` | Mode Pemeliharaan Toko | `OFF` | Mengunci sementara keranjang checkout jika atelier sedang libur/istirahat produksi. Menampilkan halaman estetik dengan pesan kuota penuh. |
+| 2 | `toggle_po_limit` | Pembatasan Kuota PO Harian | `ON` | Membatasi maksimal pesanan PO per hari (default: 10 buket) agar pengrajin tidak kewalahan (*overloaded*). |
+| 3 | `toggle_ready_stock_only` | Kunci Hanya Ready Stock | `OFF` | Menonaktifkan opsi pesanan Pre-Order dan hanya menjual buket yang sudah siap di etalase saat peak-season wisuda. |
+| 4 | `toggle_free_cod_radius` | Bebas Ongkir Radius COD 5 KM | `ON` | Otomatis memberikan tarif pengiriman Rp 0 untuk titik temu COD dalam radius 5.0 KM dari atelier pusat (Jl. Margonda Raya No. 108 Depok). |
+| 5 | `toggle_in_system_chat` | Live Web Chat Terintegrasi | `ON` | Mewajibkan obrolan awal melalui web chat modal internal sebelum dialihkan ke WhatsApp, menghindari hilangnya jejak pelanggan. |
+| 6 | `toggle_ai_chatbot` | Bot Penjawab Cerdas Otomatis | `ON` | Memberikan jawaban ramah instan 24/7 untuk pertanyaan umum (kuota, harga, titik COD, garansi). |
+| 7 | `toggle_wa_notification` | Push Notifikasi WhatsApp | `ON` | Mengirimkan notifikasi perubahan status pesanan otomatis ke nomor WhatsApp pembeli melalui webhook gateway. |
+| 8 | `toggle_theme_public_switcher` | Pemilih Tema Publik di Navbar | `ON` | Memunculkan pill switcher tema di navbar etalase agar pengunjung dapat menikmati pengalaman 3 tema toko. |
+| 9 | `toggle_guest_checkout` | Izinkan Checkout Tanpa Login | `ON` | Memfasilitasi pembelian cepat bagi pembeli yang tidak ingin membuat akun, cukup memasukkan nomor WhatsApp. |
+| 10 | `toggle_flower_points` | Program Poin Loyalitas & Diskon | `ON` | Memberikan Flower Points kepada member terdaftar setiap selesai transaksi untuk ditukarkan dengan potongan belanja. |
+
+### 7.10 Cetak Biru Penambahan Tema Baru di Masa Depan (Theme Plugin Engine & Extension Blueprint)
+Arsitektur sistem dirancang dengan prinsip **Open-Closed Principle (OCP)**: sistem terbuka untuk penambahan tema visual baru, namun tertutup dari modifikasi kode logika bisnis yang sudah stabil:
+
+1. **Kontrak Interface Desain Token (`ThemeDefinition`):**
+   Setiap tema visual wajib memenuhi interface seragam yang didefinisikan di `@chenille/shared/types/theme.types.ts`:
+   ```typescript
+   export interface ThemeDefinition {
+     id: string;             // e.g. "tema-d"
+     name: string;           // e.g. "Vintage Botanical Atelier"
+     badge: string;          // e.g. "Earthy & Nostalgic"
+     colors: {
+       primary: string;      // Warna tombol CTA & highlight
+       primaryLight: string; // Background chip & alert
+       bgPage: string;       // Latar belakang halaman
+       bgCard: string;       // Latar kartu produk
+       textMain: string;     // Teks judul & heading
+       textMuted: string;    // Teks deskripsi & label
+       border: string;       // Garis pembatas kartu
+       accent: string;       // Aksen pelengkap
+     };
+     typography: {
+       fontHeading: string;  // Font serif / sans khusus judul
+       fontBody: string;     // Font keterbacaan teks utama
+     };
+     radii: {
+       card: string;         // e.g. "16px"
+       button: string;       // e.g. "9999px"
+     };
+   }
+   ```
+
+2. **Zero Logic Coupling (Bebas Hardcode):**
+   Seluruh komponen frontend Next.js (`ProductCard.tsx`, `CartDrawer.tsx`, `OrderTrackingStepper.tsx`, `LoginForm.tsx`) **DILARANG KERAS** menggunakan pengecekan kondisi manual seperti `if (theme === 'tema-a')`. Seluruh styling murni mengonsumsi variabel CSS Custom Properties:
+   ```css
+   .product-card {
+     background-color: var(--theme-card-bg);
+     border-color: var(--theme-border);
+     border-radius: var(--theme-radius-card);
+   }
+   ```
+
+3. **Langkah 3-Menit Menambahkan Tema Baru (Contoh: Tema D - Vintage Botanical):**
+   - **Langkah 1:** Daftarkan metadata & palette warna tema baru di file `@chenille/shared/constants/themes.ts`.
+   - **Langkah 2:** Tambahkan blok variabel CSS di stylesheet global:
+     ```css
+     [data-theme="tema-d"] {
+       --theme-primary: #556B2F;
+       --theme-bg-page: #F5F5DC;
+       --theme-font-heading: 'Cinzel', serif;
+       --theme-font-body: 'Lora', serif;
+     }
+     ```
+   - **Langkah 3:** Tema baru langsung otomatis muncul di dropdown Admin Panel, live preview etalase, selector login, dan halaman portal tanpa perlu menyentuh kode logika keranjang atau database!
+
+### 7.11 Spesifikasi Animasi Interaktif Magic UI & Motion Design
+Sistem mengadopsi prinsip gerak dinamis *UI/UX Pro Max* untuk menciptakan pengalaman visual yang memikat (*wow factor*):
+1. **Parabolic Flying Flower to Cart Animation:**
+   - Saat tombol *"Tambah ke Keranjang"* diklik, klon thumbnail buket bunga mini melayang melengkung (kurva parabola Bézier) menuju ikon keranjang di header navbar.
+   - Begitu partikel mendarat di ikon keranjang, badge counter keranjang memicu efek *spring bounce animation* (+1) disertai toast notifikasi estetik.
+2. **Interactive 3D Perspective Card Tilt:**
+   - Kartu katalog produk di etalase mendeteksi posisi kursor mouse (`mousemove`) dan melakukan rotasi 3D halus (`rotateX`, `rotateY`, `transform-style: preserve-3d`) dengan efek kilauan cahaya (*dynamic glare reflection*).
+3. **Pulse Glowing Add-to-Cart Badge:**
+   - Tombol transaksi memiliki efek animasi bernapas (*pulse breathing glow*) dengan warna aksen tema aktif untuk memicu ketertarikan klik pembeli secara psikologis.
+4. **Smooth Stepper Progress Transition:**
+   - Pada kartu pelacakan pesanan aktif di portal member, titik indikator dan garis penghubung bertransisi dengan animasi pengisian hijau mulus (*fill bar progress*) dari tahap 1 hingga tahap 4.
+
 ---
 
 ## 8. Skema Database Prisma (PostgreSQL Supabase)
@@ -579,6 +698,7 @@ model Order {
   updated_at         DateTime         @updatedAt
 
   items              OrderItem[]
+  claims             WarrantyClaim[]
 }
 
 model OrderItem {
@@ -632,6 +752,61 @@ model StoreSetting {
   official_whatsapp   String   @default("081234567890")
   atelier_address     String   @default("Jl. Margonda Raya No. 108 Depok")
   updated_at          DateTime @updatedAt
+}
+
+// ------------------------------------------------------
+// WARRANTY CLAIMS & COMPLAINTS
+// ------------------------------------------------------
+enum WarrantyStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED_REPLACE
+  REJECTED
+  RESOLVED
+}
+
+enum IssueCategory {
+  TRANSIT_DAMAGE_CRUSHED
+  WRONG_PRODUCT_VARIANT
+  WRONG_GREETING_CARD
+  PACKAGE_LOST_EXPEDITION
+}
+
+model WarrantyClaim {
+  id              String         @id @default(uuid())
+  order_id        String
+  order           Order          @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  customer_phone  String
+  issue_category  IssueCategory  @default(TRANSIT_DAMAGE_CRUSHED)
+  description     String
+  video_proof_url String?        // Link video unboxing tanpa jeda
+  photo_proof_url String?
+  status          WarrantyStatus @default(SUBMITTED)
+  admin_notes     String?
+  replacement_awb String?        // Nomor resi pengiriman buket pengganti 100% gratis
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+}
+
+// ------------------------------------------------------
+// OPERATIONAL FEATURE TOGGLES & CUSTOMER FAQ
+// ------------------------------------------------------
+model FeatureToggle {
+  key          String   @id // e.g. "toggle_free_cod_radius"
+  name         String
+  description  String
+  is_enabled   Boolean  @default(true)
+  updated_at   DateTime @updatedAt
+}
+
+model CustomerFaq {
+  id         String   @id @default(uuid())
+  category   String   // "INVOICE_LOST", "FLOWER_CARE", "PO_SCHEDULE", "COD_RULES"
+  question   String
+  answer     String
+  sort_order Int      @default(0)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
 }
 ```
 
