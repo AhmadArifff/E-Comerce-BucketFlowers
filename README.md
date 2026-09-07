@@ -7,6 +7,7 @@
 [![Design Tokens](https://img.shields.io/badge/Design%20System-CSS%20Custom%20Properties-38BDF8?style=for-the-badge&logo=css3)](PRD.md)
 [![Maps](https://img.shields.io/badge/Maps-Google%20Maps%20Embed%20%26%20Geofencing-EA4335?style=for-the-badge&logo=googlemaps)](PRD.md)
 [![Payments](https://img.shields.io/badge/Payment-Midtrans%20Snap%20QRIS-0052CC?style=for-the-badge)](PRD.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
 ---
 
@@ -21,6 +22,7 @@
 - [👤 Dual-Scenario Portal Pelanggan](#-dual-scenario-portal-pelanggan)
 - [🚀 Cara Menjalankan Aplikasi](#-cara-menjalankan-aplikasi)
 - [📄 Spesifikasi Lengkap (PRD)](#-spesifikasi-lengkap-prd)
+- [📜 Lisensi](#-lisensi)
 
 ---
 
@@ -224,6 +226,12 @@ python -m http.server 8080
 ## 📄 Spesifikasi Lengkap (PRD)
 
 Dokumentasi rancangan produk, skema basis data PostgreSQL Prisma lengkap, aturan operasional, dan arsitektur teknis menyeluruh dapat dibaca pada berkas [PRD.md](PRD.md).
+
+---
+
+## 📜 Lisensi
+
+Proyek ini dilisensikan di bawah lisensi MIT — lihat berkas [LICENSE](LICENSE) untuk rincian lengkap hak cipta dan izin penggunaan.
 
 ---
 
