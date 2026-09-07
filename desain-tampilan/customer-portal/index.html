@@ -340,13 +340,52 @@
       margin-top: 2px;
     }
 
-    /* STEPPER */
+    /* STEPPER WITH MAGIC UI ANIMATED BEAM */
     .order-stepper {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
       margin-bottom: 30px;
       position: relative;
+    }
+    /* MAGIC UI ANIMATED BEAM: Background Connecting Line */
+    .order-stepper::before {
+      content: '';
+      position: absolute;
+      top: 22px;
+      left: 12.5%;
+      right: 12.5%;
+      height: 4px;
+      background: linear-gradient(90deg, #10B981 0%, #10B981 33%, #F43F5E 38%, #E2E8F0 38%, #E2E8F0 100%);
+      border-radius: 99px;
+      z-index: 1;
+    }
+    /* MAGIC UI ANIMATED BEAM: Dynamic Glowing Laser Pulse */
+    .order-stepper::after {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 12.5%;
+      width: 90px;
+      height: 8px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, transparent, #F43F5E 35%, #10B981 70%, #FFFFFF 95%, transparent);
+      box-shadow: 0 0 14px 4px rgba(244, 63, 94, 0.85), 0 0 25px rgba(16, 185, 129, 0.6);
+      z-index: 1;
+      pointer-events: none;
+      animation: magicBeamHorizontal 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    @keyframes magicBeamHorizontal {
+      0% {
+        left: 12.5%;
+        opacity: 0;
+      }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% {
+        left: calc(87.5% - 90px);
+        opacity: 0;
+      }
     }
     .step-node {
       display: flex;
@@ -355,11 +394,11 @@
       text-align: center;
       position: relative;
     }
-    .step-icon-circle {
+    .step-icon-circle, .step-dot {
       width: 44px;
       height: 44px;
       border-radius: 50%;
-      background: #F1F5F9;
+      background: #FFFFFF;
       color: var(--text-muted);
       display: flex;
       align-items: center;
@@ -367,24 +406,35 @@
       margin-bottom: 8px;
       border: 3px solid #E2E8F0;
       font-weight: 800;
+      font-size: 16px;
       transition: all 0.3s ease;
       z-index: 2;
+      position: relative;
     }
-    .step-node.completed .step-icon-circle {
+    .step-node.completed .step-icon-circle,
+    .step-node.completed .step-dot {
       background: #D1FAE5;
       color: #059669;
       border-color: #10B981;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
     }
-    .step-node.active .step-icon-circle {
+    .step-node.active .step-icon-circle,
+    .step-node.active .step-dot {
       background: var(--primary-light);
       color: var(--primary);
       border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.15);
-      animation: pulseActive 2s infinite;
+      box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.2), 0 0 18px rgba(244, 63, 94, 0.45);
+      animation: pulseActiveNode 2s infinite ease-in-out;
     }
-    @keyframes pulseActive {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.06); }
+    @keyframes pulseActiveNode {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.2), 0 0 18px rgba(244, 63, 94, 0.45);
+      }
+      50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 0 8px rgba(225, 29, 72, 0.1), 0 0 26px rgba(244, 63, 94, 0.7);
+      }
     }
     .step-title {
       font-size: 12px;
@@ -955,13 +1005,52 @@
       border-top: 1px solid var(--border);
     }
 
-    /* WARRANTY STEPPER */
+    /* WARRANTY STEPPER WITH MAGIC UI ANIMATED BEAM */
     .warranty-stepper {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 8px;
       margin: 16px 0;
       position: relative;
+    }
+    /* Static Background Connecting Line */
+    .warranty-stepper::before {
+      content: '';
+      position: absolute;
+      top: 16px;
+      left: 10%;
+      right: 10%;
+      height: 3px;
+      background: linear-gradient(90deg, #10B981 0%, #10B981 40%, #F59E0B 50%, #E2E8F0 50%, #E2E8F0 100%);
+      border-radius: 99px;
+      z-index: 1;
+    }
+    /* Dynamic Glowing Laser Pulse */
+    .warranty-stepper::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 10%;
+      width: 70px;
+      height: 7px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, transparent, #F59E0B 35%, #10B981 70%, #FFFFFF 95%, transparent);
+      box-shadow: 0 0 12px 3px rgba(245, 158, 11, 0.85), 0 0 20px rgba(16, 185, 129, 0.6);
+      z-index: 1;
+      pointer-events: none;
+      animation: magicBeamWarranty 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    @keyframes magicBeamWarranty {
+      0% {
+        left: 10%;
+        opacity: 0;
+      }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% {
+        left: calc(90% - 70px);
+        opacity: 0;
+      }
     }
     .w-step-node {
       text-align: center;
@@ -971,7 +1060,7 @@
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: #F1F5F9;
+      background: #FFFFFF;
       color: #64748B;
       display: flex;
       align-items: center;
@@ -981,17 +1070,31 @@
       font-weight: 800;
       border: 2px solid #CBD5E1;
       transition: all 0.25s ease;
+      position: relative;
+      z-index: 2;
     }
     .w-step-node.completed .w-step-circle {
       background: #10B981;
       color: #fff;
       border-color: #059669;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
     }
     .w-step-node.active .w-step-circle {
       background: #F59E0B;
       color: #fff;
       border-color: #D97706;
-      box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25);
+      box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25), 0 0 16px rgba(245, 158, 11, 0.5);
+      animation: pulseWarrantyNode 1.8s infinite ease-in-out;
+    }
+    @keyframes pulseWarrantyNode {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25), 0 0 12px rgba(245, 158, 11, 0.4);
+      }
+      50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 7px rgba(245, 158, 11, 0.15), 0 0 20px rgba(245, 158, 11, 0.7);
+      }
     }
     .w-step-title {
       font-size: 11px;
@@ -1006,7 +1109,9 @@
 
     @media (max-width: 768px) {
       .order-stepper { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+      .order-stepper::before, .order-stepper::after { display: none; }
       .warranty-stepper { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .warranty-stepper::before, .warranty-stepper::after { display: none; }
       .order-details-grid { grid-template-columns: 1fr; }
       .member-profile-card { flex-direction: column; align-items: flex-start; }
       .member-points-box { width: 100%; text-align: left; }

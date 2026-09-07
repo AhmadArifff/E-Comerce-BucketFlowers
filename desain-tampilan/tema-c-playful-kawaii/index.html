@@ -978,36 +978,91 @@
       outline: none;
       font-family: var(--font-body);
     }
+    /* MAGIC UI ANIMATED BEAM: VERTICAL TIMELINE */
     .timeline {
       list-style: none;
       position: relative;
-      padding-left: 28px;
+      padding-left: 38px;
       margin-top: 24px;
     }
+    /* Static Background Track */
     .timeline::before {
       content: '';
       position: absolute;
+      left: 10px;
+      top: 10px;
+      bottom: 14px;
+      width: 4px;
+      background: linear-gradient(180deg, #FFEAA7 0%, #FFB8B8 60%, #A7F3D0 100%);
+      border-radius: 99px;
+      z-index: 1;
+    }
+    /* Magic UI Animated Glowing Laser Beam Pulse */
+    .timeline::after {
+      content: '';
+      position: absolute;
       left: 8px;
-      top: 4px;
-      bottom: 4px;
-      width: 3px;
-      background: #FFEAA7;
+      top: 10px;
+      width: 8px;
+      height: 60px;
+      border-radius: 99px;
+      background: linear-gradient(180deg, transparent, #FF6B81 30%, #10B981 75%, #FFFFFF 95%, transparent);
+      box-shadow: 0 0 14px 4px rgba(255, 107, 129, 0.8), 0 0 22px rgba(16, 185, 129, 0.85);
+      pointer-events: none;
+      z-index: 2;
+      animation: magicBeamVertical 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    @keyframes magicBeamVertical {
+      0% {
+        top: 10px;
+        opacity: 0;
+      }
+      15% {
+        opacity: 1;
+      }
+      85% {
+        opacity: 1;
+      }
+      100% {
+        top: calc(100% - 74px);
+        opacity: 0;
+      }
     }
     .timeline-step {
       position: relative;
-      margin-bottom: 22px;
+      margin-bottom: 24px;
     }
+    /* Ring Node */
     .timeline-step::before {
       content: '';
       position: absolute;
-      left: -24px;
-      top: 4px;
-      width: 12px;
-      height: 12px;
+      left: -36px;
+      top: 1px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      background: #FF6B81;
-      border: 2px solid #fff;
-      box-shadow: 0 0 0 2px #FF6B81;
+      background: #FFFFFF;
+      border: 3.5px solid #FF6B81;
+      box-shadow: 0 0 0 3px #FFE4E6;
+      z-index: 3;
+      transition: all 0.3s ease;
+    }
+    /* Active Pulsing Node */
+    .timeline-step.active::before {
+      background: #10B981;
+      border: 3.5px solid #FFFFFF;
+      box-shadow: 0 0 0 3px #10B981, 0 0 16px rgba(16, 185, 129, 0.7);
+      animation: pulseTimelineActive 1.8s infinite ease-in-out;
+    }
+    @keyframes pulseTimelineActive {
+      0%, 100% {
+        box-shadow: 0 0 0 3px #10B981, 0 0 10px rgba(16, 185, 129, 0.4);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.25), 0 0 22px rgba(16, 185, 129, 0.85);
+        transform: scale(1.12);
+      }
     }
 
     .faq-item {
@@ -1931,7 +1986,7 @@
           <div style="font-weight:800;">📦 Sudah Masuk Box Tebal + Bubble Wrap</div>
           <div style="font-size:12px; color:#7F8C8D;">07 Sep 2026, 11:20 WIB</div>
         </li>
-        <li class="timeline-step" style="color:#FF6B81; font-weight:800;">
+        <li class="timeline-step active" style="color:#FF6B81; font-weight:800;">
           <div>🚚 Kurir Sedang Ngebut Menuju Lokasimu!</div>
           <div style="font-size:12px;">Estimasi Tiba Sore Ini Pukul 15:30 WIB</div>
         </li>
