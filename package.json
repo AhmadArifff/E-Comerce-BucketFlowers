@@ -9,6 +9,7 @@
     "build": "turbo run build",
     "build:web": "npm run build --workspace=chenille-flowers-web",
     "build:shared": "npm run build --workspace=@chenille/shared",
+    "kill:port": "npx -y kill-port 3000",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "clean": "turbo run clean"

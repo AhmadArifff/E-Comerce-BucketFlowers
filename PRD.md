@@ -238,6 +238,39 @@ Berdasarkan investigasi menyeluruh pada arsitektur reference `CrownJobExpiredSup
   ```
   Ini mencegah tereksposnya stack trace database/server ke pengguna dan memastikan response HTTP selalu memiliki struktur yang konsisten.
 
+### 4.5 Penanganan Konflik Port Monorepo Dev Server (`EADDRINUSE: address already in use :::3000`)
+* **Masalah Lapangan:**
+  Saat developer tim atau runner menjalankan `npm run dev` atau `turbo run dev`, proses gagal dengan error:
+  ```text
+  ⨯ Failed to start server
+  Error: listen EADDRINUSE: address already in use :::3000
+      at <unknown> (Error: listen EADDRINUSE: address already in use :::3000)
+      code: 'EADDRINUSE',
+      syscall: 'listen',
+      address: '::',
+      port: 3000
+  ```
+* **Akar Penyebab (*Root Cause*):**
+  1. Adanya proses Node.js / Next.js sebelumnya yang masih aktif di latar belakang (misalnya sub-proses IDE, daemon agent, atau sesi terminal yang belum dimatikan sempurna) dan tetap mengikat (*holding socket*) port 3000.
+  2. Paket monorepo belum melepaskan listener saat server di-restart secara paksa.
+* **Solusi Teruji & Standar Operasional Tim:**
+  1. **Solusi Cepat Otomatis (Perintah npm):**
+     Jalankan script yang telah disediakan di root `package.json`:
+     ```bash
+     npm run kill:port
+     npm run dev
+     ```
+  2. **Solusi Manual via PowerShell (Windows):**
+     Hentikan proses yang mengunci port 3000 secara langsung:
+     ```powershell
+     Get-Process -Id (Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue).OwningProcess -ErrorAction SilentlyContinue | Stop-Process -Force
+     ```
+  3. **Solusi Port Alternatif:**
+     Jika port 3000 sengaja digunakan aplikasi lain, jalankan pada port cadangan:
+     ```bash
+     npm run dev:web -- --port 3001
+     ```
+
 ---
 
 ## 5. Konfigurasi Root Monorepo & Task Pipeline
