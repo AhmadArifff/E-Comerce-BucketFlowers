@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Pelanggan & Lacak Pesanan — Aesthetic Chenille Flowers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #E11D48;
+      --primary-hover: #BE123C;
+      --primary-light: #FFE4E6;
+      --primary-border: #FECDD3;
+      --bg: #FFF9F7;
+      --surface: #FFFFFF;
+      --surface-subtle: #FFF1F2;
+      --border: #F3DCE2;
+      --text-main: #2C3E50;
+      --text-muted: #7F8C8D;
+      --success: #10B981;
+      --success-light: #D1FAE5;
+      --warning: #F59E0B;
+      --warning-light: #FEF3C7;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.03);
+      --shadow-md: 0 6px 16px rgba(225, 29, 72, 0.08);
+      --shadow-lg: 0 16px 32px rgba(225, 29, 72, 0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* SVG ICON UTILITY */
+    .svg-icon {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+      stroke: currentColor;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .svg-icon-sm { width: 14px; height: 14px; stroke-width: 2; }
+    .svg-icon-lg { width: 24px; height: 24px; stroke-width: 1.8; }
+
+    /* NAVBAR */
+    nav.portal-navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+    .nav-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .brand-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.1;
+    }
+    .brand-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn-link {
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      padding: 7px 14px;
+      border-radius: var(--radius-full);
+      transition: all 0.2s ease;
+    }
+    .btn-link:hover {
+      background: var(--surface-subtle);
+      color: var(--primary);
+    }
+    .btn-store {
+      background: var(--primary);
+      color: #fff;
+      padding: 7px 16px;
+      border-radius: var(--radius-full);
+      font-size: 12.5px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-store:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    /* HERO CONTAINER */
+    .portal-hero {
+      background: linear-gradient(180deg, #FFFFFF 0%, #FFF5F7 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 40px 20px 32px 20px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
+      padding: 5px 14px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+    .hero-title {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .hero-title span { color: var(--primary); }
+    .hero-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 620px;
+      margin: 0 auto 24px auto;
+      line-height: 1.5;
+    }
+
+    /* DUAL MODE SEGMENTED CONTROL */
+    .mode-tabs-wrap {
+      display: inline-flex;
+      background: var(--surface);
+      padding: 6px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      gap: 6px;
+    }
+    .mode-tab-btn {
+      padding: 10px 22px;
+      border-radius: var(--radius-full);
+      font-size: 13.5px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mode-tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
+    }
+
+    /* MAIN BODY */
+    .portal-main-wrap {
+      max-width: 900px;
+      margin: -20px auto 40px auto;
+      padding: 0 20px;
+      width: 100%;
+      flex: 1;
+    }
+    .portal-view {
+      display: none;
+      animation: fadeIn 0.25s ease forwards;
+    }
+    .portal-view.active-view {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* SEARCH TRACKING CARD */
+    .track-search-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 24px;
+    }
+    .track-form-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .track-input-wrap {
+      flex: 1;
+      position: relative;
+      min-width: 260px;
+    }
+    .track-input-wrap input {
+      width: 100%;
+      padding: 14px 16px 14px 44px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      outline: none;
+      transition: all 0.2s ease;
+      background: var(--surface);
+      color: var(--text-main);
+    }
+    .track-input-wrap input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.12);
+    }
+    .track-input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+    .btn-track-submit {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 14px 28px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-track-submit:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .quick-sample-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+    .sample-chip {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--primary);
+      transition: all 0.15s ease;
+    }
+    .sample-chip:hover {
+      background: var(--primary-light);
+    }
+
+    /* TIMELINE TRACKING CARD */
+    .timeline-result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      box-shadow: var(--shadow-md);
+      display: none;
+    }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .invoice-tag {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--primary);
+    }
+    .order-meta-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* STEPPER */
+    .order-stepper {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 30px;
+      position: relative;
+    }
+    .step-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
+    .step-icon-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #F1F5F9;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+      border: 3px solid #E2E8F0;
+      font-weight: 800;
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+    .step-node.completed .step-icon-circle {
+      background: #D1FAE5;
+      color: #059669;
+      border-color: #10B981;
+    }
+    .step-node.active .step-icon-circle {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.15);
+      animation: pulseActive 2s infinite;
+    }
+    @keyframes pulseActive {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+    .step-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .step-sub {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ORDER DETAILS GRID */
+    .order-details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      background: var(--surface-subtle);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .detail-item-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .detail-item-val {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .action-cta-bar {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    .btn-wa-cs {
+      background: #10B981;
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .btn-wa-cs:hover { background: #059669; }
+
+    .btn-warranty-claim {
+      background: #FFF1F2;
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* MEMBER PORTAL VIEW */
+    .member-profile-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 30px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .member-info-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .member-big-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FFE4E6, #FECDD3);
+      border: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--primary);
+    }
+    .member-name { font-size: 18px; font-weight: 900; color: var(--text-main); }
+    .member-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 800;
+      background: #FEF3C7;
+      color: #92400E;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      margin-top: 4px;
+    }
+    .member-points-box {
+      text-align: right;
+      background: #ECFDF5;
+      border: 1px solid #A7F3D0;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+    }
+    .points-label { font-size: 11px; color: #065F46; font-weight: 700; text-transform: uppercase; }
+    .points-val { font-size: 22px; font-weight: 900; color: #047857; }
+
+    /* CUSTOMER HEADER PROFILE */
+    .customer-header-profile {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      background: var(--surface-subtle);
+      border: 1px solid var(--primary-border);
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .customer-header-profile.show-profile {
+      display: flex;
+    }
+    .customer-header-profile:hover, .customer-header-profile.active {
+      background: #FFE4E6;
+      border-color: var(--primary);
+    }
+    .cust-header-avatar {
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 34px !important;
+      min-height: 34px !important;
+      max-width: 34px !important;
+      max-height: 34px !important;
+      aspect-ratio: 1 / 1 !important;
+      border-radius: 50% !important;
+      background: linear-gradient(135deg, #F43F5E, #BE123C);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      flex-shrink: 0 !important;
+      box-sizing: border-box !important;
+      box-shadow: 0 2px 5px rgba(244, 63, 94, 0.25);
+    }
+    .cust-header-info {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+      text-align: left;
+    }
+    .cust-header-name {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+    .cust-header-badge {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+    .cust-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 220px;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 6px 0;
+      display: none;
+      flex-direction: column;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease;
+    }
+    .cust-dropdown-menu.show {
+      display: flex;
+    }
+    .cust-dropdown-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-subtle);
+    }
+    .cust-dropdown-item {
+      padding: 9px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .cust-dropdown-item:hover {
+      background: var(--surface-subtle);
+      color: var(--primary);
+    }
+    .cust-dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+    .cust-item-danger {
+      color: #DC2626 !important;
+    }
+    .cust-item-danger:hover {
+      background: #FEE2E2 !important;
+    }
+
+    /* MEMBER ACTIVE LIVE TRACKING EMBED */
+    .member-active-order-card {
+      background: #FFFFFF;
+      border: 2px solid var(--primary-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+    .active-badge-top {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: var(--primary);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 16px;
+      border-bottom-left-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .member-addresses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .address-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      background: #fff;
+      position: relative;
+    }
+    .address-card.is-primary {
+      border-color: var(--primary);
+      background: var(--surface-subtle);
+    }
+
+    /* MEMBER HISTORY LIST */
+    .history-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 30px;
+      box-shadow: var(--shadow-md);
+    }
+    .history-header {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .order-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .order-item-row:last-child { border-bottom: none; }
+
+    /* TOAST */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast-box {
+      background: #0F172A;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    /* FLOATING CS CHAT WIDGET */
+    .floating-chat-trigger {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: linear-gradient(135deg, var(--primary), #BE123C);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: var(--radius-full);
+      box-shadow: 0 10px 25px -3px rgba(225, 29, 72, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      z-index: 990;
+      font-weight: 700;
+      font-size: 13px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .floating-chat-trigger:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 15px 30px -3px rgba(225, 29, 72, 0.5);
+    }
+    .chat-pulse-dot {
+      width: 10px;
+      height: 10px;
+      background: #10B981;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      animation: pulseGreen 2s infinite;
+    }
+    @keyframes pulseGreen {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; }
+    }
+
+    /* CUSTOMER IN-SYSTEM CHAT WINDOW */
+    .cust-chat-container {
+      position: fixed;
+      bottom: 85px;
+      right: 24px;
+      width: 380px;
+      max-width: calc(100vw - 32px);
+      height: 520px;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.2), 0 0 0 1px var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(20px) scale(0.96);
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .cust-chat-container.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .cust-chat-header {
+      background: linear-gradient(135deg, #2A171D, #4A2E35);
+      color: #fff;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .cust-chat-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+    .cust-chat-messages {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .cust-msg {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 12.5px;
+      line-height: 1.45;
+      position: relative;
+    }
+    .cust-msg.in {
+      background: #FFFFFF;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 3px;
+      align-self: flex-start;
+    }
+    .cust-msg.out {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-bottom-right-radius: 3px;
+      align-self: flex-end;
+    }
+    .cust-msg-time {
+      font-size: 9.5px;
+      opacity: 0.65;
+      margin-top: 4px;
+      text-align: right;
+    }
+    .cust-chat-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 14px;
+      background: #fff;
+      border-top: 1px solid var(--border);
+    }
+    .cust-chip {
+      background: var(--surface-subtle);
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
+      padding: 5px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .cust-chip:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-transfer-wa {
+      background: #10B981;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-transfer-wa:hover {
+      background: #059669;
+    }
+    .cust-chat-input-bar {
+      display: flex;
+      gap: 8px;
+      padding: 12px 14px;
+      background: #fff;
+      border-top: 1px solid var(--border);
+    }
+    .cust-chat-input-bar input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12.5px;
+      outline: none;
+    }
+    .cust-chat-input-bar input:focus {
+      border-color: var(--primary);
+    }
+    .cust-chat-input-bar button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .order-stepper { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+      .order-details-grid { grid-template-columns: 1fr; }
+      .member-profile-card { flex-direction: column; align-items: flex-start; }
+      .member-points-box { width: 100%; text-align: left; }
+      .cust-chat-container { width: calc(100vw - 32px); right: 16px; bottom: 75px; height: 460px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="portal-navbar">
+    <div class="nav-container">
+      <a href="../tema-a-korean-pastel/index.html" class="brand-logo">
+        <div class="brand-icon">🌸</div>
+        <div>
+          <div class="brand-name">Chenille Atelier</div>
+          <div class="brand-sub">Customer Care & Tracking</div>
+        </div>
+      </a>
+
+      <div class="nav-links">
+        <a href="../tema-a-korean-pastel/index.html" class="btn-link">Katalog Bunga</a>
+        <a href="../tema-a-korean-pastel/index.html" class="btn-store">
+          <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          <span>Belanja Buket</span>
+        </a>
+
+        <!-- MEMBER HEADER AVATAR DROPDOWN (TOGGLED IN MEMBER MODE) -->
+        <div class="customer-header-profile" id="custHeaderProfile" onclick="toggleCustomerProfileDropdown(event)">
+          <div class="cust-header-avatar" id="custHeaderAvatar">SA</div>
+          <div class="cust-header-info">
+            <span class="cust-header-name" id="custHeaderName">Sarah Amalia</span>
+            <span class="cust-header-badge">Member Gold Florist</span>
+          </div>
+          <svg class="svg-icon svg-icon-sm" style="color:var(--text-muted); margin-left:2px;" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+
+          <!-- DROPDOWN -->
+          <div class="cust-dropdown-menu" id="custDropdownMenu" onclick="event.stopPropagation()">
+            <div class="cust-dropdown-header">
+              <div style="font-weight:800; font-size:13px; color:var(--text-main);" id="custDropName">Sarah Amalia</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">sarah.amalia@ui.ac.id</div>
+              <div style="margin-top:6px; font-size:10px; font-weight:800; background:#FEF3C7; color:#D97706; padding:2px 8px; border-radius:10px; display:inline-block;">2.450 Flower Points</div>
+            </div>
+            <div class="cust-dropdown-item" onclick="openCustomerProfileModal()">
+              <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Atur Profil & Avatar</span>
+            </div>
+            <div class="cust-dropdown-item" onclick="scrollToSavedAddresses()">
+              <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Alamat Pengiriman Saya</span>
+            </div>
+            <div class="cust-dropdown-divider"></div>
+            <div class="cust-dropdown-item cust-item-danger" onclick="logoutCustomerMember()">
+              <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y1="12"/></svg>
+              <span>Keluar / Logout Akun</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <header class="portal-hero">
+    <div class="hero-badge">
+      <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Live Order Tracking & Customer Service</span>
+    </div>
+    <h1 class="hero-title">Pusat Layanan & <span>Pelacakan Pesanan</span></h1>
+    <p class="hero-sub">
+      Lupa nomor invoice? Jangan khawatir! Cukup masukkan <strong>Nomor WhatsApp</strong> Anda untuk melihat langsung status pengerjaan buket kawat bulu Anda.
+    </p>
+
+    <!-- DUAL SCENARIO SWITCH TABS -->
+    <div class="mode-tabs-wrap">
+      <button class="mode-tab-btn active" onclick="switchCustomerMode('guest', this)">
+        <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>Lacak Instan (Guest / No. WA)</span>
+      </button>
+
+      <button class="mode-tab-btn" onclick="switchCustomerMode('member', this)">
+        <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Akun Member Pelanggan</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN BODY -->
+  <main class="portal-main-wrap">
+
+    <!-- ==========================================================================
+         MODE 1: LACAK INSTAN (GUEST / PHONE NUMBER LOOKUP)
+         ========================================================================== -->
+    <section class="portal-view active-view" id="view-guest">
+      <div class="track-search-card">
+        <h3 style="font-size:16px; font-weight:800; color:var(--text-main);">
+          🔍 Masukkan Nomor WhatsApp atau Nomor Invoice
+        </h3>
+        <p style="font-size:12.5px; color:var(--text-muted); margin-top:4px;">
+          Sistem otomatis mencari buket yang sedang dirangkai atau dikirim berdasarkan nomor HP Anda tanpa perlu login password.
+        </p>
+
+        <div class="track-form-row">
+          <div class="track-input-wrap">
+            <span class="track-input-icon">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </span>
+            <input type="text" id="trackInput" placeholder="Contoh: 081298317721 atau INV/20260907/001" value="081298317721">
+          </div>
+          <button class="btn-track-submit" onclick="performTracking()">
+            <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Lacak Pesanan Saya</span>
+          </button>
+        </div>
+
+        <!-- Sample Quick Click -->
+        <div class="quick-sample-chips">
+          <span>💡 Coba Contoh Nomor:</span>
+          <span class="sample-chip" onclick="fillAndSearch('081298317721')">0812-9831-7721 (Sarah Amalia - Ekspedisi)</span>
+          <span class="sample-chip" onclick="fillAndSearch('085718290012')">0857-1829-0012 (Dimas Pratama - COD Margo City)</span>
+        </div>
+      </div>
+
+      <!-- TIMELINE TRACKING RESULT -->
+      <div class="timeline-result-card" id="timelineResultCard">
+        <div class="result-header">
+          <div>
+            <span class="invoice-tag" id="resInvoiceId">INV/20260907/001</span>
+            <div class="order-meta-info" id="resOrderMeta">Pemesanan: 07 September 2026, 10:14 WIB • Pembeli: Sarah Amalia</div>
+          </div>
+          <span class="hero-badge" style="margin:0; background:#DCFCE7; border-color:#86EFAC; color:#166534;" id="resStatusBadge">
+            Sedang Dirangkai Pengrajin
+          </span>
+        </div>
+
+        <!-- STEPPER PROGRESS BAR -->
+        <div class="order-stepper">
+          <div class="step-node completed" id="step1">
+            <div class="step-icon-circle">✓</div>
+            <div class="step-title">1. Bayar QRIS</div>
+            <div class="step-sub">Lunas Terverifikasi</div>
+          </div>
+
+          <div class="step-node active" id="step2">
+            <div class="step-icon-circle">✂️</div>
+            <div class="step-title">2. Dirangkai</div>
+            <div class="step-sub">Tim Pengrajin Atelier</div>
+          </div>
+
+          <div class="step-node" id="step3">
+            <div class="step-icon-circle">🚚</div>
+            <div class="step-title">3. Dikirim / COD</div>
+            <div class="step-sub">Kurir J&T / Janji Temu</div>
+          </div>
+
+          <div class="step-node" id="step4">
+            <div class="step-icon-circle">🎁</div>
+            <div class="step-title">4. Diterima</div>
+            <div class="step-sub">Siap Untuk Wisuda</div>
+          </div>
+        </div>
+
+        <!-- ORDER DETAIL SUMMARY -->
+        <div class="order-details-grid">
+          <div>
+            <div class="detail-item-title">Buket Bunga Dipesan</div>
+            <div class="detail-item-val" id="resItemName">Tulip Pastel Pink Candy + Fairy LED 1 Meter</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Custom Pita: Pink Velvet • Kartu: "Happy Graduation Bestie!"</div>
+          </div>
+
+          <div>
+            <div class="detail-item-title">Metode Logistik & Tujuan</div>
+            <div class="detail-item-val" id="resLogistics">Biteship — J&T Express (No. Resi: JT98127391028ID)</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;" id="resAddress">Fakultas Psikologi Universitas Indonesia, Depok</div>
+          </div>
+        </div>
+
+        <!-- ACTION CTAs -->
+        <div class="action-cta-bar">
+          <button class="btn-warranty-claim" onclick="openWarrantyModal()">
+            🛡️ Ajukan Garansi Ganti Baru 100%
+          </button>
+          <button class="btn-wa-cs" onclick="openCustomerChat('order')">
+            <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>💬 Live Chat CS Sistem (Respon Instan)</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         MODE 2: AKUN MEMBER PELANGGAN
+         ========================================================================== -->
+    <!-- ==========================================================================
+         MODE 2: AKUN MEMBER PELANGGAN (DASHBOARD LENGKAP PELACAKAN & PROFIL)
+         ========================================================================== -->
+    <section class="portal-view" id="view-member">
+      
+      <!-- Member Profile Header Card -->
+      <div class="member-profile-card">
+        <div class="member-info-group">
+          <div class="member-big-avatar" id="memberBigAvatar" onclick="openCustomerProfileModal()" title="Klik untuk ubah avatar/profil">SA</div>
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="member-name" id="memberDashboardName">Sarah Amalia</div>
+              <span class="member-badge" id="memberDashboardBadge">✨ Member Gold Florist</span>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:3px;">
+              <span id="memberDashboardPhone">0812-9831-7721</span> • <span id="memberDashboardEmail">sarah.amalia@ui.ac.id</span>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <button class="sample-chip" onclick="openCustomerProfileModal()" style="font-size:11px; background:#fff; border-color:var(--primary); color:var(--primary); font-weight:700;">
+                <svg class="svg-icon svg-icon-sm" style="width:12px; height:12px;" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Atur Profil & Avatar</span>
+              </button>
+              <button class="sample-chip" onclick="logoutCustomerMember()" style="font-size:11px; background:#FEE2E2; border-color:#FECDD3; color:#DC2626; font-weight:700;">
+                <svg class="svg-icon svg-icon-sm" style="width:12px; height:12px;" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="member-points-box">
+          <div class="points-label">Saldo Flower Points</div>
+          <div class="points-val">2.450 Poin</div>
+          <div style="font-size:11px; color:#047857; margin-top:2px;">Setara Diskon Potongan Rp 24.500</div>
+          <button class="sample-chip" style="margin-top:6px; background:#10B981; color:#fff; border:none; font-weight:800;" onclick="showToast('Klaim Voucher Diskon', 'Voucher diskon Rp 20.000 berhasil diklaim untuk checkout berikutnya!', 'success')">
+            🎁 Tukar Voucher Rp 20.000
+          </button>
+        </div>
+      </div>
+
+      <!-- LIVE ACTIVE ORDER TRACKING EMBED (SARAH AMALIA - INV/20260907/001) -->
+      <div class="member-active-order-card">
+        <div class="active-badge-top">
+          <span style="width:7px; height:7px; background:#34D399; border-radius:50%; display:inline-block;"></span>
+          <span>PESANAN AKTIF SAAT INI</span>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+          <div>
+            <span class="invoice-tag">INV/20260907/001</span>
+            <h3 style="font-size:16px; font-weight:800; color:var(--text-main); margin-top:6px;">
+              Tulip Pastel Pink Candy + Fairy LED 1 Meter
+            </h3>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+              Pemesanan: 07 September 2026, 10:14 WIB • Pembayaran QRIS Midtrans Terverifikasi
+            </p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700;">Total Pembayaran</div>
+            <strong style="font-size:18px; color:var(--primary);">Rp 195.000</strong>
+          </div>
+        </div>
+
+        <!-- 4-STEP LIVE PROGRESS STEPPER -->
+        <div class="order-stepper" style="margin: 20px 0;">
+          <div class="step-node completed">
+            <div class="step-dot"><svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="step-title">1. Pembayaran Berhasil</div>
+            <div class="step-desc">07 Sep, 10:14 WIB<br>QRIS Midtrans Lunas</div>
+          </div>
+          <div class="step-node active">
+            <div class="step-dot"><svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="step-title">2. Sedang Dirangkai</div>
+            <div class="step-desc">Di Atelier Chenille<br>Est. Selesai 15:00 WIB</div>
+          </div>
+          <div class="step-node">
+            <div class="step-dot"><svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><rect width="16" height="13" x="1" y="3" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+            <div class="step-title">3. Diserahkan ke Kurir</div>
+            <div class="step-desc">Biteship — J&T Express<br>No. Resi: JT98127391028ID</div>
+          </div>
+          <div class="step-node">
+            <div class="step-dot"><svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div class="step-title">4. Tiba di Tujuan</div>
+            <div class="step-desc">Est. Tiba 08 Sep 2026<br>Fakultas Psikologi UI</div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface-subtle); border:1px solid var(--primary-border); border-radius:12px; padding:12px 16px; margin-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div>
+            <div style="font-size:12px; font-weight:800; color:var(--text-main);">📍 Alamat Tujuan Pengiriman:</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;" id="memberActiveAddressText">Gedung Fakultas Psikologi Universitas Indonesia, Kampus Baru UI Depok (Penerima: Sarah Amalia - 081298317721)</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="sample-chip" style="background:#fff; border-color:var(--primary); color:var(--primary); font-weight:700;" onclick="openCustomerChat('order')">
+              💬 Chat CS Soal Buket Ini
+            </button>
+            <button class="sample-chip" style="background:#fff; border-color:var(--border); color:var(--text-main); font-weight:700;" onclick="showToast('Unduh Invoice', 'Invoice digital INV/20260907/001 diunduh.', 'success')">
+              📄 Unduh PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAVED DELIVERY ADDRESSES -->
+      <div class="history-card" style="margin-bottom:20px;" id="savedAddressesSection">
+        <div class="history-header">
+          <span>Daftar Alamat Pengiriman Tersimpan</span>
+          <button class="sample-chip" onclick="showToast('Tambah Alamat', 'Membuka formulir penambahan alamat baru.', 'info')">+ Tambah Alamat</button>
+        </div>
+
+        <div class="member-addresses-grid">
+          <div class="address-card is-primary">
+            <span style="font-size:10px; font-weight:800; background:var(--primary); color:#fff; padding:2px 8px; border-radius:99px; text-transform:uppercase;">Alamat Utama</span>
+            <div style="font-weight:800; font-size:13.5px; margin-top:6px;">Kampus UI Depok (Fakultas Psikologi)</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px; line-height:1.4;">
+              Gedung Fakultas Psikologi Universitas Indonesia, Kampus Baru UI Depok, Jawa Barat 16424.<br>
+              <strong>Penerima:</strong> Sarah Amalia (0812-9831-7721)
+            </div>
+          </div>
+
+          <div class="address-card">
+            <span style="font-size:10px; font-weight:800; background:#E2E8F0; color:#475569; padding:2px 8px; border-radius:99px; text-transform:uppercase;">Alamat Kost</span>
+            <div style="font-weight:800; font-size:13.5px; margin-top:6px;">Kost Putri Melati Indah</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px; line-height:1.4;">
+              Jl. Mandor Samin No. 24, Kukusan Teknik (Kutek) UI, Beji, Kota Depok.<br>
+              <strong>Penerima:</strong> Sarah Amalia (0812-9831-7721)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Table -->
+      <div class="history-card">
+        <div class="history-header">
+          <span>Riwayat Semua Pesanan Tersimpan</span>
+          <span style="font-size:12px; color:var(--text-muted);">Total 3 Transaksi</span>
+        </div>
+
+        <div class="order-item-row">
+          <div>
+            <strong style="color:var(--primary); font-size:14px;">INV/20260907/001</strong>
+            <div style="font-size:12px; color:var(--text-muted);">07 Sep 2026 • Tulip Pastel Candy + Fairy LED</div>
+            <div style="font-size:11px; color:#10B981; font-weight:700; margin-top:2px;">Sedang Dirangkai di Atelier</div>
+          </div>
+          <div style="text-align:right;">
+            <strong style="font-size:14px;">Rp 195.000</strong>
+            <div><button class="sample-chip" style="margin-top:4px;" onclick="fillAndSearch('INV/20260907/001')">Lacak Status</button></div>
+          </div>
+        </div>
+
+        <div class="order-item-row">
+          <div>
+            <strong style="color:var(--primary); font-size:14px;">INV/20260814/042</strong>
+            <div style="font-size:12px; color:var(--text-muted);">14 Agu 2026 • Sunshine Daisy Bear Toga Wisuda</div>
+            <div style="font-size:11px; color:#059669; font-weight:700; margin-top:2px;">✓ Selesai & Diterima (Review ⭐ 5.0)</div>
+          </div>
+          <div style="text-align:right;">
+            <strong style="font-size:14px;">Rp 175.000</strong>
+            <div><button class="sample-chip" style="margin-top:4px;" onclick="showToast('Unduh Invoice', 'Invoice PDF INV/20260814/042 diunduh.', 'success')">Unduh Invoice</button></div>
+          </div>
+        </div>
+
+        <div class="order-item-row">
+          <div>
+            <strong style="color:var(--primary); font-size:14px;">INV/20260510/018</strong>
+            <div style="font-size:12px; color:var(--text-muted);">10 Mei 2026 • Romantic Red Rose Velvet</div>
+            <div style="font-size:11px; color:#059669; font-weight:700; margin-top:2px;">✓ Selesai & Diterima</div>
+          </div>
+          <div style="text-align:right;">
+            <strong style="font-size:14px;">Rp 210.000</strong>
+            <div><button class="sample-chip" style="margin-top:4px;" onclick="showToast('Unduh Invoice', 'Invoice PDF INV/20260510/018 diunduh.', 'success')">Unduh Invoice</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: ATUR PROFIL & AVATAR MEMBER -->
+  <div class="modal-overlay" id="modalCustomerProfile" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:10000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:20px; max-width:460px; width:90%; padding:24px; box-shadow:var(--shadow-lg); border:2px solid var(--primary-border);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-size:16px; font-weight:800; color:var(--text-main);">Atur Profil & Avatar Member</h3>
+        <button onclick="closeCustomerProfileModal()" style="background:none; border:none; font-size:18px; cursor:pointer;">✕</button>
+      </div>
+
+      <!-- Avatar Picker -->
+      <div style="text-align:center; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--border);">
+        <div class="cust-header-avatar" id="editModalAvatarPreview" style="width:56px !important; height:56px !important; font-size:20px; margin:0 auto 10px auto;">SA</div>
+        <div style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">Pilih Inisial / Ikon Avatar Profil:</div>
+        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <button class="sample-chip" onclick="setAvatarChoice('SA')">SA</button>
+          <button class="sample-chip" onclick="setAvatarChoice('🌸')">🌸</button>
+          <button class="sample-chip" onclick="setAvatarChoice('🌷')">🌷</button>
+          <button class="sample-chip" onclick="setAvatarChoice('🧸')">🧸</button>
+          <button class="sample-chip" onclick="setAvatarChoice('👑')">👑</button>
+          <button class="sample-chip" onclick="setAvatarChoice('🎀')">🎀</button>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div>
+          <label style="font-size:12px; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Nama Lengkap Pelanggan:</label>
+          <input type="text" id="custEditName" value="Sarah Amalia" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Nomor WhatsApp Terdaftar:</label>
+          <input type="text" id="custEditPhone" value="0812-9831-7721" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Alamat Pengiriman Utama:</label>
+          <input type="text" id="custEditAddress" value="Gedung Fakultas Psikologi Universitas Indonesia, Kampus Baru UI Depok" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none;">
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+        <button class="sample-chip" onclick="closeCustomerProfileModal()">Batal</button>
+        <button class="btn-store" onclick="saveCustomerProfile()">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    /* --------------------------------------------------------------------------
+       SAMPLE DATABASE
+       -------------------------------------------------------------------------- */
+    const orderDb = [
+      {
+        id: "INV/20260907/001",
+        phone: "081298317721",
+        name: "Sarah Amalia",
+        item: "Tulip Pastel Pink Candy + Fairy LED 1 Meter",
+        logistics: "Biteship — J&T Express (No. Resi: JT98127391028ID)",
+        address: "Gedung Fakultas Psikologi Universitas Indonesia, Kampus Baru UI Depok",
+        statusStep: 2, // 1: Paid, 2: Crafting, 3: Shipped, 4: Delivered
+        statusLabel: "Sedang Dirangkai Pengrajin (Estimasi Selesai 15:00 WIB)"
+      },
+      {
+        id: "INV/20260907/002",
+        phone: "085718290012",
+        name: "Dimas Pratama",
+        item: "Sunshine Daisy Bear Toga (Graduation Edition)",
+        logistics: "COD — Lobby Drop-off Utara Margo City Mall",
+        address: "Janji Temu: Hari Ini Pukul 16:30 WIB di depan Lobby Utama",
+        statusStep: 2,
+        statusLabel: "Sedang Dirangkai Pengrajin (Siap Bawa COD)"
+      }
+    ];
+
+    function switchCustomerMode(modeKey, btn) {
+      document.querySelectorAll('.mode-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      document.querySelectorAll('.portal-view').forEach(v => v.classList.remove('active-view'));
+      const target = document.getElementById(`view-${modeKey}`);
+      if (target) target.classList.add('active-view');
+
+      const headerProfile = document.getElementById('custHeaderProfile');
+      if (headerProfile) {
+        if (modeKey === 'member') {
+          headerProfile.classList.add('show-profile');
+        } else {
+          headerProfile.classList.remove('show-profile');
+        }
+      }
+    }
+
+    function fillAndSearch(val) {
+      // If switching from member view
+      const guestTabBtn = document.querySelectorAll('.mode-tab-btn')[0];
+      switchCustomerMode('guest', guestTabBtn);
+
+      const inp = document.getElementById('trackInput');
+      inp.value = val;
+      performTracking();
+    }
+
+    function performTracking() {
+      const q = document.getElementById('trackInput').value.trim().toLowerCase().replace(/[- ]/g, '');
+      if (!q) {
+        showToast('Input Kosong', 'Masukkan nomor telepon WhatsApp atau invoice.', 'warning');
+        return;
+      }
+
+      const match = orderDb.find(o => 
+        o.phone.includes(q) || 
+        o.id.toLowerCase().includes(q)
+      );
+
+      const card = document.getElementById('timelineResultCard');
+
+      if (!match) {
+        showToast('Pesanan Tidak Ditemukan', 'Nomor tidak terdaftar atau buket telah diarsipkan.', 'warning');
+        card.style.display = 'none';
+        return;
+      }
+
+      // Populate card
+      document.getElementById('resInvoiceId').textContent = match.id;
+      document.getElementById('resOrderMeta').textContent = `Pembeli: ${match.name} (${match.phone}) • Pembayaran QRIS Midtrans Terverifikasi`;
+      document.getElementById('resStatusBadge').textContent = match.statusLabel;
+      document.getElementById('resItemName').textContent = match.item;
+      document.getElementById('resLogistics').textContent = match.logistics;
+      document.getElementById('resAddress').textContent = match.address;
+
+      // Update Stepper
+      for (let i = 1; i <= 4; i++) {
+        const stepEl = document.getElementById(`step${i}`);
+        stepEl.className = 'step-node';
+        if (i < match.statusStep) {
+          stepEl.classList.add('completed');
+        } else if (i === match.statusStep) {
+          stepEl.classList.add('active');
+        }
+      }
+
+      card.style.display = 'block';
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showToast('Pesanan Ditemukan', `Status buket untuk ${match.name} berhasil dimuat.`, 'success');
+    }
+
+    function openWarrantyModal() {
+      showToast('Klaim Garansi', 'Membuka formulir klaim Garansi Ganti Baru 100%. Silakan kirimkan foto buket ke CS WhatsApp.', 'info');
+      setTimeout(() => {
+        window.open('https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20mau%20klaim%20Garansi%20Ganti%20Baru%20karena%20paket%20buket%20kurang%20sesuai.', '_blank');
+      }, 1000);
+    }
+
+    function showToast(title, desc, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast-box';
+
+      let icon = '🔔';
+      if (type === 'success') icon = '✅';
+      if (type === 'warning') icon = '⚠️';
+
+      toast.innerHTML = `
+        <span style="font-size:16px;">${icon}</span>
+        <div>
+          <div style="font-weight:800; font-size:12.5px;">${title}</div>
+          <div style="font-size:11px; opacity:0.85; margin-top:2px;">${desc}</div>
+        </div>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.3s, transform 0.3s';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+
+  <!-- FLOATING LIVE CHAT LAUNCHER -->
+  <div class="floating-chat-trigger" onclick="toggleCustomerChat()" title="Chat dengan CS Atelier">
+    <div class="chat-pulse-dot"></div>
+    <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>Live Chat CS</span>
+  </div>
+
+  <!-- CUSTOMER IN-SYSTEM CHAT WINDOW -->
+  <div class="cust-chat-container" id="custChatContainer">
+    <div class="cust-chat-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="cust-chat-avatar">🌸</div>
+        <div>
+          <div style="font-weight: 800; font-size: 13.5px;">Customer Service Atelier</div>
+          <div style="font-size: 10.5px; color: #34D399; display: flex; align-items: center; gap: 4px;">
+            <span style="width: 7px; height: 7px; background: #34D399; border-radius: 50%; display: inline-block;"></span>
+            <span>Online di Sistem Web</span>
+          </div>
+        </div>
+      </div>
+      <button onclick="toggleCustomerChat()" style="background: transparent; border: none; color: #fff; font-size: 18px; cursor: pointer; padding: 4px;">✕</button>
+    </div>
+
+    <!-- ESCALATE / TRANSFER TO WHATSAPP BANNER -->
+    <div style="padding: 8px 14px; background: #ECFDF5; border-bottom: 1px solid #A7F3D0; display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+      <span style="font-size: 11px; color: #065F46;">Butuh kirim foto atau chat di WA?</span>
+      <button class="btn-transfer-wa" onclick="escalateChatToWhatsApp()">
+        <svg class="svg-icon svg-icon-sm" style="width:14px; height:14px;" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+        <span>Alihkan ke WA</span>
+      </button>
+    </div>
+
+    <div class="cust-chat-messages" id="custChatStream">
+      <div class="cust-msg in">
+        Halo Kak! 👋 Selamat datang di layanan Customer Care Chenille Atelier.
+        Ada yang bisa kami bantu seputar pesanan buket kawat bulu, custom warna toga, atau jadwal pengiriman?
+        <div class="cust-msg-time">Baru saja</div>
+      </div>
+    </div>
+
+    <div class="cust-chat-chips">
+      <button class="cust-chip" onclick="sendQuickCustomerMsg('Halo min, saya mau tanya progres pesanan saya apakah sudah selesai dirangkai?')">📦 Tanya Status Pesanan</button>
+      <button class="cust-chip" onclick="sendQuickCustomerMsg('Kak, apakah bisa custom warna bunga / toga wisuda?')">🎨 Custom Warna Toga</button>
+      <button class="cust-chip" onclick="sendQuickCustomerMsg('Min, untuk COD di Margo City jam berapa saja ya?')">📍 Info Janji Temu COD</button>
+    </div>
+
+    <div class="cust-chat-input-bar">
+      <input type="text" id="custChatInput" placeholder="Ketik pertanyaan untuk CS..." onkeypress="handleCustChatEnter(event)">
+      <button onclick="sendCustomerMsg()">Kirim</button>
+    </div>
+  </div>
+
+  <script>
+    // In-System Customer Chat Logic
+    function toggleCustomerChat() {
+      const container = document.getElementById('custChatContainer');
+      container.classList.toggle('active');
+      if (container.classList.contains('active')) {
+        document.getElementById('custChatInput').focus();
+      }
+    }
+
+    function openCustomerChat(context) {
+      const container = document.getElementById('custChatContainer');
+      container.classList.add('active');
+      const invoice = document.getElementById('resInvoice')?.textContent || 'INV/20260907/001';
+      const productName = document.getElementById('resProduct')?.textContent || 'Buket Bunga';
+      
+      const stream = document.getElementById('custChatStream');
+      const infoMsg = document.createElement('div');
+      infoMsg.className = 'cust-msg in';
+      infoMsg.style.background = '#FEF3C7';
+      infoMsg.style.borderColor = '#FCD34D';
+      infoMsg.innerHTML = `
+        <strong>Konteks Pesanan:</strong> ${invoice}<br>
+        <em>${productName}</em><br>
+        <span style="font-size:11px; color:#92400E;">CS Atelier sedang aktif. Silakan tanyakan hal apa pun mengenai pesanan Anda kak.</span>
+        <div class="cust-msg-time">${new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</div>
+      `;
+      stream.appendChild(infoMsg);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function sendQuickCustomerMsg(text) {
+      document.getElementById('custChatInput').value = text;
+      sendCustomerMsg();
+    }
+
+    function sendCustomerMsg() {
+      const input = document.getElementById('custChatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const stream = document.getElementById('custChatStream');
+      const now = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+
+      const msg = document.createElement('div');
+      msg.className = 'cust-msg out';
+      msg.innerHTML = `${text}<div class="cust-msg-time">${now}</div>`;
+      stream.appendChild(msg);
+      input.value = '';
+      stream.scrollTop = stream.scrollHeight;
+
+      // Save to localStorage for sync with admin
+      const existing = JSON.parse(localStorage.getItem('chenille_live_chats') || '[]');
+      existing.push({ sender: 'customer', text: text, time: now });
+      localStorage.setItem('chenille_live_chats', JSON.stringify(existing));
+
+      // Automated intelligent reply from Atelier CS System after 800ms
+      setTimeout(() => {
+        let reply = "Terima kasih pesanannya kak! Tim pengrajin sedang menyelesaikan buket pesanan Anda. Ada hal lain yang ingin ditanyakan?";
+        const low = text.toLowerCase();
+        if (low.includes('status') || low.includes('progres') || low.includes('selesai')) {
+          reply = "Pesanan kak Sarah Amalia (INV/20260907/001) saat ini sudah 75% selesai dirangkai oleh pengrajin. Estimasi siap pickup kurir J&T pukul 15:00 WIB hari ini ya kak!";
+        } else if (low.includes('warna') || low.includes('custom') || low.includes('toga')) {
+          reply = "Bisa banget kak! Stok kawat bulu kami lengkap: pastel pink, lavender, navy, kuning emas, dan marun. Kami sesuaikan dengan request kak Sarah!";
+        } else if (low.includes('cod') || low.includes('margo') || low.includes('kampus')) {
+          reply = "Titik kumpul COD gratis tersedia di Lobby Margo City & Gerbatama UI pukul 11:00 - 17:00 WIB tanpa ongkir kak.";
+        }
+
+        const replyMsg = document.createElement('div');
+        replyMsg.className = 'cust-msg in';
+        replyMsg.innerHTML = `${reply}<div class="cust-msg-time">${new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</div>`;
+        stream.appendChild(replyMsg);
+        stream.scrollTop = stream.scrollHeight;
+
+        existing.push({ sender: 'admin', text: reply, time: new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}) });
+        localStorage.setItem('chenille_live_chats', JSON.stringify(existing));
+      }, 800);
+    }
+
+    function handleCustChatEnter(e) {
+      if (e.key === 'Enter') sendCustomerMsg();
+    }
+
+    function escalateChatToWhatsApp() {
+      const invoice = document.getElementById('resInvoice')?.textContent || 'INV/20260907/001';
+      const url = `https://wa.me/6281234567890?text=${encodeURIComponent('Halo Admin Atelier, saya ingin melanjutkan percakapan dari Web Chat seputar pesanan ' + invoice + '...')}`;
+      window.open(url, '_blank');
+      showToast('Dialihkan ke WhatsApp', 'Membuka WhatsApp Business resmi pengrajin.', 'success');
+    }
+
+    /* --------------------------------------------------------------------------
+       CUSTOMER MEMBER PROFILE & DROPDOWN MANAGEMENT
+       -------------------------------------------------------------------------- */
+    function toggleCustomerProfileDropdown(e) {
+      if (e) e.stopPropagation();
+      const drop = document.getElementById('custDropdownMenu');
+      const wrap = document.getElementById('custHeaderProfile');
+      if (drop) {
+        drop.classList.toggle('show');
+        if (wrap) wrap.classList.toggle('active', drop.classList.contains('show'));
+      }
+    }
+
+    function closeCustomerProfileDropdown() {
+      const drop = document.getElementById('custDropdownMenu');
+      const wrap = document.getElementById('custHeaderProfile');
+      if (drop) drop.classList.remove('show');
+      if (wrap) wrap.classList.remove('active');
+    }
+
+    document.addEventListener('click', (e) => {
+      const profileEl = document.getElementById('custHeaderProfile');
+      if (profileEl && !profileEl.contains(e.target)) {
+        closeCustomerProfileDropdown();
+      }
+    });
+
+    function openCustomerProfileModal() {
+      closeCustomerProfileDropdown();
+      const modal = document.getElementById('modalCustomerProfile');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeCustomerProfileModal() {
+      const modal = document.getElementById('modalCustomerProfile');
+      if (modal) modal.style.display = 'none';
+    }
+
+    let selectedAvatar = 'SA';
+    function setAvatarChoice(val) {
+      selectedAvatar = val;
+      const preview = document.getElementById('editModalAvatarPreview');
+      if (preview) preview.textContent = val;
+    }
+
+    function saveCustomerProfile() {
+      const name = document.getElementById('custEditName').value.trim();
+      const phone = document.getElementById('custEditPhone').value.trim();
+      const address = document.getElementById('custEditAddress').value.trim();
+
+      if (!name || !phone) {
+        showToast('Validasi Gagal', 'Nama dan No. WhatsApp tidak boleh kosong.', 'warning');
+        return;
+      }
+
+      // Update Header
+      document.getElementById('custHeaderAvatar').textContent = selectedAvatar;
+      document.getElementById('custHeaderName').textContent = name;
+      document.getElementById('custDropName').textContent = name;
+
+      // Update Member View
+      document.getElementById('memberBigAvatar').textContent = selectedAvatar;
+      document.getElementById('memberDashboardName').textContent = name;
+      document.getElementById('memberDashboardPhone').textContent = phone;
+      document.getElementById('memberActiveAddressText').textContent = `${address} (Penerima: ${name} - ${phone})`;
+
+      closeCustomerProfileModal();
+      showToast('Profil Diperbarui', 'Data akun member berhasil disimpan.', 'success');
+    }
+
+    function scrollToSavedAddresses() {
+      closeCustomerProfileDropdown();
+      const sec = document.getElementById('savedAddressesSection');
+      if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function logoutCustomerMember() {
+      closeCustomerProfileDropdown();
+      showToast('Logout Berhasil', 'Anda telah keluar dari akun member. Kembali ke mode Lacak Instan.', 'info');
+      setTimeout(() => {
+        const guestBtn = document.querySelectorAll('.mode-tab-btn')[0];
+        switchCustomerMode('guest', guestBtn);
+      }, 700);
+    }
+
+    // Auto-search or switch mode on load
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('mode') === 'member') {
+        const memberBtn = document.querySelectorAll('.mode-tab-btn')[1];
+        switchCustomerMode('member', memberBtn);
+      } else {
+        performTracking();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,2527 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aesthetic Chenille Atelier — Tema B: Modern Romantic & Editorial</title>
+  
+  <!-- Google Fonts: Bodoni Moda (High-End Editorial Luxury Serif) & Inter (Clean Geometric Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;0,6..96,700;0,6..96,800;1,6..96,400;1,6..96,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       DESIGN DNA: TEMA B (MODERN ROMANTIC & EDITORIAL)
+       Karakteristik: Mewah, Berkelas, Burgundy Velvet, Aksen Emas Champagne, Editorial Fashion,
+       Magic UI Luxury Micro-Interactions & Parabolic Gold Fly-To-Cart
+       ========================================================================== */
+    :root {
+      --bg-page: #FAFAFA;
+      --bg-card: #FFFFFF;
+      --primary: #6B2D5C;         /* Burgundy Velvet */
+      --primary-hover: #541F47;
+      --primary-light: #F7EBE1;
+      --secondary: #C98A90;       /* Dusty Rose */
+      --gold: #D4AF37;            /* Champagne Gold */
+      --gold-light: #FDF9F0;
+      --gold-border: #E8D399;
+      --text-main: #1E1919;       /* Deep Espresso */
+      --text-muted: #6E6868;
+      --text-light: #A09A9A;
+      --border: #E8E0DA;
+      --font-heading: 'Bodoni Moda', Georgia, serif;
+      --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --shadow-sm: 0 4px 16px rgba(107, 45, 92, 0.06);
+      --shadow-md: 0 12px 32px rgba(107, 45, 92, 0.1);
+      --shadow-lg: 0 20px 48px rgba(107, 45, 92, 0.16);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-page);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, .brand-title {
+      font-family: var(--font-heading);
+      letter-spacing: 0.3px;
+    }
+
+    /* Top Editorial Bar */
+    .top-bar {
+      background: var(--primary);
+      color: var(--gold-light);
+      text-align: center;
+      padding: 9px 16px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+      border-bottom: 1px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      white-space: nowrap;
+    }
+    .top-bar-gold {
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    /* Header & Navigation — STRICT NO WRAPPING */
+    header {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      transition: all 0.3s ease;
+    }
+    .nav-container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: nowrap;
+    }
+    .brand-logo {
+      text-decoration: none;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .brand-logo h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: var(--primary);
+      line-height: 1.1;
+    }
+    .brand-logo span.subtitle {
+      display: block;
+      font-size: 9.5px;
+      font-family: var(--font-body);
+      color: var(--secondary);
+      font-weight: 600;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+
+    /* 6 Menu Items — Strictly No Wrapping */
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      list-style: none;
+      gap: 3px;
+      margin: 0;
+      padding: 0;
+      flex-shrink: 1;
+      flex-wrap: nowrap;
+    }
+    .nav-menu a {
+      text-decoration: none;
+      color: var(--text-main);
+      font-weight: 500;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      padding: 6px 11px;
+      border-radius: var(--radius-sm);
+      white-space: nowrap !important;
+      line-height: 1.2;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .nav-menu a:hover {
+      color: var(--secondary);
+    }
+    .nav-menu a.active {
+      color: var(--primary);
+      font-weight: 700;
+      background: var(--primary-light);
+    }
+    .nav-menu a.active::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 12px;
+      right: 12px;
+      height: 2px;
+      background: var(--gold);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .btn-nav-cart {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .btn-nav-cart:hover {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(107, 45, 92, 0.25);
+    }
+    .cart-badge {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-nav-cart:hover .cart-badge {
+      background: #fff;
+      color: var(--primary);
+    }
+
+    /* Magic UI Cart Bump Animation */
+    @keyframes cartBumpAnim {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.25) rotate(-4deg); }
+      65% { transform: scale(0.95) rotate(2deg); }
+      100% { transform: scale(1); }
+    }
+    .cart-bump {
+      animation: cartBumpAnim 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    }
+
+    /* Page Container */
+    .page-section {
+      display: none;
+      max-width: 1200px;
+      margin: 30px auto 80px auto;
+      padding: 0 24px;
+      animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .page-section.active-page {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================================================
+       HERO BANNER DENGAN FOTO MOCKUP MEWAH TEMA B
+       ========================================================================== */
+    .hero-banner {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 50px 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 40px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 48px;
+      position: relative;
+    }
+    .hero-banner::after {
+      content: '';
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: calc(var(--radius) - 4px);
+      pointer-events: none;
+    }
+    .hero-content {
+      flex: 1.1;
+      z-index: 2;
+    }
+    .hero-tag {
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--secondary);
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hero-content h2 {
+      font-size: 48px;
+      line-height: 1.14;
+      margin-bottom: 18px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .hero-content h2 span.highlight {
+      font-style: italic;
+      color: var(--secondary);
+    }
+    .hero-content p {
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+      max-width: 500px;
+      font-weight: 300;
+    }
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .btn-gold {
+      background: var(--primary);
+      color: #fff;
+      border: 1px solid var(--gold);
+      padding: 13px 32px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-gold::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 40%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(212,175,55,0.4), transparent);
+      transform: rotate(25deg);
+      animation: btnShimmer 3.5s infinite;
+    }
+    @keyframes btnShimmer {
+      0% { left: -60%; }
+      35%, 100% { left: 130%; }
+    }
+    .btn-gold:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(107, 45, 92, 0.25);
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      padding: 13px 26px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .btn-outline:hover {
+      background: var(--primary-light);
+    }
+
+    /* Hero Photo Card */
+    .hero-visual-box {
+      flex: 0.9;
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+    }
+    .hero-img-card {
+      width: 100%;
+      max-width: 440px;
+      height: 320px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--gold-border);
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      background: #FAF7F5;
+    }
+    .hero-img-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+    .hero-img-card:hover img {
+      transform: scale(1.04);
+    }
+    .hero-floating-pill {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(107, 45, 92, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      border: 1px solid var(--gold);
+    }
+
+    /* Trust Props */
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 48px;
+    }
+    .trust-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+    .trust-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-2px);
+    }
+    .trust-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      border: 1px solid rgba(212, 175, 55, 0.3);
+    }
+    .trust-text h4 {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 2px;
+    }
+    .trust-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* Headings */
+    .heading-box {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .heading-box h2 {
+      font-size: 38px;
+      color: var(--primary);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .heading-box p {
+      color: var(--text-muted);
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 8px 22px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(107, 45, 92, 0.2);
+    }
+
+    /* Product Grid */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+      gap: 26px;
+    }
+    .product-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .product-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-md);
+    }
+    .card-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: #FFFFFF;
+      border: 1px solid var(--gold);
+      color: var(--primary);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+      z-index: 2;
+    }
+    .card-views {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(255,255,255,0.9);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      z-index: 2;
+    }
+    .card-thumb-art {
+      height: 230px;
+      background: #FAF7F5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border-bottom: 1px solid var(--border);
+    }
+    .flower-emblem {
+      font-size: 64px;
+      filter: drop-shadow(0 6px 14px rgba(107, 45, 92, 0.15));
+      transition: transform 0.4s ease;
+    }
+    .product-card:hover .flower-emblem {
+      transform: scale(1.1);
+    }
+    .card-info {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      text-align: center;
+    }
+    .card-cat {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--secondary);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .card-title {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    .rating-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .price-row {
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .price-now {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .price-was {
+      font-size: 13px;
+      color: var(--text-light);
+      text-decoration: line-through;
+    }
+    .btn-add-cart {
+      margin-top: auto;
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .product-card:hover .btn-add-cart {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* Magic UI Flyer Element */
+    .magic-flyer {
+      position: fixed;
+      z-index: 10000;
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: #FFFFFF;
+      box-shadow: 0 8px 24px rgba(107,45,92,0.3);
+      border: 1.5px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      pointer-events: none;
+      transition: all 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    /* Magic UI Sparkle Burst */
+    .magic-sparkle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 10001;
+      font-size: 16px;
+      animation: sparkleFade 0.6s ease-out forwards;
+    }
+    @keyframes sparkleFade {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0.2); opacity: 0; }
+    }
+
+    /* Magic UI Sonner Toast Notification */
+    .magic-toast-container {
+      position: fixed;
+      bottom: 28px;
+      left: 28px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .magic-toast {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 14px 18px;
+      box-shadow: 0 12px 36px rgba(107, 45, 92, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 320px;
+      max-width: 420px;
+      animation: toastSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative;
+      overflow: hidden;
+    }
+    @keyframes toastSlideUp {
+      from { transform: translateY(30px) scale(0.9); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .toast-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 6px;
+      background: #FAF7F5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .toast-info {
+      flex: 1;
+    }
+    .toast-title {
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 2px;
+    }
+    .toast-desc {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .toast-action-btn {
+      background: var(--primary);
+      color: #fff;
+      border: 1px solid var(--gold);
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .toast-action-btn:hover {
+      background: var(--primary-hover);
+    }
+    .toast-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: var(--gold);
+      width: 100%;
+      animation: toastTimer 3.5s linear forwards;
+    }
+    @keyframes toastTimer {
+      from { width: 100%; }
+      to { width: 0%; }
+    }
+
+    /* Custom Studio */
+    .customizer-box {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      box-shadow: var(--shadow-md);
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 36px;
+      margin-bottom: 40px;
+    }
+    .step-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--primary);
+      margin-bottom: 10px;
+      margin-top: 18px;
+    }
+    .step-title:first-child { margin-top: 0; }
+    .swatches {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .swatch {
+      background: #FAF7F5;
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .swatch.selected {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .custom-preview-card {
+      background: #FAF7F5;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+    }
+    .preview-canvas {
+      height: 200px;
+      background: #FFFFFF;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .order-summary-box {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      font-size: 13px;
+      text-align: left;
+      margin-bottom: 18px;
+    }
+    .btn-wa-order {
+      background: var(--primary);
+      color: #fff;
+      border: 1px solid var(--gold);
+      padding: 14px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-wa-order:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Lookbook */
+    .lookbook-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 26px;
+    }
+    .lookbook-item {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.25s ease;
+    }
+    .lookbook-item:hover {
+      border-color: var(--gold);
+      transform: translateY(-4px);
+    }
+    .lookbook-photo-wrap {
+      height: 240px;
+      background: #FAF7F5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border-bottom: 1px solid var(--border);
+    }
+    .lookbook-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: var(--primary);
+      color: var(--gold-light);
+      border: 1px solid var(--gold);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+    .lookbook-meta { padding: 22px; }
+    .lookbook-tags {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--secondary);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .lookbook-meta h4 {
+      font-size: 19px;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+    .lookbook-quote {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    /* Tracking */
+    .tracking-box {
+      max-width: 680px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      box-shadow: var(--shadow-md);
+    }
+    .input-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .input-row input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      outline: none;
+    }
+    .timeline {
+      list-style: none;
+      position: relative;
+      padding-left: 28px;
+      margin-top: 24px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background: var(--border);
+    }
+    .timeline-step {
+      position: relative;
+      margin-bottom: 22px;
+    }
+    .timeline-step::before {
+      content: '';
+      position: absolute;
+      left: -24px;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+
+    /* FAQ */
+    .faq-item {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 22px;
+      margin-bottom: 14px;
+    }
+    .faq-q {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .faq-a {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .warranty-banner {
+      background: var(--primary-light);
+      border: 1px solid var(--gold-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* Cart Drawer */
+    .cart-drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: none;
+      justify-content: flex-end;
+    }
+    .cart-drawer {
+      width: 440px;
+      max-width: 90vw;
+      height: 100%;
+      background: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -6px 0 30px rgba(0,0,0,0.15);
+      animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideLeft {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+    .drawer-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .cart-items {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+    .cart-item {
+      display: flex;
+      gap: 14px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .item-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-sm);
+      background: #FAF7F5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .drawer-footer {
+      padding: 20px 24px;
+      border-top: 1px solid var(--border);
+      background: #FAF7F5;
+    }
+
+    .floating-wa {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--primary);
+      border: 1px solid var(--gold);
+      color: #fff;
+      padding: 13px 22px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      box-shadow: 0 8px 24px rgba(107, 45, 92, 0.3);
+      z-index: 850;
+      transition: transform 0.2s ease;
+    }
+    .floating-wa:hover {
+      transform: translateY(-2px);
+    }
+
+    /* THEME IN-SYSTEM LIVE CHAT MODAL (MODERN ROMANTIC) */
+    .theme-chat-modal {
+      position: fixed;
+      bottom: 90px;
+      right: 24px;
+      width: 380px;
+      height: 520px;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 16px 40px rgba(107, 45, 92, 0.2);
+      display: none;
+      flex-direction: column;
+      z-index: 900;
+      overflow: hidden;
+      animation: chatPopup 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .theme-chat-modal.open {
+      display: flex;
+    }
+    @keyframes chatPopup {
+      from { opacity: 0; transform: translateY(16px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .theme-chat-header {
+      background: linear-gradient(135deg, #4A154B, var(--primary));
+      color: #FFFFFF;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--gold);
+    }
+    .theme-chat-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .theme-chat-avatar {
+      width: 36px;
+      height: 36px;
+      background: rgba(212, 175, 55, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      border: 1.5px solid var(--gold);
+      flex-shrink: 0;
+    }
+    .theme-chat-name {
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 13.5px;
+      letter-spacing: 1px;
+    }
+    .theme-chat-status {
+      font-size: 10.5px;
+      color: #E2D9D2;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .status-indicator-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10B981;
+      display: inline-block;
+    }
+    .btn-chat-close {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease;
+    }
+    .btn-chat-close:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    .theme-chat-escalate {
+      background: #FAF7F5;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .escalate-info {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .btn-escalate-wa {
+      background: #10B981;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      transition: background 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-escalate-wa:hover {
+      background: #059669;
+    }
+    .theme-chat-body {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #FCFAF8;
+    }
+    .chat-bubble {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      line-height: 1.45;
+      position: relative;
+    }
+    .chat-bubble.florist-msg {
+      background: #FFFFFF;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      align-self: flex-start;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .chat-bubble.user-msg {
+      background: var(--primary);
+      color: #FFFFFF;
+      align-self: flex-end;
+      box-shadow: 0 2px 6px rgba(107, 45, 92, 0.25);
+    }
+    .chat-timestamp {
+      display: block;
+      font-size: 9.5px;
+      opacity: 0.65;
+      margin-top: 4px;
+      text-align: right;
+    }
+    .theme-chat-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 14px;
+      background: #FAF7F5;
+      border-top: 1px solid var(--border);
+    }
+    .theme-chip {
+      background: #FFFFFF;
+      border: 1px solid var(--gold);
+      color: var(--primary);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      letter-spacing: 0.3px;
+    }
+    .theme-chip:hover {
+      background: var(--primary);
+      color: #FFFFFF;
+    }
+    .theme-chat-input-row {
+      display: flex;
+      gap: 8px;
+      padding: 12px 14px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--border);
+    }
+    .theme-chat-input-row input {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .theme-chat-input-row input:focus {
+      border-color: var(--primary);
+    }
+    .btn-chat-send {
+      background: var(--primary);
+      color: #FFFFFF;
+      border: 1px solid var(--gold);
+      padding: 0 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease;
+    }
+    .btn-chat-send:hover {
+      background: #4A154B;
+    }
+    .btn-nav-login {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-main);
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: #fff;
+      transition: all 0.2s ease;
+    }
+    .btn-nav-login:hover {
+      border-color: var(--gold);
+      color: var(--primary);
+      background: #FAF7F5;
+    }
+    @media (max-width: 480px) {
+      .theme-chat-modal {
+        width: calc(100vw - 32px);
+        right: 16px;
+        bottom: 80px;
+        height: 480px;
+      }
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(6px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-card {
+      background: #FFFFFF;
+      border-radius: var(--radius);
+      max-width: 560px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      animation: zoomIn 0.25s ease;
+    }
+    @keyframes zoomIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: #fff;
+      border: 1px solid var(--border);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    /* Midtrans QRIS Modal */
+    .qris-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(6px);
+      z-index: 10005;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .qris-modal {
+      background: #FFFFFF;
+      border-radius: var(--radius);
+      max-width: 440px;
+      width: 100%;
+      padding: 28px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--gold);
+      animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    .qris-code-box {
+      width: 200px;
+      height: 200px;
+      margin: 16px auto;
+      background: #FAF7F5;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Responsive Anti-wrapping */
+    @media (max-width: 1200px) {
+      .nav-menu { gap: 2px; }
+      .nav-menu a { font-size: 11px; padding: 5px 8px; letter-spacing: 0.5px; }
+      .brand-logo h1 { font-size: 18px; }
+      .btn-nav-cart { padding: 7px 12px; font-size: 11px; }
+    }
+    @media (max-width: 960px) {
+      .hero-banner { flex-direction: column; padding: 32px 24px; text-align: center; }
+      .hero-content p { margin: 0 auto 24px auto; }
+      .hero-actions { justify-content: center; }
+      .trust-grid { grid-template-columns: repeat(2, 1fr); }
+      .customizer-box { grid-template-columns: 1fr; }
+      .nav-menu {
+        overflow-x: auto;
+        padding: 4px 0;
+        scrollbar-width: none;
+      }
+      .nav-menu::-webkit-scrollbar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP PROMO BAR EDITORIAL -->
+  <div class="top-bar">
+    <span>✦ VALENTINE & ANNIVERSARY SPECIAL CURATION • <span class="top-bar-gold">EXCLUSIVE HANDCRAFTED ATELIER</span> ✦</span>
+  </div>
+
+  <!-- HEADER & NAVIGASI 6 MENU — STRICT NO WRAPPING -->
+  <header>
+    <div class="nav-container">
+      <div class="brand-logo" onclick="navigateTo('home')">
+        <div>
+          <h1 class="brand-title">AESTHETIC CHENILLE</h1>
+          <span class="subtitle">Modern Romantic & Editorial</span>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li><a id="nav-home" class="active" onclick="navigateTo('home')">Beranda</a></li>
+        <li><a id="nav-katalog" onclick="navigateTo('katalog')">Koleksi Bunga</a></li>
+        <li><a id="nav-custom" onclick="navigateTo('custom')">Custom Bouquet</a></li>
+        <li><a id="nav-lookbook" onclick="navigateTo('lookbook')">Editorial Lookbook</a></li>
+        <li><a id="nav-tracking" onclick="navigateTo('tracking')">Lacak Pesanan</a></li>
+        <li><a id="nav-bantuan" onclick="navigateTo('bantuan')">Layanan & Garansi</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="../login/index.html?theme=tema-b" class="btn-nav-login" title="Masuk / Akun Concierge">
+          <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Masuk / Akun</span>
+        </a>
+        <button class="btn-nav-cart" onclick="toggleCartDrawer(true)">
+          <span>Biro Tas</span>
+          <span class="cart-badge" id="cartCount">2</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAGIC UI TOAST CONTAINER -->
+  <div class="magic-toast-container" id="magicToastContainer"></div>
+
+  <!-- ========================================================================
+       PAGE 1: BERANDA / HOME (TEMA B)
+       ======================================================================== -->
+  <section id="page-home" class="page-section active-page">
+    
+    <div class="hero-banner">
+      <div class="hero-content">
+        <span class="hero-tag">✦ The Art of Romance • Artisanal Botanical Craft</span>
+        <h2>Bunga Abadi untuk <span class="highlight">Kisah Cinta Terbaik</span></h2>
+        <p>Buket bunga kawat bulu mewah bernuansa burgundy velvet dan dusty rose. Dirangkai dengan presisi tinggi sebagai simbol komitmen dan keindahan yang tak pernah memudar oleh waktu.</p>
+        <div class="hero-actions">
+          <button class="btn-gold" onclick="navigateTo('katalog')">Beli Koleksi Eksklusif ✦</button>
+          <button class="btn-outline" onclick="navigateTo('custom')">Custom Curations</button>
+        </div>
+      </div>
+      
+      <div class="hero-visual-box">
+        <div class="hero-img-card">
+          <img src="preview-tema-b.jpg" alt="Preview Tema B Modern Romantic Koleksi Buket Bunga Kawat Bulu">
+          <div class="hero-floating-pill">
+            <span>✦ Signature Burgundy Edition</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Keunggulan Toko -->
+    <div class="trust-grid">
+      <div class="trust-card">
+        <div class="trust-icon">✦</div>
+        <div class="trust-text">
+          <h4>Velvet Chenille</h4>
+          <p>Material beludru sutra kawat bulu mutu terbaik</p>
+        </div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">⚜️</div>
+        <div class="trust-text">
+          <h4>Foil Emas Champagne</h4>
+          <p>Pita sutra & aksen foil emas mewah</p>
+        </div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">📍</div>
+        <div class="trust-text">
+          <h4>VIP Meetup COD</h4>
+          <p>Janji temu eksklusif di titik kampus/stasiun</p>
+        </div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">🛡️</div>
+        <div class="trust-text">
+          <h4>Garansi Utuh 100%</h4>
+          <p>Jaminan ganti buket baru bila paket rusak</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Heading -->
+    <div class="heading-box">
+      <h2>Our Signature Curations</h2>
+      <p>Kemewahan kado romantis abadi dengan sentuhan aksen emas champagne</p>
+    </div>
+
+    <!-- Grid 4 Produk Signature -->
+    <div class="product-grid">
+      <div class="product-card" onclick="openProductModal('Everlasting Red Velvet Rose', 'Rp 145.000', 'Rp 175.000', 'Romantis', '🌹', '✦ Edisi Terbatas')">
+        <span class="card-badge">✦ Edisi Terbatas</span>
+        <span class="card-views">👁️ 582 Views</span>
+        <div class="card-thumb-art">
+          <span class="flower-emblem">🌹</span>
+        </div>
+        <div class="card-info">
+          <span class="card-cat">Signature Romantic</span>
+          <h3 class="card-title">Everlasting Red Velvet Rose</h3>
+          <div class="rating-row">
+            <span>⭐⭐⭐⭐⭐</span> <span>(142 Ulasan Kurasi)</span>
+          </div>
+          <div class="price-row">
+            <span class="price-now">Rp 145.000</span>
+            <span class="price-was">Rp 175.000</span>
+          </div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Everlasting Red Velvet Rose', 145000, '🌹')">+ Tambah ke Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" onclick="openProductModal('Dusty Rose & Champagne Grand', 'Rp 225.000', 'Rp 260.000', 'Grand Edition', '💐', '✦ Pre-Order 2 Hari')">
+        <span class="card-badge">✦ Signature Atelier</span>
+        <span class="card-views">👁️ 430 Views</span>
+        <div class="card-thumb-art">
+          <span class="flower-emblem">💐</span>
+        </div>
+        <div class="card-info">
+          <span class="card-cat">Editorial Grand</span>
+          <h3 class="card-title">Dusty Rose & Champagne Grand</h3>
+          <div class="rating-row">
+            <span>⭐⭐⭐⭐⭐</span> <span>(98 Ulasan Kurasi)</span>
+          </div>
+          <div class="price-row">
+            <span class="price-now">Rp 225.000</span>
+            <span class="price-was">Rp 260.000</span>
+          </div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Dusty Rose & Champagne Grand', 225000, '💐')">+ Tambah ke Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" onclick="openProductModal('Pure White Velvet Lily Duo', 'Rp 165.000', 'Rp 195.000', 'Minimalist', '🤍', '✦ Ready Stock')">
+        <span class="card-badge">✦ Ready Stock</span>
+        <span class="card-views">👁️ 310 Views</span>
+        <div class="card-thumb-art">
+          <span class="flower-emblem">🤍</span>
+        </div>
+        <div class="card-info">
+          <span class="card-cat">Pure Elegance</span>
+          <h3 class="card-title">Pure White Velvet Lily Duo</h3>
+          <div class="rating-row">
+            <span>⭐⭐⭐⭐⭐</span> <span>(74 Ulasan Kurasi)</span>
+          </div>
+          <div class="price-row">
+            <span class="price-now">Rp 165.000</span>
+            <span class="price-was">Rp 195.000</span>
+          </div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Pure White Velvet Lily Duo', 165000, '🤍')">+ Tambah ke Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" onclick="openProductModal('Midnight Burgundy 7-Stem Masterpiece', 'Rp 275.000', 'Rp 320.000', 'Masterpiece', '🍷', '✦ Pre-Order 3 Hari')">
+        <span class="card-badge">✦ Masterpiece</span>
+        <span class="card-views">👁️ 690 Views</span>
+        <div class="card-thumb-art">
+          <span class="flower-emblem">🍷</span>
+        </div>
+        <div class="card-info">
+          <span class="card-cat">Collector's Pride</span>
+          <h3 class="card-title">Midnight Burgundy 7-Stem</h3>
+          <div class="rating-row">
+            <span>⭐⭐⭐⭐⭐</span> <span>(186 Ulasan Kurasi)</span>
+          </div>
+          <div class="price-row">
+            <span class="price-now">Rp 275.000</span>
+            <span class="price-was">Rp 320.000</span>
+          </div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Midnight Burgundy 7-Stem', 275000, '🍷')">+ Tambah ke Keranjang</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       PAGE 2: KOLEKSI BUNGA LENGKAP
+       ======================================================================== -->
+  <section id="page-katalog" class="page-section">
+    <div class="heading-box">
+      <h2>Koleksi Lengkap Editorial</h2>
+      <p>Karya botani kawat bulu berkelas galeri seni untuk ruang istimewa Anda</p>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterCatalog(this, 'all')">Semua Koleksi (8)</button>
+      <button class="filter-btn" onclick="filterCatalog(this, 'valentine')">Valentine & Cinta</button>
+      <button class="filter-btn" onclick="filterCatalog(this, 'anniversary')">Anniversary</button>
+      <button class="filter-btn" onclick="filterCatalog(this, 'velvet')">Royal Velvet</button>
+      <button class="filter-btn" onclick="filterCatalog(this, 'gold')">Champagne Gold</button>
+    </div>
+
+    <div class="product-grid" id="catalogGrid">
+      <div class="product-card" data-cat="valentine" onclick="openProductModal('Everlasting Red Velvet Rose', 'Rp 145.000', 'Rp 175.000', 'Valentine', '🌹', '✦ Edisi Terbatas')">
+        <span class="card-badge">✦ Edisi Terbatas</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🌹</span></div>
+        <div class="card-info"><span class="card-cat">Valentine</span><h3 class="card-title">Everlasting Red Velvet Rose</h3><div class="price-row"><span class="price-now">Rp 145.000</span></div><button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Everlasting Red Velvet Rose', 145000, '🌹')">+ Masukkan Keranjang</button></div>
+      </div>
+      <div class="product-card" data-cat="anniversary" onclick="openProductModal('Dusty Rose & Champagne Grand', 'Rp 225.000', 'Rp 260.000', 'Anniversary', '💐', '✦ Signature')">
+        <span class="card-badge">✦ Signature</span>
+        <div class="card-thumb-art"><span class="flower-emblem">💐</span></div>
+        <div class="card-info"><span class="card-cat">Anniversary</span><h3 class="card-title">Dusty Rose & Champagne Grand</h3><div class="price-row"><span class="price-now">Rp 225.000</span></div><button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Dusty Rose & Champagne Grand', 225000, '💐')">+ Masukkan Keranjang</button></div>
+      </div>
+      <div class="product-card" data-cat="velvet" onclick="openProductModal('Midnight Burgundy Masterpiece', 'Rp 275.000', 'Rp 320.000', 'Velvet', '🍷', '✦ Masterpiece')">
+        <span class="card-badge">✦ Masterpiece</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🍷</span></div>
+        <div class="card-info"><span class="card-cat">Royal Velvet</span><h3 class="card-title">Midnight Burgundy Masterpiece</h3><div class="price-row"><span class="price-now">Rp 275.000</span></div><button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Midnight Burgundy Masterpiece', 275000, '🍷')">+ Masukkan Keranjang</button></div>
+      </div>
+      <div class="product-card" data-cat="gold" onclick="openProductModal('Golden Twilight Tulip Quartet', 'Rp 210.000', 'Rp 245.000', 'Gold', '🌷', '✦ Gold Edition')">
+        <span class="card-badge">✦ Champagne Gold</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🌷</span></div>
+        <div class="card-info"><span class="card-cat">Gold Series</span><h3 class="card-title">Golden Twilight Tulip Quartet</h3><div class="price-row"><span class="price-now">Rp 210.000</span></div><button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Golden Twilight Tulip Quartet', 210000, '🌷')">+ Masukkan Keranjang</button></div>
+      </div>
+      <div class="product-card" data-cat="valentine" onclick="openProductModal('Sweet Scarlet Petite Bouquet', 'Rp 115.000', 'Rp 135.000', 'Valentine', '🥀', '✦ Ready Stock')">
+        <span class="card-badge">✦ Ready Stock</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🥀</span></div>
+        <div class="card-info"><span class="card-cat">Petite Velvet</span><h3 class="card-title">Sweet Scarlet Petite Bouquet</h3><div class="price-row"><span class="price-now">Rp 115.000</span></div><button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Sweet Scarlet Petite Bouquet', 115000, '🥀')">+ Masukkan Keranjang</button></div>
+      </div>
+      <div class="product-card" data-cat="anniversary" onclick="openProductModal('Vintage Noir & Pearl Lily', 'Rp 190.000', 'Rp 220.000', 'Anniversary', '🤍', '✦ Curated')">
+        <span class="card-badge">✦ Curated</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🤍</span></div>
+        <div class="card-info"><span class="card-cat">Classic Noir</span><h3 class="card-title">Vintage Noir & Pearl Lily</h3><div class="price-row"><span class="price-now">Rp 190.000</span></div><button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Vintage Noir & Pearl Lily', 190000, '🤍')">+ Masukkan Keranjang</button></div>
+      </div>
+      <div class="product-card" data-cat="gold" onclick="openProductModal('Champagne Silk Sunflowers', 'Rp 160.000', 'Rp 185.000', 'Gold', '🌻', '✦ Pre-Order 2 Hari')">
+        <span class="card-badge">✦ Gold Foil</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🌻</span></div>
+        <div class="card-info"><span class="card-cat">Champagne Gold</span><h3 class="card-title">Champagne Silk Sunflowers</h3><div class="price-row"><span class="price-now">Rp 160.000</span></div><button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Champagne Silk Sunflowers', 160000, '🌻')">+ Masukkan Keranjang</button></div>
+      </div>
+      <div class="product-card" data-cat="velvet" onclick="openProductModal('Royal Amethyst Lavender Crown', 'Rp 230.000', 'Rp 270.000', 'Velvet', '🪻', '✦ Exclusive')">
+        <span class="card-badge">✦ Royal Velvet</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🪻</span></div>
+        <div class="card-info"><span class="card-cat">High Floristry</span><h3 class="card-title">Royal Amethyst Lavender Crown</h3><div class="price-row"><span class="price-now">Rp 230.000</span></div><button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Royal Amethyst Lavender Crown', 230000, '🪻')">+ Masukkan Keranjang</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       PAGE 3: CUSTOM BOUQUET ATELIER
+       ======================================================================== -->
+  <section id="page-custom" class="page-section">
+    <div class="heading-box">
+      <h2>Bespoke Custom Atelier</h2>
+      <p>Ciptakan perpaduan buket kawat bulu eksklusif yang disesuaikan dengan selera dan cerita Anda</p>
+    </div>
+
+    <div class="customizer-box">
+      <div>
+        <div class="step-title">1. Pilih Siluet Bunga Utama:</div>
+        <div class="swatches">
+          <button class="swatch selected" onclick="pickOption(this, 'flower', 'Velvet Rose 🌹', 140000, '🌹')">Velvet Rose 🌹</button>
+          <button class="swatch" onclick="pickOption(this, 'flower', 'Midnight Lily 🤍', 150000, '🤍')">Midnight Lily 🤍</button>
+          <button class="swatch" onclick="pickOption(this, 'flower', 'Golden Tulip 🌷', 135000, '🌷')">Golden Tulip 🌷</button>
+        </div>
+
+        <div class="step-title">2. Palet Warna Chenille:</div>
+        <div class="swatches">
+          <button class="swatch selected" onclick="pickOption(this, 'color', 'Burgundy Velvet')"><span class="color-dot" style="background:#6B2D5C;"></span> Burgundy Velvet</button>
+          <button class="swatch" onclick="pickOption(this, 'color', 'Dusty Rose')"><span class="color-dot" style="background:#C98A90;"></span> Dusty Rose</button>
+          <button class="swatch" onclick="pickOption(this, 'color', 'Champagne Pearl')"><span class="color-dot" style="background:#F7EBE1;"></span> Champagne Pearl</button>
+        </div>
+
+        <div class="step-title">3. Wrapping Fabric & Texture:</div>
+        <div class="swatches">
+          <button class="swatch selected" onclick="pickOption(this, 'wrapping', 'Double Matte Black & Gold')">Double Matte Black & Gold</button>
+          <button class="swatch" onclick="pickOption(this, 'wrapping', 'French Linen Cream')">French Linen Cream</button>
+        </div>
+
+        <div class="step-title">4. Luxury Embellishments:</div>
+        <div class="swatches">
+          <button class="swatch selected" id="addon-light" onclick="toggleAddon(this, 15000, 'Warm Fairy Lights')">+ Warm Fairy Lights (+Rp 15.000)</button>
+          <button class="swatch" id="addon-ribbon" onclick="toggleAddon(this, 12000, 'Silk Gold Ribbon')">+ Silk Gold Ribbon (+Rp 12.000)</button>
+        </div>
+      </div>
+
+      <div class="custom-preview-card">
+        <div>
+          <h4 style="font-size: 18px; margin-bottom: 12px; color:var(--primary);">Visual Curated Preview</h4>
+          <div class="preview-canvas">
+            <span id="customPreviewEmoji" style="font-size: 70px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">🌹</span>
+            <div style="font-size: 12px; font-weight:700; color:var(--primary); margin-top:8px;" id="customPreviewLabel">Velvet Rose in Burgundy Velvet</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="order-summary-box">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+              <span>Kurasi Utama:</span> <strong id="sumFlower">Velvet Rose (Burgundy)</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+              <span>Wrapping:</span> <strong id="sumWrapping">Double Matte Black & Gold</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+              <span>Aksen Tambahan:</span> <strong id="sumAddons">Warm Fairy Lights</strong>
+            </div>
+            <hr style="border:none; border-top:1px dashed var(--border); margin: 10px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:700; color:var(--primary);">
+              <span>Estimasi Harga:</span> <span id="sumTotalPrice">Rp 155.000</span>
+            </div>
+          </div>
+
+          <button class="btn-wa-order" onclick="sendCustomWhatsApp()">
+            <span>✦ Ajukan Pesanan Custom ke Concierge WhatsApp</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       PAGE 4: EDITORIAL LOOKBOOK
+       ======================================================================== -->
+  <section id="page-lookbook" class="page-section">
+    <div class="heading-box">
+      <h2>Editorial Lookbook</h2>
+      <p>Kisah cinta dan perayaan berkesan yang diabadikan bersama kurasi bunga kawat bulu kami</p>
+    </div>
+
+    <div class="lookbook-grid">
+      <div class="lookbook-item">
+        <div class="lookbook-photo-wrap">
+          <span class="lookbook-badge">Editorial Volume I</span>
+          <span style="font-size: 72px;">🌹🍾</span>
+        </div>
+        <div class="lookbook-meta">
+          <div class="lookbook-tags">#Anniversary • Fine Dining Jakarta</div>
+          <h4>Private Dinner at Henshin</h4>
+          <p class="lookbook-quote">"Kejutan anniversary paling elegan. Warna burgundy-nya sangat berkelas dan pas banget dengan dress velvet istri saya."</p>
+        </div>
+      </div>
+
+      <div class="lookbook-item">
+        <div class="lookbook-photo-wrap">
+          <span class="lookbook-badge">Editorial Volume II</span>
+          <span style="font-size: 72px;">💐✨</span>
+        </div>
+        <div class="lookbook-meta">
+          <div class="lookbook-tags">#Graduation • Magister Hukum UI</div>
+          <h4>The Golden Laureate Edition</h4>
+          <p class="lookbook-quote">"Tidak pasaran sama sekali. Sangat fotogenik di bawah lampu sorot auditorium wisuda dan box kardusnya super kokoh."</p>
+        </div>
+      </div>
+
+      <div class="lookbook-item">
+        <div class="lookbook-photo-wrap">
+          <span class="lookbook-badge">Editorial Volume III</span>
+          <span style="font-size: 72px;">🍷⚜️</span>
+        </div>
+        <div class="lookbook-meta">
+          <div class="lookbook-tags">#Proposal • Romantic Engagement</div>
+          <h4>Forever Commitment Bouquet</h4>
+          <p class="lookbook-quote">"Saat melamar, saya ingin bunga yang tak akan pernah layu seperti cinta kami. Pilihan terbaik yang pernah saya buat."</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       PAGE 5: LACAK PESANAN
+       ======================================================================== -->
+  <section id="page-tracking" class="page-section">
+    <div class="heading-box">
+      <h2>Pelacakan Pengiriman Pesanan</h2>
+      <p>Kawal perjalanan kurasi buket Anda dari atelier hingga sampai di pelukan orang terkasih</p>
+    </div>
+
+    <div class="tracking-box">
+      <div class="input-row">
+        <input type="text" id="invoiceInput" value="INV/20260907/FLW-0002" placeholder="Nomor Invoice (INV/...)">
+        <button class="btn-gold" onclick="trackInvoice()">Lacak</button>
+      </div>
+
+      <div style="background: var(--primary-light); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--gold-border); margin-bottom: 20px; font-size: 13px;">
+        <div style="font-weight: 700; color: var(--primary); font-size: 14px;">Invoice: INV/20260907/FLW-0002</div>
+        <div>Pesanan: <strong>Everlasting Red Velvet Rose + Fairy Lights</strong></div>
+        <div style="color:var(--text-muted); margin-top: 4px;">Tujuan: Menteng, Jakarta Pusat • Ekspedisi: Biteship Express (AWB: BTE772819)</div>
+      </div>
+
+      <ul class="timeline" id="trackingTimeline">
+        <li class="timeline-step">
+          <div style="font-weight:700;">✦ Pembayaran QRIS Midtrans Terverifikasi</div>
+          <div style="font-size:12px; color:var(--text-muted);">07 Sep 2026, 09:30 WIB</div>
+        </li>
+        <li class="timeline-step">
+          <div style="font-weight:700;">✦ Proses Penataan & Finishing Aksen Emas</div>
+          <div style="font-size:12px; color:var(--text-muted);">07 Sep 2026, 11:00 WIB • Passed Quality Inspection</div>
+        </li>
+        <li class="timeline-step">
+          <div style="font-weight:700;">✦ Disegel dalam Box Pelindung Corrugated Tebal</div>
+          <div style="font-size:12px; color:var(--text-muted);">07 Sep 2026, 11:45 WIB</div>
+        </li>
+        <li class="timeline-step" style="color:var(--primary); font-weight:700;">
+          <div style="font-weight:800;">✦ Kurir Sedang Menuju Lokasi Penerima</div>
+          <div style="font-size:12px;">Estimasi Penerimaan Tepat Waktu Sore Hari Ini</div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       PAGE 6: LAYANAN, PERAWATAN & GARANSI
+       ======================================================================== -->
+  <section id="page-bantuan" class="page-section">
+    <div class="heading-box">
+      <h2>Layanan & Garansi Eksklusif</h2>
+      <p>Komitmen kami menghadirkan karya buket bunga kawat bulu tanpa cacat selamanya</p>
+    </div>
+
+    <div style="max-width: 800px; margin: 0 auto;">
+      <h3 style="font-size: 20px; margin-bottom: 16px; color:var(--primary);">✦ Petunjuk Perawatan Beludru Chenille</h3>
+      <div class="faq-item">
+        <div class="faq-q">Bagaimana jika bentuk kelopak sedikit tertekan saat proses pembongkaran box?</div>
+        <div class="faq-a">Kawat inti pada bunga memiliki fleksibilitas tinggi. Anda dapat merapikan dan mengarahkan kembali kelopak secara perlahan dengan jari jemari Anda. Bentuk bunga akan kembali sempurna secara instan.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Apakah warna beludru chenille dapat memudar jika terkena cahaya?</div>
+        <div class="faq-a">Bahan kawat bulu kami memiliki ketahanan pigmen tinggi. Cukup letakkan di dalam ruangan bersuhu sejuk dan hindari paparan air langsung agar kawat interior tetap terlindung.</div>
+      </div>
+
+      <div class="warranty-banner">
+        <div style="font-size: 36px; color: var(--primary);">⚜️</div>
+        <div>
+          <h4 style="font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 4px;">Jaminan 100% Penggantian Baru Tanpa Biaya</h4>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">Apabila pesanan mengalami kerusakan saat perjalanan kurir, cukup sampaikan bukti video unboxing dalam 24 jam. Kami mengirimkan buket pengganti baru tanpa Anda harus mengembalikan buket lama.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       CART DRAWER EDITORIAL
+       ======================================================================== -->
+  <div class="cart-drawer-overlay" id="cartDrawerOverlay" onclick="toggleCartDrawer(false)">
+    <div class="cart-drawer" onclick="event.stopPropagation()">
+      <div class="drawer-header">
+        <h3 style="font-size: 18px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color:var(--primary);">Biro Tas Belanja</h3>
+        <button class="btn-close" onclick="toggleCartDrawer(false)">&times;</button>
+      </div>
+
+      <div class="cart-items" id="cartItemsList">
+        <!-- Rendered by JavaScript -->
+      </div>
+
+      <div style="padding: 0 24px; margin-bottom: 12px;">
+        <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px;">Metode Pengiriman:</label>
+        <div style="display: flex; gap: 8px;">
+          <button id="ship-courier" class="swatch selected" style="flex:1; justify-content:center;" onclick="selectShipping('courier')">📦 Ekspedisi Kurir</button>
+          <button id="ship-cod" class="swatch" style="flex:1; justify-content:center;" onclick="selectShipping('cod')">📍 VIP Janji Temu</button>
+        </div>
+
+        <div id="codMapBox" style="display:none; margin-top: 10px; background: var(--primary-light); border: 1px solid var(--gold-border); border-radius: var(--radius-sm); padding: 12px; font-size: 12px;">
+          <div style="font-weight: 700; color: var(--primary); margin-bottom: 4px;">📍 Titik Janji Temu:</div>
+          <div style="color: var(--text-muted);">Lobby Utama FX Sudirman / Stasiun MRT • Waktu diselaraskan via WhatsApp</div>
+          <div style="height: 90px; background: #E2E8F0; border-radius: 4px; margin-top: 8px; display:flex; align-items:center; justify-content:center; color:#64748B; font-weight:700;">
+            🗺️ Google Maps Pinpoint Terkunci
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <input type="text" id="voucherInput" value="WISUDA10K" placeholder="Kode Voucher" style="flex:1; padding:8px 12px; border:1px solid var(--border); border-radius:4px; font-size:12px;">
+          <button class="btn-gold" style="padding:8px 16px; font-size:11px;" onclick="applyVoucher()">Terapkan</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
+          <span>Subtotal:</span> <strong id="cartSubtotal">Rp 160.000</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; color:#2E7D32; margin-bottom:6px;" id="discountRow">
+          <span>Potongan Kupon:</span> <strong>-Rp 10.000</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:700; color:var(--primary); margin-top:10px;">
+          <span>Total:</span> <span id="cartTotalPrice">Rp 150.000</span>
+        </div>
+
+        <button class="btn-gold" style="width:100%; margin-top:14px; padding:13px; justify-content:center;" onclick="proceedCheckout()">
+          ✦ Checkout Pembayaran QRIS Midtrans
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK VIEW MODAL -->
+  <div class="modal-overlay" id="productModal" onclick="closeProductModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeProductModal()">&times;</button>
+      <div style="height: 200px; background: #FAF7F5; display:flex; align-items:center; justify-content:center; font-size: 80px;" id="modalEmoji">
+        🌹
+      </div>
+      <div style="padding: 24px;">
+        <span class="card-badge" id="modalBadge" style="position:static; display:inline-block; margin-bottom:8px;">Signature Edition</span>
+        <h3 style="font-size: 22px; color: var(--primary); margin-bottom: 6px;" id="modalTitle">Everlasting Red Velvet Rose</h3>
+        <div class="price-row" style="margin-bottom: 12px; justify-content:flex-start;">
+          <span class="price-now" id="modalPrice">Rp 145.000</span>
+          <span class="price-was" id="modalPriceWas">Rp 175.000</span>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 18px;">
+          Bunga mawar kawat bulu dengan material beludru sutra kualitas tertinggi. Diikat rapi dengan aksen pita champagne gold. Kado elegan yang abadi untuk sosok teristimewa.
+        </p>
+        <button class="btn-gold" id="btnModalAdd" style="width:100%; justify-content:center;" onclick="addCurrentModalToCart(this)">
+          ✦ Tambahkan ke Biro Tas Belanja
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MIDTRANS SNAP QRIS SIMULATION MODAL -->
+  <div class="qris-modal-overlay" id="qrisModal" onclick="closeQrisModal()">
+    <div class="qris-modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeQrisModal()">&times;</button>
+      <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px;">
+        <span style="font-size:24px;">💳</span>
+        <span style="font-weight:700; font-size:18px; color:var(--primary);">Midtrans Snap QRIS</span>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted);">Pindai kode QRIS menggunakan GoPay, ShopeePay, Dana, BCA, atau Livin' Mandiri</p>
+      
+      <div class="qris-code-box">
+        <div style="font-size:11px; font-weight:800; color:var(--primary); margin-bottom:6px; letter-spacing:1px;">QRIS NASIONAL</div>
+        <div style="font-size:72px;">📱</div>
+        <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">NMID: ID10293847561</div>
+      </div>
+
+      <div style="background:var(--primary-light); padding:10px; border-radius:8px; margin-bottom:16px; font-size:13px; border:1px solid var(--gold-border);">
+        Total Pembayaran: <strong style="color:var(--primary); font-size:16px;" id="qrisTotalDisplay">Rp 150.000</strong>
+        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">⏱️ Sisa Waktu Pembayaran: <span id="qrisTimer">14:59</span></div>
+      </div>
+
+      <button class="btn-gold" style="width:100%; justify-content:center;" onclick="simulatePaymentSuccess()">
+        ✦ Simulasi Pembayaran Sukses (Testing)
+      </button>
+    </div>
+  </div>
+
+  <!-- FLOATING CHAT CS CONCIERGE (IN-SYSTEM WEB CHAT) -->
+  <div class="floating-wa" onclick="toggleStoreLiveChat()" title="Atelier Concierge Chat">
+    <span>✦ Concierge Atelier</span>
+  </div>
+
+  <!-- THEME IN-SYSTEM LIVE CHAT MODAL (MODERN ROMANTIC) -->
+  <div class="theme-chat-modal" id="themeChatModal">
+    <div class="theme-chat-header">
+      <div class="theme-chat-profile">
+        <div class="theme-chat-avatar">🌹</div>
+        <div>
+          <div class="theme-chat-name">Atelier Concierge Service</div>
+          <div class="theme-chat-status">
+            <span class="status-indicator-dot"></span>
+            <span>Online • Rania Azzahra & Atelier Privé</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn-chat-close" onclick="toggleStoreLiveChat()" title="Tutup Chat">✕</button>
+    </div>
+
+    <!-- ESCALATE / TRANSFER TO WHATSAPP BANNER -->
+    <div class="theme-chat-escalate">
+      <div class="escalate-info">💡 Butuh kirim referensi visual atau bicara langsung?</div>
+      <button class="btn-escalate-wa" onclick="escalateCurrentChatToWA()">
+        <svg class="svg-icon svg-icon-sm" style="width:14px; height:14px;" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+        <span>Alihkan ke WA</span>
+      </button>
+    </div>
+
+    <!-- CHAT STREAM -->
+    <div class="theme-chat-body" id="themeChatMessages">
+      <div class="chat-bubble florist-msg">
+        <p>Selamat datang di Atelier Modern Romantic ✦</p>
+        <p style="margin-top:4px;">Layanan concierge kami siap melayani kurasi buket velvet kawat bulu edisi anniversary, lamaran, maupun wisuda premium.</p>
+        <span class="chat-timestamp">Baru saja</span>
+      </div>
+    </div>
+
+    <!-- QUICK CHIPS -->
+    <div class="theme-chat-chips">
+      <button class="theme-chip" onclick="sendStoreChatPreset('Selamat malam, apakah buket Velvet Rose Burgundy ready hari ini?')">🌹 Cek Stok Rose Velvet</button>
+      <button class="theme-chip" onclick="sendStoreChatPreset('Bisa custom kartu ucapan lilin segel wax seal & box velvet?')">💌 Box Velvet & Wax Seal</button>
+      <button class="theme-chip" onclick="sendStoreChatPreset('Bisa pengiriman kurir mobil tertutup aman ke Jakarta / Depok?')">🚗 Kurir Mobil Spesial</button>
+      <button class="theme-chip" onclick="sendStoreChatPreset('Apakah bisa request bunga lily kawat bulu kombinasi mawar?')">✦ Kombinasi Mawar & Lily</button>
+    </div>
+
+    <!-- INPUT BAR -->
+    <form class="theme-chat-input-row" onsubmit="handleStoreChatSubmit(event)">
+      <input type="text" id="storeChatInput" placeholder="Sampaikan pesan kurasi Anda..." autocomplete="off">
+      <button type="submit" class="btn-chat-send">
+        <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24" style="stroke:#fff;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    function navigateTo(pageId) {
+      document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active-page'));
+      const target = document.getElementById('page-' + pageId);
+      if (target) target.classList.add('active-page');
+
+      document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
+      const activeLink = document.getElementById('nav-' + pageId);
+      if (activeLink) activeLink.classList.add('active');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function filterCatalog(btn, category) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const cards = document.querySelectorAll('#catalogGrid .product-card');
+      cards.forEach(card => {
+        if (category === 'all' || card.getAttribute('data-cat') === category) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // ========================================================================
+    // MAGIC UI: FLY-TO-CART PARABOLIC ANIMATION (GOLD EDITION)
+    // ========================================================================
+    function flyToCartAnimation(sourceElement, emoji) {
+      const cartBtn = document.querySelector('.btn-nav-cart');
+      if (!cartBtn) return;
+
+      const startRect = sourceElement.getBoundingClientRect();
+      const endRect = cartBtn.getBoundingClientRect();
+
+      const flyer = document.createElement('div');
+      flyer.className = 'magic-flyer';
+      flyer.textContent = emoji || '🌹';
+      flyer.style.left = `${startRect.left + startRect.width / 2 - 24}px`;
+      flyer.style.top = `${startRect.top + startRect.height / 2 - 24}px`;
+      document.body.appendChild(flyer);
+
+      // Force Reflow
+      flyer.getBoundingClientRect();
+
+      const destX = endRect.left + endRect.width / 2 - 24;
+      const destY = endRect.top + endRect.height / 2 - 24;
+
+      flyer.style.left = `${destX}px`;
+      flyer.style.top = `${destY}px`;
+      flyer.style.transform = `scale(0.35) rotate(360deg)`;
+      flyer.style.opacity = '0.7';
+
+      setTimeout(() => {
+        flyer.remove();
+        cartBtn.classList.add('cart-bump');
+        setTimeout(() => cartBtn.classList.remove('cart-bump'), 450);
+        spawnSparkles(endRect.left + endRect.width / 2, endRect.top + endRect.height / 2);
+      }, 750);
+    }
+
+    function spawnSparkles(x, y) {
+      const sparkles = ['✦', '✨', '⚜️', '🌹'];
+      for (let i = 0; i < 8; i++) {
+        const p = document.createElement('div');
+        p.className = 'magic-sparkle';
+        p.textContent = sparkles[i % sparkles.length];
+        p.style.left = `${x}px`;
+        p.style.top = `${y}px`;
+        
+        const angle = (i / 8) * Math.PI * 2;
+        const dist = 35 + Math.random() * 25;
+        p.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+        p.style.setProperty('--ty', `${Math.sin(angle) * dist}px`);
+        
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 600);
+      }
+    }
+
+    // ========================================================================
+    // MAGIC UI: SONNER TOAST NOTIFICATION
+    // ========================================================================
+    function showToast(title, desc, emoji, actionText, actionCallback) {
+      const container = document.getElementById('magicToastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'magic-toast';
+      
+      toast.innerHTML = `
+        <div class="toast-thumb">${emoji || '🌹'}</div>
+        <div class="toast-info">
+          <div class="toast-title">${title}</div>
+          <div class="toast-desc">${desc}</div>
+        </div>
+        ${actionText ? `<button class="toast-action-btn">${actionText}</button>` : ''}
+        <div class="toast-progress"></div>
+      `;
+
+      if (actionText && actionCallback) {
+        toast.querySelector('.toast-action-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          actionCallback();
+          toast.remove();
+        });
+      }
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.transition = 'all 0.3s ease';
+        toast.style.transform = 'translateY(20px) scale(0.9)';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // ========================================================================
+    // CART STATE & REALTIME INTERACTIONS
+    // ========================================================================
+    let cartItems = [
+      { id: 1, title: 'Everlasting Red Velvet Rose', price: 145000, emoji: '🌹', qty: 1 },
+      { id: 2, title: 'Warm Fairy Lights Add-on', price: 15000, emoji: '✨', qty: 1 }
+    ];
+    let isVoucherApplied = true;
+
+    function renderCartDrawer() {
+      const container = document.getElementById('cartItemsList');
+      container.innerHTML = '';
+      let subtotal = 0;
+
+      cartItems.forEach((item, index) => {
+        subtotal += item.price * item.qty;
+        const el = document.createElement('div');
+        el.className = 'cart-item';
+        el.innerHTML = `
+          <div class="item-icon">${item.emoji}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:13.5px; color:var(--primary);">${item.title}</div>
+            <div style="font-weight:700; color:var(--primary); font-size:14px; margin-top:2px;">Rp ${(item.price * item.qty).toLocaleString('id-ID')}</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+              <button onclick="updateQty(${index}, -1)" style="width:24px; height:24px; border-radius:4px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700;">-</button>
+              <span style="font-size:13px; font-weight:700;">${item.qty}</span>
+              <button onclick="updateQty(${index}, 1)" style="width:24px; height:24px; border-radius:4px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700;">+</button>
+              <button onclick="removeItem(${index})" style="background:none; border:none; color:var(--text-light); font-size:11px; cursor:pointer; margin-left:auto; text-transform:uppercase; letter-spacing:1px;">Hapus</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(el);
+      });
+
+      const discount = isVoucherApplied ? 10000 : 0;
+      const total = Math.max(0, subtotal - discount);
+
+      document.getElementById('cartSubtotal').textContent = 'Rp ' + subtotal.toLocaleString('id-ID');
+      document.getElementById('cartTotalPrice').textContent = 'Rp ' + total.toLocaleString('id-ID');
+      document.getElementById('discountRow').style.display = isVoucherApplied ? 'flex' : 'none';
+      document.getElementById('cartCount').textContent = cartItems.reduce((a, b) => a + b.qty, 0);
+    }
+
+    function updateQty(index, delta) {
+      if (cartItems[index]) {
+        cartItems[index].qty += delta;
+        if (cartItems[index].qty <= 0) cartItems.splice(index, 1);
+        renderCartDrawer();
+      }
+    }
+
+    function removeItem(index) {
+      cartItems.splice(index, 1);
+      renderCartDrawer();
+      showToast('Koleksi Dikeluarkan', 'Item telah dihapus dari tas', '✦');
+    }
+
+    function toggleCartDrawer(show) {
+      renderCartDrawer();
+      document.getElementById('cartDrawerOverlay').style.display = show ? 'flex' : 'none';
+    }
+
+    function addToCart(btnElement, title, price, emoji) {
+      flyToCartAnimation(btnElement, emoji);
+
+      const existing = cartItems.find(item => item.title === title);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cartItems.push({ id: Date.now(), title, price, emoji, qty: 1 });
+      }
+
+      document.getElementById('cartCount').textContent = cartItems.reduce((a, b) => a + b.qty, 0);
+
+      showToast(
+        'Koleksi Ditambahkan ✦',
+        `${title} (Rp ${price.toLocaleString('id-ID')})`,
+        emoji,
+        'Buka Tas 🛍️',
+        () => toggleCartDrawer(true)
+      );
+    }
+
+    function selectShipping(type) {
+      if (type === 'courier') {
+        document.getElementById('ship-courier').classList.add('selected');
+        document.getElementById('ship-cod').classList.remove('selected');
+        document.getElementById('codMapBox').style.display = 'none';
+      } else {
+        document.getElementById('ship-courier').classList.remove('selected');
+        document.getElementById('ship-cod').classList.add('selected');
+        document.getElementById('codMapBox').style.display = 'block';
+        showToast('VIP Janji Temu Terpilih 📍', 'Titik Temu: Lobby FX Sudirman / Stasiun MRT', '⚜️');
+      }
+    }
+
+    function applyVoucher() {
+      const code = document.getElementById('voucherInput').value.trim().toUpperCase();
+      if (code === 'WISUDA10K') {
+        isVoucherApplied = true;
+        renderCartDrawer();
+        showToast('Kupon Berhasil ✦', 'Potongan Rp 10.000 berhasil diaplikasikan', '⚜️');
+      } else {
+        showToast('Kupon Tidak Sah', 'Gunakan kupon WISUDA10K', '⚠️');
+      }
+    }
+
+    function proceedCheckout() {
+      toggleCartDrawer(false);
+      const total = document.getElementById('cartTotalPrice').textContent;
+      document.getElementById('qrisTotalDisplay').textContent = total;
+      document.getElementById('qrisModal').style.display = 'flex';
+      startQrisTimer();
+    }
+
+    function closeQrisModal() {
+      document.getElementById('qrisModal').style.display = 'none';
+    }
+
+    let qrisInterval;
+    function startQrisTimer() {
+      let duration = 15 * 60;
+      clearInterval(qrisInterval);
+      qrisInterval = setInterval(() => {
+        duration--;
+        if (duration <= 0) clearInterval(qrisInterval);
+        const m = Math.floor(duration / 60).toString().padStart(2, '0');
+        const s = (duration % 60).toString().padStart(2, '0');
+        document.getElementById('qrisTimer').textContent = `${m}:${s}`;
+      }, 1000);
+    }
+
+    function simulatePaymentSuccess() {
+      closeQrisModal();
+      showToast('Pembayaran Diterima ✦', 'Kurasi Anda segera dipersiapkan pengrajin', '✅');
+      cartItems = [];
+      renderCartDrawer();
+      setTimeout(() => navigateTo('tracking'), 800);
+    }
+
+    function trackInvoice() {
+      const inv = document.getElementById('invoiceInput').value.trim();
+      showToast('Invoice Terverifikasi ✦', `${inv} dalam pengawasan kurir`, '📦');
+      const timeline = document.getElementById('trackingTimeline');
+      timeline.style.transition = 'transform 0.3s ease';
+      timeline.style.transform = 'scale(1.02)';
+      setTimeout(() => timeline.style.transform = 'scale(1)', 300);
+    }
+
+    // Custom Studio
+    let customState = {
+      flower: 'Velvet Rose 🌹',
+      flowerPrice: 140000,
+      emoji: '🌹',
+      color: 'Burgundy Velvet',
+      wrapping: 'Double Matte Black & Gold',
+      addons: [{ name: 'Warm Fairy Lights', price: 15000 }]
+    };
+
+    function pickOption(btn, type, val, price, emoji) {
+      const parent = btn.parentElement;
+      parent.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+      btn.classList.add('selected');
+
+      if (type === 'flower') {
+        customState.flower = val;
+        customState.flowerPrice = price;
+        customState.emoji = emoji;
+        const previewEmoji = document.getElementById('customPreviewEmoji');
+        previewEmoji.style.transform = 'scale(0.8) rotate(-10deg)';
+        setTimeout(() => {
+          previewEmoji.textContent = emoji;
+          previewEmoji.style.transform = 'scale(1.2) rotate(6deg)';
+          setTimeout(() => previewEmoji.style.transform = 'scale(1)', 200);
+        }, 150);
+      } else if (type === 'color') {
+        customState.color = val;
+      } else if (type === 'wrapping') {
+        customState.wrapping = val;
+      }
+      updateCustomSummary();
+    }
+
+    function toggleAddon(btn, price, name) {
+      btn.classList.toggle('selected');
+      const idx = customState.addons.findIndex(a => a.name === name);
+      if (btn.classList.contains('selected')) {
+        if (idx === -1) customState.addons.push({ name, price });
+        showToast('Aksen Terpasang ✦', `${name} (+Rp ${price.toLocaleString('id-ID')})`, '⚜️');
+      } else {
+        if (idx !== -1) customState.addons.splice(idx, 1);
+      }
+      updateCustomSummary();
+    }
+
+    function updateCustomSummary() {
+      document.getElementById('sumFlower').textContent = customState.flower + ' (' + customState.color + ')';
+      document.getElementById('sumWrapping').textContent = customState.wrapping;
+      document.getElementById('customPreviewLabel').textContent = customState.flower + ' in ' + customState.color;
+      
+      const addonNames = customState.addons.map(a => a.name).join(', ') || 'Tanpa Tambahan';
+      document.getElementById('sumAddons').textContent = addonNames;
+
+      const addonTotal = customState.addons.reduce((acc, curr) => acc + curr.price, 0);
+      const total = customState.flowerPrice + addonTotal;
+      document.getElementById('sumTotalPrice').textContent = 'Rp ' + total.toLocaleString('id-ID');
+    }
+
+    function sendCustomWhatsApp() {
+      const msg = `Halo Atelier! Saya ingin kurasi Buket Custom:%0A- Bunga: ${customState.flower}%0A- Warna: ${customState.color}%0A- Wrapping: ${customState.wrapping}%0A- Aksesori: ${document.getElementById('sumAddons').textContent}%0A- Estimasi Harga: ${document.getElementById('sumTotalPrice').textContent}`;
+      window.open('https://wa.me/6281234567890?text=' + msg, '_blank');
+    }
+
+    // Modal Quick View
+    let currentModalProduct = {};
+    function openProductModal(title, price, priceWas, cat, emoji, badge) {
+      currentModalProduct = { title, price, emoji };
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalPrice').textContent = price;
+      document.getElementById('modalPriceWas').textContent = priceWas;
+      document.getElementById('modalEmoji').textContent = emoji;
+      document.getElementById('modalBadge').textContent = badge;
+      document.getElementById('productModal').style.display = 'flex';
+    }
+
+    function closeProductModal() {
+      document.getElementById('productModal').style.display = 'none';
+    }
+
+    function addCurrentModalToCart(btn) {
+      addToCart(btn, currentModalProduct.title, parseInt(currentModalProduct.price.replace(/[^0-9]/g, '')), currentModalProduct.emoji);
+      closeProductModal();
+    }
+
+    /* --------------------------------------------------------------------------
+       IN-SYSTEM LIVE CONCIERGE CHAT ENGINE (MODERN ROMANTIC)
+       -------------------------------------------------------------------------- */
+    function toggleStoreLiveChat() {
+      const modal = document.getElementById('themeChatModal');
+      modal.classList.toggle('open');
+      if (modal.classList.contains('open')) {
+        const input = document.getElementById('storeChatInput');
+        if (input) input.focus();
+        scrollStoreChatToBottom();
+      }
+    }
+
+    function scrollStoreChatToBottom() {
+      const box = document.getElementById('themeChatMessages');
+      if (box) box.scrollTop = box.scrollHeight;
+    }
+
+    function sendStoreChatPreset(text) {
+      appendStoreChatMessage(text, 'user');
+      simulateConciergeResponse(text);
+    }
+
+    function handleStoreChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('storeChatInput');
+      const val = input.value.trim();
+      if (!val) return;
+      appendStoreChatMessage(val, 'user');
+      input.value = '';
+      simulateConciergeResponse(val);
+    }
+
+    function appendStoreChatMessage(text, sender) {
+      const box = document.getElementById('themeChatMessages');
+      const bubble = document.createElement('div');
+      bubble.className = `chat-bubble ${sender === 'user' ? 'user-msg' : 'florist-msg'}`;
+      
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WIB`;
+
+      bubble.innerHTML = `
+        <p>${escapeHtml(text)}</p>
+        <span class="chat-timestamp">${timeStr}</span>
+      `;
+      box.appendChild(bubble);
+      scrollStoreChatToBottom();
+
+      try {
+        const chats = JSON.parse(localStorage.getItem('chenille_live_chats') || '[]');
+        chats.push({ sender, text, time: timeStr, theme: 'tema-b' });
+        localStorage.setItem('chenille_live_chats', JSON.stringify(chats));
+      } catch (err) {}
+    }
+
+    function simulateConciergeResponse(userMsg) {
+      const lower = userMsg.toLowerCase();
+      let reply = 'Salam hormat. Concierge atelier kami siap melayani kurasi buket istimewa Anda.';
+      
+      if (lower.includes('rose') || lower.includes('burgundy') || lower.includes('ready')) {
+        reply = 'Selamat malam Kak. Seri Velvet Rose Burgundy merupakan karya signature kami yang dilapisi beludru chenille 6mm rapat. Tersedia 2 buket yang siap dikirim malam ini dengan kurir mobil ber-AC ✦';
+      } else if (lower.includes('wax') || lower.includes('segel') || lower.includes('kartu') || lower.includes('box')) {
+        reply = 'Tentu, setiap paket Modern Romantic sudah dilengkapi box premium velvet, kartu ucapan katun handmade bertinta emas, serta stempel segel lilin wax seal monogram resmi Atelier.';
+      } else if (lower.includes('mobil') || lower.includes('kurir') || lower.includes('aman')) {
+        reply = 'Untuk menjaga kelopak kawat bulu tetap presisi tanpa tertekan, pengiriman wilayah Jadetabek menggunakan armada kurir mobil tertutup eksklusif.';
+      } else if (lower.includes('lily') || lower.includes('kombinasi') || lower.includes('custom')) {
+        reply = 'Kami dapat mengombinasikan 5 tangkai Velvet Rose dengan 2 tangkai Casablanca Lily kawat bulu bergradasi wine-champagne. Silakan klik "Alihkan ke WA" bila ingin sketsa awal kurasi.';
+      }
+
+      setTimeout(() => {
+        appendStoreChatMessage(reply, 'florist');
+      }, 700);
+    }
+
+    function escalateCurrentChatToWA() {
+      const activeChats = document.querySelectorAll('#themeChatMessages .chat-bubble.user-msg');
+      let lastMsg = 'Halo Atelier Romantic, saya ingin konsultasi kurasi buket dari website';
+      if (activeChats.length > 0) {
+        lastMsg = activeChats[activeChats.length - 1].querySelector('p').textContent;
+      }
+      const waUrl = `https://wa.me/6281234567890?text=${encodeURIComponent('Halo Atelier Romantic, saya sedang di web chat: "' + lastMsg + '". Ingin melanjutkan via WhatsApp...')}`;
+      window.open(waUrl, '_blank');
+    }
+
+    function escapeHtml(string) {
+      const pre = document.createElement('pre');
+      pre.textContent = string;
+      return pre.innerHTML;
+    }
+
+    // Initialize
+    renderCartDrawer();
+  </script>
+</body>
+</html>

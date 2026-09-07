@@ -1,0 +1,4366 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="slate">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Operations Center — Aesthetic Chenille Flowers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       THEME SYSTEM (DYNAMIC THEME PRESETS)
+       ========================================================================== */
+    :root {
+      /* Default Slate Dark / Clean Modern */
+      --sidebar-bg: #0F172A;
+      --sidebar-card: #1E293B;
+      --sidebar-text: #94A3B8;
+      --sidebar-text-bright: #F8FAFC;
+      --sidebar-active: #F43F5E;
+      --sidebar-active-bg: rgba(244, 63, 94, 0.14);
+      
+      --main-bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --surface-subtle: #F1F5F9;
+      --border: #E2E8F0;
+      --border-focus: #CBD5E1;
+      
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --text-light: #94A3B8;
+      
+      --primary: #F43F5E;
+      --primary-hover: #E11D48;
+      --primary-light: #FFE4E6;
+      
+      --success: #10B981;
+      --success-light: #D1FAE5;
+      --warning: #F59E0B;
+      --warning-light: #FEF3C7;
+      --info: #3B82F6;
+      --info-light: #DBEAFE;
+      --purple: #8B5CF6;
+      --purple-light: #EDE9FE;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.07), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.09), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
+    }
+
+    /* THEME PRESET: TEMA A (KOREAN PASTEL ATELIER) */
+    html[data-theme="tema-a"] {
+      --sidebar-bg: #38252B;
+      --sidebar-card: #4A333B;
+      --sidebar-text: #E0CCD2;
+      --sidebar-text-bright: #FFF5F7;
+      --sidebar-active: #F4A7B9;
+      --sidebar-active-bg: rgba(244, 167, 185, 0.2);
+      --main-bg: #FFF9F7;
+      --surface: #FFFFFF;
+      --surface-subtle: #FFF0F3;
+      --border: #F3DCE2;
+      --text-main: #4A2E35;
+      --primary: #E86A82;
+      --primary-hover: #D6536C;
+      --primary-light: #FFEBF0;
+    }
+
+    /* THEME PRESET: TEMA B (MODERN ROMANTIC & EDITORIAL LUXURY) */
+    html[data-theme="tema-b"] {
+      --sidebar-bg: #2B181E;
+      --sidebar-card: #3D222B;
+      --sidebar-text: #D5C2C7;
+      --sidebar-text-bright: #F9F3EA;
+      --sidebar-active: #C5A059;
+      --sidebar-active-bg: rgba(197, 160, 89, 0.22);
+      --main-bg: #FAF6F0;
+      --surface: #FFFFFF;
+      --surface-subtle: #F3ECE2;
+      --border: #E8DDCE;
+      --text-main: #2A171D;
+      --primary: #722F37;
+      --primary-hover: #5A232A;
+      --primary-light: #F7EAEB;
+    }
+
+    /* THEME PRESET: TEMA C (PLAYFUL KAWAII & PASTEL POP) */
+    html[data-theme="tema-c"] {
+      --sidebar-bg: #2C3E50;
+      --sidebar-card: #34495E;
+      --sidebar-text: #BDC3C7;
+      --sidebar-text-bright: #FFFFFF;
+      --sidebar-active: #FF6B81;
+      --sidebar-active-bg: rgba(255, 107, 129, 0.22);
+      --main-bg: #FFFDF9;
+      --surface: #FFFFFF;
+      --surface-subtle: #FFF4E6;
+      --border: #FCE8D5;
+      --text-main: #2C3E50;
+      --primary: #FF6B81;
+      --primary-hover: #EE5253;
+      --primary-light: #FFEAEF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--main-bg); color: var(--text-main); display: flex; min-height: 100vh; overflow-x: hidden; transition: background 0.3s ease, color 0.3s ease; }
+
+    /* SVG ICON UTILITY */
+    .svg-icon {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+      stroke: currentColor;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .svg-icon-sm { width: 14px; height: 14px; stroke-width: 2; }
+    .svg-icon-lg { width: 22px; height: 22px; stroke-width: 1.8; }
+
+    /* ==========================================================================
+       SIDEBAR NAVIGATION
+       ========================================================================== */
+    aside.admin-sidebar {
+      width: 275px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 100;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.2) transparent;
+      transition: background 0.3s ease;
+    }
+    aside.admin-sidebar::-webkit-scrollbar { width: 5px; }
+    aside.admin-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+    .sidebar-brand {
+      padding: 22px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .brand-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), #FB7185);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(244, 63, 94, 0.35);
+    }
+    .brand-info h1 {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--sidebar-text-bright);
+      letter-spacing: -0.2px;
+      line-height: 1.2;
+    }
+    .brand-info p {
+      font-size: 11px;
+      color: var(--sidebar-text);
+      font-weight: 600;
+    }
+
+    .sidebar-section-title {
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.4);
+      padding: 18px 20px 8px 20px;
+    }
+
+    .nav-list {
+      list-style: none;
+      padding: 0 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      user-select: none;
+    }
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--sidebar-text-bright);
+      transform: translateX(2px);
+    }
+    .nav-item.active {
+      background: var(--sidebar-active-bg);
+      color: var(--sidebar-active);
+      font-weight: 700;
+    }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: -8px;
+      top: 10px;
+      bottom: 10px;
+      width: 4px;
+      border-radius: 4px;
+      background: var(--sidebar-active);
+    }
+    .nav-badge {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      line-height: 1.2;
+    }
+    .badge-rose { background: #F43F5E; color: #fff; }
+    .badge-amber { background: #F59E0B; color: #fff; }
+    .badge-emerald { background: #10B981; color: #fff; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .store-status-card {
+      background: var(--sidebar-card);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .status-text {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--sidebar-text-bright);
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #34D399;
+      background: rgba(16, 185, 129, 0.15);
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34D399;
+      animation: pulseDot 2s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    /* ==========================================================================
+       MAIN CONTENT CONTAINER
+       ========================================================================== */
+    main.admin-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--main-bg);
+      transition: background 0.3s ease;
+    }
+
+    /* TOP HEADER */
+    header.admin-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      box-shadow: var(--shadow-sm);
+      gap: 16px;
+      min-height: 66px;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
+    .btn-mobile-toggle {
+      display: none;
+      background: none;
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .header-title-group {
+      min-width: 0;
+      overflow: hidden;
+    }
+    .header-title-group h2 {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .header-title-group p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    /* THEME CARDS IN MAINTENANCE VIEW */
+    .theme-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+    }
+    .theme-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    .theme-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .theme-card.active {
+      border-color: var(--primary);
+      background: var(--surface-subtle);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+    .theme-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .theme-card-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .theme-badge-current {
+      font-size: 10.5px;
+      font-weight: 800;
+      background: var(--primary);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .theme-card-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin-bottom: 12px;
+    }
+    .theme-color-swatches {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .theme-color-swatches span {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      display: inline-block;
+    }
+
+    /* LIVE ETALASE PREVIEW IN MAINTENANCE */
+    .preview-browser-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-top: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+    .preview-browser-header {
+      background: #0F172A;
+      color: #94A3B8;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      border-bottom: 1px solid #1E293B;
+    }
+    .browser-dots {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .browser-dots span {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .browser-address-bar {
+      flex: 1;
+      max-width: 500px;
+      background: #1E293B;
+      color: #CBD5E1;
+      font-size: 11.5px;
+      font-family: monospace;
+      padding: 5px 12px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #334155;
+    }
+    .browser-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-device-toggle {
+      background: #1E293B;
+      border: 1px solid #334155;
+      color: #CBD5E1;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .btn-device-toggle:hover {
+      background: #334155;
+      color: #fff;
+    }
+    .btn-device-toggle.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .preview-iframe-wrapper {
+      width: 100%;
+      height: 600px;
+      background: #F1F5F9;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 16px;
+      overflow-y: auto;
+      transition: all 0.3s ease;
+    }
+    .preview-iframe-wrapper.mobile-mode {
+      background: #0B1120;
+    }
+    .preview-iframe-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .preview-iframe-wrapper.mobile-mode iframe {
+      width: 390px;
+      height: 560px;
+      border: 8px solid #1E293B;
+      border-radius: 36px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    }
+
+    /* OPERATIONAL FEATURE TOGGLES */
+    .toggles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .toggle-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      transition: all 0.2s ease;
+    }
+    .toggle-card:hover {
+      border-color: var(--border-focus);
+      box-shadow: var(--shadow-sm);
+    }
+    .toggle-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toggle-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .toggle-tag {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .tag-critical { background: #FEE2E2; color: #DC2626; }
+    .tag-ops { background: #FEF3C7; color: #D97706; }
+    .tag-promo { background: #EDE9FE; color: #7C3AED; }
+
+    .search-input-box {
+      position: relative;
+    }
+    .search-input-box input {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      padding: 8px 14px 8px 34px;
+      border-radius: var(--radius-full);
+      font-size: 12.5px;
+      width: 200px;
+      outline: none;
+      transition: all 0.2s ease;
+      color: var(--text-main);
+    }
+    .search-input-box input:focus {
+      width: 260px;
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12);
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+    }
+
+    .theme-preview-dropdown {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 7px 12px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .theme-preview-dropdown:hover {
+      background: var(--primary);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .admin-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .admin-profile:hover, .admin-profile.active {
+      background: var(--surface-subtle);
+      border-color: var(--border);
+    }
+    .admin-avatar {
+      width: 38px !important;
+      height: 38px !important;
+      min-width: 38px !important;
+      min-height: 38px !important;
+      max-width: 38px !important;
+      max-height: 38px !important;
+      aspect-ratio: 1 / 1 !important;
+      border-radius: 50% !important;
+      background: linear-gradient(135deg, #FDE047, #EAB308);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #713F12;
+      border: 2px solid #FEF08A;
+      font-size: 13px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+      flex-shrink: 0 !important;
+      box-sizing: border-box !important;
+    }
+    .admin-profile-info {
+      line-height: 1.25;
+      text-align: left;
+    }
+    .admin-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+    .admin-role {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* DROPDOWN MENU */
+    .admin-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 240px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 8px 0;
+      display: none;
+      flex-direction: column;
+      z-index: 999;
+      animation: fadeInDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .admin-dropdown-menu.active, .admin-dropdown-menu.show {
+      display: flex;
+    }
+    @keyframes fadeInDropdown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .dropdown-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-subtle);
+    }
+    .dropdown-item {
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-main);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .dropdown-item:hover {
+      background: var(--surface-subtle);
+      color: var(--primary);
+    }
+    .dropdown-item.item-danger {
+      color: #EF4444;
+    }
+    .dropdown-item.item-danger:hover {
+      background: #FEE2E2;
+      color: #DC2626;
+    }
+    .dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    /* CONTENT BODY & VIEWS */
+    .content-area {
+      padding: 24px 28px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .admin-view {
+      display: none;
+      animation: fadeInView 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .admin-view.active-view { display: block; }
+    @keyframes fadeInView {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================================================
+       COMMON COMPONENTS (CARDS, GRIDS, BUTTONS, TABLES)
+       ========================================================================== */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: #CBD5E1;
+    }
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: var(--primary);
+    }
+    .kpi-card.emerald::after { background: var(--success); }
+    .kpi-card.amber::after { background: var(--warning); }
+    .kpi-card.blue::after { background: var(--info); }
+    .kpi-card.purple::after { background: var(--purple); }
+
+    .kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .kpi-icon-wrap {
+      color: var(--text-muted);
+    }
+    .kpi-value {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+    }
+    .kpi-subtext {
+      font-size: 11.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .trend-up { color: #059669; }
+    .trend-warning { color: #D97706; }
+
+    .card-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .panel-title {
+      font-size: 15.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(244, 63, 94, 0.25);
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .btn-excel {
+      background: #10B981;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+    }
+    .btn-excel:hover {
+      background: #059669;
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: var(--surface-subtle);
+      border-color: var(--border);
+      color: var(--text-main);
+    }
+    .btn-secondary:hover { background: #E2E8F0; }
+    .btn-sm { padding: 5px 10px; font-size: 11.5px; border-radius: 6px; }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    table.data-table th {
+      background: var(--surface-subtle);
+      color: var(--text-muted);
+      font-weight: 700;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.4px;
+    }
+    table.data-table td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-main);
+      font-weight: 500;
+    }
+    table.data-table tr:hover td { background: var(--surface-subtle); }
+    table.data-table tr:last-child td { border-bottom: none; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .badge-paid { background: #DCFCE7; color: #166534; }
+    .badge-unpaid { background: #FEE2E2; color: #991B1B; }
+    .badge-pending { background: #FEF3C7; color: #92400E; }
+    .badge-in-progress { background: #DBEAFE; color: #1E40AF; }
+    .badge-shipped { background: #E0E7FF; color: #3730A3; }
+    .badge-completed { background: #D1FAE5; color: #065F46; }
+
+    .filters-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface-subtle);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .filter-tab {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      border-radius: 7px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      transition: all 0.2s ease;
+    }
+    .filter-tab.active {
+      background: var(--surface);
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* ==========================================================================
+       MULTI-LINE SVG CHART (OMZET vs HPP vs LABA BERSIH)
+       ========================================================================== */
+    .line-chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      margin-bottom: 24px;
+    }
+    .chart-legend {
+      display: flex;
+      gap: 16px;
+      font-size: 11.5px;
+      font-weight: 700;
+      align-items: center;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot-omzet { background: var(--primary); }
+    .dot-hpp { background: #F59E0B; }
+    .dot-laba { background: #10B981; }
+
+    .svg-chart-wrap {
+      width: 100%;
+      height: 240px;
+      margin-top: 16px;
+      position: relative;
+    }
+    .svg-chart-wrap svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .chart-grid-line {
+      stroke: var(--border);
+      stroke-width: 1;
+      stroke-dasharray: 4 4;
+    }
+    .chart-path-omzet {
+      fill: none;
+      stroke: var(--primary);
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .chart-path-hpp {
+      fill: none;
+      stroke: #F59E0B;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-dasharray: 6 3;
+    }
+    .chart-path-laba {
+      fill: none;
+      stroke: #10B981;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .chart-dot {
+      r: 5;
+      stroke-width: 3;
+      cursor: pointer;
+      transition: r 0.2s ease;
+    }
+    .chart-dot:hover { r: 8; }
+    .dot-omzet-point { fill: #fff; stroke: var(--primary); }
+    .dot-hpp-point { fill: #fff; stroke: #F59E0B; }
+    .dot-laba-point { fill: #fff; stroke: #10B981; }
+
+    .chart-tooltip {
+      position: absolute;
+      background: #0F172A;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      transform: translate(-50%, -120%);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10;
+      white-space: nowrap;
+    }
+
+    /* DASHBOARD MIDDLE GRID */
+    .dash-middle-grid {
+      display: grid;
+      grid-template-columns: 1.7fr 1.1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    /* PRODUCTION CALENDAR */
+    .calendar-mini {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      text-align: center;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .cal-th { font-weight: 800; color: var(--text-muted); font-size: 10.5px; padding: 4px 0; }
+    .cal-day {
+      padding: 10px 4px;
+      border-radius: 8px;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .cal-day.today { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+    .cal-badge {
+      font-size: 8.5px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .cb-craft { background: #FEF3C7; color: #92400E; }
+    .cb-ship { background: #DBEAFE; color: #1E40AF; }
+    .cb-cod { background: #D1FAE5; color: #065F46; }
+
+    /* WHATSAPP CS HUB SPLIT */
+    .chat-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      height: 560px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .chat-list-panel {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      background: var(--surface-subtle);
+    }
+    .chat-list-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 800;
+      font-size: 13.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chat-threads { overflow-y: auto; flex: 1; }
+    .chat-thread-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s ease;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .chat-thread-item:hover { background: rgba(0,0,0,0.03); }
+    .chat-thread-item.active { background: var(--primary-light); border-left: 3px solid var(--primary); }
+    .thread-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--text-main);
+      flex-shrink: 0;
+    }
+    .thread-body { flex: 1; min-width: 0; }
+    .thread-name { font-size: 12.5px; font-weight: 800; display: flex; justify-content: space-between; }
+    .thread-time { font-size: 10.5px; color: var(--text-light); font-weight: 500; }
+    .thread-snippet { font-size: 11.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+
+    .chat-window { display: flex; flex-direction: column; background: var(--surface); }
+    .chat-window-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+    }
+    .chat-messages-scroll {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: var(--main-bg);
+    }
+    .chat-bubble {
+      max-width: 72%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      line-height: 1.4;
+      position: relative;
+    }
+    .bubble-in {
+      align-self: flex-start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-bottom-left-radius: 2px;
+    }
+    .bubble-out {
+      align-self: flex-end;
+      background: #DCFCE7;
+      color: #14532D;
+      border-bottom-right-radius: 2px;
+    }
+    .bubble-time {
+      font-size: 9.5px;
+      color: var(--text-light);
+      margin-top: 4px;
+      text-align: right;
+    }
+    .canned-responses-bar {
+      padding: 8px 16px;
+      background: var(--surface-subtle);
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      border-top: 1px solid var(--border);
+    }
+    .canned-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .canned-chip:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+    .chat-input-bar {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .chat-input-bar input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      outline: none;
+      background: var(--surface);
+      color: var(--text-main);
+    }
+
+    /* COD MAP CANVAS & GOOGLE MAPS INTEGRATION */
+    .cod-layout { display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; }
+    .cod-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .cod-card:hover, .cod-card.active-pin {
+      border-color: var(--primary);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+      transform: translateY(-1px);
+    }
+    .cod-card-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .cod-card-address {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+    .cod-card-meta {
+      font-size: 11px;
+      color: #059669;
+      font-weight: 700;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .cod-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .btn-cod-action {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .btn-cod-action:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .btn-cod-action.btn-danger-action:hover {
+      background: #FEE2E2;
+      border-color: #EF4444;
+      color: #DC2626;
+    }
+
+    /* MAINTENANCE SWITCH */
+    .maintenance-banner-card {
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+      border: 2px solid #FCD34D;
+      border-radius: var(--radius-md);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 56px;
+      height: 30px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #CBD5E1;
+      transition: .3s;
+      border-radius: 34px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    input:checked + .slider { background-color: #EF4444; }
+    input:checked + .slider:before { transform: translateX(26px); }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; animation: modalFade 0.2s ease forwards; }
+    @keyframes modalFade { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+    .modal-dialog {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      max-width: 580px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+    }
+    .modal-header {
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 800; color: var(--text-main); }
+    .modal-close-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted); }
+    .modal-body { padding: 22px; overflow-y: auto; font-size: 13px; }
+    .modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border);
+      background: var(--surface-subtle);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* THERMAL LABEL */
+    .thermal-label-box {
+      border: 2px dashed #000;
+      padding: 18px;
+      font-family: 'Courier New', Courier, monospace;
+      background: #FFF;
+      color: #000;
+      line-height: 1.3;
+    }
+    .thermal-header {
+      text-align: center;
+      border-bottom: 2px solid #000;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .barcode-mock {
+      font-size: 38px;
+      letter-spacing: 5px;
+      font-family: monospace;
+      text-align: center;
+      margin: 8px 0;
+      font-weight: bold;
+    }
+
+    /* TOAST (SONNER STYLE) */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 28px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .admin-toast {
+      background: #0F172A;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+      animation: slideInToast 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideInToast {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1200px) {
+      .search-input-box input { width: 140px; }
+      .header-title-group p { display: none; }
+    }
+    @media (max-width: 1024px) {
+      .dash-middle-grid { grid-template-columns: 1fr; }
+      .chat-layout { grid-template-columns: 1fr; }
+      .chat-list-panel { display: none; }
+      .cod-layout { grid-template-columns: 1fr; }
+      .search-input-box { display: none; }
+    }
+    @media (max-width: 850px) {
+      .theme-preview-dropdown span { display: none; }
+      .admin-profile-info { display: none; }
+    }
+    @media (max-width: 768px) {
+      aside.admin-sidebar { position: fixed; left: -280px; transition: left 0.3s ease; }
+      aside.admin-sidebar.mobile-open { left: 0; }
+      .btn-mobile-toggle { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       SIDEBAR NAVIGATION (SVG ICONS)
+       ========================================================================== -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-brand">
+      <div class="brand-avatar">
+        <!-- Flower Bouquet SVG Icon -->
+        <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><path d="M12 7.5a4.5 4.5 0 1 1 4.5 4.5M12 7.5A4.5 4.5 0 1 0 7.5 12M12 7.5V12m4.5 0a4.5 4.5 0 1 1-4.5 4.5M16.5 12H12m-4.5 0a4.5 4.5 0 1 0 4.5 4.5M7.5 12H12m0 4.5V21"/><circle cx="12" cy="12" r="2"/></svg>
+      </div>
+      <div class="brand-info">
+        <h1>Chenille Atelier</h1>
+        <p>Operations Suite v2.5</p>
+      </div>
+    </div>
+
+    <div class="sidebar-section-title">Menu Utama</div>
+    <ul class="nav-list">
+      <li class="nav-item active" onclick="switchView('dashboard')">
+        <svg class="svg-icon" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span>Dashboard & Analitik</span>
+      </li>
+      <li class="nav-item" onclick="switchView('orders')">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+        <span>Manajemen Pesanan</span>
+        <span class="nav-badge badge-rose" id="badgePendingOrders">4</span>
+      </li>
+      <li class="nav-item" onclick="switchView('reports')">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        <span>Laporan & Ekspor Excel</span>
+      </li>
+      <li class="nav-item" onclick="switchView('products')">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="m9 12 2 2 4-4"/></svg>
+        <span>Produk & Klik Pelanggan</span>
+      </li>
+      <li class="nav-item" onclick="switchView('bom')">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/></svg>
+        <span>Bahan Baku & Resep BOM</span>
+      </li>
+      <li class="nav-item" onclick="switchView('promos')">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 11v2"/><path d="M13 17v2"/></svg>
+        <span>Pemasaran & Kupon</span>
+      </li>
+    </ul>
+
+    <div class="sidebar-section-title">Pelayanan & Logistik</div>
+    <ul class="nav-list">
+      <li class="nav-item" onclick="switchView('complaints')">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+        <span>Komplain & Rating</span>
+        <span class="nav-badge badge-amber">1 Baru</span>
+      </li>
+      <li class="nav-item" onclick="switchView('whatsapp')">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+        <span>CS WhatsApp Hub</span>
+        <span class="nav-badge badge-emerald">3 Live</span>
+      </li>
+      <li class="nav-item" onclick="switchView('cod-maps')">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>Titik Temu COD Maps</span>
+      </li>
+    </ul>
+
+    <div class="sidebar-section-title">Sistem & Toko</div>
+    <ul class="nav-list">
+      <li class="nav-item" onclick="switchView('maintenance')">
+        <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+        <span>Mode Pemeliharaan & Tema</span>
+      </li>
+      <li class="nav-item" onclick="switchView('settings')">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span>Pengaturan Toko</span>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="store-status-card">
+        <div>
+          <div class="status-text">Status Toko</div>
+          <div style="font-size: 10px; color: var(--sidebar-text);" id="footerStoreStatusText">Online & Buka Pesanan</div>
+        </div>
+        <div class="status-pill" id="footerStorePill">
+          <span class="status-dot"></span>
+          <span>AKTIF</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==========================================================================
+       MAIN CONTENT
+       ========================================================================== -->
+  <main class="admin-main">
+    
+    <!-- TOP HEADER -->
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="btn-mobile-toggle" onclick="toggleMobileSidebar()">☰</button>
+        <div class="header-title-group">
+          <h2 id="currentViewTitle">Dashboard & Evaluasi Bisnis</h2>
+          <p id="currentViewSubtitle">Ringkasan performa penjualan, produksi buket kawat bulu, dan margin keuntungan.</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="search-input-box">
+          <span class="search-icon">
+            <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </span>
+          <input type="text" id="globalSearchInput" placeholder="Cari invoice, pembeli..." onkeyup="handleGlobalSearch(event)">
+        </div>
+
+        <!-- QUICK STORE PREVIEW -->
+        <a href="../tema-a-korean-pastel/index.html" target="_blank" class="theme-preview-dropdown" title="Buka Toko Frontend">
+          <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          <span>Buka Toko</span>
+        </a>
+
+        <!-- CUSTOMER PORTAL LINK -->
+        <a href="../customer-portal/index.html" target="_blank" class="theme-preview-dropdown" style="background:#EDE9FE; border-color:#8B5CF6; color:#7C3AED;" title="Buka Portal Pelanggan (Guest/Login)">
+          <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Portal Pelanggan</span>
+        </a>
+
+        <!-- ADMIN PROFILE WITH INTERACTIVE DROPDOWN -->
+        <div class="admin-profile" id="adminProfileBtn" onclick="toggleAdminProfileMenu(event)">
+          <div class="admin-avatar" id="headerAvatar">RA</div>
+          <div class="admin-profile-info">
+            <div class="admin-name" id="headerAdminName">Rania Azzahra</div>
+            <div class="admin-role">Super Admin Florist</div>
+          </div>
+          <svg class="svg-icon svg-icon-sm" style="color:var(--text-muted); margin-left:2px;" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+
+          <!-- DROPDOWN MENU -->
+          <div class="admin-dropdown-menu" id="adminDropdownMenu" onclick="event.stopPropagation()">
+            <div class="dropdown-header">
+              <div style="font-weight:800; font-size:13px; color:var(--text-main);" id="dropAdminName">Rania Azzahra</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">rania.florist@atelier.com</div>
+              <span style="display:inline-block; margin-top:6px; font-size:10px; font-weight:800; background:var(--primary-light); color:var(--primary); padding:2px 8px; border-radius:10px;">Super Admin Utama</span>
+            </div>
+            <div class="dropdown-item" onclick="openProfileModal()">
+              <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Profil Pengrajin & Akun</span>
+            </div>
+            <div class="dropdown-item" onclick="switchView('settings'); closeAdminProfileMenu();">
+              <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="3" r="3"/></svg>
+              <span>Pengaturan Atelier</span>
+            </div>
+            <div class="dropdown-item" onclick="openChangePasswordModal()">
+              <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>Ganti Kata Sandi</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item item-danger" onclick="logoutAdmin()">
+              <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y1="12"/></svg>
+              <span>Keluar / Logout</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT BODY -->
+    <div class="content-area">
+
+      <!-- ==========================================================================
+           VIEW 1: DASHBOARD & ANALITIK
+           ========================================================================== -->
+      <div class="admin-view active-view" id="view-dashboard">
+        
+        <!-- KPI Top Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Omzet Bulan Ini</span>
+              <span class="kpi-icon-wrap" style="color:var(--primary);">
+                <svg class="svg-icon" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </span>
+            </div>
+            <div class="kpi-value">Rp 8.750.000</div>
+            <div class="kpi-subtext trend-up">↑ 18.4% vs bulan lalu</div>
+          </div>
+
+          <div class="kpi-card emerald">
+            <div class="kpi-header">
+              <span class="kpi-label">Laba Bersih Toko</span>
+              <span class="kpi-icon-wrap" style="color:var(--success);">
+                <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </span>
+            </div>
+            <div class="kpi-value" style="color:#059669;">Rp 5.100.000</div>
+            <div class="kpi-subtext trend-up">Margin Bersih 58.2%</div>
+          </div>
+
+          <div class="kpi-card amber">
+            <div class="kpi-header">
+              <span class="kpi-label">Slot PO Wisuda</span>
+              <span class="kpi-icon-wrap" style="color:var(--warning);">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              </span>
+            </div>
+            <div class="kpi-value">4 / 10 Slot</div>
+            <div class="kpi-subtext">Kapasitas Aman (Sisa 6)</div>
+          </div>
+
+          <div class="kpi-card blue">
+            <div class="kpi-header">
+              <span class="kpi-label">Klik Katalog Pelanggan</span>
+              <span class="kpi-icon-wrap" style="color:var(--info);">
+                <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4v3H8v2h4v3z"/></svg>
+              </span>
+            </div>
+            <div class="kpi-value">1.280 Klik</div>
+            <div class="kpi-subtext trend-up">↑ Rasio Konversi 12.4%</div>
+          </div>
+
+          <div class="kpi-card purple">
+            <div class="kpi-header">
+              <span class="kpi-label">Rating Kepuasan</span>
+              <span class="kpi-icon-wrap" style="color:var(--purple);">
+                <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </span>
+            </div>
+            <div class="kpi-value">4.95 / 5.0</div>
+            <div class="kpi-subtext">Dari 142 Ulasan Pembeli</div>
+          </div>
+        </div>
+
+        <!-- MULTI-LINE CHART (OMZET vs HPP vs LABA BERSIH) -->
+        <div class="line-chart-card">
+          <div class="panel-header" style="margin-bottom: 8px;">
+            <div>
+              <div class="panel-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                <span>Grafik Komparasi Finansial: Omzet Penjualan vs HPP Bahan vs Laba Bersih</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Evaluasi mingguan pergerakan omzet, modal baku kawat bulu, dan profit bersih September 2026.
+              </p>
+            </div>
+
+            <div class="chart-legend">
+              <div class="legend-item">
+                <span class="legend-dot dot-omzet"></span>
+                <span>Omzet Penjualan</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot dot-hpp"></span>
+                <span>HPP Bahan Mentah</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot dot-laba"></span>
+                <span>Laba Bersih Toko</span>
+              </div>
+              <button class="btn btn-excel btn-sm" onclick="exportExcelReport()">
+                <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Unduh Excel</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Professional SVG Line Chart -->
+          <div class="svg-chart-wrap" id="chartWrapper">
+            <div class="chart-tooltip" id="chartTooltip">Tooltip info</div>
+            <svg viewBox="0 0 700 220" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="gradLaba" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#10B981" stop-opacity="0.25"/>
+                  <stop offset="100%" stop-color="#10B981" stop-opacity="0.0"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Grid Lines -->
+              <line x1="40" y1="30" x2="680" y2="30" class="chart-grid-line"/>
+              <line x1="40" y1="80" x2="680" y2="80" class="chart-grid-line"/>
+              <line x1="40" y1="130" x2="680" y2="130" class="chart-grid-line"/>
+              <line x1="40" y1="180" x2="680" y2="180" class="chart-grid-line"/>
+
+              <!-- Y-Axis Labels -->
+              <text x="30" y="34" font-size="10" fill="#94A3B8" text-anchor="end">Rp 3.0M</text>
+              <text x="30" y="84" font-size="10" fill="#94A3B8" text-anchor="end">Rp 2.0M</text>
+              <text x="30" y="134" font-size="10" fill="#94A3B8" text-anchor="end">Rp 1.0M</text>
+              <text x="30" y="184" font-size="10" fill="#94A3B8" text-anchor="end">Rp 0</text>
+
+              <!-- Area Fill under Laba Bersih -->
+              <polygon points="100,180 100,131 280,108 460,95 640,130 640,180" fill="url(#gradLaba)"/>
+
+              <!-- Path: OMZET (Line 1 - Pink) -->
+              <!-- W1: 1.65M -> y=97.5 | W2: 2.45M -> y=57.5 | W3: 2.95M -> y=32.5 | W4: 1.70M -> y=95 -->
+              <path d="M 100 97.5 Q 190 77.5 280 57.5 T 460 32.5 T 640 95" class="chart-path-omzet"/>
+
+              <!-- Path: HPP (Line 2 - Amber Dashed) -->
+              <!-- W1: 680K -> y=146 | W2: 1.02M -> y=129 | W3: 1.25M -> y=117.5 | W4: 700K -> y=145 -->
+              <path d="M 100 146 Q 190 137.5 280 129 T 460 117.5 T 640 145" class="chart-path-hpp"/>
+
+              <!-- Path: LABA BERSIH (Line 3 - Emerald Green) -->
+              <!-- W1: 970K -> y=131.5 | W2: 1.43M -> y=108.5 | W3: 1.70M -> y=95 | W4: 1.00M -> y=130 -->
+              <path d="M 100 131.5 Q 190 120 280 108.5 T 460 95 T 640 130" class="chart-path-laba"/>
+
+              <!-- Interactive Points: Week 1 (x=100) -->
+              <circle cx="100" cy="97.5" class="chart-dot dot-omzet-point" onmouseenter="showChartTooltip(evt, 'Minggu 1', 'Omzet: Rp 1.650.000', 'HPP: Rp 680.000', 'Laba: +Rp 970.000 (58.7%)')"/>
+              <circle cx="100" cy="146" class="chart-dot dot-hpp-point" onmouseenter="showChartTooltip(evt, 'Minggu 1', 'Omzet: Rp 1.650.000', 'HPP: Rp 680.000', 'Laba: +Rp 970.000')"/>
+              <circle cx="100" cy="131.5" class="chart-dot dot-laba-point" onmouseenter="showChartTooltip(evt, 'Minggu 1', 'Laba Bersih: +Rp 970.000', 'Margin: 58.7%', 'Omzet: Rp 1.65M')"/>
+
+              <!-- Interactive Points: Week 2 (x=280) -->
+              <circle cx="280" cy="57.5" class="chart-dot dot-omzet-point" onmouseenter="showChartTooltip(evt, 'Minggu 2', 'Omzet: Rp 2.450.000', 'HPP: Rp 1.020.000', 'Laba: +Rp 1.430.000 (58.3%)')"/>
+              <circle cx="280" cy="129" class="chart-dot dot-hpp-point" onmouseenter="showChartTooltip(evt, 'Minggu 2', 'Omzet: Rp 2.450.000', 'HPP: Rp 1.020.000', 'Laba: +Rp 1.430.000')"/>
+              <circle cx="280" cy="108.5" class="chart-dot dot-laba-point" onmouseenter="showChartTooltip(evt, 'Minggu 2', 'Laba Bersih: +Rp 1.430.000', 'Margin: 58.3%', 'Omzet: Rp 2.45M')"/>
+
+              <!-- Interactive Points: Week 3 (x=460 - Peak Wisuda) -->
+              <circle cx="460" cy="32.5" class="chart-dot dot-omzet-point" onmouseenter="showChartTooltip(evt, 'Minggu 3 (Puncak)', 'Omzet: Rp 2.950.000', 'HPP: Rp 1.250.000', 'Laba: +Rp 1.700.000 (57.6%)')"/>
+              <circle cx="460" cy="117.5" class="chart-dot dot-hpp-point" onmouseenter="showChartTooltip(evt, 'Minggu 3', 'HPP: Rp 1.250.000', 'Omzet: Rp 2.950.000', 'Laba: +Rp 1.700.000')"/>
+              <circle cx="460" cy="95" class="chart-dot dot-laba-point" onmouseenter="showChartTooltip(evt, 'Minggu 3', 'Laba Bersih: +Rp 1.700.000', 'Margin: 57.6%', 'Rekor Bulan Ini!')"/>
+
+              <!-- Interactive Points: Week 4 (x=640) -->
+              <circle cx="640" cy="95" class="chart-dot dot-omzet-point" onmouseenter="showChartTooltip(evt, 'Minggu 4 (Berjalan)', 'Omzet: Rp 1.700.000', 'HPP: Rp 700.000', 'Laba: +Rp 1.000.000 (58.8%)')"/>
+              <circle cx="640" cy="145" class="chart-dot dot-hpp-point" onmouseenter="showChartTooltip(evt, 'Minggu 4', 'HPP: Rp 700.000', 'Omzet: Rp 1.700.000', 'Laba: +Rp 1.000.000')"/>
+              <circle cx="640" cy="130" class="chart-dot dot-laba-point" onmouseenter="showChartTooltip(evt, 'Minggu 4', 'Laba Bersih: +Rp 1.000.000', 'Margin: 58.8%', 'Target Tercapai!')"/>
+
+              <!-- X-Axis Labels -->
+              <text x="100" y="205" font-size="11" font-weight="700" fill="#64748B" text-anchor="middle">Minggu 1</text>
+              <text x="280" y="205" font-size="11" font-weight="700" fill="#64748B" text-anchor="middle">Minggu 2</text>
+              <text x="460" y="205" font-size="11" font-weight="700" fill="#64748B" text-anchor="middle">Minggu 3 (Puncak)</text>
+              <text x="640" y="205" font-size="11" font-weight="700" fill="#64748B" text-anchor="middle">Minggu 4 (Berjalan)</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Middle Grid: Calendar + Quick Orders -->
+        <div class="dash-middle-grid">
+          <div class="card-panel" style="margin-bottom:0;">
+            <div class="panel-header">
+              <div class="panel-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>Kalender Produksi Atelier</span>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+              <span class="cal-badge cb-craft">● Rangkai</span>
+              <span class="cal-badge cb-ship">● Biteship J&T</span>
+              <span class="cal-badge cb-cod">● COD Kampus</span>
+            </div>
+            <div class="calendar-mini">
+              <div class="cal-th">Min</div>
+              <div class="cal-th">Sen</div>
+              <div class="cal-th">Sel</div>
+              <div class="cal-th">Rab</div>
+              <div class="cal-th">Kam</div>
+              <div class="cal-th">Jum</div>
+              <div class="cal-th">Sab</div>
+
+              <div class="cal-day">1</div>
+              <div class="cal-day">2</div>
+              <div class="cal-day">3 <span class="cal-badge cb-craft">2 Buket</span></div>
+              <div class="cal-day">4 <span class="cal-badge cb-ship">Pick Up</span></div>
+              <div class="cal-day">5</div>
+              <div class="cal-day">6 <span class="cal-badge cb-cod">COD UI</span></div>
+              <div class="cal-day today">7 <span class="cal-badge cb-craft">3 Buket</span></div>
+            </div>
+          </div>
+
+          <div class="card-panel" style="margin-bottom:0;">
+            <div class="panel-header">
+              <div class="panel-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span>Top Produk Paling Menguntungkan</span>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--surface-subtle); border-radius:8px;">
+                <div>
+                  <strong style="font-size:12.5px;">Sunshine Daisy Bear Toga</strong>
+                  <div style="font-size:11px; color:var(--text-muted);">HPP: Rp 52.600 • Jual: Rp 175.000</div>
+                </div>
+                <div style="text-align:right;">
+                  <strong style="color:#059669; font-size:13px;">+Rp 122.400</strong>
+                  <div style="font-size:10.5px; font-weight:800; color:#059669;">Margin 70.0%</div>
+                </div>
+              </div>
+
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--surface-subtle); border-radius:8px;">
+                <div>
+                  <strong style="font-size:12.5px;">Tulip Pastel Candy Pink</strong>
+                  <div style="font-size:11px; color:var(--text-muted);">HPP: Rp 40.000 • Jual: Rp 185.000</div>
+                </div>
+                <div style="text-align:right;">
+                  <strong style="color:#059669; font-size:13px;">+Rp 145.000</strong>
+                  <div style="font-size:10.5px; font-weight:800; color:#059669;">Margin 78.4%</div>
+                </div>
+              </div>
+
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--surface-subtle); border-radius:8px;">
+                <div>
+                  <strong style="font-size:12.5px;">Romantic Red Rose Atelier</strong>
+                  <div style="font-size:11px; color:var(--text-muted);">HPP: Rp 58.000 • Jual: Rp 210.000</div>
+                </div>
+                <div style="text-align:right;">
+                  <strong style="color:#059669; font-size:13px;">+Rp 152.000</strong>
+                  <div style="font-size:10.5px; font-weight:800; color:#059669;">Margin 72.4%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Orders Quick Table -->
+        <div class="card-panel" style="margin-top:24px;">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span>Pesanan Masuk Terbaru</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="switchView('orders')">
+              Lihat Semua Pesanan →
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="dashboardRecentTable">
+              <thead>
+                <tr>
+                  <th>No. Invoice</th>
+                  <th>Nama Pembeli</th>
+                  <th>Detail Buket</th>
+                  <th>Pengiriman</th>
+                  <th>Pembayaran</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Aksi Cepat</th>
+                </tr>
+              </thead>
+              <tbody id="dashOrdersBody">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================================
+           VIEW 2: MANAJEMEN PESANAN
+           ========================================================================== -->
+      <div class="admin-view" id="view-orders">
+        <div class="card-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              <span>Manajemen Alur Pesanan & Ekspedisi</span>
+            </div>
+            <div class="panel-actions">
+              <button class="btn btn-excel btn-sm" onclick="exportExcelReport()">
+                <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Ekspor Pesanan (.csv)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Filter status tabs -->
+          <div class="filters-bar">
+            <div class="filter-tabs">
+              <button class="filter-tab active" onclick="filterOrderTable('ALL', this)">Semua (6)</button>
+              <button class="filter-tab" onclick="filterOrderTable('PENDING', this)">Menunggu Rangkai (2)</button>
+              <button class="filter-tab" onclick="filterOrderTable('CRAFTING', this)">Sedang Dirangkai (2)</button>
+              <button class="filter-tab" onclick="filterOrderTable('SHIPPED', this)">Siap / Dikirim (1)</button>
+              <button class="filter-tab" onclick="filterOrderTable('COMPLETED', this)">Selesai (1)</button>
+            </div>
+
+            <div style="font-size: 12px; color: var(--text-muted);">
+              💡 <em>Klik tombol status pada baris untuk memajukan alur pengerjaan</em>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>No. Invoice</th>
+                  <th>Tanggal</th>
+                  <th>Nama Pembeli</th>
+                  <th>Buket Dipesan</th>
+                  <th>Metode Logistik</th>
+                  <th>Pembayaran</th>
+                  <th>Total</th>
+                  <th>Status Pengerjaan</th>
+                  <th>Aksi Dokumen</th>
+                </tr>
+              </thead>
+              <tbody id="fullOrdersTableBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================================
+           VIEW 3: LAPORAN PENJUALAN & EKSPOR EXCEL
+           ========================================================================== -->
+      <div class="admin-view" id="view-reports">
+        <div class="card-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                <span>Laporan Penghasilan & Evaluasi Margin Toko</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                Evaluasi omzet kotor, HPP bahan baku kawat bulu, biaya packing, dan margin laba bersih toko.
+              </p>
+            </div>
+            <div class="panel-actions">
+              <button class="btn btn-excel" onclick="exportExcelReport()">
+                <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Unduh Laporan Excel Lengkap (.csv/.xlsx)</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="kpi-grid" style="margin-top: 10px;">
+            <div class="kpi-card">
+              <div class="kpi-label">Total Omzet Penjualan</div>
+              <div class="kpi-value">Rp 8.750.000</div>
+              <div class="kpi-subtext trend-up">48 Buket Terjual</div>
+            </div>
+            <div class="kpi-card amber">
+              <div class="kpi-label">Total HPP Bahan Kawat Bulu</div>
+              <div class="kpi-value">Rp 3.650.000</div>
+              <div class="kpi-subtext">Biaya kawat bulu, boneka & box</div>
+            </div>
+            <div class="kpi-card emerald">
+              <div class="kpi-label">Laba Bersih Toko</div>
+              <div class="kpi-value">Rp 5.100.000</div>
+              <div class="kpi-subtext trend-up">Margin Bersih 58.2%</div>
+            </div>
+            <div class="kpi-card blue">
+              <div class="kpi-label">Rata-Rata Order Value</div>
+              <div class="kpi-value">Rp 182.290</div>
+              <div class="kpi-subtext">Per Transaksi</div>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="reportTableData">
+              <thead>
+                <tr>
+                  <th>No. Invoice</th>
+                  <th>Tanggal</th>
+                  <th>Pelanggan</th>
+                  <th>Detail Buket</th>
+                  <th>HPP Bahan</th>
+                  <th>Harga Jual</th>
+                  <th>Laba Bersih</th>
+                  <th>Metode Bayar</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="reportTableBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================================
+           VIEW 4: PRODUK & KLIK PELANGGAN
+           ========================================================================== -->
+      <div class="admin-view" id="view-products">
+        <div class="card-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4v3H8v2h4v3z"/></svg>
+                <span>Katalog Produk & Analitik Klik Minat Pelanggan</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                Pantau jumlah klik kartu produk oleh pengunjung dan tingkat konversi ke keranjang belanja.
+              </p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="showToast('Tambah Produk', 'Form buket baru siap.', 'info')">
+              + Tambah Buket Baru
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nama Buket Bunga</th>
+                  <th>Kategori</th>
+                  <th>Harga Jual</th>
+                  <th>Stok Fisik</th>
+                  <th>Status PO</th>
+                  <th>Jumlah Klik Pengunjung</th>
+                  <th>Konversi Checkout</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="productsTableBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================================
+           VIEW 5: BAHAN BAKU & RESEP BOM (BILL OF MATERIALS)
+           ========================================================================== -->
+      <div class="admin-view" id="view-bom">
+        <div class="card-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/></svg>
+                <span>Resep Bahan Baku (Bill of Materials) & Rincian Modal Per Buket</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                Transparansi modal: Setiap buket menghabiskan bahan mentah apa saja, biaya satuannya, dan untung bersihnya.
+              </p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="showToast('Restock Order', 'Daftar belanja bahan baku dibuat.', 'success')">
+              📦 Buat Purchase Order Bahan
+            </button>
+          </div>
+
+          <!-- BOM Cards Accordion / Table -->
+          <div style="display:flex; flex-direction:column; gap:16px;" id="bomListContainer">
+            <!-- 1. Sunshine Daisy Bear Toga -->
+            <div class="card-panel" style="margin-bottom:0; background:var(--surface-subtle); border-color:var(--border);">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <h4 style="font-size:15px; font-weight:800;">🎓 Sunshine Daisy Bear Toga (Edisi Wisuda Best Seller)</h4>
+                  <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Kategori: Wisuda • Waktu Perakitan: 45 Menit</div>
+                </div>
+                <div style="text-align:right;">
+                  <span style="font-size:11.5px; color:var(--text-muted);">Harga Jual: <strong>Rp 175.000</strong></span>
+                  <div style="font-size:14px; font-weight:900; color:#059669;">Laba Bersih: +Rp 122.400 (Margin 70.0%)</div>
+                </div>
+              </div>
+
+              <div class="table-container" style="background:#fff;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Komponen Bahan Baku</th>
+                      <th>Kebutuhan per Buket</th>
+                      <th>Biaya Satuan Bahan</th>
+                      <th>Subtotal Biaya Modal (HPP)</th>
+                      <th>Sisa Stok Gudang</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Kawat Bulu Chenille Kuning Daisy</strong></td>
+                      <td>8 Batang</td>
+                      <td>Rp 800 / batang</td>
+                      <td>Rp 6.400</td>
+                      <td><span class="status-badge badge-paid">140 Batang (Aman)</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Kawat Bulu Chenille Hijau Sage</strong></td>
+                      <td>4 Batang</td>
+                      <td>Rp 800 / batang</td>
+                      <td>Rp 3.200</td>
+                      <td><span class="status-badge badge-paid">92 Batang (Aman)</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Boneka Beruang Toga Mini + Ijazah</strong></td>
+                      <td>1 Pcs</td>
+                      <td>Rp 18.000 / pcs</td>
+                      <td>Rp 18.000</td>
+                      <td><span class="status-badge badge-pending">8 Pcs (Perlu Tambah)</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Kertas Cellophane Matte 2-Tone</strong></td>
+                      <td>2 Lembar</td>
+                      <td>Rp 4.000 / lembar</td>
+                      <td>Rp 8.000</td>
+                      <td><span class="status-badge badge-paid">45 Lembar</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Kardus Buket Tebal Die-Cut A3</strong></td>
+                      <td>1 Box</td>
+                      <td>Rp 12.000 / box</td>
+                      <td>Rp 12.000</td>
+                      <td><span class="status-badge badge-paid">30 Box</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Pita Satin Emas & Lem Tembak Bakar</strong></td>
+                      <td>1 Set</td>
+                      <td>Rp 5.000 / set</td>
+                      <td>Rp 5.000</td>
+                      <td><span class="status-badge badge-paid">Aman</span></td>
+                    </tr>
+                    <tr style="background:#FEF3C7; font-weight:800;">
+                      <td colspan="3" style="text-align:right;">TOTAL HPP BIAYA PRODUKSI:</td>
+                      <td style="color:#92400E;">Rp 52.600</td>
+                      <td style="color:#059669;">Untung Bersih: Rp 122.400</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- 2. Tulip Pastel Candy Symphony -->
+            <div class="card-panel" style="margin-bottom:0; background:var(--surface-subtle); border-color:var(--border);">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <h4 style="font-size:15px; font-weight:800;">🌷 Tulip Pastel Pink Candy + Fairy LED (Edisi Romantis)</h4>
+                  <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Kategori: Romantis • Waktu Perakitan: 35 Menit</div>
+                </div>
+                <div style="text-align:right;">
+                  <span style="font-size:11.5px; color:var(--text-muted);">Harga Jual: <strong>Rp 185.000</strong></span>
+                  <div style="font-size:14px; font-weight:900; color:#059669;">Laba Bersih: +Rp 145.000 (Margin 78.4%)</div>
+                </div>
+              </div>
+
+              <div class="table-container" style="background:#fff;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Komponen Bahan Baku</th>
+                      <th>Kebutuhan per Buket</th>
+                      <th>Biaya Satuan Bahan</th>
+                      <th>Subtotal Biaya Modal (HPP)</th>
+                      <th>Sisa Stok Gudang</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Kawat Bulu Pink Sakura & Baby Pink</strong></td>
+                      <td>7 Batang</td>
+                      <td>Rp 800 / batang</td>
+                      <td>Rp 5.600</td>
+                      <td><span class="status-badge badge-paid">180 Batang (Aman)</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Kawat Bulu Chenille Hijau Daun</strong></td>
+                      <td>3 Batang</td>
+                      <td>Rp 800 / batang</td>
+                      <td>Rp 2.400</td>
+                      <td><span class="status-badge badge-paid">110 Batang (Aman)</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Lampu Fairy LED Warm White 1 Meter</strong></td>
+                      <td>1 Untai</td>
+                      <td>Rp 8.500 / untai</td>
+                      <td>Rp 8.500</td>
+                      <td><span class="status-badge badge-paid">25 Untai</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Kertas Wrapping Cellophane Lilac Pink</strong></td>
+                      <td>2 Lembar</td>
+                      <td>Rp 4.000 / lembar</td>
+                      <td>Rp 8.000</td>
+                      <td><span class="status-badge badge-paid">38 Lembar</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Kardus Buket Tebal Die-Cut A3</strong></td>
+                      <td>1 Box</td>
+                      <td>Rp 12.000 / box</td>
+                      <td>Rp 12.000</td>
+                      <td><span class="status-badge badge-paid">30 Box</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Pita Satin Pink & Perekat</strong></td>
+                      <td>1 Set</td>
+                      <td>Rp 3.500 / set</td>
+                      <td>Rp 3.500</td>
+                      <td><span class="status-badge badge-paid">Aman</span></td>
+                    </tr>
+                    <tr style="background:#FEF3C7; font-weight:800;">
+                      <td colspan="3" style="text-align:right;">TOTAL HPP BIAYA PRODUKSI:</td>
+                      <td style="color:#92400E;">Rp 40.000</td>
+                      <td style="color:#059669;">Untung Bersih: Rp 145.000</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================================
+           VIEW 6: PEMASARAN & KUPON DISKON
+           ========================================================================== -->
+      <div class="admin-view" id="view-promos">
+        <div class="card-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 11v2"/><path d="M13 17v2"/></svg>
+                <span>Kupon Promosi & Kode Voucher Toko</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                Kelola diskon musiman wisuda, ulang tahun, dan insentif pembelian pertama.
+              </p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="showToast('Kupon Baru', 'Form voucher dibuka.', 'info')">
+              + Buat Kupon Baru
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Kode Kupon</th>
+                  <th>Tipe Diskon</th>
+                  <th>Nilai Potongan</th>
+                  <th>Min. Belanja</th>
+                  <th>Kuota Terpakai</th>
+                  <th>Masa Berlaku</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="couponTableBody">
+                <tr>
+                  <td><strong style="color: var(--primary); font-size: 13px;">WISUDA10K</strong></td>
+                  <td>Potongan Tetap</td>
+                  <td>Rp 10.000</td>
+                  <td>Rp 150.000</td>
+                  <td>48 / 100 Digunakan</td>
+                  <td>Sampai 30 Sep 2026</td>
+                  <td><span class="status-badge badge-paid">AKTIF</span></td>
+                  <td>
+                    <button class="btn btn-secondary btn-sm" onclick="showToast('Kupon Diperbarui', 'Status kupon WISUDA10K aktif.', 'success')">Ubah Kuota</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong style="color: var(--primary); font-size: 13px;">BUKETBARU15</strong></td>
+                  <td>Persentase</td>
+                  <td>15% OFF (Maks. Rp 25.000)</td>
+                  <td>Rp 120.000</td>
+                  <td>22 / 50 Digunakan</td>
+                  <td>Sampai 15 Okt 2026</td>
+                  <td><span class="status-badge badge-paid">AKTIF</span></td>
+                  <td>
+                    <button class="btn btn-secondary btn-sm" onclick="showToast('Kupon Diperbarui', 'Status kupon BUKETBARU15 aktif.', 'success')">Ubah Kuota</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================================
+           VIEW 7: KOMPLAIN & RATING PELANGGAN
+           ========================================================================== -->
+      <div class="admin-view" id="view-complaints">
+        <div class="card-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+                <span>Penanganan Komplain & Evaluasi Kepuasan Rating</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                Tanggapi komplain ketidakpuasan, proses klaim garansi ganti baru 100%, dan evaluasi ulasan.
+              </p>
+            </div>
+            <span class="status-badge badge-paid" style="font-size: 12px; padding: 6px 12px;">
+              Skor Toko: ⭐ 4.95 / 5.0 (98% Puas)
+            </span>
+          </div>
+
+          <!-- Komplain Card Highlight -->
+          <div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 12px; padding: 18px; margin-bottom: 20px; display: flex; gap: 16px; align-items: flex-start;">
+            <div style="color:#D97706;">
+              <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div style="flex: 1;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong style="font-size: 13.5px; color: #92400E;">Tiket Komplain #KMP-001: Kelopak Tertekan di Kurir Ekspedisi</strong>
+                <span class="status-badge badge-pending">Perlu Solusi Cepat</span>
+              </div>
+              <p style="font-size: 12.5px; color: #78350F; margin: 6px 0;">
+                <em>"Halo min, buket wisudanya sampai tadi siang, tapi pas dibuka kardus agak penyok di bagian samping jadi kelopak tulip mawar kawat bulunya agak miring sedikit."</em>
+              </p>
+              <div style="font-size: 11.5px; color: #B45309;">
+                Pelanggan: <strong>Anisa Rahma</strong> (0813-9821-xxxx) • Invoice: <strong>INV/20260907/003</strong> • Garansi Ganti Baru Aktif
+              </div>
+              <div style="margin-top: 12px; display: flex; gap: 8px;">
+                <button class="btn btn-primary btn-sm" onclick="resolveComplaint('Anisa Rahma', '081398217721')">
+                  Hubungi Pembeli via WhatsApp (Ganti Baru)
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="showToast('Garansi Disetujui', 'Buket pengganti telah masuk antrean perakitan prioritas.', 'success')">
+                  Setujui Garansi Ganti Baru
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Nama Pembeli</th>
+                  <th>Buket Yang Dinilai</th>
+                  <th>Bintang</th>
+                  <th>Ulasan Testimoni</th>
+                  <th>Status Garansi</th>
+                  <th>Tanggapan Toko</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>07 Sep 2026</td>
+                  <td><strong>Dina Kusuma</strong></td>
+                  <td>Sunshine Daisy Bear Toga</td>
+                  <td><span style="color: #F59E0B; font-weight: 800;">5.0 ⭐⭐⭐⭐⭐</span></td>
+                  <td>"Gemes banget beruang toganya! Bestie aku pas wisuda seneng banget, bunganya awet ga bakal layu."</td>
+                  <td><span class="status-badge badge-completed">Selesai Puas</span></td>
+                  <td><span style="color: #059669; font-size: 11.5px;">✓ Dibalas "Terima kasih kak"</span></td>
+                </tr>
+                <tr>
+                  <td>06 Sep 2026</td>
+                  <td><strong>Kevin Sanjaya</strong></td>
+                  <td>Romantic Red Rose Atelier</td>
+                  <td><span style="color: #F59E0B; font-weight: 800;">5.0 ⭐⭐⭐⭐⭐</span></td>
+                  <td>"Pita burgundy-nya mewah banget, finishing kawat bulu super rapi dan tebal. Recommended!"</td>
+                  <td><span class="status-badge badge-completed">Selesai Puas</span></td>
+                  <td><span style="color: #059669; font-size: 11.5px;">✓ Dibalas "Terima kasih kak Kevin!"</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================================
+           VIEW 8: CS WHATSAPP HUB
+           ========================================================================== -->
+      <div class="admin-view" id="view-whatsapp">
+        <div class="card-panel" style="padding: 0; overflow: hidden;">
+          <div class="panel-header" style="padding: 18px 22px; margin: 0; border-bottom: 1px solid var(--border);">
+            <div>
+              <div class="panel-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+                <span>CS WhatsApp Business Interaction Hub</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                Kelola pesan masuk pembeli dan teruskan ke WhatsApp Business dengan template siap kirim.
+              </p>
+            </div>
+            <button class="btn btn-excel btn-sm" onclick="openDirectWhatsApp()">
+              <span>Buka Aplikasi WhatsApp Web / App</span>
+            </button>
+          </div>
+
+          <div class="chat-layout">
+            <div class="chat-list-panel">
+              <div class="chat-list-header">
+                <span>Daftar Chat Masuk</span>
+                <span class="status-badge badge-paid">3 Aktif</span>
+              </div>
+              <div class="chat-threads">
+                <div class="chat-thread-item active" onclick="selectChatThread(0)">
+                  <div class="thread-avatar">NP</div>
+                  <div class="thread-body">
+                    <div class="thread-name">
+                      <span>Nabila Putri</span>
+                      <span class="thread-time">12:42</span>
+                    </div>
+                    <div class="thread-snippet">Halo min, buket wisuda toga beruang bisa request warna toga biru?</div>
+                  </div>
+                </div>
+
+                <div class="chat-thread-item" onclick="selectChatThread(1)">
+                  <div class="thread-avatar">DP</div>
+                  <div class="thread-body">
+                    <div class="thread-name">
+                      <span>Dimas Pratama</span>
+                      <span class="thread-time">11:15</span>
+                    </div>
+                    <div class="thread-snippet">Kak, nanti sore janji temu COD di Lobby Margo City jam 4 ya?</div>
+                  </div>
+                </div>
+
+                <div class="chat-thread-item" onclick="selectChatThread(2)">
+                  <div class="thread-avatar">SA</div>
+                  <div class="thread-body">
+                    <div class="thread-name">
+                      <span>Sarah Amalia</span>
+                      <span class="thread-time">09:30</span>
+                    </div>
+                    <div class="thread-snippet">Sudah bayar via QRIS Midtrans min, minta resinya yaa...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="chat-window">
+              <div class="chat-window-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div class="thread-avatar" id="activeChatAvatar">NP</div>
+                  <div>
+                    <strong style="font-size: 13.5px;" id="activeChatName">Nabila Putri</strong>
+                    <div style="font-size: 11px; color: #10B981; display: flex; align-items: center; gap: 4px;">
+                      <span style="width: 6px; height: 6px; background: #10B981; border-radius: 50%; display: inline-block;"></span>
+                      <span id="activeChatStatus">Terhubung via Web Chat Sistem (Online)</span>
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn btn-secondary btn-sm" onclick="showToast('Sistem Web Chat', 'Percakapan aktif dari web chat internal toko.', 'info')">
+                    <span>Web Chat</span>
+                  </button>
+                  <button class="btn btn-excel btn-sm" onclick="sendToCustomerWA()">
+                    <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+                    <span>Alihkan ke WA Pengrajin</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="chat-messages-scroll" id="chatMessageStream">
+                <div class="chat-bubble bubble-in">
+                  Halo admin atelier, salam kenal! Mau tanya buket wisuda bear toganya bisa custom warna toga jadi biru dongker sesuai warna kampus saya ngga ya?
+                  <div class="bubble-time">12:40</div>
+                </div>
+                <div class="chat-bubble bubble-out">
+                  Halo kak Nabila! Bisa banget kak! Kawat bulu kami ready warna biru dongker, kuning emas, dan hitam untuk toga wisuda. Mau untuk wisuda tanggal berapa kak?
+                  <div class="bubble-time">12:41</div>
+                </div>
+                <div class="chat-bubble bubble-in">
+                  Untuk wisuda hari Sabtu tanggal 12 September kak. Berarti kalau pesan sekarang slotnya masih kebagian ya?
+                  <div class="bubble-time">12:42</div>
+                </div>
+              </div>
+
+              <div class="canned-responses-bar">
+                <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); align-self: center;">Template:</span>
+                <button class="canned-chip" onclick="insertCanned('Halo kak! Slot pengerjaan buket masih tersedia, proses pengerjaan 1-2 hari kerja ya kak.')">
+                  Slot Pengerjaan Ready
+                </button>
+                <button class="canned-chip" onclick="insertCanned('Untuk pembayaran bisa langsung lewat QRIS Midtrans Snap otomatis terverifikasi kak.')">
+                  Panduan Bayar QRIS
+                </button>
+                <button class="canned-chip" onclick="insertCanned('Janji temu COD bisa di sekitar Gerbatama UI atau Lobby Margo City tanpa ongkir kak!')">
+                  Info Titik COD
+                </button>
+              </div>
+
+              <div class="chat-input-bar">
+                <input type="text" id="adminChatInput" placeholder="Ketik balasan untuk pelanggan..." onkeypress="handleChatEnter(event)">
+                <button class="btn btn-primary" onclick="sendAdminChatMessage()">Kirim Pesan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================================
+           VIEW 9: TITIK TEMU COD MAPS
+           ========================================================================== -->
+      <div class="admin-view" id="view-cod-maps">
+        <div class="card-panel">
+          <div class="panel-header" style="flex-wrap: wrap; gap: 14px;">
+            <div>
+              <div class="panel-title">
+                <svg class="svg-icon" style="color:#EA4335;" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>Titik Temu COD Google Maps & Geofencing Atelier</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                Kelola titik serah terima buket kawat bulu tanpa ongkir dengan link Google Maps resmi dan estimasi jarak radius 5.0 KM.
+              </p>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <button class="btn btn-secondary btn-sm" onclick="resetCodMapToAtelier()">
+                <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                <span>Atelier Pusat</span>
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="showAddCodPointModal()" style="display:flex; align-items:center; gap:6px;">
+                <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Tambah Titik Temu via Google Maps</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- STATUS BAR COD GEOFENCING -->
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:18px;">
+            <div style="background:var(--surface-subtle); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px;">
+              <div style="width:36px; height:36px; border-radius:50%; background:#FEE2E2; color:#DC2626; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><circle cx="12" cy="12" r="2"/></svg>
+              </div>
+              <div>
+                <div style="font-size:11px; color:var(--text-muted); font-weight:700;">ATELIER PUSAT PRODUKSI</div>
+                <div style="font-size:12.5px; font-weight:800;">Jl. Margonda Raya No. 108 Depok</div>
+              </div>
+            </div>
+
+            <div style="background:var(--surface-subtle); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px;">
+              <div style="width:36px; height:36px; border-radius:50%; background:#ECFDF5; color:#059669; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+              </div>
+              <div>
+                <div style="font-size:11px; color:var(--text-muted); font-weight:700;">RADIUS BEBAS ONGKIR</div>
+                <div style="font-size:12.5px; font-weight:800; color:#059669;">Maksimal 5.0 KM (Rp 0 Ongkir)</div>
+              </div>
+            </div>
+
+            <div style="background:var(--surface-subtle); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px;">
+              <div style="width:36px; height:36px; border-radius:50%; background:#EDE9FE; color:#7C3AED; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <div>
+                <div style="font-size:11px; color:var(--text-muted); font-weight:700;">TOTAL TITIK TERVERIFIKASI</div>
+                <div style="font-size:12.5px; font-weight:800; color:#7C3AED;" id="totalCodPointsCount">4 Titik Temu Aktif</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cod-layout">
+            <!-- PETA GOOGLE MAPS ASLI INTERAKTIF -->
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div style="position: relative; border-radius: var(--radius-md); overflow: hidden; border: 2px solid var(--border); height: 440px; box-shadow: var(--shadow-sm); background: #f1f5f9;">
+                <iframe id="mainCodGoogleMap" src="https://maps.google.com/maps?q=Jl.+Margonda+Raya+Depok&t=&z=14&ie=UTF8&iwloc=&output=embed" style="width:100%; height:100%; border:none;" allowfullscreen loading="lazy"></iframe>
+                <div style="position: absolute; bottom: 12px; left: 12px; right: 12px; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(4px); color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 11px; display:flex; justify-content:space-between; align-items:center;">
+                  <span id="activeMapFocusText">📍 Fokus Lokasi: Atelier Pusat Margonda Raya</span>
+                  <a href="https://maps.google.com/?q=Margonda+Raya+Depok" target="_blank" id="btnOpenFullMapsExternal" style="color:#67E8F9; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:4px;">
+                    <span>Buka Google Maps</span> ↗
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- DAFTAR TITIK TEMU GOOGLE MAPS TERVERIFIKASI -->
+            <div style="display:flex; flex-direction:column;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h4 style="font-size: 14px; font-weight: 800;">Daftar Titik Temu Resmi Terverifikasi</h4>
+                <span style="font-size:11px; color:var(--text-muted);">Klik titik untuk fokus di peta</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px; max-height: 440px; overflow-y: auto; padding-right: 4px;" id="codPointsList">
+                <!-- Dynamically populated by renderCodPointsList() -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================================
+           VIEW 10: MODE PEMELIHARAAN (MAINTENANCE MODE)
+           ========================================================================== -->
+      <div class="admin-view" id="view-maintenance">
+        <div class="card-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+                <span>Kendali Mode Pemeliharaan Toko (Maintenance Mode)</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                Gunakan saat atelier sedang kelebihan beban pesanan (overload wisuda) atau saat restocking bahan kawat bulu.
+              </p>
+            </div>
+          </div>
+
+          <div class="maintenance-banner-card">
+            <div>
+              <h3 style="font-size: 16px; font-weight: 800; color: #78350F;" id="maintenanceStatusHeading">
+                Toko Saat Ini: BUKA & MENERIMA PESANAN (ONLINE)
+              </h3>
+              <p style="font-size: 12.5px; color: #92400E; margin-top: 4px;" id="maintenanceStatusSub">
+                Pengunjung website dapat melihat seluruh katalog, menambahkan ke keranjang, dan melakukan pembayaran.
+              </p>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 12px; font-weight: 800;">Sakelar Tutup Toko:</span>
+              <label class="switch">
+                <input type="checkbox" id="maintenanceToggle" onchange="toggleMaintenanceMode(this.checked)">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="card-panel" style="margin-bottom: 0;">
+              <h4 style="font-size: 14px; font-weight: 800; margin-bottom: 14px;">Kustomisasi Pengumuman Penutupan</h4>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                  <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Judul Banner:</label>
+                  <input type="text" id="maintTitleInput" value="Atelier Chenille Sedang Istirahat Produksi" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;">
+                </div>
+                <div>
+                  <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Pesan Keterangan Untuk Pembeli:</label>
+                  <textarea id="maintDescInput" rows="3" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 12.5px;">Kapasitas perakitan buket wisuda hari ini telah penuh (10/10 slot). Toko akan dibuka kembali besok pagi pukul 08:00 WIB untuk slot pemesanan berikutnya.</textarea>
+                </div>
+                <div>
+                  <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">PIN Rahasia Bypass Admin:</label>
+                  <input type="text" value="2026" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;">
+                </div>
+                <button class="btn btn-primary btn-sm" style="align-self: flex-start;" onclick="saveMaintenanceSettings()">
+                  Simpan Pengaturan Pemeliharaan
+                </button>
+              </div>
+            </div>
+
+            <div class="card-panel" style="margin-bottom: 0; background: #0F172A; color: #fff;">
+              <div style="font-size: 11px; color: #94A3B8; text-transform: uppercase; font-weight: 800; margin-bottom: 12px;">
+                Pratinjau Layar di Browser Pembeli:
+              </div>
+              <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 24px; text-align: center;">
+                <svg class="svg-icon svg-icon-lg" style="color:#FB7185; margin-bottom:8px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <h4 style="font-size: 15px; font-weight: 800; color: #FB7185;" id="previewMaintTitle">Atelier Chenille Sedang Istirahat Produksi</h4>
+                <p style="font-size: 12px; color: #CBD5E1; margin: 8px 0;" id="previewMaintDesc">
+                  Kapasitas perakitan buket wisuda hari ini telah penuh (10/10 slot). Toko akan dibuka kembali besok pagi pukul 08:00 WIB.
+                </p>
+                <div style="margin-top: 14px; font-size: 11px; color: #FCD34D;">
+                  Butuh darurat? Hubungi WhatsApp Pengrajin: 0812-3456-7890
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PENGATURAN TEMA ADMIN & SINKRONISASI ETALASE -->
+          <div class="card-panel" style="margin-top: 20px;">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">
+                  <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                  <span>Tema & Estetika Panel Admin (Sinkronisasi Etalase)</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                  Pilih opsi tema untuk menyelaraskan suasana dashboard admin dengan tema landing page yang aktif di etalase, atau gunakan mode gelap standar.
+                </p>
+              </div>
+            </div>
+
+            <div class="theme-cards-grid">
+              <!-- Dark Slate (Default) -->
+              <div class="theme-card active" id="themeCard-slate" onclick="selectThemeFromMaintenance('slate')">
+                <div class="theme-card-header">
+                  <div class="theme-card-title">Dark Slate Modern</div>
+                  <span class="theme-badge-current" id="badge-slate">Aktif</span>
+                </div>
+                <p class="theme-card-desc">Mode default admin profesional dengan kontras tinggi, dominan abu gelap dan aksen rose modern.</p>
+                <div class="theme-color-swatches">
+                  <span style="background: #0F172A;" title="Sidebar Dark #0F172A"></span>
+                  <span style="background: #1E293B;" title="Card #1E293B"></span>
+                  <span style="background: #F43F5E;" title="Accent Rose #F43F5E"></span>
+                  <span style="background: #F8FAFC;" title="Canvas #F8FAFC"></span>
+                </div>
+              </div>
+
+              <!-- Tema A: Korean Pastel -->
+              <div class="theme-card" id="themeCard-tema-a" onclick="selectThemeFromMaintenance('tema-a')">
+                <div class="theme-card-header">
+                  <div class="theme-card-title">Tema A: Korean Pastel</div>
+                  <span class="theme-badge-current" id="badge-tema-a" style="display:none;">Aktif</span>
+                </div>
+                <p class="theme-card-desc">Nuansa pastel lembut ala florist Seoul dengan sentuhan soft pink sakura, krem hangat, dan plum anggun.</p>
+                <div class="theme-color-swatches">
+                  <span style="background: #38252B;" title="Sidebar Plum"></span>
+                  <span style="background: #FFF0F3;" title="Soft Blush"></span>
+                  <span style="background: #E86A82;" title="Sakura Accent"></span>
+                  <span style="background: #FFF9F7;" title="Warm Cream"></span>
+                </div>
+              </div>
+
+              <!-- Tema B: Modern Romantic -->
+              <div class="theme-card" id="themeCard-tema-b" onclick="selectThemeFromMaintenance('tema-b')">
+                <div class="theme-card-header">
+                  <div class="theme-card-title">Tema B: Modern Romantic</div>
+                  <span class="theme-badge-current" id="badge-tema-b" style="display:none;">Aktif</span>
+                </div>
+                <p class="theme-card-desc">Sentuhan mewah editorial bergaya butik bunga Eropa dengan aksen merah marun velvet dan emas.</p>
+                <div class="theme-color-swatches">
+                  <span style="background: #2B181E;" title="Sidebar Wine Dark"></span>
+                  <span style="background: #F3ECE2;" title="Linen Ivory"></span>
+                  <span style="background: #722F37;" title="Velvet Wine"></span>
+                  <span style="background: #C5A059;" title="Gold Accent"></span>
+                </div>
+              </div>
+
+              <!-- Tema C: Playful Kawaii -->
+              <div class="theme-card" id="themeCard-tema-c" onclick="selectThemeFromMaintenance('tema-c')">
+                <div class="theme-card-header">
+                  <div class="theme-card-title">Tema C: Playful Kawaii</div>
+                  <span class="theme-badge-current" id="badge-tema-c" style="display:none;">Aktif</span>
+                </div>
+                <p class="theme-card-desc">Nuansa pop ceria anak muda, penuh energi dengan warna peach coral dan kuning mentega cerah.</p>
+                <div class="theme-color-swatches">
+                  <span style="background: #2C3E50;" title="Slate Navy"></span>
+                  <span style="background: #FFF3E0;" title="Warm Butter"></span>
+                  <span style="background: #FF6B81;" title="Coral Pop"></span>
+                  <span style="background: #FFFDF9;" title="Canvas Light"></span>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: 14px; padding: 12px 16px; background: var(--surface-subtle); border-radius: 8px; border-left: 3px solid var(--primary); font-size: 12px; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+              <span>💡 <strong>Bilah Navigasi Bersih:</strong> Pengaturan tema kini berada khusus di menu Pemeliharaan ini agar bilah atas (header) tetap bersih, lega, dan tidak ruwet.</span>
+              <button class="btn btn-secondary btn-sm" onclick="selectThemeFromMaintenance('slate')">Reset ke Default Slate</button>
+            </div>
+          </div>
+
+          <!-- LIVE PREVIEW ETALASE TOKO LANGSUNG (UNDER THEME SET) -->
+          <div class="card-panel preview-browser-card">
+            <div class="preview-browser-header">
+              <div class="browser-dots">
+                <span class="dot-red"></span>
+                <span class="dot-yellow"></span>
+                <span class="dot-green"></span>
+              </div>
+              <div class="browser-address-bar">
+                <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <span id="previewUrlLabel">https://atelier-chenille.store/tema-a-korean-pastel</span>
+              </div>
+              <div class="browser-actions">
+                <button class="btn-device-toggle active" id="btnDeviceDesktop" onclick="setPreviewDevice('desktop')" title="Tampilan Layar Desktop PC">
+                  <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+                  <span>Desktop</span>
+                </button>
+                <button class="btn-device-toggle" id="btnDeviceMobile" onclick="setPreviewDevice('mobile')" title="Tampilan Layar Ponsel Smartphone (390px)">
+                  <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/></svg>
+                  <span>Mobile Phone</span>
+                </button>
+                <button class="btn-device-toggle" onclick="reloadPreviewFrame()" title="Segarkan Muat Ulang Preview">
+                  <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+                  <span>Refresh</span>
+                </button>
+                <a href="../tema-a-korean-pastel/index.html" target="_blank" id="previewExternalLink" class="btn-device-toggle" style="background:var(--primary-light); color:var(--primary); border-color:var(--primary);" title="Buka di Tab Baru">
+                  <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  <span>Buka Tab Baru</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- EMBEDDED IFRAME WRAPPER -->
+            <div class="preview-iframe-wrapper" id="previewIframeWrapper">
+              <iframe id="storefrontLivePreview" src="../tema-a-korean-pastel/index.html" title="Live Preview Etalase Toko"></iframe>
+            </div>
+          </div>
+
+          <!-- PUSAT SAKELAR FITUR BISNIS & OPERASIONAL TOKO -->
+          <div class="card-panel" style="margin-top: 20px;">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">
+                  <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span>Pusat Sakelar Fitur Bisnis (Operational Feature Toggles)</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                  Kendali cepat On/Off fitur operasional harian untuk mengantisipasi lonjakan wisuda, cuaca buruk, atau rotasi CS.
+                </p>
+              </div>
+            </div>
+
+            <div class="toggles-grid">
+              <!-- Toggle 1 -->
+              <div class="toggle-card">
+                <div>
+                  <div class="toggle-title">
+                    <span>Limit Slot PO Harian (Auto-Cutoff 10 Buket)</span>
+                    <span class="toggle-tag tag-critical">Kapasitas</span>
+                  </div>
+                  <div class="toggle-desc">Otomatis mengunci checkout jika kuota 10 buket wisuda/hari telah habis terisi.</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked onchange="toggleFeature('poLimit', this.checked, 'Batas Kuota PO Harian')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Toggle 2 -->
+              <div class="toggle-card">
+                <div>
+                  <div class="toggle-title">
+                    <span>Layanan Janji Temu COD Kampus & Mall</span>
+                    <span class="toggle-tag tag-ops">Logistik</span>
+                  </div>
+                  <div class="toggle-desc">Aktifkan opsi ambil buket gratis tanpa ongkir di Lobby Margo City & Gerbatama UI.</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked onchange="toggleFeature('codActive', this.checked, 'Layanan COD Kampus & Mall')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Toggle 3 -->
+              <div class="toggle-card">
+                <div>
+                  <div class="toggle-title">
+                    <span>Live Chat Web Internal (Sistem)</span>
+                    <span class="toggle-tag tag-ops">Pelayanan</span>
+                  </div>
+                  <div class="toggle-desc">Jika mati, tombol chat pelanggan di website langsung otomatis dialihkan ke WhatsApp.</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked onchange="toggleFeature('liveChat', this.checked, 'Sistem Web Live Chat')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Toggle 4 -->
+              <div class="toggle-card">
+                <div>
+                  <div class="toggle-title">
+                    <span>Wajib Foto Approval Sebelum Pengiriman</span>
+                    <span class="toggle-tag tag-critical">Quality Check</span>
+                  </div>
+                  <div class="toggle-desc">Pengrajin wajib unggah foto buket jadi ke portal sebelum resi kurir bisa dicetak.</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked onchange="toggleFeature('photoApproval', this.checked, 'Wajib Foto Approval')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Toggle 5 -->
+              <div class="toggle-card">
+                <div>
+                  <div class="toggle-title">
+                    <span>Pesanan Kilat / Rush Order (Sameday)</span>
+                    <span class="toggle-tag tag-ops">Wisuda Rush</span>
+                  </div>
+                  <div class="toggle-desc">Membuka opsi pembuatan prioritas kilat H-1 dengan biaya tambahan +Rp 25.000/buket.</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" onchange="toggleFeature('rushOrder', this.checked, 'Layanan Rush Order Kilat')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Toggle 6 -->
+              <div class="toggle-card">
+                <div>
+                  <div class="toggle-title">
+                    <span>Kustomisasi Kartu Ucapan & Pita Free</span>
+                    <span class="toggle-tag tag-ops">Katalog</span>
+                  </div>
+                  <div class="toggle-desc">Menampilkan form input ucapan wisuda dan opsi warna pita velvet di halaman checkout.</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked onchange="toggleFeature('customCard', this.checked, 'Custom Kartu Ucapan & Pita')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Toggle 7 -->
+              <div class="toggle-card">
+                <div>
+                  <div class="toggle-title">
+                    <span>Program Loyalty Flower Points</span>
+                    <span class="toggle-tag tag-promo">Membership</span>
+                  </div>
+                  <div class="toggle-desc">Berikan 100 poin (Rp 1.000) tiap belanja kelipatan Rp 10.000 untuk member pelanggan.</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked onchange="toggleFeature('loyaltyPoints', this.checked, 'Program Flower Points')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Toggle 8 -->
+              <div class="toggle-card">
+                <div>
+                  <div class="toggle-title">
+                    <span>Pengiriman Ekspedisi Luar Kota (Kargo/J&T)</span>
+                    <span class="toggle-tag tag-ops">Ekspedisi</span>
+                  </div>
+                  <div class="toggle-desc">Bisa dinonaktifkan saat cuaca buruk agar kawat bulu tidak rusak di perjalanan jauh.</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked onchange="toggleFeature('intercityShip', this.checked, 'Ekspedisi Luar Kota')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Toggle 9 -->
+              <div class="toggle-card">
+                <div>
+                  <div class="toggle-title">
+                    <span>Garansi Ganti Baru 100% Anti Patah</span>
+                    <span class="toggle-tag tag-critical">Trust Badge</span>
+                  </div>
+                  <div class="toggle-desc">Menampilkan lencana garansi penggantian buket baru di katalog dan invoice pembeli.</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked onchange="toggleFeature('warrantyBadge', this.checked, 'Garansi Ganti Baru 100%')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Toggle 10 -->
+              <div class="toggle-card">
+                <div>
+                  <div class="toggle-title">
+                    <span>Popup Sambutan Diskon (BUKETBARU15)</span>
+                    <span class="toggle-tag tag-promo">Promosi</span>
+                  </div>
+                  <div class="toggle-desc">Tampilkan modal pop-up diskon 15% untuk pengunjung yang baru pertama membuka web.</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" onchange="toggleFeature('welcomePopup', this.checked, 'Popup Diskon Sambutan')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================================
+           VIEW 11: PENGATURAN TOKO
+           ========================================================================== -->
+      <div class="admin-view" id="view-settings">
+        <div class="card-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span>Pengaturan Bisnis & Kredensial API</span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="showToast('Pengaturan Disimpan', 'Konfigurasi toko berhasil diperbarui.', 'success')">
+              Simpan Semua Perubahan
+            </button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <h4 style="font-size: 13.5px; font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 6px;">Identitas Bisnis</h4>
+              <div>
+                <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Nama Brand:</label>
+                <input type="text" value="Aesthetic Chenille Flowers Atelier" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;">
+              </div>
+              <div>
+                <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Nomor WhatsApp Resmi:</label>
+                <input type="text" value="081234567890" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;">
+              </div>
+              <div>
+                <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Alamat Atelier Fisik:</label>
+                <input type="text" value="Jl. Margonda Raya No. 108, Pondok Cina, Kota Depok" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;">
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <h4 style="font-size: 13.5px; font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 6px;">Integrasi Pembayaran & Logistik</h4>
+              <div>
+                <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Midtrans Snap Server Key (Simulasi):</label>
+                <input type="password" value="SB-Mid-server-chenille-flow-2026-xyz" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;">
+              </div>
+              <div>
+                <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Biteship API Token (Simulasi):</label>
+                <input type="password" value="biteship_live_chenille_key_token_9988" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;">
+              </div>
+              <div>
+                <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Maksimal Slot PO Harian:</label>
+                <input type="number" value="10" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ==========================================================================
+       MODALS (RESI A6, MAPS)
+       ========================================================================== -->
+  <div class="modal-overlay" id="modalResi">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Pratinjau Cetak Resi Pengiriman (A6 / Thermal)</h3>
+        <button class="modal-close-btn" onclick="closeModal('modalResi')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="thermal-label-box" id="thermalLabelContent">
+          <div class="thermal-header">
+            <h2 style="font-size: 16px; font-weight: 900;">AESTHETIC CHENILLE FLOWERS</h2>
+            <p style="font-size: 10px;">Atelier Buket Kawat Bulu Premium Handmade</p>
+            <p style="font-size: 11px; font-weight: bold; margin-top: 4px;">EXPEDITION: BITESHIP — J&T EXPRESS (REG)</p>
+          </div>
+
+          <div class="barcode-mock">||| | |||| | || |||||</div>
+          <div style="text-align: center; font-size: 12px; font-weight: bold;" id="resiBarcodeText">JT98127391028ID</div>
+
+          <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 6px 0; margin: 8px 0; font-size: 11px;">
+            <div><strong>INVOICE:</strong> <span id="resiInvoiceText">INV/20260907/001</span></div>
+            <div><strong>TANGGAL:</strong> 07-09-2026 10:14 WIB</div>
+            <div><strong>PEMBAYARAN:</strong> LUNAS (QRIS MIDTRANS SNAP)</div>
+          </div>
+
+          <div style="font-size: 11px; margin-bottom: 8px;">
+            <div><strong>PENERIMA:</strong></div>
+            <div id="resiRecipientName" style="font-weight: bold; font-size: 12px;">Sarah Amalia (0812-9831-xxxx)</div>
+            <div id="resiRecipientAddress">Gedung Fakultas Psikologi Universitas Indonesia, Kampus Baru UI Depok, Jawa Barat 16424</div>
+          </div>
+
+          <div style="border-top: 1px solid #000; padding-top: 6px; font-size: 11px;">
+            <div><strong>ISI PAKET:</strong></div>
+            <div id="resiItemText" style="font-weight: bold;">1x Tulip Pastel Candy Symphony + Fairy LED + Pita Pink</div>
+            <div style="font-style: italic; margin-top: 4px;">*PERHATIAN: Barang Fragile/Bunga Handmade. Jangan Ditindih Paket Berat!</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalResi')">Tutup</button>
+        <button class="btn btn-primary" onclick="printResiAction()">Cetak ke Printer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADMIN PROFILE -->
+  <div class="modal-overlay" id="modalAdminProfile">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Profil Akun Pengrajin & Pemilik Atelier</h3>
+        <button class="modal-close-btn" onclick="closeModal('modalAdminProfile')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:18px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+          <div class="admin-avatar" style="width:54px; height:54px; font-size:18px;">RA</div>
+          <div>
+            <h4 style="font-size:15px; font-weight:800;" id="modalProfileHeading">Rania Azzahra</h4>
+            <p style="font-size:12px; color:var(--text-muted);">Kepala Studio & Master Florist Kawat Bulu</p>
+            <button class="sample-chip" style="margin-top:6px;" onclick="showToast('Ubah Avatar', 'Fitur unggah foto avatar baru.', 'info')">📷 Ubah Foto Avatar</button>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div>
+            <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">Nama Lengkap:</label>
+            <input type="text" id="editAdminNameInput" value="Rania Azzahra" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">Email Akun:</label>
+            <input type="email" id="editAdminEmailInput" value="rania.florist@atelier.com" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">No. WhatsApp Resmi:</label>
+            <input type="text" value="0812-3456-7890" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalAdminProfile')">Batal</button>
+        <button class="btn btn-primary" onclick="saveAdminProfile()">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CHANGE PASSWORD -->
+  <div class="modal-overlay" id="modalChangePassword">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Ganti Kata Sandi Admin</h3>
+        <button class="modal-close-btn" onclick="closeModal('modalChangePassword')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div>
+            <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">Kata Sandi Lama:</label>
+            <input type="password" placeholder="••••••••" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">Kata Sandi Baru:</label>
+            <input type="password" placeholder="Minimal 8 karakter" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalChangePassword')">Batal</button>
+        <button class="btn btn-primary" onclick="saveNewPassword()">Perbarui Kata Sandi</button>
+      </div>
+    </div>
+  </div>
+  <!-- MODAL: DAFTAR TITIK TEMU COD VIA GOOGLE MAPS -->
+  <div class="modal-overlay" id="modalAddCod">
+    <div class="modal-dialog" style="max-width: 620px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg class="svg-icon" style="color:#EA4335;" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+          <h3 style="margin:0; font-size:16px; font-weight:800;">Daftarkan Titik COD Baru via Google Maps</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('modalAddCod')">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 20px 24px;">
+        <!-- Input Cepat / Google Maps Link -->
+        <div style="background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+          <label style="font-size: 12px; font-weight: 800; display: block; margin-bottom: 6px; color: var(--text-main);">
+            🔍 Cari Lokasi atau Tempel Link Google Maps:
+          </label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="inputMapsSearchOrLink" placeholder="Tempel link https://maps.app.goo.gl/... atau ketik nama gedung/mall..." style="flex:1; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 12.5px; background:#fff;">
+            <button type="button" class="btn btn-primary" onclick="detectGoogleMapsInput()" style="white-space:nowrap; padding: 9px 16px; font-size:12px; display:flex; align-items:center; gap:6px;">
+              <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <span>Deteksi Maps</span>
+            </button>
+          </div>
+          <!-- Preset Chips -->
+          <div style="margin-top: 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <span style="font-size: 10.5px; font-weight: 700; color: var(--text-muted);">Preset Populer:</span>
+            <button type="button" class="canned-chip" onclick="applyCodPreset('ui-gerbatama')">🏛️ UI Gerbatama</button>
+            <button type="button" class="canned-chip" onclick="applyCodPreset('margo-city')">🛍️ Margo City</button>
+            <button type="button" class="canned-chip" onclick="applyCodPreset('stasiun-pocin')">🚉 Stasiun Pocin</button>
+            <button type="button" class="canned-chip" onclick="applyCodPreset('dmall-depok')">🏬 D'Mall Margonda</button>
+            <button type="button" class="canned-chip" onclick="applyCodPreset('gunadarma-d')">🎓 Gunadarma Kampus D</button>
+          </div>
+        </div>
+
+        <!-- Detail Titik COD -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Nama Titik / Tempat Temu:</label>
+            <input type="text" id="newCodName" placeholder="Contoh: Gedung Rektorat UI / Lobby Margo City..." style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;">
+          </div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Alamat Lengkap Google Maps:</label>
+            <textarea id="newCodAddress" rows="2" placeholder="Alamat lengkap terdeteksi dari Google Maps..." style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 12.5px;"></textarea>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Link Google Maps (Share URL):</label>
+              <div style="display:flex; gap:6px;">
+                <input type="text" id="newCodMapsUrl" placeholder="https://maps.google.com/?q=..." style="flex:1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="testOpenMapsLink()" title="Cek di Tab Baru">↗</button>
+              </div>
+            </div>
+            <div>
+              <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Estimasi Jarak dari Atelier (KM):</label>
+              <input type="number" id="newCodDist" placeholder="2.5" step="0.1" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;">
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Catatan Khusus Titik Penyerahan Buket:</label>
+            <input type="text" id="newCodNotes" placeholder="Contoh: Pembeli menunggu di lobi depan Starbucks / Pos Satpam..." style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 12.5px;">
+          </div>
+
+          <!-- Pratinjau Google Maps Embed di Modal -->
+          <div>
+            <label style="font-size: 11.5px; font-weight: 700; display: block; margin-bottom: 4px; color: var(--text-muted);">Pratinjau Pin Google Maps:</label>
+            <div style="height: 160px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border);">
+              <iframe id="modalMapPreviewIframe" src="https://maps.google.com/maps?q=Margonda+Raya+Depok&t=&z=14&ie=UTF8&iwloc=&output=embed" style="width:100%; height:100%; border:none;" loading="lazy"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalAddCod')">Batal</button>
+        <button class="btn btn-primary" onclick="saveNewCodPoint()" style="display:flex; align-items:center; gap:6px;">
+          <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Simpan Titik COD ke Sistem</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ==========================================================================
+       JAVASCRIPT APP LOGIC
+       ========================================================================== -->
+  <script>
+    /* --------------------------------------------------------------------------
+       THEME SYNCHRONIZER (CENTRALIZED IN MAINTENANCE VIEW)
+       -------------------------------------------------------------------------- */
+    function selectThemeFromMaintenance(themeKey) {
+      applyAdminTheme(themeKey);
+      updateThemeCardsUI(themeKey);
+      updatePreviewForTheme(themeKey);
+    }
+
+    function updatePreviewForTheme(themeKey) {
+      const iframe = document.getElementById('storefrontLivePreview');
+      const urlLabel = document.getElementById('previewUrlLabel');
+      const extLink = document.getElementById('previewExternalLink');
+      if (!iframe) return;
+
+      let targetUrl = '../tema-a-korean-pastel/index.html';
+      let displayUrl = 'https://atelier-chenille.store/tema-a-korean-pastel';
+
+      if (themeKey === 'tema-b') {
+        targetUrl = '../tema-b-modern-romantic/index.html';
+        displayUrl = 'https://atelier-chenille.store/tema-b-modern-romantic';
+      } else if (themeKey === 'tema-c') {
+        targetUrl = '../tema-c-playful-kawaii/index.html';
+        displayUrl = 'https://atelier-chenille.store/tema-c-playful-kawaii';
+      } else if (themeKey === 'slate') {
+        targetUrl = '../tema-a-korean-pastel/index.html';
+        displayUrl = 'https://atelier-chenille.store/tema-a-korean-pastel (Etalase Default)';
+      }
+
+      iframe.src = targetUrl;
+      if (urlLabel) urlLabel.textContent = displayUrl;
+      if (extLink) extLink.href = targetUrl;
+    }
+
+    function setPreviewDevice(device) {
+      const wrapper = document.getElementById('previewIframeWrapper');
+      const btnDesktop = document.getElementById('btnDeviceDesktop');
+      const btnMobile = document.getElementById('btnDeviceMobile');
+      if (!wrapper) return;
+
+      if (device === 'mobile') {
+        wrapper.classList.add('mobile-mode');
+        btnMobile.classList.add('active');
+        btnDesktop.classList.remove('active');
+        showToast('Mode Smartphone', 'Pratinjau etalase diubah ke resolusi layar HP (390px).', 'info');
+      } else {
+        wrapper.classList.remove('mobile-mode');
+        btnDesktop.classList.add('active');
+        btnMobile.classList.remove('active');
+        showToast('Mode Desktop', 'Pratinjau etalase diubah ke layar penuh desktop.', 'info');
+      }
+    }
+
+    function reloadPreviewFrame() {
+      const iframe = document.getElementById('storefrontLivePreview');
+      if (iframe) {
+        iframe.src = iframe.src;
+        showToast('Pratinjau Disegarkan', 'Etalase toko dimuat ulang.', 'info');
+      }
+    }
+
+    function toggleFeature(featureKey, isChecked, featureName) {
+      localStorage.setItem(`feature_${featureKey}`, isChecked);
+      const statusText = isChecked ? 'DIAKTIFKAN' : 'DINONAKTIFKAN';
+      const type = isChecked ? 'success' : 'warning';
+      showToast(`Fitur ${statusText}`, `Sakelar '${featureName}' kini ${statusText.toLowerCase()}.`, type);
+    }
+
+    function updateThemeCardsUI(themeKey) {
+      ['slate', 'tema-a', 'tema-b', 'tema-c'].forEach(t => {
+        const card = document.getElementById(`themeCard-${t}`);
+        const badge = document.getElementById(`badge-${t}`);
+        if (card) {
+          if (t === themeKey) {
+            card.classList.add('active');
+            if (badge) badge.style.display = 'inline-block';
+          } else {
+            card.classList.remove('active');
+            if (badge) badge.style.display = 'none';
+          }
+        }
+      });
+    }
+
+    function applyAdminTheme(themeKey) {
+      document.documentElement.setAttribute('data-theme', themeKey);
+      localStorage.setItem('admin_theme', themeKey);
+
+      let themeName = 'Dark Slate';
+      if (themeKey === 'tema-a') themeName = 'Tema A (Korean Pastel)';
+      if (themeKey === 'tema-b') themeName = 'Tema B (Modern Romantic)';
+      if (themeKey === 'tema-c') themeName = 'Tema C (Playful Kawaii)';
+
+      showToast('Tema Diperbarui', `Tampilan admin sekarang menggunakan estetika ${themeName}.`, 'success');
+    }
+
+    // Load saved theme if any
+    const savedTheme = localStorage.getItem('admin_theme') || 'slate';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    window.addEventListener('DOMContentLoaded', () => {
+      updateThemeCardsUI(savedTheme);
+      updatePreviewForTheme(savedTheme);
+    });
+
+    /* --------------------------------------------------------------------------
+       CENTRAL DATA STORE
+       -------------------------------------------------------------------------- */
+    const storeData = {
+      orders: [
+        {
+          id: "INV/20260907/001",
+          date: "07 Sep 2026, 10:14",
+          customer: "Sarah Amalia",
+          phone: "081298317721",
+          items: "Tulip Pastel Candy + Fairy LED",
+          logistics: "Biteship (J&T Express)",
+          payment: "Lunas QRIS",
+          isPaid: true,
+          total: 195000,
+          cost: 40000, // Real BOM HPP
+          status: "PENDING",
+          statusLabel: "Menunggu Rangkai",
+          address: "Gedung Psikologi Universitas Indonesia, Depok"
+        },
+        {
+          id: "INV/20260907/002",
+          date: "07 Sep 2026, 11:20",
+          customer: "Dimas Pratama",
+          phone: "085718290012",
+          items: "Sunshine Daisy Bear Toga",
+          logistics: "COD (Margo City Lobby)",
+          payment: "DP Rp 20.000 QRIS",
+          isPaid: true,
+          total: 175000,
+          cost: 52600,
+          status: "CRAFTING",
+          statusLabel: "Sedang Dirangkai",
+          address: "Lobby Utara Drop-off Margo City"
+        },
+        {
+          id: "INV/20260907/003",
+          date: "07 Sep 2026, 11:45",
+          customer: "Anisa Rahma",
+          phone: "081398217721",
+          items: "Tulip Pastel Pink + LED",
+          logistics: "Biteship (SiCepat)",
+          payment: "Lunas QRIS",
+          isPaid: true,
+          total: 185000,
+          cost: 40000,
+          status: "PENDING",
+          statusLabel: "Menunggu Rangkai",
+          address: "Jl. Akses UI No. 44, Kelapa Dua, Depok"
+        },
+        {
+          id: "INV/20260907/004",
+          date: "06 Sep 2026, 14:10",
+          customer: "Nabila Putri",
+          phone: "081299882314",
+          items: "Cute Penguin Graduation Trio",
+          logistics: "COD (Gerbatama UI)",
+          payment: "Lunas Transfer BCA",
+          isPaid: true,
+          total: 180000,
+          cost: 48000,
+          status: "CRAFTING",
+          statusLabel: "Sedang Dirangkai",
+          address: "Halte Bus Kuning Gerbatama UI"
+        },
+        {
+          id: "INV/20260907/005",
+          date: "06 Sep 2026, 09:12",
+          customer: "Kevin Sanjaya",
+          phone: "081908271109",
+          items: "Romantic Red Rose Atelier",
+          logistics: "Biteship (J&T Express)",
+          payment: "Lunas QRIS",
+          isPaid: true,
+          total: 210000,
+          cost: 58000,
+          status: "SHIPPED",
+          statusLabel: "Siap / Dikirim",
+          address: "Apartemen Evenciio Margonda Lt. 12"
+        },
+        {
+          id: "INV/20260907/006",
+          date: "05 Sep 2026, 16:30",
+          customer: "Dina Kusuma",
+          phone: "087812903344",
+          items: "Rainbow Pastel Dreamy 5-Stem",
+          logistics: "COD (Stasiun Pocin)",
+          payment: "Lunas QRIS",
+          isPaid: true,
+          total: 155000,
+          cost: 38000,
+          status: "COMPLETED",
+          statusLabel: "Selesai",
+          address: "Pintu Timur Stasiun KRL Pondok Cina"
+        }
+      ],
+
+      products: [
+        { name: "Sunshine Daisy Bear Toga", cat: "Wisuda", price: 175000, stock: "Aman (15)", isPo: "PO 2 Hari", clicks: 342, conv: "14.2%" },
+        { name: "Tulip Pastel Pink Candy", cat: "Romantis", price: 185000, stock: "Aman (12)", isPo: "PO 2 Hari", clicks: 298, conv: "16.8%" },
+        { name: "Rainbow Pastel Dreamy", cat: "Pastel", price: 155000, stock: "Menipis (3)", isPo: "Ready Stock", clicks: 245, conv: "11.0%" },
+        { name: "Cute Penguin Graduation", cat: "Wisuda", price: 180000, stock: "Aman (8)", isPo: "PO 2 Hari", clicks: 211, conv: "12.5%" },
+        { name: "Fluffy Bunny Tulip Bouquet", cat: "Karakter", price: 165000, stock: "Aman (10)", isPo: "PO 2 Hari", clicks: 184, conv: "9.8%" },
+        { name: "Sunny Sunflower Smiling Pot", cat: "Mini Pot", price: 65000, stock: "Aman (20)", isPo: "Ready Stock", clicks: 190, conv: "18.4%" }
+      ]
+    };
+
+    /* --------------------------------------------------------------------------
+       VIEW ROUTER
+       -------------------------------------------------------------------------- */
+    const viewMetadata = {
+      dashboard: { title: "Dashboard & Evaluasi Bisnis", sub: "Ringkasan performa penjualan, produksi buket kawat bulu, dan margin keuntungan." },
+      orders: { title: "Manajemen Pesanan & Logistik", sub: "Kelola status tahap perakitan buket, nomor resi, dan bukti penyerahan barang." },
+      reports: { title: "Laporan Penghasilan & Evaluasi Margin", sub: "Analisis omzet kotor, modal bahan kawat bulu, dan ekspor spreadsheet Excel." },
+      products: { title: "Katalog Produk & Minat Klik Pelanggan", sub: "Pantau produk paling sering diklik, rasio konversi checkout, dan stok bahan." },
+      bom: { title: "Resep Bahan Baku (BOM) & HPP Per Buket", sub: "Rincian kebutuhan bahan kawat bulu, boneka toga, kertas cellophane, dan margin keuntungan bersih." },
+      promos: { title: "Pemasaran & Kupon Diskon", sub: "Pengaturan kode voucher potongan harga dan kuota pemakaian pelanggan." },
+      complaints: { title: "Pusat Komplain & Rating Toko", sub: "Kelola testimoni bintang 1-5 dan proses klaim Garansi Ganti Baru 100%." },
+      whatsapp: { title: "CS WhatsApp Business Interaction Hub", sub: "Layanan chat pelanggan dengan template pesan cepat dan penerusan ke WA Business." },
+      "cod-maps": { title: "Simulator Titik Temu COD Kampus & Mall", sub: "Atur lokasi titik kumpul penyerahan buket kawat bulu tanpa ongkir." },
+      maintenance: { title: "Kendali Pemeliharaan & Tema Toko", sub: "Kelola status buka/tutup toko dan pilihan estetika tema admin / etalase landing page." },
+      settings: { title: "Pengaturan Toko & Integrasi API", sub: "Kelola identitas bisnis, nomor kontak resmi, dan kredensial API logistik." }
+    };
+
+    function switchView(viewKey) {
+      document.querySelectorAll('.admin-view').forEach(v => v.classList.remove('active-view'));
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+      const targetView = document.getElementById(`view-${viewKey}`);
+      if (targetView) targetView.classList.add('active-view');
+
+      const clickedItem = Array.from(document.querySelectorAll('.nav-item')).find(el => {
+        const fn = el.getAttribute('onclick');
+        return fn && fn.includes(viewKey);
+      });
+      if (clickedItem) clickedItem.classList.add('active');
+
+      const meta = viewMetadata[viewKey] || { title: "Chenille Admin Operations", sub: "Atelier Operations Suite" };
+      document.getElementById('currentViewTitle').textContent = meta.title;
+      document.getElementById('currentViewSubtitle').textContent = meta.sub;
+
+      document.getElementById('adminSidebar').classList.remove('mobile-open');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleMobileSidebar() {
+      document.getElementById('adminSidebar').classList.toggle('mobile-open');
+    }
+
+    /* --------------------------------------------------------------------------
+       LINE CHART TOOLTIP INTERACTION
+       -------------------------------------------------------------------------- */
+    function showChartTooltip(e, weekTitle, l1, l2, l3) {
+      const tip = document.getElementById('chartTooltip');
+      const wrap = document.getElementById('chartWrapper');
+      const rect = wrap.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      tip.style.left = `${x}px`;
+      tip.style.top = `${y}px`;
+      tip.innerHTML = `
+        <div style="color:var(--primary); font-size:12px; margin-bottom:2px;">● ${weekTitle}</div>
+        <div>${l1}</div>
+        <div style="color:#F59E0B;">${l2}</div>
+        <div style="color:#10B981; font-weight:800;">${l3}</div>
+      `;
+      tip.style.opacity = '1';
+    }
+
+    document.getElementById('chartWrapper')?.addEventListener('mouseleave', () => {
+      document.getElementById('chartTooltip').style.opacity = '0';
+    });
+
+    /* --------------------------------------------------------------------------
+       RENDER TABLES
+       -------------------------------------------------------------------------- */
+    function renderOrdersTables() {
+      const dashBody = document.getElementById('dashOrdersBody');
+      const fullBody = document.getElementById('fullOrdersTableBody');
+      const reportBody = document.getElementById('reportTableBody');
+
+      if (!dashBody || !fullBody) return;
+      dashBody.innerHTML = '';
+      fullBody.innerHTML = '';
+      if (reportBody) reportBody.innerHTML = '';
+
+      storeData.orders.forEach(order => {
+        const badgeClass = getStatusBadgeClass(order.status);
+
+        // 1. Dashboard quick row
+        const trDash = document.createElement('tr');
+        trDash.innerHTML = `
+          <td><strong>${order.id}</strong></td>
+          <td>${order.customer}</td>
+          <td>${order.items}</td>
+          <td>${order.logistics}</td>
+          <td><span class="status-badge ${order.isPaid ? 'badge-paid' : 'badge-unpaid'}">${order.payment}</span></td>
+          <td><strong>Rp ${order.total.toLocaleString('id-ID')}</strong></td>
+          <td>
+            <span class="status-badge ${badgeClass}" style="cursor:pointer;" onclick="cycleOrderStatus('${order.id}')" title="Klik untuk ubah status">
+              ${order.statusLabel} ⟳
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="openResiModal('${order.id}')">Resi A6</button>
+          </td>
+        `;
+        dashBody.appendChild(trDash);
+
+        // 2. Full orders row
+        const trFull = document.createElement('tr');
+        trFull.setAttribute('data-status', order.status);
+        trFull.innerHTML = `
+          <td><strong>${order.id}</strong></td>
+          <td>${order.date}</td>
+          <td>
+            <div><strong>${order.customer}</strong></div>
+            <div style="font-size:10.5px; color:var(--text-muted);">${order.phone}</div>
+          </td>
+          <td>${order.items}</td>
+          <td>${order.logistics}</td>
+          <td><span class="status-badge ${order.isPaid ? 'badge-paid' : 'badge-unpaid'}">${order.payment}</span></td>
+          <td><strong>Rp ${order.total.toLocaleString('id-ID')}</strong></td>
+          <td>
+            <button class="status-badge ${badgeClass}" style="border:none; cursor:pointer;" onclick="cycleOrderStatus('${order.id}')" title="Klik untuk memajukan status">
+              ${order.statusLabel} ➔
+            </button>
+          </td>
+          <td>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-secondary btn-sm" onclick="openResiModal('${order.id}')">Cetak Resi A6</button>
+              <button class="btn btn-primary btn-sm" onclick="openCustomerChat('${order.customer}', '${order.phone}')">Chat</button>
+            </div>
+          </td>
+        `;
+        fullBody.appendChild(trFull);
+
+        // 3. Report row
+        if (reportBody) {
+          const margin = order.total - order.cost;
+          const trRep = document.createElement('tr');
+          trRep.innerHTML = `
+            <td><strong>${order.id}</strong></td>
+            <td>${order.date}</td>
+            <td>${order.customer}</td>
+            <td>${order.items}</td>
+            <td style="color:#B45309; font-weight:700;">Rp ${order.cost.toLocaleString('id-ID')}</td>
+            <td><strong>Rp ${order.total.toLocaleString('id-ID')}</strong></td>
+            <td style="color:#059669; font-weight:800;">+Rp ${margin.toLocaleString('id-ID')} (${((margin/order.total)*100).toFixed(1)}%)</td>
+            <td>${order.payment}</td>
+            <td><span class="status-badge ${badgeClass}">${order.statusLabel}</span></td>
+          `;
+          reportBody.appendChild(trRep);
+        }
+      });
+    }
+
+    function getStatusBadgeClass(status) {
+      switch(status) {
+        case 'PENDING': return 'badge-pending';
+        case 'CRAFTING': return 'badge-in-progress';
+        case 'SHIPPED': return 'badge-shipped';
+        case 'COMPLETED': return 'badge-completed';
+        default: return 'badge-pending';
+      }
+    }
+
+    function getNextStatus(current) {
+      if (current === 'PENDING') return 'CRAFTING';
+      if (current === 'CRAFTING') return 'SHIPPED';
+      if (current === 'SHIPPED') return 'COMPLETED';
+      return 'PENDING';
+    }
+
+    function getStatusLabel(status) {
+      switch(status) {
+        case 'PENDING': return 'Menunggu Rangkai';
+        case 'CRAFTING': return 'Sedang Dirangkai';
+        case 'SHIPPED': return 'Siap / Dikirim';
+        case 'COMPLETED': return 'Selesai';
+        default: return status;
+      }
+    }
+
+    function cycleOrderStatus(orderId) {
+      const ord = storeData.orders.find(o => o.id === orderId);
+      if (!ord) return;
+      const next = getNextStatus(ord.status);
+      ord.status = next;
+      ord.statusLabel = getStatusLabel(next);
+
+      renderOrdersTables();
+      showToast('Status Pesanan Diperbarui', `${ord.id} sekarang: "${ord.statusLabel}".`, 'success');
+    }
+
+    function filterOrderTable(filterStatus, tabBtn) {
+      document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+      tabBtn.classList.add('active');
+
+      const rows = document.querySelectorAll('#fullOrdersTableBody tr');
+      rows.forEach(r => {
+        const rowStat = r.getAttribute('data-status');
+        if (filterStatus === 'ALL' || rowStat === filterStatus) {
+          r.style.display = '';
+        } else {
+          r.style.display = 'none';
+        }
+      });
+    }
+
+    function renderProductsTable() {
+      const tbody = document.getElementById('productsTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      storeData.products.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${p.name}</strong></td>
+          <td><span class="status-badge badge-pending">${p.cat}</span></td>
+          <td><strong>Rp ${p.price.toLocaleString('id-ID')}</strong></td>
+          <td>${p.stock}</td>
+          <td><span class="status-badge ${p.isPo === 'Ready Stock' ? 'badge-paid' : 'badge-in-progress'}">${p.isPo}</span></td>
+          <td><strong style="color:var(--text-main);">🖱️ ${p.clicks} klik</strong></td>
+          <td><span style="color:#059669; font-weight:800;">${p.conv}</span></td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="showToast('Edit Produk', 'Form edit ${p.name} dibuka.', 'info')">Edit</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* --------------------------------------------------------------------------
+       EXCEL EXPORT (.CSV WITH HPP & NET PROFIT)
+       -------------------------------------------------------------------------- */
+    function exportExcelReport() {
+      let csvContent = "\uFEFF";
+      csvContent += "NO INVOICE,TANGGAL,NAMA PELANGGAN,NO TELEPON,DETAIL BUKET BUNGA,LOGISTIK / COD,STATUS BAYAR,HPP BAHAN MENTAH (RP),HARGA JUAL (RP),LABA BERSIH (RP),MARGIN (%),STATUS PENGERJAAN\r\n";
+
+      storeData.orders.forEach(o => {
+        const margin = o.total - o.cost;
+        const marginPct = ((margin / o.total) * 100).toFixed(1);
+        const row = [
+          `"${o.id}"`,
+          `"${o.date}"`,
+          `"${o.customer}"`,
+          `"${o.phone}"`,
+          `"${o.items}"`,
+          `"${o.logistics}"`,
+          `"${o.payment}"`,
+          o.cost,
+          o.total,
+          margin,
+          `"${marginPct}%"`,
+          `"${o.statusLabel}"`
+        ];
+        csvContent += row.join(",") + "\r\n";
+      });
+
+      const totalOmzet = storeData.orders.reduce((acc, curr) => acc + curr.total, 0);
+      const totalHPP = storeData.orders.reduce((acc, curr) => acc + curr.cost, 0);
+      const totalLaba = totalOmzet - totalHPP;
+      const totalMarginPct = ((totalLaba / totalOmzet) * 100).toFixed(1);
+      csvContent += `TOTAL KESELURUHAN,,,,,,,"${totalHPP}","${totalOmzet}","${totalLaba}","${totalMarginPct}%",\r\n`;
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Laporan-Keuangan-Chenille-Flowers-${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast("Unduh Excel Berhasil", "Berkas laporan spreadsheet .csv telah berhasil diunduh.", "success");
+    }
+
+    /* --------------------------------------------------------------------------
+       RESI MODAL
+       -------------------------------------------------------------------------- */
+    function openResiModal(orderId) {
+      const ord = storeData.orders.find(o => o.id === orderId) || storeData.orders[0];
+      document.getElementById('resiInvoiceText').textContent = ord.id;
+      document.getElementById('resiRecipientName').textContent = `${ord.customer} (${ord.phone})`;
+      document.getElementById('resiRecipientAddress').textContent = ord.address;
+      document.getElementById('resiItemText').textContent = `1x ${ord.items}`;
+      document.getElementById('resiBarcodeText').textContent = `JT${Math.floor(1000000000 + Math.random() * 9000000000)}ID`;
+
+      document.getElementById('modalResi').classList.add('active');
+    }
+
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) modal.classList.remove('active');
+    }
+
+    function printResiAction() {
+      showToast("Mengirim ke Printer", "Format thermal resi A6 sedang dicetak...", "info");
+      setTimeout(() => {
+        closeModal('modalResi');
+        showToast("Cetak Selesai", "Resi pengiriman siap ditempel pada kardus buket.", "success");
+      }, 1000);
+    }
+
+    /* --------------------------------------------------------------------------
+       WHATSAPP CHAT INTERACTIONS
+       -------------------------------------------------------------------------- */
+    const chatProfiles = [
+      { name: "Nabila Putri", phone: "081299882314", avatar: "NP", query: "Halo kak, buket wisuda toga beruang bisa custom warna toga biru dongker?" },
+      { name: "Dimas Pratama", phone: "085718290012", avatar: "DP", query: "Kak, nanti sore janji temu COD di Lobby Margo City jam 4 ya?" },
+      { name: "Sarah Amalia", phone: "081298317721", avatar: "SA", query: "Sudah bayar via QRIS Midtrans min, minta resinya yaa..." }
+    ];
+    let currentChatIndex = 0;
+
+    function selectChatThread(index) {
+      currentChatIndex = index;
+      document.querySelectorAll('.chat-thread-item').forEach((el, idx) => {
+        el.classList.toggle('active', idx === index);
+      });
+
+      const profile = chatProfiles[index];
+      document.getElementById('activeChatName').textContent = profile.name;
+      document.getElementById('activeChatAvatar').textContent = profile.avatar;
+
+      const stream = document.getElementById('chatMessageStream');
+      stream.innerHTML = `
+        <div class="chat-bubble bubble-in">
+          ${profile.query}
+          <div class="bubble-time">${new Date().toLocaleTimeString().slice(0,5)}</div>
+        </div>
+        <div class="chat-bubble bubble-out">
+          Halo kak ${profile.name}! Tim pengrajin Chenille Flowers siap membantu. Ada yang bisa kami bantu konfirmasi?
+          <div class="bubble-time">${new Date().toLocaleTimeString().slice(0,5)}</div>
+        </div>
+      `;
+    }
+
+    function insertCanned(text) {
+      const input = document.getElementById('adminChatInput');
+      input.value = text;
+      input.focus();
+    }
+
+    function sendAdminChatMessage() {
+      const input = document.getElementById('adminChatInput');
+      const val = input.value.trim();
+      if (!val) return;
+
+      const stream = document.getElementById('chatMessageStream');
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble bubble-out';
+      bubble.innerHTML = `${val}<div class="bubble-time">${new Date().toLocaleTimeString().slice(0,5)}</div>`;
+      stream.appendChild(bubble);
+      stream.scrollTop = stream.scrollHeight;
+
+      input.value = '';
+      showToast('Pesan Terkirim', 'Pesan berhasil dikirimkan ke pelanggan di chat room.', 'success');
+    }
+
+    function handleChatEnter(e) {
+      if (e.key === 'Enter') sendAdminChatMessage();
+    }
+    function sendToCustomerWA() {
+      const profile = chatProfiles[currentChatIndex];
+      const message = `Halo Kak ${profile.name}, kami dari Atelier Buket Chenille Flowers ingin mengonfirmasi pesanan kakak...`;
+      const waUrl = `https://wa.me/62${profile.phone.replace(/^0/, '')}?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, '_blank');
+      showToast('Membuka WhatsApp', `Meneruskan percakapan dengan ${profile.name} ke WhatsApp.`, 'info');
+    }
+
+    /* --------------------------------------------------------------------------
+       ADMIN PROFILE & DROPDOWN INTERACTIONS
+       -------------------------------------------------------------------------- */
+    function toggleAdminProfileMenu(e) {
+      e.stopPropagation();
+      const menu = document.getElementById('adminDropdownMenu');
+      const btn = document.getElementById('adminProfileBtn');
+      menu.classList.toggle('active');
+      btn.classList.toggle('active');
+    }
+
+    function closeAdminProfileMenu() {
+      const menu = document.getElementById('adminDropdownMenu');
+      const btn = document.getElementById('adminProfileBtn');
+      if (menu) menu.classList.remove('active');
+      if (btn) btn.classList.remove('active');
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#adminProfileBtn')) {
+        closeAdminProfileMenu();
+      }
+    });
+
+    function openProfileModal() {
+      closeAdminProfileMenu();
+      document.getElementById('modalAdminProfile').classList.add('active');
+    }
+
+    function saveAdminProfile() {
+      const newName = document.getElementById('editAdminNameInput').value.trim();
+      if (newName) {
+        document.getElementById('headerAdminName').textContent = newName;
+        document.getElementById('dropAdminName').textContent = newName;
+        document.getElementById('modalProfileHeading').textContent = newName;
+        const initials = newName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        document.getElementById('headerAvatar').textContent = initials;
+      }
+      closeModal('modalAdminProfile');
+      showToast('Profil Disimpan', 'Data profil pengrajin utama berhasil diperbarui.', 'success');
+    }
+
+    function openChangePasswordModal() {
+      closeAdminProfileMenu();
+      document.getElementById('modalChangePassword').classList.add('active');
+    }
+
+    function saveNewPassword() {
+      closeModal('modalChangePassword');
+      showToast('Kata Sandi Diperbarui', 'Kata sandi akun pengrajin berhasil diubah.', 'success');
+    }
+
+    function logoutAdmin() {
+      closeAdminProfileMenu();
+      showToast('Keluar dari Sesi', 'Mengalihkan ke halaman login etalase...', 'info');
+      setTimeout(() => {
+        window.location.href = '../login/index.html';
+      }, 1000);
+    }
+
+    function openDirectWhatsApp() {
+      window.open('https://web.whatsapp.com', '_blank');
+    }
+
+    function openCustomerChat(name, phone) {
+      switchView('whatsapp');
+      document.getElementById('activeChatName').textContent = name;
+      showToast('Membuka Percakapan', `Room obrolan dengan ${name} dibuka.`, 'info');
+    }
+
+    function resolveComplaint(name, phone) {
+      const message = `Halo Kak ${name}, kami dari Manajemen Chenille Flowers memohon maaf atas kendala buket yang tertekan di kurir. Kami akan segera membuatkan buket pengganti baru 100% gratis sesuai Garansi Toko kami ya kak.`;
+      const waUrl = `https://wa.me/62${phone.replace(/^0/, '')}?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, '_blank');
+      showToast('Menghubungi Komplain', `Membuka WhatsApp pembeli untuk verifikasi Garansi Ganti Baru.`, 'success');
+    }
+
+    /* --------------------------------------------------------------------------
+       COD MAPS (GOOGLE MAPS INTEGRATED)
+       -------------------------------------------------------------------------- */
+    let codPointsData = [
+      {
+        id: 'cod-1',
+        name: 'Kampus UI Depok (Gerbatama & Rotunda Rektorat)',
+        address: 'Jl. Margonda Raya No. 100, Pondok Cina, Kec. Beji, Kota Depok, Jawa Barat 16424',
+        mapsUrl: 'https://maps.google.com/?q=-6.3628,106.8315',
+        embedQuery: 'Gerbatama UI Depok',
+        distance: 2.4,
+        notes: 'Titik temu utama wisuda akbar universitas (Lobby Rotunda depan Rektorat UI)',
+        status: 'AKTIF'
+      },
+      {
+        id: 'cod-2',
+        name: 'Margo City Mall (Drop-off Lobby Utama Utara)',
+        address: 'Jl. Margonda Raya No. 358, Kemiri Muka, Kec. Beji, Kota Depok, Jawa Barat 16423',
+        mapsUrl: 'https://maps.google.com/?q=-6.3732,106.8345',
+        embedQuery: 'Margo City Mall Depok',
+        distance: 3.1,
+        notes: 'Titik temu sore hari / weekend anniversary (Dekat Starbucks Lobby Utara)',
+        status: 'AKTIF'
+      },
+      {
+        id: 'cod-3',
+        name: 'Stasiun KRL Pondok Cina (Pintu Keluar Timur)',
+        address: 'Pondok Cina, Kec. Beji, Kota Depok, Jawa Barat 16424',
+        mapsUrl: 'https://maps.google.com/?q=-6.3688,106.8336',
+        embedQuery: 'Stasiun Pondok Cina',
+        distance: 1.8,
+        notes: 'Khusus pembeli komuter transit kereta (Depan minimarket pintu timur)',
+        status: 'AKTIF'
+      },
+      {
+        id: 'cod-4',
+        name: 'D\'Mall Margonda Depok (Area Lobby Utama)',
+        address: 'Jl. Margonda Raya No. 88, Kemiri Muka, Kec. Beji, Kota Depok, Jawa Barat 16423',
+        mapsUrl: 'https://maps.google.com/?q=-6.3862,106.8285',
+        embedQuery: 'DMall Depok',
+        distance: 3.9,
+        notes: 'Titik temu area perkantoran Margonda & hotel Santika',
+        status: 'AKTIF'
+      }
+    ];
+
+    const COD_PRESETS = {
+      'ui-gerbatama': {
+        name: 'Kampus UI Depok (Gerbatama & Rotunda)',
+        address: 'Jl. Margonda Raya No. 100, Pondok Cina, Kec. Beji, Kota Depok, Jawa Barat 16424',
+        mapsUrl: 'https://maps.google.com/?q=-6.3628,106.8315',
+        distance: 2.4,
+        notes: 'Titik serah terima buket di pos satpam Gerbatama / Lobby Rotunda Rektorat UI'
+      },
+      'margo-city': {
+        name: 'Margo City Mall (Lobby Utama Utara)',
+        address: 'Jl. Margonda Raya No. 358, Kemiri Muka, Kec. Beji, Kota Depok, Jawa Barat 16423',
+        mapsUrl: 'https://maps.google.com/?q=-6.3732,106.8345',
+        distance: 3.1,
+        notes: 'Tempat serah terima dekat Starbucks / Lobby Utama Drop-off Mobil'
+      },
+      'stasiun-pocin': {
+        name: 'Stasiun KRL Pondok Cina (Pintu Timur)',
+        address: 'Pondok Cina, Kec. Beji, Kota Depok, Jawa Barat 16424',
+        mapsUrl: 'https://maps.google.com/?q=-6.3688,106.8336',
+        distance: 1.8,
+        notes: 'Serah terima cepat di depan minimarket pintu keluar stasiun sebelah timur'
+      },
+      'dmall-depok': {
+        name: 'D\'Mall Margonda (Lobby Depan)',
+        address: 'Jl. Margonda Raya No. 88, Kemiri Muka, Kec. Beji, Kota Depok, Jawa Barat 16423',
+        mapsUrl: 'https://maps.google.com/?q=-6.3862,106.8285',
+        distance: 3.9,
+        notes: 'Serah terima di drop-off lobby depan dekat hotel Santika'
+      },
+      'gunadarma-d': {
+        name: 'Universitas Gunadarma (Kampus D Margonda)',
+        address: 'Jl. Margonda Raya No. 100, Pondok Cina, Kec. Beji, Kota Depok, Jawa Barat 16424',
+        mapsUrl: 'https://maps.google.com/?q=Universitas+Gunadarma+Kampus+D',
+        distance: 2.1,
+        notes: 'Titik kumpul di depan pos keamanan gerbang utama Kampus D'
+      }
+    };
+
+    function renderCodPointsList() {
+      const container = document.getElementById('codPointsList');
+      const countLabel = document.getElementById('totalCodPointsCount');
+      if (!container) return;
+
+      if (countLabel) countLabel.textContent = `${codPointsData.length} Titik Temu Aktif`;
+
+      container.innerHTML = codPointsData.map(pt => `
+        <div class="cod-card" id="card-${pt.id}" onclick="focusCodOnMap('${pt.id}')">
+          <div class="cod-card-title">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="color:#EA4335;">📍</span>
+              <strong>${pt.name}</strong>
+            </div>
+            <span class="status-badge badge-paid">${pt.status || 'AKTIF'}</span>
+          </div>
+          <div class="cod-card-address">
+            <svg class="svg-icon svg-icon-sm" style="color:var(--text-muted);" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>${pt.address}</span>
+          </div>
+          <div class="cod-card-meta">
+            <span>✓ Jarak ${pt.distance} KM dari Atelier</span>
+            <span>•</span>
+            <span>Bebas Ongkir (Rp 0)</span>
+            <span>•</span>
+            <span style="color:var(--text-muted);">${pt.notes}</span>
+          </div>
+          <div class="cod-card-actions" onclick="event.stopPropagation()">
+            <button type="button" class="btn-cod-action" onclick="focusCodOnMap('${pt.id}')" title="Lihat lokasi di peta embed">
+              📍 Fokus di Peta
+            </button>
+            <a href="${pt.mapsUrl}" target="_blank" class="btn-cod-action" style="color:#2563EB; border-color:#BFDBFE; background:#EFF6FF;" title="Buka di tab baru Google Maps">
+              🗺️ Buka Google Maps ↗
+            </a>
+            <button type="button" class="btn-cod-action" onclick="copyMapsLink('${pt.mapsUrl}', '${pt.name.replace(/'/g, "\\'")}')" title="Salin link Google Maps untuk dikirim ke chat/WA pembeli">
+              📋 Salin Link
+            </button>
+            <button type="button" class="btn-cod-action btn-danger-action" onclick="deleteCodPoint('${pt.id}')" title="Hapus titik COD ini">
+              🗑️ Hapus
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function focusCodOnMap(pointId) {
+      const point = codPointsData.find(p => p.id === pointId);
+      if (!point) return;
+
+      document.querySelectorAll('.cod-card').forEach(c => c.classList.remove('active-pin'));
+      const activeCard = document.getElementById(`card-${pointId}`);
+      if (activeCard) activeCard.classList.add('active-pin');
+
+      const mapIframe = document.getElementById('mainCodGoogleMap');
+      const focusText = document.getElementById('activeMapFocusText');
+      const extLink = document.getElementById('btnOpenFullMapsExternal');
+
+      const query = point.embedQuery || `${point.name} ${point.address}`;
+      if (mapIframe) {
+        mapIframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+      }
+      if (focusText) focusText.textContent = `📍 Fokus Lokasi: ${point.name} (${point.distance} KM)`;
+      if (extLink) extLink.href = point.mapsUrl;
+
+      showToast('Peta Difokuskan', `Titik temu: ${point.name} (Jarak ~${point.distance} KM).`, 'info');
+    }
+
+    function resetCodMapToAtelier() {
+      document.querySelectorAll('.cod-card').forEach(c => c.classList.remove('active-pin'));
+      const mapIframe = document.getElementById('mainCodGoogleMap');
+      const focusText = document.getElementById('activeMapFocusText');
+      const extLink = document.getElementById('btnOpenFullMapsExternal');
+
+      if (mapIframe) {
+        mapIframe.src = `https://maps.google.com/maps?q=Jl.+Margonda+Raya+No.+108+Depok&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+      }
+      if (focusText) focusText.textContent = `📍 Fokus Lokasi: Atelier Pusat Margonda Raya`;
+      if (extLink) extLink.href = `https://maps.google.com/?q=Jl.+Margonda+Raya+No.+108+Depok`;
+
+      showToast('Atelier Pusat', 'Peta kembali difokuskan pada studio produksi Margonda Raya.', 'info');
+    }
+
+    function showAddCodPointModal() {
+      document.getElementById('inputMapsSearchOrLink').value = '';
+      document.getElementById('newCodName').value = '';
+      document.getElementById('newCodAddress').value = '';
+      document.getElementById('newCodMapsUrl').value = '';
+      document.getElementById('newCodDist').value = '';
+      document.getElementById('newCodNotes').value = '';
+      document.getElementById('modalMapPreviewIframe').src = `https://maps.google.com/maps?q=Margonda+Raya+Depok&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+      document.getElementById('modalAddCod').classList.add('active');
+    }
+
+    function applyCodPreset(key) {
+      const preset = COD_PRESETS[key];
+      if (!preset) return;
+
+      document.getElementById('inputMapsSearchOrLink').value = preset.name;
+      document.getElementById('newCodName').value = preset.name;
+      document.getElementById('newCodAddress').value = preset.address;
+      document.getElementById('newCodMapsUrl').value = preset.mapsUrl;
+      document.getElementById('newCodDist').value = preset.distance;
+      document.getElementById('newCodNotes').value = preset.notes;
+
+      document.getElementById('modalMapPreviewIframe').src = `https://maps.google.com/maps?q=${encodeURIComponent(preset.name + ' Depok')}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+      showToast('Preset Diterapkan', `Data titik ${preset.name} berhasil dimuat otomatis.`, 'success');
+    }
+
+    function detectGoogleMapsInput() {
+      const input = document.getElementById('inputMapsSearchOrLink').value.trim();
+      if (!input) {
+        showToast('Peringatan', 'Silakan ketik nama lokasi atau tempel link Google Maps terlebih dahulu.', 'warning');
+        return;
+      }
+
+      let detectedName = input;
+      let detectedAddress = `Sekitar ${input}, Kota Depok, Jawa Barat 16424`;
+      let detectedUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(input + ' Depok')}`;
+      let detectedDist = (1.5 + Math.random() * 2.5).toFixed(1);
+      let detectedNotes = `Janji serah terima di pintu masuk / lobi utama ${input}`;
+
+      if (input.includes('maps.app.goo.gl') || input.includes('google.com/maps')) {
+        detectedName = 'Titik Temu Google Maps ' + (codPointsData.length + 1);
+        detectedAddress = 'Alamat spesifik sesuai pin tautan Google Maps yang dibagikan';
+        detectedUrl = input;
+      }
+
+      document.getElementById('newCodName').value = detectedName;
+      document.getElementById('newCodAddress').value = detectedAddress;
+      document.getElementById('newCodMapsUrl').value = detectedUrl;
+      document.getElementById('newCodDist').value = detectedDist;
+      document.getElementById('newCodNotes').value = detectedNotes;
+
+      document.getElementById('modalMapPreviewIframe').src = `https://maps.google.com/maps?q=${encodeURIComponent(input + ' Depok')}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+      showToast('Lokasi Terdeteksi', 'Alamat, estimasi jarak, dan link Google Maps berhasil disiapkan!', 'success');
+    }
+
+    function testOpenMapsLink() {
+      const url = document.getElementById('newCodMapsUrl').value.trim();
+      if (url) {
+        window.open(url, '_blank');
+      } else {
+        showToast('Link Kosong', 'Belum ada link Google Maps yang terisi.', 'warning');
+      }
+    }
+
+    function saveNewCodPoint() {
+      const name = document.getElementById('newCodName').value.trim();
+      const address = document.getElementById('newCodAddress').value.trim();
+      const mapsUrl = document.getElementById('newCodMapsUrl').value.trim() || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
+      const dist = parseFloat(document.getElementById('newCodDist').value) || 2.0;
+      const notes = document.getElementById('newCodNotes').value.trim() || 'Titik temu resmi via WhatsApp';
+
+      if (!name) {
+        showToast('Validasi Gagal', 'Mohon isi nama titik temu atau deteksi dari Google Maps!', 'warning');
+        return;
+      }
+
+      const newPoint = {
+        id: 'cod-' + Date.now(),
+        name: name,
+        address: address || `Area sekitar ${name}, Depok`,
+        mapsUrl: mapsUrl,
+        embedQuery: name,
+        distance: dist,
+        notes: notes,
+        status: 'AKTIF'
+      };
+
+      codPointsData.unshift(newPoint);
+      renderCodPointsList();
+      closeModal('modalAddCod');
+      focusCodOnMap(newPoint.id);
+      showToast('Titik COD Ditambahkan', `Titik temu "${name}" berhasil didaftarkan dan dapat digunakan pembeli.`, 'success');
+    }
+
+    function deleteCodPoint(id) {
+      const point = codPointsData.find(p => p.id === id);
+      if (!point) return;
+
+      if (confirm(`Apakah Anda yakin ingin menghapus titik temu "${point.name}" dari sistem?`)) {
+        codPointsData = codPointsData.filter(p => p.id !== id);
+        renderCodPointsList();
+        showToast('Titik COD Dihapus', `Titik temu "${point.name}" telah dihapus.`, 'info');
+      }
+    }
+
+    function copyMapsLink(url, name) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Link Disalin', `Link Google Maps untuk "${name}" berhasil disalin ke clipboard!`, 'success');
+        });
+      } else {
+        showToast('Link Google Maps', url, 'info');
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+       MAINTENANCE MODE
+       -------------------------------------------------------------------------- */
+    function toggleMaintenanceMode(isMaintenanceActive) {
+      const head = document.getElementById('maintenanceStatusHeading');
+      const sub = document.getElementById('maintenanceStatusSub');
+      const footText = document.getElementById('footerStoreStatusText');
+      const footPill = document.getElementById('footerStorePill');
+
+      if (isMaintenanceActive) {
+        head.textContent = 'Toko Saat Ini: MODE PEMELIHARAAN (TUTUP SEMENTARA)';
+        head.style.color = '#991B1B';
+        sub.textContent = 'Pengunjung website akan melihat banner toko sedang istirahat dan tidak bisa melakukan checkout.';
+        
+        footText.textContent = 'Pemeliharaan (Tutup)';
+        footPill.innerHTML = '<span class="status-dot" style="background:#EF4444;"></span><span style="color:#EF4444;">TUTUP</span>';
+        footPill.style.background = 'rgba(239, 68, 68, 0.15)';
+
+        showToast('Mode Pemeliharaan AKTIF', 'Toko ditutup sementara untuk pembeli baru.', 'warning');
+      } else {
+        head.textContent = 'Toko Saat Ini: BUKA & MENERIMA PESANAN (ONLINE)';
+        head.style.color = '#78350F';
+        sub.textContent = 'Pengunjung website dapat melihat seluruh katalog, menambahkan ke keranjang, dan melakukan pembayaran.';
+
+        footText.textContent = 'Online & Buka Pesanan';
+        footPill.innerHTML = '<span class="status-dot"></span><span>AKTIF</span>';
+        footPill.style.background = 'rgba(16, 185, 129, 0.15)';
+
+        showToast('Toko Dibuka Kembali', 'Pembeli sekarang dapat berbelanja normal.', 'success');
+      }
+    }
+
+    function saveMaintenanceSettings() {
+      const title = document.getElementById('maintTitleInput').value;
+      const desc = document.getElementById('maintDescInput').value;
+
+      document.getElementById('previewMaintTitle').textContent = title;
+      document.getElementById('previewMaintDesc').textContent = desc;
+
+      showToast('Pengaturan Disimpan', 'Teks pengumuman pemeliharaan berhasil diperbarui.', 'success');
+    }
+
+    function handleGlobalSearch(e) {
+      const q = e.target.value.toLowerCase().trim();
+      const allRows = document.querySelectorAll('#fullOrdersTableBody tr');
+      allRows.forEach(r => {
+        const text = r.textContent.toLowerCase();
+        r.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    function showToast(title, desc, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'admin-toast';
+
+      let iconSvg = '<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+      if (type === 'success') iconSvg = '<svg class="svg-icon" style="color:#10B981;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+      if (type === 'warning') iconSvg = '<svg class="svg-icon" style="color:#F59E0B;" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+
+      toast.innerHTML = `
+        <span>${iconSvg}</span>
+        <div>
+          <div style="font-weight: 800; font-size: 12.5px;">${title}</div>
+          <div style="font-size: 11px; opacity: 0.85; margin-top: 2px;">${desc}</div>
+        </div>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.3s, transform 0.3s';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    /* --------------------------------------------------------------------------
+       ADMIN PROFILE & DROPDOWN ACTIONS
+       -------------------------------------------------------------------------- */
+    function toggleAdminProfileMenu(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('adminDropdownMenu');
+      const btn = document.getElementById('adminProfileBtn');
+      if (menu) {
+        menu.classList.toggle('show');
+        if (btn) btn.classList.toggle('active', menu.classList.contains('show'));
+      }
+    }
+
+    function closeAdminProfileMenu() {
+      const menu = document.getElementById('adminDropdownMenu');
+      const btn = document.getElementById('adminProfileBtn');
+      if (menu) menu.classList.remove('show');
+      if (btn) btn.classList.remove('active');
+    }
+
+    document.addEventListener('click', (e) => {
+      const profileWrap = document.getElementById('adminProfileBtn');
+      if (profileWrap && !profileWrap.contains(e.target)) {
+        closeAdminProfileMenu();
+      }
+    });
+
+    function openProfileModal() {
+      closeAdminProfileMenu();
+      openModal('modalAdminProfile');
+    }
+
+    function openChangePasswordModal() {
+      closeAdminProfileMenu();
+      openModal('modalChangePassword');
+    }
+
+    function saveAdminProfile() {
+      const name = document.getElementById('editAdminNameInput').value.trim();
+      const email = document.getElementById('editAdminEmailInput').value.trim();
+      if (!name) {
+        showToast('Validasi Gagal', 'Nama admin tidak boleh kosong.', 'warning');
+        return;
+      }
+      document.getElementById('headerAdminName').textContent = name;
+      document.getElementById('dropAdminName').textContent = name;
+      document.getElementById('modalProfileHeading').textContent = name;
+      
+      const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'RA';
+      document.getElementById('headerAvatar').textContent = initials;
+      
+      closeModal('modalAdminProfile');
+      showToast('Profil Diperbarui', 'Data profil Super Admin berhasil disimpan.', 'success');
+    }
+
+    function saveChangePassword() {
+      closeModal('modalChangePassword');
+      showToast('Password Berhasil Diubah', 'Kata sandi akun admin telah diperbarui secara aman.', 'success');
+    }
+
+    function logoutAdmin() {
+      closeAdminProfileMenu();
+      showToast('Keluar Sistem', 'Sesi admin berakhir. Mengalihkan ke halaman login...', 'info');
+      setTimeout(() => {
+        const activeTheme = localStorage.getItem('chenille_active_theme') || 'tema-a';
+        window.location.href = `../login/index.html?theme=${activeTheme}`;
+      }, 900);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderOrdersTables();
+      renderProductsTable();
+      renderCodPointsList();
+    });
+  </script>
+</body>
+</html>

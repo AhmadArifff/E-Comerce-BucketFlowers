@@ -1,0 +1,2607 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aesthetic Chenille Flowers — Tema A: Korean Pastel Atelier</title>
+  
+  <!-- Google Fonts: Cormorant Garamond (Heading Elegance) & Plus Jakarta Sans (Clean Modern Body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       DESIGN DNA: TEMA A (KOREAN PASTEL ATELIER)
+       Karakteristik: Lembut, Hangat, Feminim, Ramah, Rapi, Ruang Bernafas Lega,
+       Magic UI Micro-Interactions & Parabolic Fly-To-Cart
+       ========================================================================== */
+    :root {
+      --bg-page: #FAF8F5;
+      --bg-card: #FFFFFF;
+      --primary: #F4A7B9;         /* Sakura Petal Pink */
+      --primary-hover: #E38EA1;
+      --primary-light: #FDF2F4;
+      --primary-border: #F7D1D9;
+      --secondary: #A8C3A0;       /* Sage Green */
+      --secondary-light: #F1F6F0;
+      --accent: #FCEADE;          /* Peach Cream */
+      --text-main: #2D2A2A;       /* Soft Charcoal */
+      --text-muted: #7E7676;
+      --text-light: #A09898;
+      --border: #EFE8E1;
+      --border-focus: #F4A7B9;
+      --font-heading: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --radius: 20px;
+      --radius-sm: 12px;
+      --shadow-sm: 0 4px 12px rgba(244, 167, 185, 0.12);
+      --shadow-md: 0 10px 30px -8px rgba(244, 167, 185, 0.22);
+      --shadow-lg: 0 18px 45px -10px rgba(244, 167, 185, 0.32);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-page);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, .brand-title {
+      font-family: var(--font-heading);
+      letter-spacing: -0.2px;
+    }
+
+    /* Top Announcement Bar */
+    .top-bar {
+      background: linear-gradient(90deg, #F4A7B9, #FCEADE, #F4A7B9);
+      background-size: 200% 100%;
+      animation: gradientMove 8s ease infinite;
+      color: #722332;
+      text-align: center;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      white-space: nowrap;
+    }
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .top-bar-code {
+      background: rgba(255,255,255,0.7);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+
+    /* Header & Navigation — STRICT NO WRAPPING */
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      transition: all 0.3s ease;
+    }
+    .nav-container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: nowrap;
+    }
+    .brand-logo {
+      text-decoration: none;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .brand-logo h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #9C3D52;
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+    }
+    .brand-logo span.subtitle {
+      display: block;
+      font-size: 10px;
+      font-family: var(--font-body);
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    /* 6 Menu Items — Strictly No Wrapping */
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      list-style: none;
+      gap: 3px;
+      margin: 0;
+      padding: 0;
+      flex-shrink: 1;
+      flex-wrap: nowrap;
+    }
+    .nav-menu a {
+      text-decoration: none;
+      color: var(--text-main);
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 99px;
+      white-space: nowrap !important;
+      line-height: 1.2;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav-menu a:hover {
+      color: #9C3D52;
+      background: var(--primary-light);
+    }
+    .nav-menu a.active {
+      color: #fff;
+      background: var(--primary);
+      box-shadow: 0 4px 12px rgba(244, 167, 185, 0.4);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .btn-nav-cart {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      box-shadow: 0 4px 14px rgba(244, 167, 185, 0.4);
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+    }
+    .btn-nav-cart:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .cart-badge {
+      background: #fff;
+      color: #9C3D52;
+      border-radius: 99px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 800;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* Magic UI Cart Bump Animation */
+    @keyframes cartBumpAnim {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.3) rotate(-6deg); }
+      65% { transform: scale(0.92) rotate(4deg); }
+      100% { transform: scale(1); }
+    }
+    .cart-bump {
+      animation: cartBumpAnim 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    }
+
+    /* Container SPA View */
+    .page-section {
+      display: none;
+      max-width: 1200px;
+      margin: 30px auto 80px auto;
+      padding: 0 24px;
+      animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .page-section.active-page {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================================================
+       HERO BANNER ELEGAN DENGAN FOTO MOCKUP REALISTIK
+       ========================================================================== */
+    .hero-banner {
+      background: linear-gradient(135deg, #FFF9FA 0%, #FDF4F5 60%, #FAF5F0 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 40px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-banner::after {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 240px;
+      height: 240px;
+      background: radial-gradient(circle, rgba(244,167,185,0.2) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .hero-content {
+      flex: 1.1;
+      z-index: 2;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent);
+      color: #9C3D52;
+      padding: 6px 16px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      box-shadow: var(--shadow-sm);
+    }
+    .hero-content h2 {
+      font-size: 46px;
+      line-height: 1.18;
+      margin-bottom: 16px;
+      color: #2D2A2A;
+      font-weight: 700;
+    }
+    .hero-content h2 span.highlight {
+      color: #B3586B;
+      font-style: italic;
+    }
+    .hero-content p {
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+      max-width: 500px;
+    }
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .btn-main {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 13px 30px;
+      border-radius: 99px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(244, 167, 185, 0.4);
+      transition: all 0.25s ease;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-main::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 40%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transform: rotate(25deg);
+      animation: btnShimmer 3.5s infinite;
+    }
+    @keyframes btnShimmer {
+      0% { left: -60%; }
+      35%, 100% { left: 130%; }
+    }
+    .btn-main:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    .btn-secondary {
+      background: #FFFFFF;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 13px 26px;
+      border-radius: 99px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .btn-secondary:hover {
+      border-color: var(--primary);
+      color: #9C3D52;
+      background: var(--primary-light);
+    }
+
+    /* Hero Photo Mockup */
+    .hero-visual-box {
+      flex: 0.9;
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+    }
+    .hero-img-card {
+      width: 100%;
+      max-width: 440px;
+      height: 320px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 2px solid #FFFFFF;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      background: #fff;
+    }
+    .hero-img-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+    .hero-img-card:hover img {
+      transform: scale(1.04);
+    }
+    .hero-floating-pill {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #9C3D52;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--primary-border);
+    }
+
+    /* Trust Value Props Bar */
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 48px;
+    }
+    .trust-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s ease;
+    }
+    .trust-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    .trust-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: var(--primary-light);
+      color: #9C3D52;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .trust-text h4 {
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font-body);
+      color: var(--text-main);
+      margin-bottom: 2px;
+    }
+    .trust-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* Section Headings */
+    .heading-box {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .heading-box h2 {
+      font-size: 36px;
+      color: #2D2A2A;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .heading-box p {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 540px;
+      margin: 0 auto;
+    }
+
+    /* Filter Pills */
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 9px 24px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(244, 167, 185, 0.35);
+    }
+
+    /* Product Grid */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+      gap: 24px;
+    }
+    .product-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .product-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary-border);
+    }
+    .card-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(8px);
+      color: #9C3D52;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 12px;
+      border-radius: 99px;
+      border: 1px solid var(--primary-border);
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .card-views {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(8px);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 99px;
+      z-index: 2;
+    }
+
+    .card-thumb-art {
+      height: 220px;
+      background: linear-gradient(135deg, #FFF6F8 0%, #FAF0F2 50%, #F5EAE6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .card-thumb-art::after {
+      content: '';
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(244,167,185,0.25) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .flower-emblem {
+      font-size: 68px;
+      z-index: 1;
+      filter: drop-shadow(0 8px 16px rgba(179, 88, 107, 0.18));
+      transition: transform 0.4s ease;
+    }
+    .product-card:hover .flower-emblem {
+      transform: scale(1.12) rotate(3deg);
+    }
+
+    .card-info {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .card-cat {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--secondary);
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      margin-bottom: 4px;
+    }
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 8px;
+      line-height: 1.35;
+    }
+    .rating-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .rating-stars { color: #F5A623; font-weight: 700; }
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .price-now {
+      font-size: 19px;
+      font-weight: 800;
+      color: #9C3D52;
+    }
+    .price-was {
+      font-size: 13px;
+      color: var(--text-light);
+      text-decoration: line-through;
+    }
+    .btn-add-cart {
+      margin-top: auto;
+      width: 100%;
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+      color: #9C3D52;
+      padding: 11px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .product-card:hover .btn-add-cart {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(244, 167, 185, 0.35);
+    }
+
+    /* Magic UI Flyer Element */
+    .magic-flyer {
+      position: fixed;
+      z-index: 10000;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 8px 24px rgba(244,167,185,0.4);
+      border: 2px solid var(--primary-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      pointer-events: none;
+      transition: all 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    /* Magic UI Sparkle Burst */
+    .magic-sparkle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 10001;
+      font-size: 16px;
+      animation: sparkleFade 0.6s ease-out forwards;
+    }
+    @keyframes sparkleFade {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0.2); opacity: 0; }
+    }
+
+    /* Magic UI Sonner Toast Notification */
+    .magic-toast-container {
+      position: fixed;
+      bottom: 28px;
+      left: 28px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .magic-toast {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(14px);
+      border: 1.5px solid var(--primary-border);
+      border-radius: 18px;
+      padding: 14px 18px;
+      box-shadow: 0 12px 36px rgba(244, 167, 185, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 320px;
+      max-width: 420px;
+      animation: toastSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative;
+      overflow: hidden;
+    }
+    @keyframes toastSlideUp {
+      from { transform: translateY(30px) scale(0.9); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .toast-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+      border: 1px solid var(--primary-border);
+    }
+    .toast-info {
+      flex: 1;
+    }
+    .toast-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 2px;
+    }
+    .toast-desc {
+      font-size: 12px;
+      font-weight: 600;
+      color: #9C3D52;
+    }
+    .toast-action-btn {
+      background: var(--primary-light);
+      color: #9C3D52;
+      border: 1px solid var(--primary-border);
+      padding: 7px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .toast-action-btn:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+    .toast-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: var(--primary);
+      width: 100%;
+      animation: toastTimer 3.5s linear forwards;
+    }
+    @keyframes toastTimer {
+      from { width: 100%; }
+      to { width: 0%; }
+    }
+
+    /* Custom Studio */
+    .customizer-box {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      box-shadow: var(--shadow-md);
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 36px;
+      margin-bottom: 40px;
+    }
+    .step-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 10px;
+      margin-top: 18px;
+    }
+    .step-title:first-child { margin-top: 0; }
+    .swatches {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .swatch {
+      background: #FAF8F5;
+      border: 1.5px solid var(--border);
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .swatch.selected {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: #9C3D52;
+      font-weight: 700;
+      box-shadow: var(--shadow-sm);
+    }
+    .color-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .custom-preview-card {
+      background: linear-gradient(135deg, #FFF9FA 0%, #FAF2F4 100%);
+      border: 1px solid var(--primary-border);
+      border-radius: var(--radius);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+    }
+    .preview-canvas {
+      height: 200px;
+      background: #FFFFFF;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 72px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.02);
+      margin-bottom: 20px;
+    }
+    .order-summary-box {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      font-size: 13px;
+      text-align: left;
+      margin-bottom: 18px;
+    }
+    .btn-wa-order {
+      background: #25D366;
+      color: #fff;
+      border: none;
+      padding: 14px;
+      border-radius: 99px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(37, 211, 102, 0.35);
+      transition: all 0.2s ease;
+    }
+    .btn-wa-order:hover {
+      background: #20BA5A;
+      transform: translateY(-2px);
+    }
+
+    /* Lookbook */
+    .lookbook-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .lookbook-item {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+    }
+    .lookbook-item:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-border);
+    }
+    .lookbook-photo-wrap {
+      height: 240px;
+      background: linear-gradient(135deg, #FAF0F2 0%, #F5EAE6 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      font-size: 60px;
+    }
+    .lookbook-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(6px);
+      color: #9C3D52;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 99px;
+      border: 1px solid var(--primary-border);
+    }
+    .lookbook-meta { padding: 20px; }
+    .lookbook-tags {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--secondary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .lookbook-meta h4 {
+      font-size: 18px;
+      color: var(--text-main);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    .lookbook-quote {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    /* Tracking & Bantuan */
+    .tracking-box {
+      max-width: 680px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      box-shadow: var(--shadow-md);
+    }
+    .input-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .input-row input {
+      flex: 1;
+      padding: 13px 18px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-family: var(--font-body);
+      outline: none;
+    }
+    .timeline {
+      list-style: none;
+      position: relative;
+      padding-left: 28px;
+      margin-top: 24px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background: var(--primary-border);
+    }
+    .timeline-step {
+      position: relative;
+      margin-bottom: 22px;
+    }
+    .timeline-step::before {
+      content: '';
+      position: absolute;
+      left: -24px;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+    .timeline-step.active::before {
+      background: #25D366;
+      box-shadow: 0 0 0 3px rgba(37,211,102,0.3);
+    }
+
+    .faq-item {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 22px;
+      margin-bottom: 14px;
+    }
+    .faq-q {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+    .faq-a {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .warranty-banner {
+      background: linear-gradient(135deg, #FFF5F7 0%, #FDF0F3 100%);
+      border: 1.5px solid var(--primary-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* Cart Drawer */
+    .cart-drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: none;
+      justify-content: flex-end;
+    }
+    .cart-drawer {
+      width: 440px;
+      max-width: 90vw;
+      height: 100%;
+      background: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -6px 0 30px rgba(0,0,0,0.15);
+      animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideLeft {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+    .drawer-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .cart-items {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+    .cart-item {
+      display: flex;
+      gap: 14px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .item-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+    .drawer-footer {
+      padding: 20px 24px;
+      border-top: 1px solid var(--border);
+      background: #FAF8F5;
+    }
+
+    .floating-wa {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #25D366;
+      color: #fff;
+      padding: 13px 22px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 6px 20px rgba(37,211,102,0.4);
+      z-index: 850;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+    }
+    .floating-wa:hover {
+      transform: scale(1.05) translateY(-2px);
+    }
+
+    /* THEME IN-SYSTEM LIVE CHAT MODAL */
+    .theme-chat-modal {
+      position: fixed;
+      bottom: 90px;
+      right: 24px;
+      width: 380px;
+      height: 520px;
+      background: #FFFFFF;
+      border: 1px solid var(--primary-border);
+      border-radius: 20px;
+      box-shadow: 0 16px 40px rgba(225, 29, 72, 0.16);
+      display: none;
+      flex-direction: column;
+      z-index: 900;
+      overflow: hidden;
+      animation: chatPopup 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .theme-chat-modal.open {
+      display: flex;
+    }
+    @keyframes chatPopup {
+      from { opacity: 0; transform: translateY(16px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .theme-chat-header {
+      background: linear-gradient(135deg, var(--primary), #9C3D52);
+      color: #FFFFFF;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .theme-chat-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .theme-chat-avatar {
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      border: 1.5px solid rgba(255,255,255,0.4);
+      flex-shrink: 0;
+    }
+    .theme-chat-name {
+      font-weight: 800;
+      font-size: 13.5px;
+      line-height: 1.2;
+    }
+    .theme-chat-status {
+      font-size: 10.5px;
+      opacity: 0.9;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .status-indicator-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #34D399;
+      display: inline-block;
+    }
+    .btn-chat-close {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease;
+    }
+    .btn-chat-close:hover {
+      background: rgba(255,255,255,0.35);
+    }
+    .theme-chat-escalate {
+      background: #ECFDF5;
+      border-bottom: 1px solid #A7F3D0;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .escalate-info {
+      font-size: 11px;
+      color: #065F46;
+      font-weight: 600;
+    }
+    .btn-escalate-wa {
+      background: #10B981;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-escalate-wa:hover {
+      background: #059669;
+    }
+    .theme-chat-body {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #FFFDFD;
+    }
+    .chat-bubble {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 12.5px;
+      line-height: 1.45;
+      position: relative;
+    }
+    .chat-bubble.florist-msg {
+      background: #FFFFFF;
+      color: var(--text-main);
+      border: 1px solid var(--primary-border);
+      border-bottom-left-radius: 3px;
+      align-self: flex-start;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .chat-bubble.user-msg {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-bottom-right-radius: 3px;
+      align-self: flex-end;
+      box-shadow: 0 2px 6px rgba(225, 29, 72, 0.2);
+    }
+    .chat-timestamp {
+      display: block;
+      font-size: 9.5px;
+      opacity: 0.65;
+      margin-top: 4px;
+      text-align: right;
+    }
+    .theme-chat-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 14px;
+      background: #FFF9F9;
+      border-top: 1px solid var(--primary-border);
+    }
+    .theme-chip {
+      background: #FFFFFF;
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
+      padding: 5px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .theme-chip:hover {
+      background: var(--primary);
+      color: #FFFFFF;
+    }
+    .theme-chat-input-row {
+      display: flex;
+      gap: 8px;
+      padding: 12px 14px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--primary-border);
+    }
+    .theme-chat-input-row input {
+      flex: 1;
+      padding: 9px 14px;
+      border: 1.5px solid var(--primary-border);
+      border-radius: 10px;
+      font-size: 12.5px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .theme-chat-input-row input:focus {
+      border-color: var(--primary);
+    }
+    .btn-chat-send {
+      background: var(--primary);
+      color: #FFFFFF;
+      border: none;
+      padding: 0 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease;
+    }
+    .btn-chat-send:hover {
+      background: #9C3D52;
+    }
+    .btn-nav-login {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: #fff;
+      transition: all 0.2s ease;
+    }
+    .btn-nav-login:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    @media (max-width: 480px) {
+      .theme-chat-modal {
+        width: calc(100vw - 32px);
+        right: 16px;
+        bottom: 80px;
+        height: 480px;
+      }
+    }
+
+    /* Modal Quick View */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(6px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-card {
+      background: #FFFFFF;
+      border-radius: var(--radius);
+      max-width: 560px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      animation: zoomIn 0.25s ease;
+      position: relative;
+    }
+    @keyframes zoomIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: #fff;
+      border: 1px solid var(--border);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    /* Midtrans QRIS Modal */
+    .qris-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(6px);
+      z-index: 10005;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .qris-modal {
+      background: #FFFFFF;
+      border-radius: var(--radius);
+      max-width: 440px;
+      width: 100%;
+      padding: 28px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      border: 2px solid var(--primary-border);
+      animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    .qris-code-box {
+      width: 200px;
+      height: 200px;
+      margin: 16px auto;
+      background: #FAF8F5;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Responsive Anti-wrapping */
+    @media (max-width: 1200px) {
+      .nav-menu { gap: 2px; }
+      .nav-menu a { font-size: 12px; padding: 5px 9px; }
+      .brand-logo h1 { font-size: 18px; }
+      .brand-icon { width: 34px; height: 34px; font-size: 17px; }
+      .btn-nav-cart { padding: 7px 12px; font-size: 12px; }
+    }
+    @media (max-width: 960px) {
+      .hero-banner { flex-direction: column; padding: 32px 24px; text-align: center; }
+      .hero-content p { margin: 0 auto 24px auto; }
+      .hero-actions { justify-content: center; }
+      .trust-grid { grid-template-columns: repeat(2, 1fr); }
+      .customizer-box { grid-template-columns: 1fr; }
+      .nav-menu {
+        overflow-x: auto;
+        padding: 4px 0;
+        scrollbar-width: none;
+      }
+      .nav-menu::-webkit-scrollbar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP PROMO ANNOUNCEMENT BAR -->
+  <div class="top-bar">
+    <span>🌸 <strong>KOREAN PASTEL ATELIER</strong> • Dapatkan Diskon Rp 10.000 untuk Pemesanan Wisuda!</span>
+    <span class="top-bar-code">KODE: WISUDA10K</span>
+  </div>
+
+  <!-- HEADER & NAVIGASI 6 MENU KONSISTEN — CLEAN & NO WRAPPING -->
+  <header>
+    <div class="nav-container">
+      <div class="brand-logo" onclick="navigateTo('home')">
+        <div class="brand-icon">🌸</div>
+        <div>
+          <h1 class="brand-title">Aesthetic Chenille Flowers</h1>
+          <span class="subtitle">Korean Pastel Atelier</span>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li><a id="nav-home" class="active" onclick="navigateTo('home')">Beranda</a></li>
+        <li><a id="nav-katalog" onclick="navigateTo('katalog')">Katalog Bunga</a></li>
+        <li><a id="nav-custom" onclick="navigateTo('custom')">Custom Studio</a></li>
+        <li><a id="nav-lookbook" onclick="navigateTo('lookbook')">Lookbook</a></li>
+        <li><a id="nav-tracking" onclick="navigateTo('tracking')">Lacak Pesanan</a></li>
+        <li><a id="nav-bantuan" onclick="navigateTo('bantuan')">Bantuan & Garansi</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="../login/index.html?theme=tema-a" class="btn-nav-login" title="Masuk / Akun Pelanggan">
+          <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Masuk / Akun</span>
+        </a>
+        <button class="btn-nav-cart" onclick="toggleCartDrawer(true)">
+          <span>🛍️ Keranjang</span>
+          <span class="cart-badge" id="cartCount">2</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAGIC UI TOAST CONTAINER -->
+  <div class="magic-toast-container" id="magicToastContainer"></div>
+
+  <!-- ========================================================================
+       PAGE 1: BERANDA / HOME (TEMA A)
+       ======================================================================== -->
+  <section id="page-home" class="page-section active-page">
+    
+    <!-- Hero Banner dengan Foto Preview Realistik -->
+    <div class="hero-banner">
+      <div class="hero-content">
+        <span class="hero-badge">✨ Korean Florist Craft • Everlasting Love</span>
+        <h2>Buket Bunga Kawat Bulu <span class="highlight">Estetik & Abadi</span></h2>
+        <p>Sentuhan lembut beludru chenille stem buatan tangan yang tahan selamanya tanpa layu. Kado paling manis dan berkesan untuk momen wisuda, sidang skripsi, dan perayaan romantis.</p>
+        <div class="hero-actions">
+          <button class="btn-main" onclick="navigateTo('katalog')">Jelajahi Katalog 🌸</button>
+          <button class="btn-secondary" onclick="navigateTo('custom')">Rangkai Custom ✨</button>
+        </div>
+      </div>
+      
+      <div class="hero-visual-box">
+        <div class="hero-img-card">
+          <img src="preview-tema-a.jpg" alt="Preview Koleksi Buket Bunga Kawat Bulu Korean Pastel Atelier">
+          <div class="hero-floating-pill">
+            <span>🌸 100% Handcrafted Chenille Velvet</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Keunggulan Toko -->
+    <div class="trust-grid">
+      <div class="trust-card">
+        <div class="trust-icon">🌿</div>
+        <div class="trust-text">
+          <h4>Awet Selamanya</h4>
+          <p>Kawat bulu premium anti-rontok & tak pernah layu</p>
+        </div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">📦</div>
+        <div class="trust-text">
+          <h4>Kardus Box Tebal</h4>
+          <p>Double-wall box aman dari tekanan kurir</p>
+        </div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">🤝</div>
+        <div class="trust-text">
+          <h4>COD Titik Temu</h4>
+          <p>Janji temu langsung di kampus atau stasiun</p>
+        </div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">🛡️</div>
+        <div class="trust-text">
+          <h4>Garansi 100% Baru</h4>
+          <p>Ganti buket baru jika rusak saat pengiriman</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Heading -->
+    <div class="heading-box">
+      <h2>Koleksi Favorit Paling Diminati</h2>
+      <p>Pilihan buket kombinasi warna pastel lembut ala florist Seoul yang paling disukai pelanggan</p>
+    </div>
+
+    <!-- Grid 4 Produk Terlaris -->
+    <div class="product-grid">
+      <div class="product-card" onclick="openProductModal('Pink Tulip Bliss Trio', 'Rp 185.000', 'Rp 210.000', 'Wisuda & Sidang', '🌷', '🌸 Pre-Order 2 Hari')">
+        <span class="card-badge">🌸 Pre-Order 2 Hari</span>
+        <span class="card-views">👁️ 412 Views</span>
+        <div class="card-thumb-art">
+          <span class="flower-emblem">🌷</span>
+        </div>
+        <div class="card-info">
+          <span class="card-cat">Wisuda & Sidang</span>
+          <h3 class="card-title">Pink Tulip Bliss Trio</h3>
+          <div class="rating-row">
+            <span class="rating-stars">⭐⭐⭐⭐⭐</span>
+            <span>4.9 (128 ulasan)</span>
+          </div>
+          <div class="price-row">
+            <span class="price-now">Rp 185.000</span>
+            <span class="price-was">Rp 210.000</span>
+          </div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Pink Tulip Bliss Trio', 185000, '🌷')">+ Masukkan Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" onclick="openProductModal('Sunshine Daisy & Sunflower', 'Rp 145.000', 'Rp 165.000', 'Best Seller', '🌻', 'Ready Stock')">
+        <span class="card-badge" style="color:#2E7D32; border-color:#C8E6C9;">🟢 Ready Stock</span>
+        <span class="card-views">👁️ 628 Views</span>
+        <div class="card-thumb-art" style="background: linear-gradient(135deg, #FFFDF0 0%, #FFF8E1 100%);">
+          <span class="flower-emblem">🌻</span>
+        </div>
+        <div class="card-info">
+          <span class="card-cat">Best Seller</span>
+          <h3 class="card-title">Sunshine Daisy & Sunflower</h3>
+          <div class="rating-row">
+            <span class="rating-stars">⭐⭐⭐⭐⭐</span>
+            <span>5.0 (214 ulasan)</span>
+          </div>
+          <div class="price-row">
+            <span class="price-now">Rp 145.000</span>
+            <span class="price-was">Rp 165.000</span>
+          </div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Sunshine Daisy & Sunflower', 145000, '🌻')">+ Masukkan Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" onclick="openProductModal('Everlasting Red Velvet Rose', 'Rp 125.000', 'Rp 150.000', 'Romantis', '🌹', 'Ready Stock')">
+        <span class="card-badge" style="color:#2E7D32; border-color:#C8E6C9;">🟢 Ready Stock</span>
+        <span class="card-views">👁️ 380 Views</span>
+        <div class="card-thumb-art" style="background: linear-gradient(135deg, #FFF0F2 0%, #FCE4EC 100%);">
+          <span class="flower-emblem">🌹</span>
+        </div>
+        <div class="card-info">
+          <span class="card-cat">Romantis & Anniversary</span>
+          <h3 class="card-title">Everlasting Red Velvet Rose</h3>
+          <div class="rating-row">
+            <span class="rating-stars">⭐⭐⭐⭐⭐</span>
+            <span>4.9 (95 ulasan)</span>
+          </div>
+          <div class="price-row">
+            <span class="price-now">Rp 125.000</span>
+            <span class="price-was">Rp 150.000</span>
+          </div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Everlasting Red Velvet Rose', 125000, '🌹')">+ Masukkan Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" onclick="openProductModal('Happy Graduation Bear Sun', 'Rp 175.000', 'Rp 200.000', 'Karakter Toga', '🧸', '🌸 Pre-Order 2 Hari')">
+        <span class="card-badge">🌸 Pre-Order 2 Hari</span>
+        <span class="card-views">👁️ 510 Views</span>
+        <div class="card-thumb-art" style="background: linear-gradient(135deg, #FDF7ED 0%, #F5EBE1 100%);">
+          <span class="flower-emblem">🧸</span>
+        </div>
+        <div class="card-info">
+          <span class="card-cat">Karakter Toga Wisuda</span>
+          <h3 class="card-title">Happy Graduation Bear Sun</h3>
+          <div class="rating-row">
+            <span class="rating-stars">⭐⭐⭐⭐⭐</span>
+            <span>5.0 (176 ulasan)</span>
+          </div>
+          <div class="price-row">
+            <span class="price-now">Rp 175.000</span>
+            <span class="price-was">Rp 200.000</span>
+          </div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Happy Graduation Bear Sun', 175000, '🧸')">+ Masukkan Keranjang</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       PAGE 2: KATALOG LENGKAP & FILTER KATEGORI
+       ======================================================================== -->
+  <section id="page-katalog" class="page-section">
+    <div class="heading-box">
+      <h2>Katalog Lengkap Buket Bunga</h2>
+      <p>Temukan buket kawat bulu istimewa yang dirangkai teliti untuk setiap momen kebahagiaan Anda</p>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterCatalog(this, 'all')">Semua Model (8)</button>
+      <button class="filter-btn" onclick="filterCatalog(this, 'wisuda')">Wisuda & Sidang</button>
+      <button class="filter-btn" onclick="filterCatalog(this, 'romantis')">Romantis & Valentine</button>
+      <button class="filter-btn" onclick="filterCatalog(this, 'karakter')">Karakter & Hewan</button>
+      <button class="filter-btn" onclick="filterCatalog(this, 'minipot')">Mini Pot Hias Meja</button>
+    </div>
+
+    <div class="product-grid" id="catalogGrid">
+      <div class="product-card" data-cat="wisuda" onclick="openProductModal('Pink Tulip Bliss Trio', 'Rp 185.000', 'Rp 210.000', 'Wisuda', '🌷', '🌸 Pre-Order 2 Hari')">
+        <span class="card-badge">🌸 Pre-Order 2 Hari</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🌷</span></div>
+        <div class="card-info">
+          <span class="card-cat">Wisuda & Sidang</span>
+          <h3 class="card-title">Pink Tulip Bliss Trio</h3>
+          <div class="price-row"><span class="price-now">Rp 185.000</span><span class="price-was">Rp 210.000</span></div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Pink Tulip Bliss Trio', 185000, '🌷')">+ Masukkan Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" data-cat="wisuda" onclick="openProductModal('Sunshine Daisy Delight', 'Rp 145.000', 'Rp 165.000', 'Wisuda', '🌻', 'Ready Stock')">
+        <span class="card-badge" style="color:#2E7D32; border-color:#C8E6C9;">🟢 Ready Stock</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🌻</span></div>
+        <div class="card-info">
+          <span class="card-cat">Best Seller</span>
+          <h3 class="card-title">Sunshine Daisy Delight</h3>
+          <div class="price-row"><span class="price-now">Rp 145.000</span><span class="price-was">Rp 165.000</span></div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Sunshine Daisy Delight', 145000, '🌻')">+ Masukkan Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" data-cat="romantis" onclick="openProductModal('Everlasting Red Velvet Rose', 'Rp 125.000', 'Rp 150.000', 'Romantis', '🌹', 'Ready Stock')">
+        <span class="card-badge" style="color:#2E7D32; border-color:#C8E6C9;">🟢 Ready Stock</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🌹</span></div>
+        <div class="card-info">
+          <span class="card-cat">Romantis</span>
+          <h3 class="card-title">Everlasting Red Velvet Rose</h3>
+          <div class="price-row"><span class="price-now">Rp 125.000</span><span class="price-was">Rp 150.000</span></div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Everlasting Red Velvet Rose', 125000, '🌹')">+ Masukkan Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" data-cat="romantis" onclick="openProductModal('Lavender Dream 5-Stem', 'Rp 210.000', 'Rp 240.000', 'Romantis', '🪻', '🌸 Pre-Order 3 Hari')">
+        <span class="card-badge">🌸 Pre-Order 3 Hari</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🪻</span></div>
+        <div class="card-info">
+          <span class="card-cat">Aroma Floral</span>
+          <h3 class="card-title">Lavender Dream 5-Stem</h3>
+          <div class="price-row"><span class="price-now">Rp 210.000</span><span class="price-was">Rp 240.000</span></div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Lavender Dream 5-Stem', 210000, '🪻')">+ Masukkan Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" data-cat="karakter" onclick="openProductModal('Graduation Bear with Sunflower', 'Rp 175.000', 'Rp 200.000', 'Karakter', '🧸', '🌸 Pre-Order 2 Hari')">
+        <span class="card-badge">🌸 Pre-Order 2 Hari</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🧸</span></div>
+        <div class="card-info">
+          <span class="card-cat">Spesial Toga</span>
+          <h3 class="card-title">Graduation Bear with Sunflower</h3>
+          <div class="price-row"><span class="price-now">Rp 175.000</span><span class="price-was">Rp 200.000</span></div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Graduation Bear with Sunflower', 175000, '🧸')">+ Masukkan Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" data-cat="minipot" onclick="openProductModal('Mini Sunflower Desk Companion', 'Rp 65.000', 'Rp 75.000', 'Mini Pot', '🪴', 'Ready Stock')">
+        <span class="card-badge" style="color:#2E7D32; border-color:#C8E6C9;">🟢 Ready Stock</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🪴</span></div>
+        <div class="card-info">
+          <span class="card-cat">Mini Desk Pot</span>
+          <h3 class="card-title">Mini Sunflower Desk Companion</h3>
+          <div class="price-row"><span class="price-now">Rp 65.000</span><span class="price-was">Rp 75.000</span></div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Mini Sunflower Desk Companion', 65000, '🪴')">+ Masukkan Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" data-cat="karakter" onclick="openProductModal('Fluffy Bunny Tulip Bouquet', 'Rp 160.000', 'Rp 185.000', 'Karakter', '🐰', '🌸 Pre-Order 2 Hari')">
+        <span class="card-badge">🌸 Pre-Order 2 Hari</span>
+        <div class="card-thumb-art"><span class="flower-emblem">🐰</span></div>
+        <div class="card-info">
+          <span class="card-cat">Karakter Gemas</span>
+          <h3 class="card-title">Fluffy Bunny Tulip Bouquet</h3>
+          <div class="price-row"><span class="price-now">Rp 160.000</span><span class="price-was">Rp 185.000</span></div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Fluffy Bunny Tulip Bouquet', 160000, '🐰')">+ Masukkan Keranjang</button>
+        </div>
+      </div>
+
+      <div class="product-card" data-cat="wisuda" onclick="openProductModal('Pastel Rainbow Grand 10-Stem', 'Rp 285.000', 'Rp 320.000', 'Wisuda', '💐', '🌸 Pre-Order 3 Hari')">
+        <span class="card-badge">🌸 Pre-Order 3 Hari</span>
+        <div class="card-thumb-art"><span class="flower-emblem">💐</span></div>
+        <div class="card-info">
+          <span class="card-cat">Mewah / Grand</span>
+          <h3 class="card-title">Pastel Rainbow Grand 10-Stem</h3>
+          <div class="price-row"><span class="price-now">Rp 285.000</span><span class="price-was">Rp 320.000</span></div>
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(this, 'Pastel Rainbow Grand 10-Stem', 285000, '💐')">+ Masukkan Keranjang</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       PAGE 3: CUSTOM STUDIO (INTERAKTIF KE WHATSAPP)
+       ======================================================================== -->
+  <section id="page-custom" class="page-section">
+    <div class="heading-box">
+      <h2>Custom Buket Studio Interaktif</h2>
+      <p>Rangkai buket impian Anda sendiri secara live. Pilih bunga, warna kawat bulu, kertas wrapping, dan aksesori tambahan</p>
+    </div>
+
+    <div class="customizer-box">
+      <div>
+        <div class="step-title">1. Pilih Jenis Bunga Utama:</div>
+        <div class="swatches" id="optFlowers">
+          <button class="swatch selected" onclick="pickOption(this, 'flower', 'Tulip 🌷', 120000, '🌷')">Tulip 🌷</button>
+          <button class="swatch" onclick="pickOption(this, 'flower', 'Mawar Velvet 🌹', 130000, '🌹')">Mawar Velvet 🌹</button>
+          <button class="swatch" onclick="pickOption(this, 'flower', 'Bunga Matahari 🌻', 115000, '🌻')">Bunga Matahari 🌻</button>
+          <button class="swatch" onclick="pickOption(this, 'flower', 'Lavender 🪻', 125000, '🪻')">Lavender 🪻</button>
+        </div>
+
+        <div class="step-title">2. Pilih Warna Kawat Bulu:</div>
+        <div class="swatches" id="optColors">
+          <button class="swatch selected" onclick="pickOption(this, 'color', 'Pastel Pink')"><span class="color-dot" style="background:#F4A7B9;"></span> Pastel Pink</button>
+          <button class="swatch" onclick="pickOption(this, 'color', 'Lavender Lilac')"><span class="color-dot" style="background:#C4B5FD;"></span> Lavender Lilac</button>
+          <button class="swatch" onclick="pickOption(this, 'color', 'Sky Blue')"><span class="color-dot" style="background:#BAE6FD;"></span> Sky Blue</button>
+          <button class="swatch" onclick="pickOption(this, 'color', 'Matcha Sage')"><span class="color-dot" style="background:#A8C3A0;"></span> Matcha Sage</button>
+        </div>
+
+        <div class="step-title">3. Tema Kertas Wrapping:</div>
+        <div class="swatches" id="optWrapping">
+          <button class="swatch selected" onclick="pickOption(this, 'wrapping', 'Korean Two-Tone Pink')">Korean Two-Tone Pink</button>
+          <button class="swatch" onclick="pickOption(this, 'wrapping', 'Lilac & White Velvet')">Lilac & White Velvet</button>
+          <button class="swatch" onclick="pickOption(this, 'wrapping', 'Minimalist Clean Oat')">Minimalist Clean Oat</button>
+        </div>
+
+        <div class="step-title">4. Tambahan Aksesori (Upselling Add-ons):</div>
+        <div class="swatches">
+          <button class="swatch selected" id="addon-led" onclick="toggleAddon(this, 10000, 'Lampu LED')">+ Lampu LED Fairy Light (+Rp 10.000)</button>
+          <button class="swatch" id="addon-bear" onclick="toggleAddon(this, 15000, 'Boneka Toga')">+ Boneka Toga Wisuda (+Rp 15.000)</button>
+          <button class="swatch" id="addon-card" onclick="toggleAddon(this, 5000, 'Kartu Ucapan')">+ Kartu Ucapan Kaligrafi (+Rp 5.000)</button>
+        </div>
+      </div>
+
+      <div class="custom-preview-card">
+        <div>
+          <h4 style="font-size: 18px; margin-bottom: 12px; color:#2D2A2A;">Preview Desain Buket</h4>
+          <div class="preview-canvas">
+            <span id="customPreviewEmoji" style="font-size: 72px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">🌷</span>
+            <div class="preview-canvas-label" id="customPreviewLabel">Tulip Pastel Pink (Korean Two-Tone)</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="order-summary-box">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+              <span>Bunga Utama:</span> <strong id="sumFlower">Tulip (Pastel Pink)</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+              <span>Wrapping:</span> <strong id="sumWrapping">Korean Two-Tone Pink</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+              <span>Aksesori:</span> <strong id="sumAddons">Lampu LED</strong>
+            </div>
+            <hr style="border:none; border-top:1px dashed var(--border); margin: 10px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:800; color:#9C3D52;">
+              <span>Estimasi Harga:</span> <span id="sumTotalPrice">Rp 130.000</span>
+            </div>
+          </div>
+
+          <button class="btn-wa-order" onclick="sendCustomWhatsApp()">
+            <span>💬 Kirim Pesanan Custom ke WhatsApp Pengrajin</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       PAGE 4: LOOKBOOK
+       ======================================================================== -->
+  <section id="page-lookbook" class="page-section">
+    <div class="heading-box">
+      <h2>Lookbook & Inspirasi Pelanggan</h2>
+      <p>Koleksi hasil karya buket asli yang telah menemani momen wisuda dan perayaan bahagia pelanggan kami</p>
+    </div>
+
+    <div class="lookbook-grid">
+      <div class="lookbook-item">
+        <div class="lookbook-photo-wrap" style="background: linear-gradient(135deg, #FFF0F4 0%, #FDE4EC 100%);">
+          <span class="lookbook-badge">Wisuda UI 2026</span>
+          <span style="font-size: 72px;">🎓💐</span>
+        </div>
+        <div class="lookbook-meta">
+          <div class="lookbook-tags">#GraduationGift • Universitas Indonesia</div>
+          <h4>Graduation Bouquet Pink & Gold Edition</h4>
+          <p class="lookbook-quote">"Cantik banget dan rapi parah! Bunga kawat bulunya tebel dan lampunya nyala terang pas sesi foto wisuda. Sahabatku seneng banget!"</p>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">— Kak Sarah, Jakarta</div>
+        </div>
+      </div>
+
+      <div class="lookbook-item">
+        <div class="lookbook-photo-wrap" style="background: linear-gradient(135deg, #FFF5E6 0%, #FEE8D6 100%);">
+          <span class="lookbook-badge">Anniversary 2nd Year</span>
+          <span style="font-size: 72px;">🌹✨</span>
+        </div>
+        <div class="lookbook-meta">
+          <div class="lookbook-tags">#Romance • Kado Kejutan</div>
+          <h4>Everlasting Red Velvet & Champagne Mist</h4>
+          <p class="lookbook-quote">"Biasanya beli bunga asli 3 hari layu, yang ini udah sebulan dipajang di kamar masih tetap tegak dan warnanya cantik banget!"</p>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">— Mas Dimas, Bandung</div>
+        </div>
+      </div>
+
+      <div class="lookbook-item">
+        <div class="lookbook-photo-wrap" style="background: linear-gradient(135deg, #F0F9F0 0%, #E2F2E2 100%);">
+          <span class="lookbook-badge">Sidang Skripsi IPB</span>
+          <span style="font-size: 72px;">🌻🧸</span>
+        </div>
+        <div class="lookbook-meta">
+          <div class="lookbook-tags">#DeskDecoration • Sidang Sarjana</div>
+          <h4>Sunshine Sunflower in Desk Pot</h4>
+          <p class="lookbook-quote">"Beruang toganya lucu banget! Buat foto sidang pas banget ukurannya dan pengiriman aman pakai box double wall."</p>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">— Kak Nadya, Bogor</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       PAGE 5: LACAK PESANAN
+       ======================================================================== -->
+  <section id="page-tracking" class="page-section">
+    <div class="heading-box">
+      <h2>Lacak Status Pesanan</h2>
+      <p>Pantau progres perakitan buket bunga kawat bulu Anda secara transparan dari pengrajin hingga kurir</p>
+    </div>
+
+    <div class="tracking-box">
+      <div class="input-row">
+        <input type="text" id="invoiceInput" value="INV/20260907/FLW-0001" placeholder="Masukkan nomor invoice (contoh: INV/...)">
+        <button class="btn-main" onclick="trackInvoice()">Lacak Sekarang</button>
+      </div>
+
+      <div style="background: var(--primary-light); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--primary-border); margin-bottom: 20px; font-size: 13px;">
+        <div style="font-weight: 700; color: #9C3D52; font-size: 14px;">Invoice: INV/20260907/FLW-0001</div>
+        <div>Pesanan: <strong>Pink Tulip Bliss Trio + Lampu LED</strong></div>
+        <div style="color:var(--text-muted); margin-top: 4px;">Tujuan: Tebet, Jakarta Selatan • Kurir: J&T Express (Resi: JNT99281726)</div>
+      </div>
+
+      <ul class="timeline" id="trackingTimeline">
+        <li class="timeline-step">
+          <div style="font-weight:700;">✅ Pembayaran Terverifikasi Otomatis (QRIS Midtrans)</div>
+          <div style="font-size:12px; color:var(--text-muted);">07 Sep 2026, 09:15 WIB</div>
+        </li>
+        <li class="timeline-step">
+          <div style="font-weight:700;">🌸 Buket Sedang Dirangkai oleh Pengrajin Atelier</div>
+          <div style="font-size:12px; color:var(--text-muted);">07 Sep 2026, 10:45 WIB • Quality Check Passed</div>
+        </li>
+        <li class="timeline-step">
+          <div style="font-weight:700;">📦 Selesai Dipacking dalam Box Corrugated Tebal</div>
+          <div style="font-size:12px; color:var(--text-muted);">07 Sep 2026, 11:30 WIB • Bubble wrap berlapis</div>
+        </li>
+        <li class="timeline-step active" style="color:#2E7D32;">
+          <div style="font-weight:800;">🚚 Paket Telah Diambil Kurir Menuju Alamat Penerima</div>
+          <div style="font-size:12px; color:#2E7D32;">Sedang Berjalan (Estimasi Tiba Hari Ini Pukul 16:00 WIB)</div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       PAGE 6: BANTUAN & GARANSI 100%
+       ======================================================================== -->
+  <section id="page-bantuan" class="page-section">
+    <div class="heading-box">
+      <h2>Pusat Bantuan, Perawatan & Garansi</h2>
+      <p>Segala informasi yang Anda butuhkan untuk merawat buket kawat bulu agar tetap awet selamanya</p>
+    </div>
+
+    <div style="max-width: 800px; margin: 0 auto;">
+      <h3 style="font-size: 22px; margin-bottom: 16px; color:#9C3D52;">💡 Panduan Perawatan (Care Guide)</h3>
+      
+      <div class="faq-item">
+        <div class="faq-q">❓ Bagaimana jika kelopak bunga sedikit penyok setelah keluar dari kardus?</div>
+        <div class="faq-a">Jangan khawatir! Kawat di dalam bulu chenille bersifat <strong>sangat lentur dan elastis</strong>. Anda cukup menggunakan jari tangan perlahan untuk merapikan, melenturkan, atau melebarkan kembali kelopak bunga ke bentuk cantiknya hanya dalam waktu 10-20 detik!</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">❓ Bagaimana cara membersihkan debu jika sudah lama dipajang di kamar?</div>
+        <div class="faq-a">Gunakan kuas makeup berbulu halus atau kuas lukis bersih. Anda juga bisa menggunakan pengering rambut (hairdryer) dengan pengaturan angin dingin bersuhu normal. <em>Peringatan: Hindari mencuci buket dengan air agar kawat di dalamnya tetap awet tidak berkarat.</em></div>
+      </div>
+
+      <h3 style="font-size: 22px; margin: 36px 0 16px 0; color:#9C3D52;">🛡️ Kebijakan Garansi & Retur Adil</h3>
+
+      <div class="warranty-banner">
+        <div style="font-size: 40px; color:#9C3D52;">🛡️</div>
+        <div>
+          <h4 style="font-size: 18px; font-weight: 700; color: #9C3D52; margin-bottom: 4px;">Garansi 100% Ganti Buket Baru (Free Shipping)</h4>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">Jika buket rusak parah akibat kelalaian kurir (tangkai patah atau kardus basah kuyup), cukup sertakan video unboxing 1x24 jam sejak paket diterima. Kami akan kirimkan <strong>Buket Baru 100% Gratis</strong> tanpa Anda harus repot mengembalikan buket lama!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       CART DRAWER & COD MAPS
+       ======================================================================== -->
+  <div class="cart-drawer-overlay" id="cartDrawerOverlay" onclick="toggleCartDrawer(false)">
+    <div class="cart-drawer" onclick="event.stopPropagation()">
+      <div class="drawer-header">
+        <h3 style="font-size: 20px; font-weight: 700; color: #9C3D52;">Keranjang Belanja</h3>
+        <button class="btn-close" onclick="toggleCartDrawer(false)">&times;</button>
+      </div>
+
+      <div class="cart-items" id="cartItemsList">
+        <!-- Rendered by JavaScript -->
+      </div>
+
+      <div style="padding: 0 24px; margin-bottom: 12px;">
+        <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">PILIH METODE PENGIRIMAN:</label>
+        <div style="display: flex; gap: 8px;">
+          <button id="ship-courier" class="swatch selected" style="flex:1; justify-content:center;" onclick="selectShipping('courier')">📦 Kurir Ekspedisi</button>
+          <button id="ship-cod" class="swatch" style="flex:1; justify-content:center;" onclick="selectShipping('cod')">📍 COD Janji Temu</button>
+        </div>
+
+        <div id="codMapBox" style="display:none; margin-top: 10px; background: #FFF9FA; border: 1px solid var(--primary-border); border-radius: var(--radius-sm); padding: 12px; font-size: 12px;">
+          <div style="font-weight: 700; color: #9C3D52; margin-bottom: 4px;">📍 Titik Temu COD Terpilih:</div>
+          <div style="color: var(--text-muted);">Stasiun UI Depok / Halte Kampus • Waktu: Sesuai Janji Temu WhatsApp</div>
+          <div style="height: 90px; background: #E2E8F0; border-radius: 6px; margin-top: 8px; display:flex; align-items:center; justify-content:center; color:#64748B; font-weight:700; border: 1px dashed #CBD5E1;">
+            🗺️ Google Maps Pinpoint Terkunci
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <input type="text" id="voucherInput" value="WISUDA10K" placeholder="Kode Promo" style="flex:1; padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:12px;">
+          <button class="btn-main" style="padding:8px 16px; font-size:12px;" onclick="applyVoucher()">Pakai</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
+          <span>Subtotal:</span> <strong id="cartSubtotal">Rp 195.000</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; color:#2E7D32; margin-bottom:6px;" id="discountRow">
+          <span>Voucher Diskon (WISUDA10K):</span> <strong>-Rp 10.000</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:800; color:#9C3D52; margin-top:10px;">
+          <span>Total Pembayaran:</span> <span id="cartTotalPrice">Rp 185.000</span>
+        </div>
+
+        <button class="btn-main" style="width:100%; margin-top:14px; padding:13px; justify-content:center;" onclick="proceedCheckout()">
+          🔒 Checkout via Midtrans QRIS
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL QUICK VIEW -->
+  <div class="modal-overlay" id="productModal" onclick="closeProductModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeProductModal()">&times;</button>
+      <div style="height: 200px; background: linear-gradient(135deg, #FFF9FA, #FDF2F4); display:flex; align-items:center; justify-content:center; font-size: 80px;" id="modalEmoji">
+        🌷
+      </div>
+      <div style="padding: 24px;">
+        <span class="card-badge" id="modalBadge" style="position:static; display:inline-block; margin-bottom:8px;">Pre-Order 2 Hari</span>
+        <h3 style="font-size: 22px; color: #2D2A2A; margin-bottom: 6px;" id="modalTitle">Pink Tulip Bliss Trio</h3>
+        <div class="price-row" style="margin-bottom: 12px;">
+          <span class="price-now" id="modalPrice">Rp 185.000</span>
+          <span class="price-was" id="modalPriceWas">Rp 210.000</span>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 18px;">
+          Rangkaian buket kawat bulu premium berbentuk bunga tulip lembut dengan sentuhan wrapping Korea. Cocok untuk hadiah wisuda atau ulang tahun. Tahan selamanya tanpa layu!
+        </p>
+        <button class="btn-main" id="btnModalAdd" style="width:100%; justify-content:center;" onclick="addCurrentModalToCart(this)">
+          + Masukkan ke Keranjang Belanja
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MIDTRANS SNAP QRIS SIMULATION MODAL -->
+  <div class="qris-modal-overlay" id="qrisModal" onclick="closeQrisModal()">
+    <div class="qris-modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeQrisModal()">&times;</button>
+      <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px;">
+        <span style="font-size:24px;">💳</span>
+        <span style="font-weight:700; font-size:18px; color:#2D2A2A;">Midtrans Snap QRIS</span>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted);">Pindai kode QRIS menggunakan GoPay, ShopeePay, Dana, BCA, atau Livin' Mandiri</p>
+      
+      <div class="qris-code-box">
+        <div style="font-size:11px; font-weight:800; color:#9C3D52; margin-bottom:6px; letter-spacing:1px;">QRIS NASIONAL</div>
+        <div style="font-size:72px;">📱</div>
+        <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">NMID: ID10293847561</div>
+      </div>
+
+      <div style="background:var(--primary-light); padding:10px; border-radius:12px; margin-bottom:16px; font-size:13px; border:1px solid var(--primary-border);">
+        Total Pembayaran: <strong style="color:#9C3D52; font-size:16px;" id="qrisTotalDisplay">Rp 185.000</strong>
+        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">⏱️ Sisa Waktu Pembayaran: <span id="qrisTimer">14:59</span></div>
+      </div>
+
+      <button class="btn-main" style="width:100%; justify-content:center;" onclick="simulatePaymentSuccess()">
+        ⚡ Simulasi Pembayaran Sukses (Testing)
+      </button>
+    </div>
+  </div>
+
+  <!-- FLOATING CHAT CS PENGRAJIN (IN-SYSTEM WEB CHAT) -->
+  <div class="floating-wa" onclick="toggleStoreLiveChat()" title="Live Chat CS Pengrajin Atelier">
+    <span>💬 Chat CS Pengrajin</span>
+  </div>
+
+  <!-- THEME IN-SYSTEM LIVE CHAT MODAL -->
+  <div class="theme-chat-modal" id="themeChatModal">
+    <div class="theme-chat-header">
+      <div class="theme-chat-profile">
+        <div class="theme-chat-avatar">🌸</div>
+        <div>
+          <div class="theme-chat-name">CS Florist Atelier</div>
+          <div class="theme-chat-status">
+            <span class="status-indicator-dot"></span>
+            <span>Online • Rania & Tim Pengrajin</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn-chat-close" onclick="toggleStoreLiveChat()" title="Tutup Chat">✕</button>
+    </div>
+
+    <!-- ESCALATE / TRANSFER TO WHATSAPP BANNER -->
+    <div class="theme-chat-escalate">
+      <div class="escalate-info">💡 Ingin kirim foto buket atau lanjut di HP?</div>
+      <button class="btn-escalate-wa" onclick="escalateCurrentChatToWA()">
+        <svg class="svg-icon svg-icon-sm" style="width:14px; height:14px;" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+        <span>Alihkan ke WA</span>
+      </button>
+    </div>
+
+    <!-- CHAT STREAM -->
+    <div class="theme-chat-body" id="themeChatMessages">
+      <div class="chat-bubble florist-msg">
+        <p>Halo Kak! Selamat datang di Korean Pastel Atelier 🌸</p>
+        <p style="margin-top:4px;">Ada yang bisa kami bantu seputar koleksi buket kawat bulu pastel, custom warna toga wisuda, atau jadwal kirim?</p>
+        <span class="chat-timestamp">Baru saja</span>
+      </div>
+    </div>
+
+    <!-- QUICK CHIPS -->
+    <div class="theme-chat-chips">
+      <button class="theme-chip" onclick="sendStoreChatPreset('Halo pengrajin, apakah buket wisuda pastel ready kirim hari ini?')">🎓 Ready Kirim Hari Ini?</button>
+      <button class="theme-chip" onclick="sendStoreChatPreset('Bisa custom warna bunga pastel sesuai toga kampus?')">🎨 Custom Warna Toga</button>
+      <button class="theme-chip" onclick="sendStoreChatPreset('Bisa minta foto real detail kawat bulu & LED fairy?')">📸 Detail Kawat Bulu & LED</button>
+      <button class="theme-chip" onclick="sendStoreChatPreset('Bisa COD langsung di kampus UI Depok?')">📍 Janji COD Kampus</button>
+    </div>
+
+    <!-- INPUT BAR -->
+    <form class="theme-chat-input-row" onsubmit="handleStoreChatSubmit(event)">
+      <input type="text" id="storeChatInput" placeholder="Tulis pesan untuk pengrajin..." autocomplete="off">
+      <button type="submit" class="btn-chat-send">
+        <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24" style="stroke:#fff;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    function navigateTo(pageId) {
+      document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active-page'));
+      const target = document.getElementById('page-' + pageId);
+      if (target) target.classList.add('active-page');
+
+      document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
+      const activeLink = document.getElementById('nav-' + pageId);
+      if (activeLink) activeLink.classList.add('active');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function filterCatalog(btn, category) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const cards = document.querySelectorAll('#catalogGrid .product-card');
+      cards.forEach(card => {
+        if (category === 'all' || card.getAttribute('data-cat') === category) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // ========================================================================
+    // MAGIC UI: FLY-TO-CART PARABOLIC ANIMATION
+    // ========================================================================
+    function flyToCartAnimation(sourceElement, emoji) {
+      const cartBtn = document.querySelector('.btn-nav-cart');
+      if (!cartBtn) return;
+
+      const startRect = sourceElement.getBoundingClientRect();
+      const endRect = cartBtn.getBoundingClientRect();
+
+      const flyer = document.createElement('div');
+      flyer.className = 'magic-flyer';
+      flyer.textContent = emoji || '🌸';
+      flyer.style.left = `${startRect.left + startRect.width / 2 - 24}px`;
+      flyer.style.top = `${startRect.top + startRect.height / 2 - 24}px`;
+      document.body.appendChild(flyer);
+
+      // Force Reflow
+      flyer.getBoundingClientRect();
+
+      const destX = endRect.left + endRect.width / 2 - 24;
+      const destY = endRect.top + endRect.height / 2 - 24;
+
+      flyer.style.left = `${destX}px`;
+      flyer.style.top = `${destY}px`;
+      flyer.style.transform = `scale(0.35) rotate(360deg)`;
+      flyer.style.opacity = '0.7';
+
+      setTimeout(() => {
+        flyer.remove();
+        cartBtn.classList.add('cart-bump');
+        setTimeout(() => cartBtn.classList.remove('cart-bump'), 450);
+        spawnSparkles(endRect.left + endRect.width / 2, endRect.top + endRect.height / 2);
+      }, 750);
+    }
+
+    function spawnSparkles(x, y) {
+      const sparkles = ['🌸', '✨', '💖', '🌷'];
+      for (let i = 0; i < 8; i++) {
+        const p = document.createElement('div');
+        p.className = 'magic-sparkle';
+        p.textContent = sparkles[i % sparkles.length];
+        p.style.left = `${x}px`;
+        p.style.top = `${y}px`;
+        
+        const angle = (i / 8) * Math.PI * 2;
+        const dist = 35 + Math.random() * 25;
+        p.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+        p.style.setProperty('--ty', `${Math.sin(angle) * dist}px`);
+        
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 600);
+      }
+    }
+
+    // ========================================================================
+    // MAGIC UI: SONNER TOAST NOTIFICATION (REPLACES BLOCKING ALERTS)
+    // ========================================================================
+    function showToast(title, desc, emoji, actionText, actionCallback) {
+      const container = document.getElementById('magicToastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'magic-toast';
+      
+      toast.innerHTML = `
+        <div class="toast-thumb">${emoji || '🌸'}</div>
+        <div class="toast-info">
+          <div class="toast-title">${title}</div>
+          <div class="toast-desc">${desc}</div>
+        </div>
+        ${actionText ? `<button class="toast-action-btn">${actionText}</button>` : ''}
+        <div class="toast-progress"></div>
+      `;
+
+      if (actionText && actionCallback) {
+        toast.querySelector('.toast-action-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          actionCallback();
+          toast.remove();
+        });
+      }
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.transition = 'all 0.3s ease';
+        toast.style.transform = 'translateY(20px) scale(0.9)';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // ========================================================================
+    // CART STATE & REALTIME INTERACTIONS
+    // ========================================================================
+    let cartItems = [
+      { id: 1, title: 'Pink Tulip Bliss Trio', price: 185000, emoji: '🌷', qty: 1 },
+      { id: 2, title: 'Tambahan Lampu LED Fairy Light', price: 10000, emoji: '✨', qty: 1 }
+    ];
+    let isVoucherApplied = true;
+
+    function renderCartDrawer() {
+      const container = document.getElementById('cartItemsList');
+      container.innerHTML = '';
+      let subtotal = 0;
+
+      cartItems.forEach((item, index) => {
+        subtotal += item.price * item.qty;
+        const el = document.createElement('div');
+        el.className = 'cart-item';
+        el.innerHTML = `
+          <div class="item-icon">${item.emoji}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:13.5px; color:#2D2A2A;">${item.title}</div>
+            <div style="font-weight:800; color:#9C3D52; font-size:14px; margin-top:2px;">Rp ${(item.price * item.qty).toLocaleString('id-ID')}</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+              <button onclick="updateQty(${index}, -1)" style="width:24px; height:24px; border-radius:50%; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700;">-</button>
+              <span style="font-size:13px; font-weight:700;">${item.qty}</span>
+              <button onclick="updateQty(${index}, 1)" style="width:24px; height:24px; border-radius:50%; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700;">+</button>
+              <button onclick="removeItem(${index})" style="background:none; border:none; color:var(--text-light); font-size:12px; cursor:pointer; margin-left:auto;">🗑️ Hapus</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(el);
+      });
+
+      const discount = isVoucherApplied ? 10000 : 0;
+      const total = Math.max(0, subtotal - discount);
+
+      document.getElementById('cartSubtotal').textContent = 'Rp ' + subtotal.toLocaleString('id-ID');
+      document.getElementById('cartTotalPrice').textContent = 'Rp ' + total.toLocaleString('id-ID');
+      document.getElementById('discountRow').style.display = isVoucherApplied ? 'flex' : 'none';
+      document.getElementById('cartCount').textContent = cartItems.reduce((a, b) => a + b.qty, 0);
+    }
+
+    function updateQty(index, delta) {
+      if (cartItems[index]) {
+        cartItems[index].qty += delta;
+        if (cartItems[index].qty <= 0) cartItems.splice(index, 1);
+        renderCartDrawer();
+      }
+    }
+
+    function removeItem(index) {
+      cartItems.splice(index, 1);
+      renderCartDrawer();
+      showToast('Item Dihapus', 'Produk dikeluarkan dari keranjang', '🗑️');
+    }
+
+    function toggleCartDrawer(show) {
+      renderCartDrawer();
+      document.getElementById('cartDrawerOverlay').style.display = show ? 'flex' : 'none';
+    }
+
+    function addToCart(btnElement, title, price, emoji) {
+      flyToCartAnimation(btnElement, emoji);
+
+      const existing = cartItems.find(item => item.title === title);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cartItems.push({ id: Date.now(), title, price, emoji, qty: 1 });
+      }
+
+      document.getElementById('cartCount').textContent = cartItems.reduce((a, b) => a + b.qty, 0);
+
+      showToast(
+        'Berhasil Ditambahkan! 🌸',
+        `${title} (Rp ${price.toLocaleString('id-ID')})`,
+        emoji,
+        'Lihat Keranjang 🛍️',
+        () => toggleCartDrawer(true)
+      );
+    }
+
+    function selectShipping(type) {
+      if (type === 'courier') {
+        document.getElementById('ship-courier').classList.add('selected');
+        document.getElementById('ship-cod').classList.remove('selected');
+        document.getElementById('codMapBox').style.display = 'none';
+      } else {
+        document.getElementById('ship-courier').classList.remove('selected');
+        document.getElementById('ship-cod').classList.add('selected');
+        document.getElementById('codMapBox').style.display = 'block';
+        showToast('Metode COD Terpilih 📍', 'Titik Temu: Stasiun UI Depok / Halte Kampus', '🛵');
+      }
+    }
+
+    function applyVoucher() {
+      const code = document.getElementById('voucherInput').value.trim().toUpperCase();
+      if (code === 'WISUDA10K') {
+        isVoucherApplied = true;
+        renderCartDrawer();
+        showToast('Kupon Berhasil! 🎉', 'Potongan Rp 10.000 berhasil digunakan', '🏷️');
+      } else {
+        showToast('Kupon Tidak Valid', 'Gunakan kupon WISUDA10K', '⚠️');
+      }
+    }
+
+    function proceedCheckout() {
+      toggleCartDrawer(false);
+      const total = document.getElementById('cartTotalPrice').textContent;
+      document.getElementById('qrisTotalDisplay').textContent = total;
+      document.getElementById('qrisModal').style.display = 'flex';
+      startQrisTimer();
+    }
+
+    function closeQrisModal() {
+      document.getElementById('qrisModal').style.display = 'none';
+    }
+
+    let qrisInterval;
+    function startQrisTimer() {
+      let duration = 15 * 60;
+      clearInterval(qrisInterval);
+      qrisInterval = setInterval(() => {
+        duration--;
+        if (duration <= 0) clearInterval(qrisInterval);
+        const m = Math.floor(duration / 60).toString().padStart(2, '0');
+        const s = (duration % 60).toString().padStart(2, '0');
+        document.getElementById('qrisTimer').textContent = `${m}:${s}`;
+      }, 1000);
+    }
+
+    function simulatePaymentSuccess() {
+      closeQrisModal();
+      showToast('Pembayaran QRIS Berhasil! 🎉', 'Pesanan segera dirangkai pengrajin', '✅');
+      cartItems = [];
+      renderCartDrawer();
+      setTimeout(() => navigateTo('tracking'), 800);
+    }
+
+    function trackInvoice() {
+      const inv = document.getElementById('invoiceInput').value.trim();
+      showToast('Invoice Terverifikasi! 🚚', `${inv} dalam perjalanan kurir`, '📦');
+      const timeline = document.getElementById('trackingTimeline');
+      timeline.style.transition = 'transform 0.3s ease';
+      timeline.style.transform = 'scale(1.02)';
+      setTimeout(() => timeline.style.transform = 'scale(1)', 300);
+    }
+
+    // Custom Studio
+    let customState = {
+      flower: 'Tulip 🌷',
+      flowerPrice: 120000,
+      emoji: '🌷',
+      color: 'Pastel Pink',
+      wrapping: 'Korean Two-Tone Pink',
+      addons: [{ name: 'Lampu LED', price: 10000 }]
+    };
+
+    function pickOption(btn, type, val, price, emoji) {
+      const parent = btn.parentElement;
+      parent.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+      btn.classList.add('selected');
+
+      if (type === 'flower') {
+        customState.flower = val;
+        customState.flowerPrice = price;
+        customState.emoji = emoji;
+        const previewEmoji = document.getElementById('customPreviewEmoji');
+        previewEmoji.style.transform = 'scale(0.8) rotate(-10deg)';
+        setTimeout(() => {
+          previewEmoji.textContent = emoji;
+          previewEmoji.style.transform = 'scale(1.2) rotate(6deg)';
+          setTimeout(() => previewEmoji.style.transform = 'scale(1)', 200);
+        }, 150);
+      } else if (type === 'color') {
+        customState.color = val;
+      } else if (type === 'wrapping') {
+        customState.wrapping = val;
+      }
+      updateCustomSummary();
+    }
+
+    function toggleAddon(btn, price, name) {
+      btn.classList.toggle('selected');
+      const idx = customState.addons.findIndex(a => a.name === name);
+      if (btn.classList.contains('selected')) {
+        if (idx === -1) customState.addons.push({ name, price });
+        showToast('Aksesori Ditambahkan! ✨', `${name} (+Rp ${price.toLocaleString('id-ID')})`, '🎁');
+      } else {
+        if (idx !== -1) customState.addons.splice(idx, 1);
+      }
+      updateCustomSummary();
+    }
+
+    function updateCustomSummary() {
+      document.getElementById('sumFlower').textContent = customState.flower + ' (' + customState.color + ')';
+      document.getElementById('sumWrapping').textContent = customState.wrapping;
+      document.getElementById('customPreviewLabel').textContent = customState.flower + ' ' + customState.color + ' (' + customState.wrapping + ')';
+      
+      const addonNames = customState.addons.map(a => a.name).join(', ') || 'Tanpa Tambahan';
+      document.getElementById('sumAddons').textContent = addonNames;
+
+      const addonTotal = customState.addons.reduce((acc, curr) => acc + curr.price, 0);
+      const total = customState.flowerPrice + addonTotal;
+      document.getElementById('sumTotalPrice').textContent = 'Rp ' + total.toLocaleString('id-ID');
+    }
+
+    function sendCustomWhatsApp() {
+      const msg = `Halo Atelier! Saya ingin pesan Buket Custom:%0A- Bunga: ${customState.flower}%0A- Warna: ${customState.color}%0A- Wrapping: ${customState.wrapping}%0A- Aksesori: ${document.getElementById('sumAddons').textContent}%0A- Estimasi Harga: ${document.getElementById('sumTotalPrice').textContent}`;
+      window.open('https://wa.me/6281234567890?text=' + msg, '_blank');
+    }
+
+    // Modal Quick View
+    let currentModalProduct = {};
+    function openProductModal(title, price, priceWas, cat, emoji, badge) {
+      currentModalProduct = { title, price, emoji };
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalPrice').textContent = price;
+      document.getElementById('modalPriceWas').textContent = priceWas;
+      document.getElementById('modalEmoji').textContent = emoji;
+      document.getElementById('modalBadge').textContent = badge;
+      document.getElementById('productModal').style.display = 'flex';
+    }
+
+    function closeProductModal() {
+      document.getElementById('productModal').style.display = 'none';
+    }
+
+    function addCurrentModalToCart(btn) {
+      addToCart(btn, currentModalProduct.title, parseInt(currentModalProduct.price.replace(/[^0-9]/g, '')), currentModalProduct.emoji);
+      closeProductModal();
+    }
+
+    /* --------------------------------------------------------------------------
+       IN-SYSTEM LIVE WEB CHAT ENGINE
+       -------------------------------------------------------------------------- */
+    function toggleStoreLiveChat() {
+      const modal = document.getElementById('themeChatModal');
+      modal.classList.toggle('open');
+      if (modal.classList.contains('open')) {
+        const input = document.getElementById('storeChatInput');
+        if (input) input.focus();
+        scrollStoreChatToBottom();
+      }
+    }
+
+    function scrollStoreChatToBottom() {
+      const box = document.getElementById('themeChatMessages');
+      if (box) box.scrollTop = box.scrollHeight;
+    }
+
+    function sendStoreChatPreset(text) {
+      appendStoreChatMessage(text, 'user');
+      simulateFloristResponse(text);
+    }
+
+    function handleStoreChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('storeChatInput');
+      const val = input.value.trim();
+      if (!val) return;
+      appendStoreChatMessage(val, 'user');
+      input.value = '';
+      simulateFloristResponse(val);
+    }
+
+    function appendStoreChatMessage(text, sender) {
+      const box = document.getElementById('themeChatMessages');
+      const bubble = document.createElement('div');
+      bubble.className = `chat-bubble ${sender === 'user' ? 'user-msg' : 'florist-msg'}`;
+      
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WIB`;
+
+      bubble.innerHTML = `
+        <p>${escapeHtml(text)}</p>
+        <span class="chat-timestamp">${timeStr}</span>
+      `;
+      box.appendChild(bubble);
+      scrollStoreChatToBottom();
+
+      try {
+        const chats = JSON.parse(localStorage.getItem('chenille_live_chats') || '[]');
+        chats.push({ sender, text, time: timeStr, theme: 'tema-a' });
+        localStorage.setItem('chenille_live_chats', JSON.stringify(chats));
+      } catch (err) {}
+    }
+
+    function simulateFloristResponse(userMsg) {
+      const lower = userMsg.toLowerCase();
+      let reply = 'Terima kasih atas pertanyaannya Kak! Pengrajin kami siap membantu pesanan buket spesial Anda.';
+      
+      if (lower.includes('ready') || lower.includes('hari ini')) {
+        reply = 'Halo Kak! Kami memiliki stok ready untuk seri Tulip Pastel dan Daisy Mini yang bisa dikirim kurir instan (Grab/Gojek) hari ini juga sebelum jam 16.00 WIB ✨';
+      } else if (lower.includes('toga') || lower.includes('custom') || lower.includes('warna')) {
+        reply = 'Tentu bisa banget Kak! Kami bisa menyesuaikan pita toga wisuda dengan warna fakultas/universitas Kakak (UI, ITB, UGM, Unpad, dll). Cukup sertakan foto toga di catatan atau klik "Alihkan ke WA" untuk kirim gambar 🎓';
+      } else if (lower.includes('cod')) {
+        reply = 'Untuk COD bisa dilakukan di Lobby Mall Margo City Depok atau halte kampus UI ya Kak. Silakan pilih metode COD saat checkout keranjang.';
+      } else if (lower.includes('kawat') || lower.includes('led') || lower.includes('foto')) {
+        reply = 'Semua buket menggunakan kawat bulu chenille stem grade A 6mm yang padat dan lembut. Paket sudah include lampu LED Fairy 3 mode dengan tombol baterai tersembunyi rapi 💡';
+      }
+
+      setTimeout(() => {
+        appendStoreChatMessage(reply, 'florist');
+      }, 700);
+    }
+
+    function escalateCurrentChatToWA() {
+      const activeChats = document.querySelectorAll('#themeChatMessages .chat-bubble.user-msg');
+      let lastMsg = 'Halo Florist Atelier, saya ingin konsultasi seputar buket bunga kawat bulu dari website';
+      if (activeChats.length > 0) {
+        lastMsg = activeChats[activeChats.length - 1].querySelector('p').textContent;
+      }
+      const waUrl = `https://wa.me/6281234567890?text=${encodeURIComponent('Halo Atelier, saya sedang chat di website: "' + lastMsg + '". Ingin melanjutkan via WhatsApp...')}`;
+      window.open(waUrl, '_blank');
+    }
+
+    function escapeHtml(string) {
+      const pre = document.createElement('pre');
+      pre.textContent = string;
+      return pre.innerHTML;
+    }
+
+    // Initialize
+    renderCartDrawer();
+  </script>
+</body>
+</html>
