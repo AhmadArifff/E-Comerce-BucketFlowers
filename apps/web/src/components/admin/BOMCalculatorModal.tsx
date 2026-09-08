@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Calculator,
   Plus,
@@ -15,10 +15,12 @@ import {
   CheckCircle2,
   FileSpreadsheet,
   ShieldAlert,
+  Lock,
 } from 'lucide-react';
 import { MOCK_PRODUCTS } from '@chenille/shared';
 import { useSettingsStore, type WasteMaterialItem } from '@/stores/useSettingsStore';
 import { showMagicToast } from '@/lib/magic-motion';
+import { TableSortHeader, type SortDirection } from './TableSortHeader';
 
 interface BomRow {
   id: string;
@@ -73,6 +75,73 @@ export const BOMCalculatorModal: React.FC = () => {
   const [wasteCost, setWasteCost] = useState('350');
   const [wasteReason, setWasteReason] = useState<WasteMaterialItem['reason']>('LEMBAP_BERKARAT');
   const [wasteMitigation, setWasteMitigation] = useState('');
+
+  type BomSortField = 'material' | 'qty' | 'unit' | 'pricePerUnit' | 'subtotal';
+  const [bomSortField, setBomSortField] = useState<BomSortField | null>(null);
+  const [bomSortDirection, setBomSortDirection] = useState<SortDirection>(null);
+
+  const handleBomSort = (field: BomSortField) => {
+    if (bomSortField === field) {
+      if (bomSortDirection === 'asc') setBomSortDirection('desc');
+      else if (bomSortDirection === 'desc') {
+        setBomSortField(null);
+        setBomSortDirection(null);
+      }
+    } else {
+      setBomSortField(field);
+      setBomSortDirection('asc');
+    }
+  };
+
+  const sortedRows = useMemo(() => {
+    if (!bomSortField || !bomSortDirection) return rows;
+    return [...rows].sort((a, b) => {
+      let valA: any = a[bomSortField as keyof BomRow];
+      let valB: any = b[bomSortField as keyof BomRow];
+
+      if (bomSortField === 'subtotal') {
+        valA = a.qty * a.pricePerUnit;
+        valB = b.qty * b.pricePerUnit;
+      }
+
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        const c = valA.localeCompare(valB, 'id');
+        return bomSortDirection === 'asc' ? c : -c;
+      }
+      return bomSortDirection === 'asc' ? valA - valB : valB - valA;
+    });
+  }, [rows, bomSortField, bomSortDirection]);
+
+  type WasteSortField = 'materialName' | 'category' | 'qty' | 'reason' | 'totalLoss';
+  const [wasteSortField, setWasteSortField] = useState<WasteSortField | null>(null);
+  const [wasteSortDirection, setWasteSortDirection] = useState<SortDirection>(null);
+
+  const handleWasteSort = (field: WasteSortField) => {
+    if (wasteSortField === field) {
+      if (wasteSortDirection === 'asc') setWasteSortDirection('desc');
+      else if (wasteSortDirection === 'desc') {
+        setWasteSortField(null);
+        setWasteSortDirection(null);
+      }
+    } else {
+      setWasteSortField(field);
+      setWasteSortDirection('asc');
+    }
+  };
+
+  const sortedWasteMaterials = useMemo(() => {
+    if (!wasteSortField || !wasteSortDirection) return wasteMaterials;
+    return [...wasteMaterials].sort((a, b) => {
+      let valA: any = a[wasteSortField as keyof WasteMaterialItem];
+      let valB: any = b[wasteSortField as keyof WasteMaterialItem];
+
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        const c = valA.localeCompare(valB, 'id');
+        return wasteSortDirection === 'asc' ? c : -c;
+      }
+      return wasteSortDirection === 'asc' ? valA - valB : valB - valA;
+    });
+  }, [wasteMaterials, wasteSortField, wasteSortDirection]);
 
   const totalHpp = rows.reduce((sum, r) => sum + r.qty * r.pricePerUnit, 0);
   const grossProfit = sellingPrice - totalHpp;
@@ -244,16 +313,50 @@ export const BOMCalculatorModal: React.FC = () => {
             <table className="w-full text-left text-xs text-stone-600">
               <thead className="bg-stone-50 text-stone-700 font-extrabold uppercase text-[10px] tracking-wider border-b border-stone-200">
                 <tr>
-                  <th className="py-3 px-3">Nama Bahan Baku</th>
-                  <th className="py-3 px-3 w-24">Jumlah</th>
-                  <th className="py-3 px-3 w-24">Satuan</th>
-                  <th className="py-3 px-3 w-32">Harga Satuan</th>
-                  <th className="py-3 px-3 w-32">Subtotal HPP</th>
+                  <TableSortHeader
+                    label="Nama Bahan Baku"
+                    field="material"
+                    currentField={bomSortField}
+                    direction={bomSortDirection}
+                    onSort={(f) => handleBomSort(f as BomSortField)}
+                  />
+                  <TableSortHeader
+                    label="Jumlah"
+                    field="qty"
+                    currentField={bomSortField}
+                    direction={bomSortDirection}
+                    onSort={(f) => handleBomSort(f as BomSortField)}
+                    className="w-24"
+                  />
+                  <TableSortHeader
+                    label="Satuan"
+                    field="unit"
+                    currentField={bomSortField}
+                    direction={bomSortDirection}
+                    onSort={(f) => handleBomSort(f as BomSortField)}
+                    className="w-24"
+                  />
+                  <TableSortHeader
+                    label="Harga Satuan (Terkunci)"
+                    field="pricePerUnit"
+                    currentField={bomSortField}
+                    direction={bomSortDirection}
+                    onSort={(f) => handleBomSort(f as BomSortField)}
+                    className="w-36"
+                  />
+                  <TableSortHeader
+                    label="Subtotal HPP"
+                    field="subtotal"
+                    currentField={bomSortField}
+                    direction={bomSortDirection}
+                    onSort={(f) => handleBomSort(f as BomSortField)}
+                    className="w-32"
+                  />
                   <th className="py-3 px-2 text-center w-12">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
-                {rows.map((row) => {
+                {sortedRows.map((row) => {
                   const subtotal = row.qty * row.pricePerUnit;
                   return (
                     <tr key={row.id} className="hover:bg-rose-50/20">
@@ -275,16 +378,15 @@ export const BOMCalculatorModal: React.FC = () => {
                       </td>
                       <td className="py-2.5 px-3 text-stone-500 font-medium">{row.unit}</td>
                       <td className="py-2.5 px-3">
-                        <div className="flex items-center gap-1 font-bold">
+                        <div
+                          className="flex items-center gap-1.5 font-bold text-stone-600 bg-stone-100/80 px-2 py-1 rounded-lg border border-stone-200 w-fit cursor-not-allowed select-none"
+                          title="Harga satuan di-set di data master Bahan Baku (Read-only)"
+                        >
+                          <Lock className="w-3 h-3 text-stone-400 shrink-0" />
                           <span className="text-stone-400 text-[10px]">Rp</span>
-                          <input
-                            type="number"
-                            value={row.pricePerUnit}
-                            onChange={(e) =>
-                              handleUpdateRow(row.id, 'pricePerUnit', parseFloat(e.target.value) || 0)
-                            }
-                            className="w-24 text-xs font-bold p-1 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-rose-500"
-                          />
+                          <span className="text-xs font-mono font-bold text-stone-700">
+                            {row.pricePerUnit.toLocaleString('id-ID')}
+                          </span>
                         </div>
                       </td>
                       <td className="py-2.5 px-3 font-black text-rose-600">
@@ -533,17 +635,47 @@ export const BOMCalculatorModal: React.FC = () => {
             <table className="w-full text-left text-xs text-stone-600">
               <thead className="bg-stone-50 text-stone-700 font-extrabold uppercase text-[10px] tracking-wider border-b border-stone-200">
                 <tr>
-                  <th className="py-3 px-3">Bahan Baku Rusak</th>
-                  <th className="py-3 px-3">Kategori</th>
-                  <th className="py-3 px-3">Qty & Unit</th>
-                  <th className="py-3 px-3">Penyebab Kerusakan</th>
+                  <TableSortHeader
+                    label="Bahan Baku Rusak"
+                    field="materialName"
+                    currentField={wasteSortField}
+                    direction={wasteSortDirection}
+                    onSort={(f) => handleWasteSort(f as WasteSortField)}
+                  />
+                  <TableSortHeader
+                    label="Kategori"
+                    field="category"
+                    currentField={wasteSortField}
+                    direction={wasteSortDirection}
+                    onSort={(f) => handleWasteSort(f as WasteSortField)}
+                  />
+                  <TableSortHeader
+                    label="Qty & Unit"
+                    field="qty"
+                    currentField={wasteSortField}
+                    direction={wasteSortDirection}
+                    onSort={(f) => handleWasteSort(f as WasteSortField)}
+                  />
+                  <TableSortHeader
+                    label="Penyebab Kerusakan"
+                    field="reason"
+                    currentField={wasteSortField}
+                    direction={wasteSortDirection}
+                    onSort={(f) => handleWasteSort(f as WasteSortField)}
+                  />
                   <th className="py-3 px-3">Tindakan Mitigasi</th>
-                  <th className="py-3 px-3">Total Rugi</th>
+                  <TableSortHeader
+                    label="Total Rugi"
+                    field="totalLoss"
+                    currentField={wasteSortField}
+                    direction={wasteSortDirection}
+                    onSort={(f) => handleWasteSort(f as WasteSortField)}
+                  />
                   <th className="py-3 px-2 text-center w-12">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
-                {wasteMaterials.map((item) => {
+                {sortedWasteMaterials.map((item) => {
                   const reasonLabel: Record<string, string> = {
                     LEMBAP_BERKARAT: 'Lembap & Berkarat',
                     KERTAS_LECEK_ROBEK: 'Kertas Lecek/Robek',

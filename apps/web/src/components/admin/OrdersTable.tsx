@@ -1,21 +1,39 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ShoppingBag, CheckCircle2, Scissors, Truck, MapPin, Check, ExternalLink, Printer, Download, Search } from 'lucide-react';
 import { useOrderStore, type Order } from '@/stores/useOrderStore';
 import { showMagicToast } from '@/lib/magic-motion';
+import { TableSortHeader, type SortDirection } from './TableSortHeader';
 
 interface OrdersTableProps {
   searchQuery?: string;
   onPrintResi?: (order: Order) => void;
 }
 
+type OrderSortField = 'invoiceNumber' | 'customerName' | 'items' | 'fulfillment' | 'totalAmount' | 'currentStep';
+
 export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPrintResi }) => {
   const { orders, updateOrderStep } = useOrderStore();
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'CRAFTING' | 'SHIPPED' | 'COMPLETED'>('ALL');
   const [internalSearch, setInternalSearch] = useState('');
+  const [sortField, setSortField] = useState<OrderSortField | null>('currentStep');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const activeSearch = searchQuery || internalSearch;
+
+  const handleSort = (field: OrderSortField) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') setSortDirection('desc');
+      else if (sortDirection === 'desc') {
+        setSortField(null);
+        setSortDirection(null);
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   const stepButtons = [
     { step: 1, label: '1. Bayar', color: 'hover:bg-blue-50 text-blue-600 border-blue-200' },
@@ -24,25 +42,53 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
     { step: 4, label: '4. Selesai', color: 'hover:bg-emerald-50 text-emerald-600 border-emerald-200' },
   ];
 
-  const filteredOrders = orders.filter((order) => {
-    // Status filter
-    if (statusFilter === 'PENDING' && order.currentStep !== 1) return false;
-    if (statusFilter === 'CRAFTING' && order.currentStep !== 2) return false;
-    if (statusFilter === 'SHIPPED' && order.currentStep !== 3) return false;
-    if (statusFilter === 'COMPLETED' && order.currentStep !== 4) return false;
+  const filteredOrders = useMemo(() => {
+    const list = orders.filter((order) => {
+      // Status filter
+      if (statusFilter === 'PENDING' && order.currentStep !== 1) return false;
+      if (statusFilter === 'CRAFTING' && order.currentStep !== 2) return false;
+      if (statusFilter === 'SHIPPED' && order.currentStep !== 3) return false;
+      if (statusFilter === 'COMPLETED' && order.currentStep !== 4) return false;
 
-    // Search query filter
-    if (activeSearch.trim()) {
-      const q = activeSearch.toLowerCase();
-      const matchInvoice = order.invoiceNumber.toLowerCase().includes(q);
-      const matchCustomer = order.customerName.toLowerCase().includes(q);
-      const matchPhone = order.customerPhone.toLowerCase().includes(q);
-      const matchItem = order.items.some((i) => i.productName.toLowerCase().includes(q));
-      return matchInvoice || matchCustomer || matchPhone || matchItem;
+      // Search query filter
+      if (activeSearch.trim()) {
+        const q = activeSearch.toLowerCase();
+        const matchInvoice = order.invoiceNumber.toLowerCase().includes(q);
+        const matchCustomer = order.customerName.toLowerCase().includes(q);
+        const matchPhone = order.customerPhone.toLowerCase().includes(q);
+        const matchItem = order.items.some((i) => i.productName.toLowerCase().includes(q));
+        return matchInvoice || matchCustomer || matchPhone || matchItem;
+      }
+
+      return true;
+    });
+
+    if (sortField && sortDirection) {
+      return [...list].sort((a, b) => {
+        let valA: any = a[sortField as keyof Order];
+        let valB: any = b[sortField as keyof Order];
+
+        if (sortField === 'items') {
+          valA = a.items.length;
+          valB = b.items.length;
+        } else if (sortField === 'fulfillment') {
+          valA = a.fulfillmentType;
+          valB = b.fulfillmentType;
+        }
+
+        if (typeof valA === 'string' && typeof valB === 'string') {
+          const comp = valA.localeCompare(valB, 'id');
+          return sortDirection === 'asc' ? comp : -comp;
+        }
+        if (typeof valA === 'number' && typeof valB === 'number') {
+          return sortDirection === 'asc' ? valA - valB : valB - valA;
+        }
+        return 0;
+      });
     }
 
-    return true;
-  });
+    return list;
+  }, [orders, statusFilter, activeSearch, sortField, sortDirection]);
 
   const handleExportOrdersCsv = () => {
     showMagicToast('Ekspor Pesanan Berhasil! 📦', 'File Pesanan_Chenille_Atelier.csv berhasil diunduh.', '📄');
@@ -117,13 +163,47 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
         <table className="w-full text-left text-xs text-stone-600">
           <thead className="bg-stone-50 border-b border-stone-200 text-stone-700 font-extrabold uppercase text-[10px] tracking-wider">
             <tr>
-              <th className="py-3.5 px-4">Invoice / Pemesan</th>
-              <th className="py-3.5 px-4">Item Buket</th>
-              <th className="py-3.5 px-4">Pengiriman</th>
-              <th className="py-3.5 px-4">Total</th>
-              <th className="py-3.5 px-4">Status Saat Ini</th>
-              <th className="py-3.5 px-4 text-center">Ubah Status Cepat</th>
-              <th className="py-3.5 px-4 text-center">Aksi Dokumen</th>
+              <TableSortHeader
+                label="Invoice / Pemesan"
+                field="invoiceNumber"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={handleSort}
+              />
+              <TableSortHeader
+                label="Item Buket"
+                field="items"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={handleSort}
+              />
+              <TableSortHeader
+                label="Pengiriman"
+                field="fulfillment"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={handleSort}
+              />
+              <TableSortHeader
+                label="Total"
+                field="totalAmount"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={handleSort}
+              />
+              <TableSortHeader
+                label="Status Saat Ini"
+                field="currentStep"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={handleSort}
+              />
+              <th className="py-3.5 px-4 text-center text-[10px] font-extrabold uppercase tracking-wider text-stone-700">
+                Ubah Status Cepat
+              </th>
+              <th className="py-3.5 px-4 text-center text-[10px] font-extrabold uppercase tracking-wider text-stone-700">
+                Aksi Dokumen
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
@@ -139,7 +219,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
                 return (
                   <tr key={order.id} className="hover:bg-rose-50/30 transition-colors">
                     {/* Invoice & Customer */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-sm">
                           {order.customerAvatarEmoji || '🌸'}
@@ -162,7 +242,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
                     </td>
 
                     {/* Fulfillment */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         {isCOD ? (
                           <>
@@ -183,45 +263,60 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
                     </td>
 
                     {/* Total */}
-                    <td className="py-3.5 px-4 font-black text-stone-800">
+                    <td className="py-3.5 px-4 font-black text-stone-800 whitespace-nowrap">
                       Rp {order.totalAmount.toLocaleString('id-ID')}
                     </td>
 
-                    {/* Current Status */}
-                    <td className="py-3.5 px-4">
+                    {/* Current Status Badge - Fixed single-line pill with dot */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <span
-                        className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border shadow-2xs ${
                           order.currentStep === 4
-                            ? 'bg-emerald-100 text-emerald-800'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                             : order.currentStep === 3
-                            ? 'bg-purple-100 text-purple-800'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200'
                             : order.currentStep === 2
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-blue-100 text-blue-800'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-blue-50 text-blue-700 border-blue-200'
                         }`}
                       >
-                        Langkah {order.currentStep}: {order.statusLabel}
+                        <span
+                          className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                            order.currentStep === 4
+                              ? 'bg-emerald-500'
+                              : order.currentStep === 3
+                              ? 'bg-purple-500'
+                              : order.currentStep === 2
+                              ? 'bg-amber-500'
+                              : 'bg-blue-500 animate-pulse'
+                          }`}
+                        />
+                        <span>Langkah {order.currentStep}: {order.statusLabel}</span>
                       </span>
                     </td>
 
-                    {/* Step Action Buttons */}
-                    <td className="py-3.5 px-4 text-center">
-                      <div className="inline-flex items-center gap-1 bg-stone-50 p-1 rounded-xl border border-stone-200">
+                    {/* Step Action Buttons - Fixed single-line segmented control */}
+                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1 bg-stone-100/90 p-1 rounded-xl border border-stone-200 shadow-2xs">
                         {stepButtons.map((btn) => {
                           const isCurrent = order.currentStep === btn.step;
+                          const isPassed = order.currentStep > btn.step;
                           return (
                             <button
                               key={btn.step}
                               onClick={() => updateOrderStep(order.id, btn.step)}
-                              className={`px-2 py-1 rounded-lg text-[10px] font-extrabold transition-all border cursor-pointer ${
+                              className={`h-7 px-2.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 whitespace-nowrap cursor-pointer ${
                                 isCurrent
-                                  ? 'bg-rose-600 text-white border-rose-600 shadow-sm scale-105'
-                                  : `bg-white ${btn.color}`
+                                  ? 'bg-rose-600 text-white shadow-xs font-extrabold scale-102'
+                                  : isPassed
+                                  ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/80'
+                                  : 'text-stone-500 hover:text-stone-800 hover:bg-white'
                               }`}
                               title={`Set pesanan ke langkah ${btn.step}`}
                             >
-                              {isCurrent && <Check className="w-2.5 h-2.5 inline mr-0.5 stroke-[3]" />}
-                              {btn.label}
+                              {isCurrent && <Check className="w-3 h-3 stroke-[3]" />}
+                              {isPassed && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
+                              <span>{btn.label}</span>
                             </button>
                           );
                         })}
@@ -229,13 +324,13 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
                     </td>
 
                     {/* Print Resi AWB */}
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       <button
                         onClick={() => onPrintResi?.(order)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border border-stone-200 bg-white hover:bg-rose-50 hover:border-rose-300 text-stone-700 hover:text-rose-600 text-[10px] font-extrabold transition-all shadow-2xs cursor-pointer active:scale-95"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-rose-50 hover:border-rose-300 text-stone-700 hover:text-rose-600 text-[11px] font-extrabold transition-all shadow-2xs cursor-pointer active:scale-95"
                         title="Cetak Label Resi Pengiriman AWB"
                       >
-                        <Printer className="w-3 h-3 text-rose-600" />
+                        <Printer className="w-3.5 h-3.5 text-rose-600" />
                         <span>Cetak Resi</span>
                       </button>
                     </td>

@@ -1,19 +1,52 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ShieldCheck, CheckCircle2, XCircle, Clock, Search, AlertCircle, ExternalLink, Sparkles } from 'lucide-react';
 import { useOrderStore } from '@/stores/useOrderStore';
 import type { WarrantyStatus } from '@chenille/shared';
+import { TableSortHeader, type SortDirection } from './TableSortHeader';
 
 export const WarrantyClaimsTable: React.FC = () => {
   const { warrantyClaims, updateWarrantyClaimStatus } = useOrderStore();
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
 
-  const filteredClaims = warrantyClaims.filter((c) => {
-    if (filterStatus === 'ALL') return true;
-    return c.status === filterStatus;
-  });
+  type ClaimSortField = 'id' | 'customerName' | 'issueCategory' | 'solutionPreference' | 'status';
+  const [sortField, setSortField] = useState<ClaimSortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+
+  const handleSort = (field: ClaimSortField) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') setSortDirection('desc');
+      else if (sortDirection === 'desc') {
+        setSortField(null);
+        setSortDirection(null);
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedAndFilteredClaims = useMemo(() => {
+    const list = warrantyClaims.filter((c) => {
+      if (filterStatus === 'ALL') return true;
+      return c.status === filterStatus;
+    });
+
+    if (!sortField || !sortDirection) return list;
+
+    return [...list].sort((a, b) => {
+      let valA: any = a[sortField];
+      let valB: any = b[sortField];
+
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        const cmp = valA.localeCompare(valB, 'id');
+        return sortDirection === 'asc' ? cmp : -cmp;
+      }
+      return sortDirection === 'asc' ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
+    });
+  }, [warrantyClaims, filterStatus, sortField, sortDirection]);
 
   const getStatusBadge = (status: WarrantyStatus) => {
     switch (status) {
@@ -112,24 +145,59 @@ export const WarrantyClaimsTable: React.FC = () => {
         <table className="w-full text-left text-xs text-stone-600">
           <thead className="bg-stone-50 text-stone-700 font-extrabold uppercase text-[10px] tracking-wider border-b border-stone-200">
             <tr>
-              <th className="py-3 px-4">ID & No. Invoice</th>
-              <th className="py-3 px-4">Pelanggan</th>
-              <th className="py-3 px-4">Kategori Kerusakan</th>
+              <TableSortHeader
+                label="ID & No. Invoice"
+                field="id"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={(f) => handleSort(f as ClaimSortField)}
+                className="py-3 px-4"
+              />
+              <TableSortHeader
+                label="Pelanggan"
+                field="customerName"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={(f) => handleSort(f as ClaimSortField)}
+                className="py-3 px-4"
+              />
+              <TableSortHeader
+                label="Kategori Kerusakan"
+                field="issueCategory"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={(f) => handleSort(f as ClaimSortField)}
+                className="py-3 px-4"
+              />
               <th className="py-3 px-4">Foto Bukti</th>
-              <th className="py-3 px-4">Solusi Pilihan</th>
-              <th className="py-3 px-4">Status Klaim</th>
+              <TableSortHeader
+                label="Solusi Pilihan"
+                field="solutionPreference"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={(f) => handleSort(f as ClaimSortField)}
+                className="py-3 px-4"
+              />
+              <TableSortHeader
+                label="Status Klaim"
+                field="status"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={(f) => handleSort(f as ClaimSortField)}
+                className="py-3 px-4"
+              />
               <th className="py-3 px-4 text-right">Aksi Verifikasi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
-            {filteredClaims.length === 0 ? (
+            {sortedAndFilteredClaims.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-8 text-center text-stone-400">
                   Tidak ada tiket klaim dengan status ini.
                 </td>
               </tr>
             ) : (
-              filteredClaims.map((claim) => {
+              sortedAndFilteredClaims.map((claim) => {
                 const badge = getStatusBadge(claim.status);
 
                 return (

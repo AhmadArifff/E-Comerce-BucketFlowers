@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { TableSortHeader, type SortDirection } from './TableSortHeader';
 import {
   FileSpreadsheet,
   Download,
@@ -286,12 +287,60 @@ export const ReportsView: React.FC = () => {
     showMagicToast(`Laporan ${format} Siap! 📈`, `File Laporan_Atelier_2026.${format.toLowerCase()} berhasil diekspor.`, '📄');
   };
 
-  const reportsData = [
-    { period: 'September 2026 (Berjalan)', orders: 58, omzet: 'Rp 8.750.000', hpp: 'Rp 3.650.000', net: 'Rp 5.100.000', margin: '58.2%' },
-    { period: 'Agustus 2026', orders: 74, omzet: 'Rp 11.200.000', hpp: 'Rp 4.700.000', net: 'Rp 6.500.000', margin: '58.0%' },
-    { period: 'Juli 2026', orders: 62, omzet: 'Rp 9.400.000', hpp: 'Rp 3.950.000', net: 'Rp 5.450.000', margin: '57.9%' },
-    { period: 'Juni 2026 (Wisuda Raya)', orders: 95, omzet: 'Rp 14.800.000', hpp: 'Rp 6.100.000', net: 'Rp 8.700.000', margin: '58.7%' },
+  type ReportSortField = 'period' | 'orders' | 'omzet' | 'hpp' | 'net' | 'margin';
+  const [sortField, setSortField] = useState<ReportSortField | null>('period');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  const handleSort = (field: ReportSortField) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') setSortDirection('desc');
+      else if (sortDirection === 'desc') {
+        setSortField(null);
+        setSortDirection(null);
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const rawReportsData = [
+    { period: 'September 2026 (Berjalan)', monthOrder: 9, orders: 58, omzetNum: 8750000, omzet: 'Rp 8.750.000', hppNum: 3650000, hpp: 'Rp 3.650.000', netNum: 5100000, net: 'Rp 5.100.000', marginNum: 58.2, margin: '58.2%' },
+    { period: 'Agustus 2026', monthOrder: 8, orders: 74, omzetNum: 11200000, omzet: 'Rp 11.200.000', hppNum: 4700000, hpp: 'Rp 4.700.000', netNum: 6500000, net: 'Rp 6.500.000', marginNum: 58.0, margin: '58.0%' },
+    { period: 'Juli 2026', monthOrder: 7, orders: 62, omzetNum: 9400000, omzet: 'Rp 9.400.000', hppNum: 3950000, hpp: 'Rp 3.950.000', netNum: 5450000, net: 'Rp 5.450.000', marginNum: 57.9, margin: '57.9%' },
+    { period: 'Juni 2026 (Wisuda Raya)', monthOrder: 6, orders: 95, omzetNum: 14800000, omzet: 'Rp 14.800.000', hppNum: 6100000, hpp: 'Rp 6.100.000', netNum: 8700000, net: 'Rp 8.700.000', marginNum: 58.7, margin: '58.7%' },
   ];
+
+  const sortedReports = useMemo(() => {
+    if (!sortField || !sortDirection) return rawReportsData;
+    return [...rawReportsData].sort((a, b) => {
+      let valA: any = a[sortField as keyof typeof a];
+      let valB: any = b[sortField as keyof typeof b];
+
+      if (sortField === 'period') {
+        valA = a.monthOrder;
+        valB = b.monthOrder;
+      } else if (sortField === 'omzet') {
+        valA = a.omzetNum;
+        valB = b.omzetNum;
+      } else if (sortField === 'hpp') {
+        valA = a.hppNum;
+        valB = b.hppNum;
+      } else if (sortField === 'net') {
+        valA = a.netNum;
+        valB = b.netNum;
+      } else if (sortField === 'margin') {
+        valA = a.marginNum;
+        valB = b.marginNum;
+      }
+
+      if (typeof valA === 'string') {
+        const c = valA.localeCompare(valB, 'id');
+        return sortDirection === 'asc' ? c : -c;
+      }
+      return sortDirection === 'asc' ? valA - valB : valB - valA;
+    });
+  }, [sortField, sortDirection]);
 
   return (
     <div className="space-y-6 admin-view-fade">
@@ -372,17 +421,53 @@ export const ReportsView: React.FC = () => {
           <table className="w-full text-left text-xs text-stone-600">
             <thead className="bg-stone-50 text-stone-700 font-extrabold uppercase text-[10px] tracking-wider border-b border-stone-200">
               <tr>
-                <th className="py-3 px-4">Periode Bulan</th>
-                <th className="py-3 px-4">Jumlah Pesanan</th>
-                <th className="py-3 px-4">Omzet Bruto</th>
-                <th className="py-3 px-4">Total HPP</th>
-                <th className="py-3 px-4">Laba Bersih</th>
-                <th className="py-3 px-4">Margin (%)</th>
+                <TableSortHeader
+                  label="Periode Bulan"
+                  field="period"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={handleSort}
+                />
+                <TableSortHeader
+                  label="Jumlah Pesanan"
+                  field="orders"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={handleSort}
+                />
+                <TableSortHeader
+                  label="Omzet Bruto"
+                  field="omzet"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={handleSort}
+                />
+                <TableSortHeader
+                  label="Total HPP"
+                  field="hpp"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={handleSort}
+                />
+                <TableSortHeader
+                  label="Laba Bersih"
+                  field="net"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={handleSort}
+                />
+                <TableSortHeader
+                  label="Margin (%)"
+                  field="margin"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={handleSort}
+                />
                 <th className="py-3 px-4 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {reportsData.map((row, idx) => (
+              {sortedReports.map((row, idx) => (
                 <tr key={idx} className="hover:bg-rose-50/20 transition-colors">
                   <td className="py-3.5 px-4 font-extrabold text-stone-800">{row.period}</td>
                   <td className="py-3.5 px-4 font-bold">{row.orders} Buket</td>
@@ -473,11 +558,22 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
   const [selectedCat, setSelectedCat] = useState('ALL');
   const [selectedProdBom, setSelectedProdBom] = useState<Product | null>(null);
 
-  const filtered = MOCK_PRODUCTS.filter((prod) => {
-    const matchName = prod.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchCat = selectedCat === 'ALL' || prod.category === selectedCat;
-    return matchName && matchCat;
-  });
+  type ProductSortField = 'name' | 'category' | 'recipe' | 'rawCostHpp' | 'price' | 'margin' | 'clicks' | 'status';
+  const [sortField, setSortField] = useState<ProductSortField | null>('clicks');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  const handleSort = (field: ProductSortField) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') setSortDirection('desc');
+      else if (sortDirection === 'desc') {
+        setSortField(null);
+        setSortDirection(null);
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   // Mock recipe ingredients generator based on product ID
   const getProductRecipe = (prod: Product) => {
@@ -489,6 +585,56 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
       { name: 'Aksesoris / Kartu Ucapan / Box Kemas', qty: 1, unit: 'Pcs', cost: prod.rawCostHpp - 29500 > 0 ? prod.rawCostHpp - 29500 : 5000, subtotal: prod.rawCostHpp - 29500 > 0 ? prod.rawCostHpp - 29500 : 5000 },
     ];
   };
+
+  const sortedProducts = useMemo(() => {
+    const list = MOCK_PRODUCTS.filter((prod) => {
+      const matchName = prod.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchCat = selectedCat === 'ALL' || prod.category === selectedCat;
+      return matchName && matchCat;
+    });
+
+    if (sortField && sortDirection) {
+      return [...list].sort((a, b) => {
+        let valA: any = a[sortField as keyof Product];
+        let valB: any = b[sortField as keyof Product];
+
+        const priceA = a.discountPrice ?? a.price;
+        const priceB = b.discountPrice ?? b.price;
+        const profitA = priceA - a.rawCostHpp;
+        const profitB = priceB - b.rawCostHpp;
+        const marginA = Math.round((profitA / priceA) * 100);
+        const marginB = Math.round((profitB / priceB) * 100);
+
+        if (sortField === 'price') {
+          valA = priceA;
+          valB = priceB;
+        } else if (sortField === 'margin') {
+          valA = marginA;
+          valB = marginB;
+        } else if (sortField === 'clicks') {
+          valA = a.clickCount || 0;
+          valB = b.clickCount || 0;
+        } else if (sortField === 'status') {
+          valA = a.isReadyStock ? 1 : 0;
+          valB = b.isReadyStock ? 1 : 0;
+        } else if (sortField === 'recipe') {
+          valA = getProductRecipe(a).length;
+          valB = getProductRecipe(b).length;
+        }
+
+        if (typeof valA === 'string' && typeof valB === 'string') {
+          const comp = valA.localeCompare(valB, 'id');
+          return sortDirection === 'asc' ? comp : -comp;
+        }
+        if (typeof valA === 'number' && typeof valB === 'number') {
+          return sortDirection === 'asc' ? valA - valB : valB - valA;
+        }
+        return 0;
+      });
+    }
+
+    return list;
+  }, [searchTerm, selectedCat, sortField, sortDirection]);
 
   return (
     <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs space-y-6 admin-view-fade">
@@ -546,18 +692,18 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
         <table className="w-full text-left text-xs text-stone-600">
           <thead className="bg-stone-50 text-stone-700 font-extrabold uppercase text-[10px] tracking-wider border-b border-stone-200">
             <tr>
-              <th className="py-3 px-4">Buket Produk</th>
-              <th className="py-3 px-4">Kategori</th>
-              <th className="py-3 px-4">Resep Bahan</th>
-              <th className="py-3 px-4">HPP (Modal)</th>
-              <th className="py-3 px-4">Harga Jual</th>
-              <th className="py-3 px-4">Margin</th>
-              <th className="py-3 px-4">Klik (CTR)</th>
-              <th className="py-3 px-4">Status Produksi</th>
+              <TableSortHeader label="Buket Produk" field="name" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+              <TableSortHeader label="Kategori" field="category" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+              <TableSortHeader label="Resep Bahan" field="recipe" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+              <TableSortHeader label="HPP (Modal)" field="rawCostHpp" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+              <TableSortHeader label="Harga Jual" field="price" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+              <TableSortHeader label="Margin" field="margin" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+              <TableSortHeader label="Klik (CTR)" field="clicks" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+              <TableSortHeader label="Status Produksi" field="status" currentField={sortField} direction={sortDirection} onSort={handleSort} />
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
-            {filtered.map((prod, idx) => {
+            {sortedProducts.map((prod, idx) => {
               const price = prod.discountPrice ?? prod.price;
               const profit = price - prod.rawCostHpp;
               const margin = Math.round((profit / price) * 100);
@@ -724,21 +870,258 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
 };
 
 // ============================================================================
-// 5. PROMOS & COUPONS VIEW
+// 5. CREATE COUPON MODAL
+// ============================================================================
+export const CreateCouponModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onAddCoupon: (newCoupon: {
+    code: string;
+    discount: string;
+    minSpend: string;
+    used: number;
+    quota: number;
+    active: boolean;
+    expiry: string;
+  }) => void;
+}> = ({ isOpen, onClose, onAddCoupon }) => {
+  const [code, setCode] = useState('');
+  const [discountType, setDiscountType] = useState<'NOMINAL' | 'PERCENT' | 'ONGKIR'>('NOMINAL');
+  const [discountVal, setDiscountVal] = useState('25000');
+  const [minSpend, setMinSpend] = useState('150000');
+  const [noMinSpend, setNoMinSpend] = useState(false);
+  const [quota, setQuota] = useState('50');
+  const [expiry, setExpiry] = useState('31 Okt 2026');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code.trim()) {
+      showMagicToast('Kode Wajib Diisi ⚠️', 'Harap masukkan kode kupon promo.', '❌');
+      return;
+    }
+
+    let discountStr = '';
+    if (discountType === 'PERCENT') {
+      discountStr = `Diskon ${discountVal}%`;
+    } else if (discountType === 'ONGKIR') {
+      discountStr = `Gratis Ongkir Rp ${parseInt(discountVal || '0').toLocaleString('id-ID')}`;
+    } else {
+      discountStr = `Diskon Rp ${parseInt(discountVal || '0').toLocaleString('id-ID')}`;
+    }
+
+    const minSpendStr = noMinSpend
+      ? 'Tanpa Minimum'
+      : `Min. Belanja Rp ${parseInt(minSpend || '0').toLocaleString('id-ID')}`;
+
+    onAddCoupon({
+      code: code.trim().toUpperCase(),
+      discount: discountStr,
+      minSpend: minSpendStr,
+      used: 0,
+      quota: parseInt(quota) || 50,
+      active: true,
+      expiry,
+    });
+
+    onClose();
+    showMagicToast('Kupon Baru Diterbitkan! 🏷️', `Kupon ${code.toUpperCase()} aktif dan siap digunakan pembeli.`, '✨');
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+      <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-rose-100 space-y-4 my-8">
+        <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+          <div className="flex items-center gap-2">
+            <Tag className="w-5 h-5 text-rose-600" />
+            <div>
+              <h3 className="font-extrabold text-stone-800 text-sm">Buat Kupon Diskon Baru</h3>
+              <span className="text-[11px] text-stone-500">Kupon akan langsung aktif di etalase checkout toko.</span>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-full text-stone-400 hover:text-stone-600 cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+          <div>
+            <label className="block font-bold text-stone-700 mb-1">
+              Kode Kupon Diskon <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              placeholder="CONTOH: WISUDAHEMAT25"
+              className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 font-mono font-black text-xs uppercase tracking-wider text-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-stone-700 mb-1">Jenis Potongan</label>
+              <select
+                value={discountType}
+                onChange={(e) => setDiscountType(e.target.value as any)}
+                className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white font-bold"
+              >
+                <option value="NOMINAL">Potongan Nominal (Rp)</option>
+                <option value="PERCENT">Persentase Diskon (%)</option>
+                <option value="ONGKIR">Potongan Ongkir (Rp)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-bold text-stone-700 mb-1">
+                {discountType === 'PERCENT' ? 'Persentase (%)' : 'Nilai Potongan (Rp)'}
+              </label>
+              <input
+                type="number"
+                required
+                value={discountVal}
+                onChange={(e) => setDiscountVal(e.target.value)}
+                placeholder={discountType === 'PERCENT' ? '15' : '25000'}
+                className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 font-mono font-bold text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-stone-700 mb-1">Minimal Belanja (Rp)</label>
+              <input
+                type="number"
+                disabled={noMinSpend}
+                value={noMinSpend ? 0 : minSpend}
+                onChange={(e) => setMinSpend(e.target.value)}
+                className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 font-mono font-bold text-xs disabled:bg-stone-100 disabled:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+              />
+              <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer text-[11px] text-stone-600 font-medium">
+                <input
+                  type="checkbox"
+                  checked={noMinSpend}
+                  onChange={(e) => setNoMinSpend(e.target.checked)}
+                  className="rounded text-rose-600 focus:ring-rose-500"
+                />
+                <span>Tanpa Minimal Belanja</span>
+              </label>
+            </div>
+
+            <div>
+              <label className="block font-bold text-stone-700 mb-1">Kuota Pemakaian (Kupon)</label>
+              <input
+                type="number"
+                required
+                value={quota}
+                onChange={(e) => setQuota(e.target.value)}
+                placeholder="50"
+                className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 font-mono font-bold text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-bold text-stone-700 mb-1">Masa Berlaku / Kadaluarsa</label>
+            <input
+              type="text"
+              required
+              value={expiry}
+              onChange={(e) => setExpiry(e.target.value)}
+              placeholder="Contoh: 31 Okt 2026"
+              className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-stone-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl border border-stone-200 text-xs font-bold text-stone-600 hover:bg-stone-50 cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer"
+            >
+              Terbitkan Kupon
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// 6. PROMOS & COUPONS VIEW (WITHOUT TOGGLE, WITH CREATE FORM & TABLE SORTING)
 // ============================================================================
 export const PromosView: React.FC = () => {
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [coupons, setCoupons] = useState([
-    { code: 'WISUDAHEMAT', discount: 'Diskon Rp 25.000', minSpend: 'Min. Belanja Rp 150.000', used: 14, quota: 50, active: true, expiry: '30 Sep 2026' },
-    { code: 'LOVECHENILLE', discount: 'Diskon 10%', minSpend: 'Tanpa Minimum', used: 28, quota: 100, active: true, expiry: '15 Okt 2026' },
-    { code: 'GRATISONGKIR5K', discount: 'Gratis Ongkir Rp 10.000', minSpend: 'Min. Belanja Rp 100.000', used: 42, quota: 60, active: true, expiry: '05 Okt 2026' },
-    { code: 'MEMBERGOLD15', discount: 'Diskon Eksklusif 15%', minSpend: 'Khusus Member Gold', used: 8, quota: 20, active: false, expiry: '31 Des 2026' },
+    { code: 'WISUDAHEMAT', discount: 'Diskon Rp 25.000', discountVal: 25000, minSpend: 'Min. Belanja Rp 150.000', minSpendVal: 150000, used: 14, quota: 50, active: true, expiry: '30 Sep 2026' },
+    { code: 'LOVECHENILLE', discount: 'Diskon 10%', discountVal: 10, minSpend: 'Tanpa Minimum', minSpendVal: 0, used: 28, quota: 100, active: true, expiry: '15 Okt 2026' },
+    { code: 'GRATISONGKIR5K', discount: 'Gratis Ongkir Rp 10.000', discountVal: 10000, minSpend: 'Min. Belanja Rp 100.000', minSpendVal: 100000, used: 42, quota: 60, active: true, expiry: '05 Okt 2026' },
+    { code: 'MEMBERGOLD15', discount: 'Diskon Eksklusif 15%', discountVal: 15, minSpend: 'Khusus Member Gold', minSpendVal: 0, used: 8, quota: 20, active: true, expiry: '31 Des 2026' },
   ]);
 
-  const toggleCoupon = (code: string) => {
-    setCoupons((prev) =>
-      prev.map((c) => (c.code === code ? { ...c, active: !c.active } : c))
-    );
-    showMagicToast('Status Kupon Diperbarui! 🏷️', `Kupon ${code} telah diubah statusnya.`, '✅');
+  type CouponSortField = 'code' | 'discount' | 'minSpend' | 'used' | 'expiry' | 'active';
+  const [sortField, setSortField] = useState<CouponSortField | null>('used');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  const handleSort = (field: CouponSortField) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') setSortDirection('desc');
+      else if (sortDirection === 'desc') {
+        setSortField(null);
+        setSortDirection(null);
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedCoupons = useMemo(() => {
+    if (!sortField || !sortDirection) return coupons;
+    return [...coupons].sort((a, b) => {
+      let valA: any = a[sortField as keyof typeof a];
+      let valB: any = b[sortField as keyof typeof b];
+
+      if (sortField === 'discount') {
+        valA = a.discountVal;
+        valB = b.discountVal;
+      } else if (sortField === 'minSpend') {
+        valA = a.minSpendVal;
+        valB = b.minSpendVal;
+      }
+
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        const comp = valA.localeCompare(valB, 'id');
+        return sortDirection === 'asc' ? comp : -comp;
+      }
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return sortDirection === 'asc' ? valA - valB : valB - valA;
+      }
+      if (typeof valA === 'boolean' && typeof valB === 'boolean') {
+        return sortDirection === 'asc' ? (valA ? 1 : 0) - (valB ? 1 : 0) : (valB ? 1 : 0) - (valA ? 1 : 0);
+      }
+      return 0;
+    });
+  }, [coupons, sortField, sortDirection]);
+
+  const handleAddCoupon = (newCoupon: any) => {
+    setCoupons((prev) => [
+      {
+        ...newCoupon,
+        discountVal: 20000,
+        minSpendVal: 100000,
+      },
+      ...prev,
+    ]);
   };
 
   return (
@@ -749,12 +1132,12 @@ export const PromosView: React.FC = () => {
             Pemasaran & Manajemen Kupon Diskon
           </h2>
           <p className="text-xs text-stone-500">
-            Dorong konversi pesanan dengan voucher potongan belanja dan voucher gratis ongkos kirim.
+            Kupon potongan harga dan gratis ongkir untuk pelanggan tanpa sakelar toggle manual.
           </p>
         </div>
 
         <button
-          onClick={() => showMagicToast('Fitur Buat Kupon', 'Form kupon baru siap digunakan.', '✨')}
+          onClick={() => setIsCreateOpen(true)}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
@@ -762,15 +1145,12 @@ export const PromosView: React.FC = () => {
         </button>
       </div>
 
+      {/* Coupon Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {coupons.map((coupon) => (
+        {sortedCoupons.map((coupon) => (
           <div
             key={coupon.code}
-            className={`p-5 rounded-2xl border transition-all ${
-              coupon.active
-                ? 'bg-white border-rose-200 shadow-sm'
-                : 'bg-stone-50/70 border-stone-200 opacity-75'
-            }`}
+            className="p-5 rounded-2xl border bg-white border-rose-200 shadow-sm transition-all"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -780,16 +1160,11 @@ export const PromosView: React.FC = () => {
                 </span>
               </div>
 
-              <button
-                onClick={() => toggleCoupon(coupon.code)}
-                className={`text-xs font-extrabold px-3 py-1 rounded-full cursor-pointer transition-all ${
-                  coupon.active
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-stone-200 text-stone-600'
-                }`}
-              >
-                {coupon.active ? 'Aktif' : 'Nonaktif'}
-              </button>
+              {/* Status Badge - Static without toggle switch */}
+              <span className="text-xs font-bold px-3 py-1 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200 inline-flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span>Kupon Aktif</span>
+              </span>
             </div>
 
             <div className="mt-3 space-y-1 text-xs">
@@ -802,7 +1177,9 @@ export const PromosView: React.FC = () => {
             <div className="mt-3 pt-3 border-t border-stone-100">
               <div className="flex justify-between text-[11px] font-bold text-stone-500 mb-1">
                 <span>Penggunaan Kupon</span>
-                <span>{coupon.used} / {coupon.quota} ({Math.round((coupon.used / coupon.quota) * 100)}%)</span>
+                <span>
+                  {coupon.used} / {coupon.quota} ({Math.round((coupon.used / coupon.quota) * 100)}%)
+                </span>
               </div>
               <div className="w-full h-2 rounded-full bg-stone-100 overflow-hidden">
                 <div
@@ -814,6 +1191,56 @@ export const PromosView: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Sortable Coupons Table */}
+      <div className="pt-4 border-t border-stone-100 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-black text-stone-800 uppercase tracking-wider">
+            Tabel Daftar Seluruh Voucher & Kupon ({coupons.length})
+          </span>
+          <span className="text-[11px] text-stone-400">Klik header kolom untuk mengurutkan data (Asc / Desc)</span>
+        </div>
+
+        <div className="overflow-x-auto border border-stone-200 rounded-2xl">
+          <table className="w-full text-left text-xs text-stone-600">
+            <thead className="bg-stone-50 text-stone-700 font-extrabold uppercase text-[10px] tracking-wider border-b border-stone-200">
+              <tr>
+                <TableSortHeader label="Kode Kupon" field="code" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+                <TableSortHeader label="Jenis Diskon" field="discount" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+                <TableSortHeader label="Min. Belanja" field="minSpend" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+                <TableSortHeader label="Penggunaan Kupon" field="used" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+                <TableSortHeader label="Masa Berlaku" field="expiry" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+                <TableSortHeader label="Status Kupon" field="active" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-stone-100">
+              {sortedCoupons.map((c) => (
+                <tr key={c.code} className="hover:bg-rose-50/20 transition-colors">
+                  <td className="py-3 px-4 font-mono font-black text-rose-700">{c.code}</td>
+                  <td className="py-3 px-4 font-bold text-stone-800">{c.discount}</td>
+                  <td className="py-3 px-4 text-stone-500 font-medium">{c.minSpend}</td>
+                  <td className="py-3 px-4 font-bold">
+                    {c.used} / {c.quota} ({Math.round((c.used / c.quota) * 100)}%)
+                  </td>
+                  <td className="py-3 px-4 text-stone-600">{c.expiry}</td>
+                  <td className="py-3 px-4">
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Aktif
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Create Coupon Modal Form */}
+      <CreateCouponModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onAddCoupon={handleAddCoupon}
+      />
     </div>
   );
 };
@@ -1681,6 +2108,20 @@ export const AddProductModal: React.FC<{
   const [leadDays, setLeadDays] = useState('2');
   const [isReadyStock, setIsReadyStock] = useState(true);
 
+  // Master Bahan Baku database reference
+  const MASTER_RAW_MATERIALS = [
+    { name: 'Batang Kawat Bulu Utama (6mm)', unit: 'Batang', costPerUnit: 350 },
+    { name: 'Kawat Batang Penyangga No. 18', unit: 'Batang', costPerUnit: 500 },
+    { name: 'Cellophane Korean Matte Waterproof', unit: 'Lembar', costPerUnit: 4500 },
+    { name: 'Pita Satin Mewah Burgundy 2.5cm', unit: 'Meter', costPerUnit: 2200 },
+    { name: 'Pita Organza Korea Glossy', unit: 'Meter', costPerUnit: 2500 },
+    { name: 'Boneka Wisuda Mini Ber-toga 10cm', unit: 'Pcs', costPerUnit: 7400 },
+    { name: 'Fairy Light LED Kawat Warm White', unit: 'Pcs', costPerUnit: 6500 },
+    { name: 'Dry Floral Foam Oasis', unit: 'Blok', costPerUnit: 4000 },
+    { name: 'Kartu Ucapan Gold Foil + Amplop', unit: 'Pcs', costPerUnit: 1500 },
+    { name: 'Box Packaging Corrugated Tebal', unit: 'Pcs', costPerUnit: 7500 },
+  ];
+
   // BOM Recipe Ingredients for 1 product
   interface IngredientItem {
     id: string;
@@ -1700,14 +2141,28 @@ export const AddProductModal: React.FC<{
   if (!isOpen) return null;
 
   const handleAddIngredient = () => {
+    const defaultMat = MASTER_RAW_MATERIALS[ingredients.length % MASTER_RAW_MATERIALS.length];
     const newItem: IngredientItem = {
       id: `ing-${Date.now()}`,
-      name: 'Bahan Tambahan Kawat/Aksesoris',
+      name: defaultMat.name,
       qty: 1,
-      unit: 'Pcs',
-      costPerUnit: 1000,
+      unit: defaultMat.unit,
+      costPerUnit: defaultMat.costPerUnit,
     };
     setIngredients([...ingredients, newItem]);
+  };
+
+  const handleMaterialChange = (id: string, matName: string) => {
+    const found = MASTER_RAW_MATERIALS.find((m) => m.name === matName);
+    if (found) {
+      setIngredients(
+        ingredients.map((item) =>
+          item.id === id ? { ...item, name: found.name, unit: found.unit, costPerUnit: found.costPerUnit } : item
+        )
+      );
+    } else {
+      handleUpdateIngredient(id, 'name', matName);
+    }
   };
 
   const handleRemoveIngredient = (id: string) => {
@@ -1814,10 +2269,10 @@ export const AddProductModal: React.FC<{
               <table className="w-full text-left text-xs">
                 <thead className="bg-stone-50 text-stone-600 font-extrabold text-[10px] uppercase border-b border-stone-200">
                   <tr>
-                    <th className="py-2 px-3">Nama Bahan</th>
+                    <th className="py-2 px-3">Nama Bahan Baku</th>
                     <th className="py-2 px-2 w-16">Jumlah</th>
                     <th className="py-2 px-2 w-20">Satuan</th>
-                    <th className="py-2 px-2 w-24">Harga/Unit</th>
+                    <th className="py-2 px-2 w-28">Harga/Unit (Terkunci)</th>
                     <th className="py-2 px-3 w-28">Subtotal HPP</th>
                     <th className="py-2 px-2 text-center w-8">Aksi</th>
                   </tr>
@@ -1828,33 +2283,43 @@ export const AddProductModal: React.FC<{
                     return (
                       <tr key={ing.id}>
                         <td className="py-1.5 px-3">
-                          <input
-                            type="text"
+                          <select
                             value={ing.name}
-                            onChange={(e) => handleUpdateIngredient(ing.id, 'name', e.target.value)}
-                            className="w-full font-semibold text-stone-800 bg-transparent border-b border-transparent focus:border-rose-400 focus:outline-none text-[11px]"
-                          />
+                            onChange={(e) => handleMaterialChange(ing.id, e.target.value)}
+                            className="w-full font-semibold text-stone-800 bg-transparent border border-stone-200 rounded-lg p-1 focus:border-rose-400 focus:outline-none text-[11px]"
+                          >
+                            {MASTER_RAW_MATERIALS.map((m) => (
+                              <option key={m.name} value={m.name}>
+                                {m.name} ({m.unit} - Rp {m.costPerUnit.toLocaleString('id-ID')})
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td className="py-1.5 px-2">
                           <input
                             type="number"
+                            min="0.1"
+                            step="any"
                             value={ing.qty}
                             onChange={(e) =>
                               handleUpdateIngredient(ing.id, 'qty', parseFloat(e.target.value) || 0)
                             }
-                            className="w-14 p-1 bg-stone-50 border border-stone-200 rounded text-center font-bold text-[11px]"
+                            className="w-16 p-1 bg-white border border-stone-200 rounded text-center font-bold text-[11px] focus:ring-1 focus:ring-rose-500"
                           />
                         </td>
                         <td className="py-1.5 px-2 text-stone-500 font-medium">{ing.unit}</td>
+                        {/* Harga/Unit is disabled so master price isn't corrupted */}
                         <td className="py-1.5 px-2">
-                          <input
-                            type="number"
-                            value={ing.costPerUnit}
-                            onChange={(e) =>
-                              handleUpdateIngredient(ing.id, 'costPerUnit', parseFloat(e.target.value) || 0)
-                            }
-                            className="w-20 p-1 bg-stone-50 border border-stone-200 rounded font-mono font-bold text-[11px]"
-                          />
+                          <div className="relative flex items-center">
+                            <input
+                              type="number"
+                              disabled
+                              value={ing.costPerUnit}
+                              className="w-24 p-1 bg-stone-100 text-stone-500 border border-stone-200 rounded font-mono font-bold text-[11px] cursor-not-allowed select-none"
+                              title="Harga per unit dikunci dari database Master Bahan Baku (BOM)"
+                            />
+                            <Lock className="w-2.5 h-2.5 text-stone-400 absolute right-1.5 pointer-events-none" />
+                          </div>
                         </td>
                         <td className="py-1.5 px-3 font-bold text-rose-600">
                           Rp {subtotal.toLocaleString('id-ID')}
@@ -1875,11 +2340,17 @@ export const AddProductModal: React.FC<{
               </table>
             </div>
 
-            <div className="flex justify-between items-center text-xs pt-1">
-              <span className="text-stone-500">Total HPP Dihitung Otomatis:</span>
-              <span className="text-sm font-black text-rose-700">
-                Rp {calculatedHpp.toLocaleString('id-ID')}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs pt-1 gap-2">
+              <span className="text-[11px] text-stone-500 flex items-center gap-1">
+                <Lock className="w-3 h-3 text-stone-400" />
+                <span>Harga/Unit dikunci dari database Bahan Baku agar HPP tidak tumpang tindih.</span>
               </span>
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <span className="text-stone-500 font-medium">Total HPP 1 Buket:</span>
+                <span className="text-sm font-black text-rose-700">
+                  Rp {calculatedHpp.toLocaleString('id-ID')}
+                </span>
+              </div>
             </div>
           </div>
 
