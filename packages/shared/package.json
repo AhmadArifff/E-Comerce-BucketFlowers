@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "node -e \"try{require('fs').rmSync('dist',{recursive:true,force:true})}catch(e){}\""
   },
   "dependencies": {
     "zod": "^3.23.8"
