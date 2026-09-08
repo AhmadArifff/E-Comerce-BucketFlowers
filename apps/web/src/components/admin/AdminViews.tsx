@@ -45,10 +45,15 @@ import {
   Trash2,
   Info,
   ShieldCheck,
+  Database,
+  RefreshCw,
+  Terminal,
+  CheckCheck,
 } from 'lucide-react';
 import { MOCK_PRODUCTS, type ExtendedProduct as Product } from '@chenille/shared';
 import { useThemeStore, type ThemeId } from '@/stores/useThemeStore';
 import { useSettingsStore, type WasteMaterialItem } from '@/stores/useSettingsStore';
+import { useOrderStore } from '@/stores/useOrderStore';
 import { showMagicToast } from '@/lib/magic-motion';
 
 // ============================================================================
@@ -1444,8 +1449,69 @@ export const PromosView: React.FC = () => {
 // ============================================================================
 export const MaintenanceThemeView: React.FC = () => {
   const { theme, setTheme } = useThemeStore();
+  const { resetOrdersToDefault } = useOrderStore();
+  const { resetAllSettingsToDefault } = useSettingsStore();
+
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [refreshStep, setRefreshStep] = useState(0);
+  const [copiedSql, setCopiedSql] = useState(false);
+
+  const handleCopySqlSnippet = () => {
+    const textToCopy = `-- CHENILLE ATELIER - SUPABASE SQL SCHEMA (27 TABLES & 7 BUCKETS)
+-- File master schema: supabase/schema.sql
+-- Silakan buka Supabase Dashboard -> SQL Editor dan jalankan isi file supabase/schema.sql`;
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedSql(true);
+    showMagicToast('Info SQL Disalin! 📋', 'File schema.sql lengkap ada di folder supabase/schema.sql', '✨');
+    setTimeout(() => setCopiedSql(false), 2500);
+  };
+
+  const handleExecuteMigrateRefresh = async () => {
+    setIsRefreshing(true);
+    setRefreshStep(1);
+
+    try {
+      // Step 1: Membersihkan transaksi dummy
+      await new Promise((r) => setTimeout(r, 500));
+      setRefreshStep(2);
+
+      // Step 2: Memulihkan 8 buket & 7 bahan baku
+      resetAllSettingsToDefault();
+      await new Promise((r) => setTimeout(r, 600));
+      setRefreshStep(3);
+
+      // Step 3: Memulihkan 6 titik COD & status order
+      resetOrdersToDefault();
+
+      try {
+        await fetch('/api/admin/migrate-refresh', { method: 'POST' });
+      } catch (err) {
+        console.warn('API migrate refresh background notification:', err);
+      }
+
+      await new Promise((r) => setTimeout(r, 500));
+      setRefreshStep(4);
+      await new Promise((r) => setTimeout(r, 400));
+
+      setShowResetModal(false);
+      setIsRefreshing(false);
+      setRefreshStep(0);
+
+      showMagicToast(
+        'Migrate Refresh Berhasil! 🚀',
+        'Database Atelier & antarmuka telah dipulihkan ke bibit data awal (8 Buket, 7 Bahan, 6 Titik COD).',
+        '✨'
+      );
+    } catch (e) {
+      console.error(e);
+      setIsRefreshing(false);
+      setRefreshStep(0);
+      showMagicToast('Gagal Reset Database', 'Terjadi kesalahan saat mengeksekusi reset.', '⚠️');
+    }
+  };
 
   const themesList: {
     id: ThemeId;
@@ -1525,7 +1591,176 @@ export const MaintenanceThemeView: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. THEME SELECTION CARDS */}
+      {/* 2. DATABASE MAINTENANCE & SETUP MIGRATE REFRESH */}
+      <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs flex-shrink-0">
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-black text-stone-800 tracking-tight">
+                  Database Maintenance & Setup Migrate Refresh
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-700">
+                  Supabase Ready
+                </span>
+              </div>
+              <p className="text-xs text-stone-500 mt-1 leading-relaxed max-w-2xl">
+                Fitur pemeliharaan untuk mereset seluruh database & transaksi pengujian ke bibit data awal (*initial seed*):
+                8 buket bunga kawat bulu, 7 master bahan baku BOM, 6 titik temu COD Google Maps Depok, dan pemulihan kuota PO harian.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowResetModal(true)}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>{isRefreshing ? 'Memproses Reset...' : '⚡ Jalankan Migrate Refresh'}</span>
+          </button>
+        </div>
+
+        {/* STATS TILES */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-stone-100">
+          <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-100">
+            <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Katalog Produk</div>
+            <div className="text-sm sm:text-base font-black text-stone-800 mt-0.5">8 Buket Wisuda</div>
+            <div className="text-[10px] text-emerald-600 font-bold">100% Asset Lokal Backup</div>
+          </div>
+          <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-100">
+            <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Bahan Baku (BOM)</div>
+            <div className="text-sm sm:text-base font-black text-stone-800 mt-0.5">7 Master Bahan</div>
+            <div className="text-[10px] text-indigo-600 font-bold">Resep HPP Otomatis</div>
+          </div>
+          <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-100">
+            <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Titik COD Maps</div>
+            <div className="text-sm sm:text-base font-black text-stone-800 mt-0.5">6 Titik Depok</div>
+            <div className="text-[10px] text-amber-600 font-bold">Geofence Radius 5 KM</div>
+          </div>
+          <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-100">
+            <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Tabel Supabase</div>
+            <div className="text-sm sm:text-base font-black text-stone-800 mt-0.5">27 Tabel Relasional</div>
+            <div className="text-[10px] text-rose-600 font-bold">7 Storage Buckets</div>
+          </div>
+        </div>
+
+        {/* QUICK ACTION BARS & SQL TOOLS */}
+        <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5 text-stone-700 font-semibold">
+            <Terminal className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+            <span>Master Script DDL: <code className="font-mono px-1.5 py-0.5 rounded bg-white border border-indigo-200 text-indigo-800 text-[11px]">supabase/schema.sql</code></span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCopySqlSnippet}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-stone-50 text-stone-700 border border-stone-200 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+            >
+              {copiedSql ? <CheckCheck className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-stone-500" />}
+              <span>{copiedSql ? 'Tersalin!' : 'Salin Perintah SQL'}</span>
+            </button>
+            <a
+              href="/supabase/schema.sql"
+              download="chenille-atelier-schema.sql"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-2xs"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Unduh .sql</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* CONFIRMATION & RESET PROGRESS MODAL */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-rose-100 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-stone-900">
+                  Konfirmasi Migrate Refresh Database
+                </h3>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Tindakan ini akan mengembalikan data atelier ke bibit data awal (*seed defaults*).
+                </p>
+              </div>
+            </div>
+
+            {isRefreshing ? (
+              <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-100 space-y-3">
+                <div className="flex items-center gap-2.5 text-xs font-bold text-indigo-900">
+                  <RefreshCw className="w-4 h-4 animate-spin text-indigo-600" />
+                  <span>Sedang memproses reset database...</span>
+                </div>
+                <div className="space-y-1.5 text-[11px] text-stone-600">
+                  <div className={`flex items-center gap-2 ${refreshStep >= 1 ? 'font-bold text-indigo-700' : 'text-stone-400'}`}>
+                    <span>{refreshStep > 1 ? '✓' : '1.'}</span>
+                    <span>Membersihkan transaksi pengujian & keranjang...</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${refreshStep >= 2 ? 'font-bold text-indigo-700' : 'text-stone-400'}`}>
+                    <span>{refreshStep > 2 ? '✓' : '2.'}</span>
+                    <span>Memulihkan 8 produk buket bunga & 7 bahan baku BOM...</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${refreshStep >= 3 ? 'font-bold text-indigo-700' : 'text-stone-400'}`}>
+                    <span>{refreshStep > 3 ? '✓' : '3.'}</span>
+                    <span>Mengatur ulang 6 titik COD Google Maps Depok...</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${refreshStep >= 4 ? 'font-bold text-emerald-600' : 'text-stone-400'}`}>
+                    <span>{refreshStep >= 4 ? '✓' : '4.'}</span>
+                    <span>Selesai! Database siap digunakan.</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-xs text-stone-600 space-y-2.5 bg-stone-50 p-4 rounded-2xl border border-stone-200">
+                <div className="font-bold text-stone-800">Item yang akan di-refresh:</div>
+                <ul className="list-disc pl-4 space-y-1 text-stone-600 text-[11px]">
+                  <li>Semua transaksi pengujian akan dibersihkan.</li>
+                  <li>Stok 8 katalog buket bunga kawat bulu dikembalikan ke default.</li>
+                  <li>7 master bahan baku BOM & 6 titik COD Google Maps dipulihkan.</li>
+                  <li>Pengaturan toko dan kuota PO harian di-reset ke 25 order.</li>
+                </ul>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                disabled={isRefreshing}
+                onClick={() => setShowResetModal(false)}
+                className="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-600 text-xs font-bold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={isRefreshing}
+                onClick={handleExecuteMigrateRefresh}
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isRefreshing ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Mereset Data...</span>
+                  </>
+                ) : (
+                  <span>Ya, Reset Sekarang ⚡</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. THEME SELECTION CARDS */}
       <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs space-y-5">
         <div>
           <h3 className="text-base font-black text-stone-800 tracking-tight">

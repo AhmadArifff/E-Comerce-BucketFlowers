@@ -17,6 +17,7 @@ interface OrderState {
   addNewOrder: (order: MockOrder) => void;
   addWarrantyClaim: (claim: Omit<WarrantyClaim, 'id' | 'createdAt' | 'status'>) => WarrantyClaim;
   updateWarrantyClaimStatus: (claimId: string, status: WarrantyStatus, adminNote?: string) => void;
+  resetOrdersToDefault: () => void;
 }
 
 export const useOrderStore = create<OrderState>()(
@@ -116,6 +117,14 @@ export const useOrderStore = create<OrderState>()(
             return claim;
           }),
         }));
+      },
+
+      resetOrdersToDefault: () => {
+        set({
+          orders: MOCK_ORDERS,
+          activeOrderId: 'ord-101',
+          warrantyClaims: MOCK_WARRANTY_CLAIMS,
+        });
       },
     }),
     {

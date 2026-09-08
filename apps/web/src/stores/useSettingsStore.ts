@@ -138,6 +138,7 @@ interface SettingsState {
   updateCodPoint: (id: string, updates: Partial<CodPoint>) => void;
   deleteCodPoint: (id: string) => void;
   resetCodPointsToDefault: () => void;
+  resetAllSettingsToDefault: () => void;
 }
 
 const DEFAULT_WASTE_MATERIALS: WasteMaterialItem[] = [
@@ -640,6 +641,20 @@ export const useSettingsStore = create<SettingsState>()(
 
       resetCodPointsToDefault: () => {
         set({ codPoints: DEFAULT_COD_POINTS });
+      },
+
+      resetAllSettingsToDefault: () => {
+        set({
+          storeName: 'Chenille Atelier Depok',
+          tagline: 'Buket Bunga Kawat Bulu Chenille Premium & Graduation Florist',
+          waNumber: '+62 812-9928-1192',
+          studioAddress: 'Jl. Margonda Raya No. 120, Beji, Kota Depok, Jawa Barat 16424',
+          dailyQuota: 25,
+          wasteMaterials: DEFAULT_WASTE_MATERIALS,
+          rawMaterials: DEFAULT_RAW_MATERIALS,
+          procurementOrders: DEFAULT_PROCUREMENT_ORDERS,
+          codPoints: DEFAULT_COD_POINTS,
+        });
       },
     }),
     {
