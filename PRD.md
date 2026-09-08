@@ -983,9 +983,9 @@ Framework agen telah dilengkapi dengan official Supabase Agent Skills yang terpa
   1. `supabase`: Best practices produk Supabase (Database, Auth, Storage, Edge Functions, Realtime, Logging, client SDK).
   2. `supabase-postgres-best-practices`: Aturan baku arsitektur skema PostgreSQL, penulisan migrasi, Row Level Security (RLS) policies, indexing query optimasi, dan pencegahan connection leak.
 
-### 8.2 Skema Prisma ORM (Dual URL Configuration & Models)
+### 8.2 Skema Prisma ORM (Dual URL Configuration & 27 Models)
 
-Skema database tersimpan di `apps/api/prisma/schema.prisma` dan memanfaatkan fitur **Dual URL Connection**:
+Skema database tersimpan di `apps/api/prisma/schema.prisma` dan memanfaatkan fitur **Dual URL Connection Strategy** (PgBouncer Pooler + Direct Session Migration) yang selaras dengan seluruh antarmuka yang telah dibangun:
 
 ```prisma
 datasource db {
@@ -997,6 +997,10 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
+
+// ============================================================================
+// ENUMS
+// ============================================================================
 
 enum Role {
   SUPER_ADMIN
@@ -1024,199 +1028,20 @@ enum OrderStepStatus {
   CANCELLED
 }
 
-// ------------------------------------------------------
-// USER & CUSTOMER MEMBERSHIP
-// ------------------------------------------------------
-model User {
-  id            String          @id @default(uuid())
-  email         String          @unique
-  phone         String          @unique
-  name          String
-  password_hash String
-  role          Role            @default(CUSTOMER_MEMBER)
-  avatar_emoji  String?         @default("🌸")
-  avatar_url    String?
-  flower_points Int             @default(50)
-  created_at    DateTime        @default(now())
-  updated_at    DateTime        @updatedAt
-
-  orders        Order[]
-  addresses     CustomerAddress[]
-  chat_sessions ChatSession[]
+enum PaymentGatewayType {
+  MIDTRANS
+  BCA_MANUAL
+  COD_CASH
 }
 
-model CustomerAddress {
-  id            String   @id @default(uuid())
-  user_id       String
-  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  label         String   // e.g. "Kampus UI", "Kost Margonda", "Rumah"
-  recipient     String
-  phone         String
-  full_address  String
-  postal_code   String?
-  is_primary    Boolean  @default(false)
-  created_at    DateTime @default(now())
+enum PaymentStatus {
+  WAITING_PAYMENT
+  PAYMENT_CONFIRMED
+  PAID_ON_COD
+  FAILED
+  REFUNDED
 }
 
-// ------------------------------------------------------
-// PRODUCT, BILL OF MATERIALS (BOM) & INVENTORY
-// ------------------------------------------------------
-model Product {
-  id             String          @id @default(uuid())
-  name           String
-  slug           String          @unique
-  category       String          // Wisuda, Romantis, Pastel, Karakter, Mini Pot
-  price          Decimal         @db.Decimal(12, 2)
-  discount_price Decimal?        @db.Decimal(12, 2)
-  raw_cost_hpp   Decimal         @db.Decimal(12, 2) // Total HPP dari BOM
-  stock          Int             @default(10)
-  po_lead_days   Int             @default(2)
-  click_count    Int             @default(0)
-  is_ready_stock Boolean         @default(true)
-  is_active      Boolean         @default(true)
-  created_at     DateTime        @default(now())
-  updated_at     DateTime        @updatedAt
-
-  bom_items      BillOfMaterial[]
-  order_items    OrderItem[]
-}
-
-model RawMaterial {
-  id             String          @id @default(uuid())
-  name           String          // e.g. "Kawat Bulu Pink Pastel", "Cellophane White Border"
-  category       String          // KAWAT_BULU, CELLOPHANE, PITA, ACCESSORY
-  unit           String          // batang, lembar, meter, pcs
-  unit_price     Decimal         @db.Decimal(10, 2)
-  stock_quantity Int             @default(500)
-  created_at     DateTime        @default(now())
-
-  bom_recipes    BillOfMaterial[]
-}
-
-model BillOfMaterial {
-  id              String       @id @default(uuid())
-  product_id      String
-  product         Product      @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  raw_material_id String
-  raw_material    RawMaterial  @relation(fields: [raw_material_id], references: [id])
-  quantity_needed Int          // Batang kawat / lembar kertas yang dibutuhkan
-  subtotal_cost   Decimal      @db.Decimal(10, 2)
-}
-
-// ------------------------------------------------------
-// GOOGLE MAPS COD POINTS & GEOFENCING
-// ------------------------------------------------------
-model CodMeetingPoint {
-  id              String   @id @default(uuid())
-  name            String   // e.g. "Kampus UI Depok (Gerbatama & Rotunda)"
-  full_address    String
-  google_maps_url String   // Link resmi maps.google.com/?q=...
-  embed_query     String?  // Kata kunci pencarian embed iframe
-  distance_km     Decimal  @db.Decimal(4, 1)
-  delivery_notes  String?  // "Lobby utama samping Starbucks"
-  is_active       Boolean  @default(true)
-  created_at      DateTime @default(now())
-
-  orders          Order[]
-}
-
-// ------------------------------------------------------
-// ORDERS, TRACKING & TRANSACTIONS
-// ------------------------------------------------------
-model Order {
-  id                 String           @id @default(uuid())
-  invoice_number     String           @unique // e.g. INV/20260907/001
-  user_id            String?
-  user               User?            @relation(fields: [user_id], references: [id])
-  guest_name         String
-  guest_phone        String
-  guest_email        String?
-  
-  fulfillment_type   OrderFulfillment @default(COURIER_EXPEDITION)
-  status             OrderStepStatus  @default(PAYMENT_CONFIRMED)
-  
-  subtotal           Decimal          @db.Decimal(12, 2)
-  shipping_cost      Decimal          @default(0) @db.Decimal(12, 2)
-  discount_amount    Decimal          @default(0) @db.Decimal(12, 2)
-  total_amount       Decimal          @db.Decimal(12, 2)
-  total_hpp_cost     Decimal          @db.Decimal(12, 2) // HPP gabungan untuk laporan laba
-  net_profit         Decimal          @db.Decimal(12, 2) // total_amount - total_hpp_cost
-  
-  // Midtrans Payment
-  payment_method     String           @default("QRIS Midtrans Snap")
-  is_paid            Boolean          @default(true)
-  paid_at            DateTime?
-  
-  // Logistics / COD
-  cod_point_id       String?
-  cod_point          CodMeetingPoint? @relation(fields: [cod_point_id], references: [id])
-  shipping_courier   String?          // Biteship: J&T / SiCepat
-  shipping_awb       String?          // Resi pengiriman
-  shipping_address   String?
-  
-  created_at         DateTime         @default(now())
-  updated_at         DateTime         @updatedAt
-
-  items              OrderItem[]
-  claims             WarrantyClaim[]
-}
-
-model OrderItem {
-  id         String   @id @default(uuid())
-  order_id   String
-  order      Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
-  product_id String
-  product    Product  @relation(fields: [product_id], references: [id])
-  quantity   Int
-  unit_price Decimal  @db.Decimal(12, 2)
-  item_hpp   Decimal  @db.Decimal(12, 2)
-  notes      String?  // Kustomisasi kartu ucapan
-}
-
-// ------------------------------------------------------
-// IN-SYSTEM LIVE WEB CHAT
-// ------------------------------------------------------
-model ChatSession {
-  id              String        @id @default(uuid())
-  user_id         String?
-  user            User?         @relation(fields: [user_id], references: [id])
-  session_token   String        @unique
-  customer_name   String
-  customer_phone  String?
-  is_escalated_wa Boolean       @default(false)
-  created_at      DateTime      @default(now())
-  updated_at      DateTime      @updatedAt
-
-  messages        ChatMessage[]
-}
-
-model ChatMessage {
-  id         String      @id @default(uuid())
-  session_id String
-  session    ChatSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
-  sender     String      // "CUSTOMER" | "BOT" | "FLORIST_ADMIN"
-  text       String
-  sent_at    DateTime    @default(now())
-}
-
-// ------------------------------------------------------
-// STORE SETTINGS & MAINTENANCE
-// ------------------------------------------------------
-model StoreSetting {
-  id                  String   @id @default("atelier_setting")
-  active_theme        ThemeKey @default(TEMA_A_KOREAN_PASTEL)
-  is_maintenance_mode Boolean  @default(false)
-  maintenance_title   String   @default("Atelier Chenille Sedang Istirahat Produksi")
-  maintenance_desc    String   @default("Kapasitas buket wisuda hari ini telah penuh (10/10 slot).")
-  daily_po_limit      Int      @default(10)
-  official_whatsapp   String   @default("081234567890")
-  atelier_address     String   @default("Jl. Margonda Raya No. 108 Depok")
-  updated_at          DateTime @updatedAt
-}
-
-// ------------------------------------------------------
-// WARRANTY CLAIMS & COMPLAINTS
-// ------------------------------------------------------
 enum WarrantyStatus {
   SUBMITTED
   UNDER_REVIEW
@@ -1232,96 +1057,95 @@ enum IssueCategory {
   PACKAGE_LOST_EXPEDITION
 }
 
-model WarrantyClaim {
-  id              String         @id @default(uuid())
-  order_id        String
-  order           Order          @relation(fields: [order_id], references: [id], onDelete: Cascade)
-  customer_phone  String
-  issue_category  IssueCategory  @default(TRANSIT_DAMAGE_CRUSHED)
-  description     String
-  video_proof_url String?        // Link video unboxing tanpa jeda
-  photo_proof_url String?
-  status          WarrantyStatus @default(SUBMITTED)
-  admin_notes     String?
-  replacement_awb String?        // Nomor resi pengiriman buket pengganti 100% gratis
-  created_at      DateTime       @default(now())
-  updated_at      DateTime       @updatedAt
+enum RawCategory {
+  KAWAT_BULU
+  BATANG_KAWAT
+  CELLOPHANE
+  PITA
+  BONEKA_AKSESORIS
+  FLORAL_FOAM
+  LAINNYA
 }
 
-// ------------------------------------------------------
-// OPERATIONAL FEATURE TOGGLES & CUSTOMER FAQ
-// ------------------------------------------------------
-model FeatureToggle {
-  key          String   @id // e.g. "toggle_free_cod_radius"
-  name         String
-  description  String
-  is_enabled   Boolean  @default(true)
-  updated_at   DateTime @updatedAt
+enum ProcurementStatus {
+  ORDERED
+  SHIPPED
+  ARRIVED
+  CANCELLED
 }
 
-model CustomerFaq {
-  id         String   @id @default(uuid())
-  category   String   // "INVOICE_LOST", "FLOWER_CARE", "PO_SCHEDULE", "COD_RULES"
-  question   String
-  answer     String
-  sort_order Int      @default(0)
-  is_active  Boolean  @default(true)
-  created_at DateTime @default(now())
+enum WasteReason {
+  LEMBAP_BERKARAT
+  KERTAS_LECEK_ROBEK
+  CACAT_PRODUKSI
+  KADALUARSA_SIMPAN
 }
 
-// ------------------------------------------------------
-// PRODUCT IMAGES & MEDIA GALLERY (Section 7.16)
-// ------------------------------------------------------
-model ProductImage {
-  id           String   @id @default(uuid())
-  product_id   String
-  product      Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  url          String   // Supabase Storage CDN URL
-  thumb_url    String?  // 200x200 thumbnail
-  medium_url   String?  // 600x600 medium
-  alt_text     String?  // SEO alt text
-  blur_hash    String?  // Base64 blur placeholder (10x10px)
-  sort_order   Int      @default(0)
-  is_primary   Boolean  @default(false)
-  created_at   DateTime @default(now())
-}
-
-// ------------------------------------------------------
-// COUPON & DISCOUNT SYSTEM (Section 7.17)
-// ------------------------------------------------------
 enum CouponType {
   PERCENT
   FIXED_AMOUNT
+  FREE_SHIPPING
 }
 
-model Coupon {
-  id            String     @id @default(uuid())
-  code          String     @unique // e.g. "WISUDA15", "WELCOME10K"
-  type          CouponType @default(PERCENT)
-  value         Decimal    @db.Decimal(10, 2) // 15.00 (%) atau 10000.00 (Rp)
-  max_discount  Decimal?   @db.Decimal(10, 2) // Cap maksimal potongan (untuk PERCENT)
-  min_purchase  Decimal    @default(0) @db.Decimal(10, 2) // Minimum subtotal
-  max_uses      Int        @default(100)  // Kuota pemakaian total
-  usage_count   Int        @default(0)    // Jumlah sudah dipakai
-  member_only   Boolean    @default(false) // Hanya untuk registered member
-  is_active     Boolean    @default(true)
-  valid_from    DateTime   @default(now())
-  valid_until   DateTime
-  created_at    DateTime   @default(now())
-  updated_at    DateTime   @updatedAt
-
-  orders        Order[]    // Relasi ke order yang memakai kupon ini
-}
-
-// ------------------------------------------------------
-// FLOWER POINTS LOYALTY TRANSACTION LOG (Section 7.17)
-// ------------------------------------------------------
 enum PointTransactionType {
-  EARN       // Dapat poin dari transaksi selesai
-  REDEEM     // Tukar poin jadi diskon
-  BONUS      // Bonus welcome / event
-  EXPIRE     // Poin kedaluwarsa (reserved, saat ini lifetime)
-  ADJUSTMENT // Koreksi manual oleh admin
+  EARN
+  REDEEM
+  BONUS
+  EXPIRE
+  ADJUSTMENT
+}
+
+enum CustomOptionCategory {
+  FLOWER_HEAD        // Step 1: Tulip, Mawar, Matahari, Lavender
+  STEM_COLOR         // Step 2: Pastel Pink, Lavender, Sky Blue, Sage
+  CELLOPHANE_WRAP    // Step 3: Korean Two-Tone, Lilac Velvet, Clean Oat
+  ACCESSORY          // Step 4: Lampu LED Fairy, Boneka Toga Mini, Kartu
+  RIBBON_STYLE       // Step 5 (Tambahan): Satin Burgundy, Organza, Chiffon, Tali Rami
+  PACKAGING_BOX      // Step 6 (Tambahan): Tas Mika Transparan, Box Jendela Mika, Pot Keramik
+  GREETING_SEAL      // Step 7 (Tambahan): Kartu Gold Foil, Akrilik Bening, Wax Seal Stamp
+}
+
+// ============================================================================
+// 1. USERS, CUSTOMER MEMBERSHIP & AUTH
+// ============================================================================
+
+model User {
+  id                 String                    @id @default(uuid())
+  email              String                    @unique
+  phone              String                    @unique
+  name               String
+  password_hash      String
+  role               Role                      @default(CUSTOMER_MEMBER)
+  avatar_emoji       String?                   @default("🌸")
+  avatar_url         String?                   // URL Supabase Storage
+  flower_points      Int                       @default(50)
+  created_at         DateTime                  @default(now())
+  updated_at         DateTime                  @updatedAt
+
+  orders             Order[]
+  addresses          CustomerAddress[]
+  point_transactions FlowerPointTransaction[]
+  chat_sessions      ChatSession[]
+  reviews            ProductReview[]
+  saved_designs      SavedCustomDesign[]
+
+  @@index([email])
+  @@index([phone])
+}
+
+model CustomerAddress {
+  id           String   @id @default(uuid())
+  user_id      String
+  user         User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  label        String   // "Kampus UI Depok", "Kost Beji", "Rumah"
+  recipient    String
+  phone        String
+  full_address String
+  postal_code  String?
+  is_primary   Boolean  @default(false)
+  created_at   DateTime @default(now())
+
+  @@index([user_id])
 }
 
 model FlowerPointTransaction {
@@ -1329,30 +1153,615 @@ model FlowerPointTransaction {
   user_id    String
   user       User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
   type       PointTransactionType
-  points     Int                  // Positif = tambah, negatif = kurangi
-  balance    Int                  // Saldo poin setelah transaksi ini
-  order_id   String?              // Referensi order (jika EARN/REDEEM)
-  note       String?              // "Pembelian INV/20260907/001" atau "Redeem 20 poin"
+  points     Int                  // Positif = bertambah, negatif = ditukar
+  balance    Int                  // Saldo poin setelah transaksi
+  order_id   String?
+  note       String?
   created_at DateTime             @default(now())
+
+  @@index([user_id])
 }
 
-// ------------------------------------------------------
-// OTP VERIFICATION (Section 7.15 - Guest Tracking)
-// ------------------------------------------------------
 model OtpVerification {
-  id           String   @id @default(uuid())
-  phone        String
-  otp_hash     String   // bcrypt hash dari OTP 6 digit
-  attempts     Int      @default(0) // Max 5 attempts
-  is_verified  Boolean  @default(false)
-  expires_at   DateTime // now() + 5 minutes
-  created_at   DateTime @default(now())
+  id          String   @id @default(uuid())
+  phone       String
+  otp_hash    String
+  attempts    Int      @default(0)
+  is_verified Boolean  @default(false)
+  expires_at  DateTime
+  created_at  DateTime @default(now())
 
   @@index([phone, expires_at])
 }
+
+// ============================================================================
+// 2. PRODUCT CATALOG, IMAGES & ANALYTICS
+// ============================================================================
+
+model Product {
+  id                String             @id @default(uuid())
+  name              String
+  slug              String             @unique
+  category          String             // Wisuda, Romantis, Pastel, Karakter, Mini Pot
+  price             Decimal            @db.Decimal(12, 2)
+  discount_price    Decimal?           @db.Decimal(12, 2)
+  raw_cost_hpp      Decimal            @db.Decimal(12, 2) // HPP gabungan dari BOM
+  stock             Int                @default(10)
+  po_lead_days      Int                @default(2)
+  click_count       Int                @default(0)
+  is_ready_stock    Boolean            @default(true)
+  is_active         Boolean            @default(true)
+  badge             String?            // "Terlaris Wisuda", "Trending Korea"
+  rating            Decimal            @default(4.9) @db.Decimal(3, 2)
+  review_count      Int                @default(0)
+  description       String             @db.Text
+  theme_suitability String[]           // ["tema-a", "tema-b", "tema-c"]
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @updatedAt
+
+  images            ProductImage[]
+  bom_recipes       BillOfMaterial[]
+  order_items       OrderItem[]
+  reviews           ProductReview[]
+  click_logs        ProductClickLog[]
+
+  @@index([category])
+  @@index([is_active])
+}
+
+model ProductImage {
+  id          String   @id @default(uuid())
+  product_id  String
+  product     Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  url         String   // Supabase Storage CDN URL atau local backup fallback
+  thumb_url   String?
+  medium_url  String?
+  alt_text    String?
+  sort_order  Int      @default(0)
+  is_primary  Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  @@index([product_id])
+}
+
+model ProductClickLog {
+  id            String   @id @default(uuid())
+  product_id    String
+  product       Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  ip_address    String?
+  session_token String?
+  user_agent    String?
+  referrer      String?
+  clicked_at    DateTime @default(now())
+
+  @@index([product_id, clicked_at])
+}
+
+model ProductReview {
+  id          String   @id @default(uuid())
+  product_id  String
+  product     Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  user_id     String?
+  user        User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  customer_name String
+  rating      Int      @default(5)
+  comment     String   @db.Text
+  photo_url   String?  // Foto lookbook pelanggan saat wisuda
+  occasion    String?  // "Wisuda UI Depok", "Anniversary", "Sidang Skripsi"
+  is_featured Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  @@index([product_id])
+}
+
+// ============================================================================
+// 3. CUSTOM STUDIO INTERAKTIF
+// ============================================================================
+
+model CustomStudioOption {
+  id              String               @id @default(uuid())
+  category        CustomOptionCategory
+  name            String
+  extra_price     Decimal              @default(0) @db.Decimal(10, 2)
+  color_hex       String?
+  image_url       String?
+  raw_material_id String?
+  raw_material    RawMaterial?         @relation(fields: [raw_material_id], references: [id], onDelete: SetNull)
+  is_active       Boolean              @default(true)
+  sort_order      Int                  @default(0)
+
+  @@index([category, is_active])
+}
+
+model SavedCustomDesign {
+  id                  String   @id @default(uuid())
+  user_id             String?
+  user                User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  session_token       String?
+  flower_name         String   // Tulip, Mawar, Matahari, Lavender
+  wire_color          String   // Pastel Pink, Lavender Lilac, Sky Blue, Matcha
+  cellophane_type     String   // Korean Two-Tone, Lilac Velvet, Clean Oat
+  accessory_name      String?  // LED, Boneka Toga Mini
+  ribbon_type         String?  // Satin Burgundy, Organza Transparan
+  packaging_type      String?  // Tas Mika, Box Jendela Mika
+  greeting_card_text  String?  @db.Text
+  estimated_total     Decimal  @db.Decimal(12, 2)
+  created_at          DateTime @default(now())
+
+  @@index([user_id])
+  @@index([session_token])
+}
+
+// ============================================================================
+// 4. BILL OF MATERIALS (BOM), SUPPLIERS & PROCUREMENT
+// ============================================================================
+
+model SupplierDirectory {
+  id               String             @id @default(uuid())
+  name             String             // "Toko Kawat Bulu Chenille Bandung"
+  pic_name         String?
+  phone            String             // Nomor WhatsApp supplier
+  address          String?
+  marketplace_link String?            // "https://shopee.co.id/..."
+  terms_notes      String?
+  rating           Decimal?           @default(4.9) @db.Decimal(3, 2)
+  is_active        Boolean            @default(true)
+  created_at       DateTime           @default(now())
+
+  raw_materials    RawMaterial[]
+  procurements     ProcurementOrder[]
+}
+
+model RawMaterial {
+  id               String               @id @default(uuid())
+  name             String               // "Kawat Bulu Burgundy 6mm", "Cellophane Matte Gold"
+  category         RawCategory
+  stock            Int                  @default(100)
+  min_stock        Int                  @default(20)
+  unit             String               // Batang, Lembar, Meter, Pcs
+  cost_per_unit    Decimal              @db.Decimal(10, 2)
+  supplier_id      String?
+  supplier         SupplierDirectory?   @relation(fields: [supplier_id], references: [id], onDelete: SetNull)
+  supplier_name    String
+  supplier_contact String
+  supplier_link    String?
+  notes            String?
+  updated_at       DateTime             @updatedAt
+
+  bom_recipes      BillOfMaterial[]
+  procurements     ProcurementOrder[]
+  waste_logs       WasteMaterialLog[]
+  custom_options   CustomStudioOption[]
+
+  @@index([category])
+}
+
+model BillOfMaterial {
+  id              String       @id @default(uuid())
+  product_id      String
+  product         Product      @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  raw_material_id String
+  raw_material    RawMaterial  @relation(fields: [raw_material_id], references: [id], onDelete: Restrict)
+  quantity_needed Int          // Kebutuhan bahan per 1 buket
+  subtotal_cost   Decimal      @db.Decimal(10, 2)
+
+  @@index([product_id])
+  @@index([raw_material_id])
+}
+
+model ProcurementOrder {
+  id                String             @id // e.g. "PO-20260907-01"
+  material_id       String
+  material          RawMaterial        @relation(fields: [material_id], references: [id], onDelete: Restrict)
+  material_name     String
+  supplier_id       String?
+  supplier          SupplierDirectory? @relation(fields: [supplier_id], references: [id], onDelete: SetNull)
+  supplier_name     String
+  supplier_contact  String?
+  supplier_link     String?
+  order_date        DateTime           @default(now())
+  estimated_arrival DateTime           // ETA
+  actual_arrival    DateTime?
+  qty_ordered       Int
+  unit              String
+  cost_per_unit     Decimal            @db.Decimal(10, 2)
+  total_cost        Decimal            @db.Decimal(12, 2)
+  status            ProcurementStatus  @default(ORDERED)
+  tracking_number   String?            // Resi J&T / SiCepat
+  is_stock_added    Boolean            @default(false) // Auto-tambah saat status ARRIVED
+  notes             String?
+  created_at        DateTime           @default(now())
+
+  @@index([material_id])
+  @@index([status])
+}
+
+model WasteMaterialLog {
+  id                String      @id @default(uuid())
+  material_id       String?
+  material          RawMaterial? @relation(fields: [material_id], references: [id], onDelete: SetNull)
+  material_name     String
+  category          RawCategory
+  qty               Int
+  unit              String
+  cost_per_unit     Decimal     @db.Decimal(10, 2)
+  total_loss        Decimal     @db.Decimal(12, 2) // qty * cost_per_unit
+  reason            WasteReason
+  mitigation_action String?
+  reported_at       DateTime    @default(now())
+
+  @@index([category])
+  @@index([reported_at])
+}
+
+// ============================================================================
+// 5. GOOGLE MAPS COD POINTS & GEOFENCING
+// ============================================================================
+
+model CodMeetingPoint {
+  id              String   @id @default(uuid())
+  name            String   // "Kampus UI Depok (Gerbatama & Rotunda)"
+  full_address    String   @db.Text
+  google_maps_url String   @db.Text // https://maps.google.com/?q=-6.3628,106.8315
+  embed_query     String?
+  distance_km     Decimal  @db.Decimal(4, 1)
+  latitude        Decimal  @db.Decimal(10, 7)
+  longitude       Decimal  @db.Decimal(10, 7)
+  delivery_notes  String?  @db.Text
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now())
+
+  orders          Order[]
+
+  @@index([is_active])
+}
+
+// ============================================================================
+// 6. ORDERS, TRANSACTIONS & SHIPPING
+// ============================================================================
+
+model Order {
+  id                    String              @id @default(uuid())
+  invoice_number        String              @unique // INV-20260907-001
+  user_id               String?
+  user                  User?               @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  customer_name         String
+  customer_phone        String
+  customer_email        String?
+  customer_avatar_emoji String?             @default("🌸")
+  
+  fulfillment_type      OrderFulfillment    @default(COURIER_EXPEDITION)
+  status                OrderStepStatus     @default(PAYMENT_CONFIRMED)
+  
+  subtotal              Decimal             @db.Decimal(12, 2)
+  shipping_cost         Decimal             @default(0) @db.Decimal(12, 2)
+  discount_amount       Decimal             @default(0) @db.Decimal(12, 2)
+  admin_fee             Decimal             @default(0) @db.Decimal(12, 2)
+  total_amount          Decimal             @db.Decimal(12, 2)
+  total_hpp_cost        Decimal             @db.Decimal(12, 2) // Total HPP dari BOM
+  net_profit            Decimal             @db.Decimal(12, 2) // total_amount - total_hpp_cost
+  
+  // Payment
+  payment_method        String              @default("midtrans")
+  payment_status        PaymentStatus       @default(WAITING_PAYMENT)
+  paid_at               DateTime?
+  
+  // Logistics & COD
+  cod_point_id          String?
+  cod_point             CodMeetingPoint?    @relation(fields: [cod_point_id], references: [id], onDelete: SetNull)
+  courier_name          String?             // "J&T Express Fragile"
+  tracking_number       String?             // "BTE-88910293"
+  shipping_address      String?             @db.Text
+  cod_meetup_notes      String?             @db.Text
+  greeting_card_notes   String?             @db.Text
+  
+  // Coupon
+  coupon_id             String?
+  coupon                Coupon?             @relation(fields: [coupon_id], references: [id], onDelete: SetNull)
+
+  created_at            DateTime            @default(now())
+  updated_at            DateTime            @updatedAt
+
+  items                 OrderItem[]
+  claims                WarrantyClaim[]
+  payments              PaymentTransaction[]
+
+  @@index([invoice_number])
+  @@index([customer_phone])
+  @@index([status])
+  @@index([created_at])
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  order_id   String
+  order      Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product_id String
+  product    Product  @relation(fields: [product_id], references: [id], onDelete: Restrict)
+  quantity   Int
+  unit_price Decimal  @db.Decimal(12, 2)
+  item_hpp   Decimal  @db.Decimal(12, 2)
+  notes      String?  @db.Text
+
+  @@index([order_id])
+}
+
+model PaymentTransaction {
+  id             String             @id @default(uuid())
+  order_id       String
+  order          Order              @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  gateway        PaymentGatewayType
+  transaction_id String?            // ID Transaksi Midtrans / No Referensi Bank
+  status         PaymentStatus      @default(WAITING_PAYMENT)
+  gross_amount   Decimal            @db.Decimal(12, 2)
+  fee            Decimal            @default(0) @db.Decimal(10, 2)
+  payload_json   Json?              // Raw webhook payload dari Midtrans
+  created_at     DateTime           @default(now())
+
+  @@index([order_id])
+  @@index([transaction_id])
+}
+
+// ============================================================================
+// 7. MARKETING & COUPONS
+// ============================================================================
+
+model Coupon {
+  id           String     @id @default(uuid())
+  code         String     @unique // "WISUDAHEMAT", "LOVECHENILLE"
+  type         CouponType @default(PERCENT)
+  value        Decimal    @db.Decimal(10, 2)
+  max_discount Decimal?   @db.Decimal(10, 2)
+  min_purchase Decimal    @default(0) @db.Decimal(10, 2)
+  quota        Int        @default(100)
+  usage_count  Int        @default(0)
+  is_active    Boolean    @default(true)
+  valid_from   DateTime   @default(now())
+  valid_until  DateTime
+  description  String?
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+
+  orders       Order[]
+
+  @@index([code])
+  @@index([is_active])
+}
+
+// ============================================================================
+// 8. WARRANTY & COMPLAINTS
+// ============================================================================
+
+model WarrantyClaim {
+  id               String         @id @default(uuid())
+  order_id         String
+  order            Order          @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  customer_phone   String
+  issue_category   IssueCategory  @default(TRANSIT_DAMAGE_CRUSHED)
+  description      String         @db.Text
+  video_proof_url  String?        // Video unboxing di Supabase Storage
+  photo_proof_url  String?        // Foto bukti kelopak rusak
+  status           WarrantyStatus @default(SUBMITTED)
+  admin_notes      String?        @db.Text
+  replacement_awb  String?        // Resi buket pengganti 100% gratis
+  replacement_date DateTime?
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+
+  @@index([order_id])
+  @@index([customer_phone])
+  @@index([status])
+}
+
+// ============================================================================
+// 9. IN-SYSTEM LIVE WEB CHAT CS HUB
+// ============================================================================
+
+model ChatSession {
+  id              String        @id @default(uuid())
+  user_id         String?
+  user            User?         @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  session_token   String        @unique
+  customer_name   String
+  customer_phone  String?
+  is_escalated_wa Boolean       @default(false)
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+
+  messages        ChatMessage[]
+
+  @@index([session_token])
+  @@index([is_escalated_wa])
+}
+
+model ChatMessage {
+  id             String      @id @default(uuid())
+  session_id     String
+  session        ChatSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  sender         String      // "CUSTOMER" | "BOT" | "FLORIST_ADMIN"
+  text           String      @db.Text
+  attachment_url String?     // Lampiran gambar kustomisasi buket
+  sent_at        DateTime    @default(now())
+
+  @@index([session_id])
+}
+
+model CannedResponse {
+  id              String   @id @default(uuid())
+  trigger_keyword String
+  title           String
+  message_text    String   @db.Text
+  category        String   // "FAQ", "CUSTOM_ORDER", "DELIVERY", "CARE"
+  sort_order      Int      @default(0)
+  is_active       Boolean  @default(true)
+
+  @@index([trigger_keyword])
+}
+
+// ============================================================================
+// 10. STORE SETTINGS, GATEWAYS & FEATURE TOGGLES
+// ============================================================================
+
+model StoreSetting {
+  id                  String   @id @default("atelier_setting")
+  store_name          String   @default("Chenille Atelier Depok")
+  tagline             String   @default("Buket Bunga Kawat Bulu Chenille Premium & Graduation Florist")
+  official_whatsapp   String   @default("+62 812-9928-1192")
+  studio_address      String   @default("Jl. Margonda Raya No. 120, Beji, Kota Depok, Jawa Barat 16424")
+  daily_po_limit      Int      @default(25)
+  active_theme        ThemeKey @default(TEMA_A_KOREAN_PASTEL)
+  is_maintenance_mode Boolean  @default(false)
+  maintenance_title   String   @default("Atelier Chenille Sedang Istirahat Produksi")
+  maintenance_desc    String   @default("Kapasitas buket wisuda hari ini telah penuh.")
+  updated_at          DateTime @updatedAt
+}
+
+model PaymentGatewayConfig {
+  id               String             @id @default(uuid())
+  gateway_type     PaymentGatewayType @unique
+  is_enabled       Boolean            @default(true)
+  credentials_json Json?              // Menyimpan keys terenkripsi (Client/Server Key Midtrans, No Rek BCA)
+  admin_fee        Decimal            @default(0) @db.Decimal(10, 2)
+  max_distance_km  Decimal?           @db.Decimal(4, 1) // Khusus COD Cash
+  notes            String?            @db.Text
+  updated_at       DateTime           @updatedAt
+}
+
+model FeatureToggle {
+  key         String   @id // "toggle_maintenance", "toggle_free_cod_radius"
+  name        String
+  description String
+  is_enabled  Boolean  @default(true)
+  updated_at  DateTime @updatedAt
+}
+
+model CustomerFaq {
+  id         String   @id @default(uuid())
+  category   String   // "FLOWER_CARE", "COD_RULES", "PO_SCHEDULE", "WARRANTY"
+  question   String
+  answer     String   @db.Text
+  sort_order Int      @default(0)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  @@index([category])
+}
 ```
 
-> **Catatan Relasi Baru:** Model `Product` perlu ditambahkan field `images ProductImage[]`. Model `User` perlu ditambahkan field `point_transactions FlowerPointTransaction[]`. Model `Order` perlu ditambahkan field `coupon_id String?` dan relasi `coupon Coupon? @relation(fields: [coupon_id], references: [id])`.
+---
+
+### 8.3 Spesifikasi Supabase Storage Buckets & Strategi Local Backup Failover
+
+Untuk menjamin ketersediaan media (gambar produk, bukti pembayaran, klaim garansi) dan mencegah broken images jika Supabase Storage di-reset atau mengalami *downtime*, arsitektur menerapkan strategi **Dual-Layer Media Storage**:
+
+#### 1. Daftar 7 Supabase Storage Buckets
+
+| Nama Bucket | Level Privasi | Tipe File yang Diizinkan | Ukuran Maksimal | Fungsi Utama |
+| :--- | :--- | :--- | :--- | :--- |
+| **`product-images`** | **Public** | `image/jpeg`, `image/png`, `image/webp` | 5 MB | Foto katalog produk buket bunga kawat bulu (Cover 1:1, Detail Kelopak, Packaging Box). |
+| **`raw-material-images`** | **Public** | `image/jpeg`, `image/png`, `image/webp` | 3 MB | Foto fisik bahan baku mentah (kawat bulu burgundy, kertas cellophane, pita satin, boneka toga). |
+| **`lookbook-reviews`** | **Public** | `image/jpeg`, `image/png`, `image/webp` | 5 MB | Foto bukti sosial pelanggan wisuda UI, IPB, anniversary untuk modul Lookbook. |
+| **`avatars`** | **Public** | `image/jpeg`, `image/png`, `image/webp` | 2 MB | Foto profil akun admin Rania Azzahra dan member Sarah Amalia. |
+| **`chat-attachments`** | **Public** | `image/jpeg`, `image/png`, `image/webp` | 5 MB | Foto referensi buket custom yang dikirim pelanggan melalui Web Chat CS Hub. |
+| **`payment-receipts`** | **Private (Auth Only)** | `image/jpeg`, `image/png`, `application/pdf` | 5 MB | Bukti transfer pembayaran bank BCA manual. |
+| **`warranty-proofs`** | **Private (Auth Only)** | `image/jpeg`, `image/png`, `video/mp4` | 30 MB | Foto dan rekaman video unboxing utuh untuk validasi klaim garansi 100% ganti baru. |
+
+#### 2. Kebijakan Row Level Security (RLS) Supabase Storage
+
+- **Bucket Publik (`product-images`, `raw-material-images`, `lookbook-reviews`, `avatars`, `chat-attachments`):**
+  - `SELECT` (Read): `true` (Dapat diakses publik tanpa login via Supabase CDN URL).
+  - `INSERT / UPDATE / DELETE` (Write): Hanya role `authenticated` dengan claim role `SUPER_ADMIN` atau `FLORIST_STAFF`.
+- **Bucket Privat (`payment-receipts`, `warranty-proofs`):**
+  - `SELECT` (Read): Pemilik file (`auth.uid() = owner`) atau staf admin (`auth.jwt() ->> 'role' IN ('SUPER_ADMIN', 'FLORIST_STAFF')`).
+  - `INSERT` (Upload): Pengguna terautentikasi atau session token guest transaksi terkait.
+
+#### 3. Strategi Failover Backup Lokal (`apps/web/public/images/`)
+
+Setiap gambar produk dan bahan baku mentah wajib memiliki salinan lokal (*fallback backup*) di folder `apps/web/public/images/products/`:
+```text
+apps/web/public/images/
+├── products/
+│   ├── buket-mawar-merah-velvet.jpg      # Foto studio AI 8K Mawar Velvet
+│   ├── buket-tulip-pastel-pink.jpg       # Foto studio AI 8K Tulip Pink Korean
+│   ├── buket-matahari-graduation.jpg     # Foto studio AI 8K Bunga Matahari
+│   ├── buket-lavender-lilac-dream.jpg    # Foto studio Lavender Lilac Dream
+│   ├── buket-karakter-wisuda-toga.jpg    # Foto studio Buket Karakter Toga
+│   ├── mini-pot-daisy-kawat-bulu.jpg     # Foto studio Mini Pot Meja Belajar
+│   ├── midnight-rose-velvet-romance.jpg  # Foto studio Midnight Rose Deluxe
+│   └── buket-matahari-kawaii-smile.jpg   # Foto studio Kawaii Smile Sunflower
+└── materials/
+    ├── kawat-bulu-pink.jpg
+    ├── cellophane-matte-gold.jpg
+    └── pita-satin-burgundy.jpg
+```
+
+Komponen frontend menggunakan tag `<Image>` dengan atribut fallback: jika URL Supabase Storage mengalami kegagalan load (`onError`), antarmuka secara otomatis memuat file lokal `/images/products/[slug].jpg` tanpa memicu error visual.
+
+---
+
+### 8.4 Spesifikasi Data Seeding Lengkap (`prisma/seed.ts`)
+
+Saat inisialisasi awal database (`npx prisma db seed`), data seed berikut akan di-generate secara otomatis:
+
+#### 1. Akun Pengguna & Hak Akses (RBAC)
+- **Super Admin:**
+  - Email: `admin@chenilleatelier.com` | Password: `AdminPassword2026!`
+  - Nama: `Rania Azzahra (Lead Florist & Owner)` | Role: `SUPER_ADMIN` | Avatar: `/images/avatars/rania.jpg`
+- **Florist Staff:**
+  - Email: `staff@chenilleatelier.com` | Password: `StaffPassword2026!`
+  - Nama: `Budi Handcraft (Artisan)` | Role: `FLORIST_STAFF`
+- **Member Loyal:**
+  - Email: `sarah.amalia@student.ui.ac.id` | Phone: `081298765432` | Password: `MemberPassword2026!`
+  - Nama: `Sarah Amalia` | Role: `CUSTOMER_MEMBER` | Saldo Poin: `50 Flower Points`
+  - Alamat: `Jl. Margonda Raya No. 100, Kost UI Kutek Beji Depok`
+
+#### 2. 8 Produk Buket Bunga Kawat Bulu Lengkap
+1. `Buket Mawar Merah Velvet Wisuda` (Ready Stock, Rp 165.000, HPP Rp 48.500, Kategori: Wisuda)
+2. `Buket Tulip Pastel Pink Korean Style` (PO 2 Hari, Rp 145.000, HPP Rp 38.000, Kategori: Pastel)
+3. `Buket Bunga Matahari Graduation Ceria` (Ready Stock, Rp 135.000, HPP Rp 35.500, Kategori: Wisuda)
+4. `Buket Lavender Lilac Dream` (Ready Stock, Rp 125.000, HPP Rp 32.000, Kategori: Pastel)
+5. `Buket Karakter Wisuda Ber-toga` (PO 3 Hari, Rp 175.000, HPP Rp 54.000, Kategori: Karakter)
+6. `Buket Mini Daisy Aesthetic Oat` (Ready Stock, Rp 75.000, HPP Rp 18.000, Kategori: Mini Pot)
+7. `Buket Lily Putih Pure Elegance` (PO 2 Hari, Rp 155.000, HPP Rp 42.000, Kategori: Romantis)
+8. `Mini Pot Bunga Kawat Bulu Meja Belajar` (Ready Stock, Rp 45.000, HPP Rp 14.000, Kategori: Mini Pot)
+
+#### 3. 7 Master Bahan Baku Mentah & Resep BOM
+- `mat-1`: Batang Kawat Bulu Burgundy (6mm) - Stok 350 Batang @ Rp 350 (Supplier: Chenille Jaya Bandung)
+- `mat-2`: Batang Kawat Bulu Pastel Pink (6mm) - Stok 420 Batang @ Rp 350 (Supplier: Chenille Jaya Bandung)
+- `mat-3`: Batang Kawat Bulu Kuning Matahari - Stok 280 Batang @ Rp 350 (Supplier: Chenille Jaya Bandung)
+- `mat-4`: Batang Kawat Tangkai Hijau Kaku (30cm) - Stok 500 Batang @ Rp 500 (Supplier: Florist Supplies Cikampek)
+- `mat-5`: Cellophane Korean Matte Maroon Gold - Stok 85 Lembar @ Rp 4.500 (Supplier: Korean Floral Paper Store)
+- `mat-6`: Pita Satin Burgundy Mewah 2.5cm - Stok 95 Meter @ Rp 2.200 (Supplier: Pita Cantik Grosir)
+- `mat-7`: Boneka Wisuda Mini Ber-toga 10cm - Stok 35 Pcs @ Rp 7.400 (Supplier: Souvenir Boneka Wisuda)
+
+#### 4. 7 Kategori Opsi Custom Studio Interaktif (Termasuk 3 Kategori Tambahan)
+- **Kategori 1 (Bunga Utama):** Tulip (+Rp 0), Mawar (+Rp 15.000), Matahari (+Rp 10.000), Lavender (+Rp 5.000)
+- **Kategori 2 (Warna Kawat Bulu):** Pastel Pink, Lavender Lilac, Sky Blue, Matcha Sage, Red Velvet
+- **Kategori 3 (Kertas Cellophane):** Korean Two-Tone Pink/White, Lilac Velvet, Clean Oat, Midnight Black Gold
+- **Kategori 4 (Aksesori Tambahan):** Lampu LED Fairy Light (+Rp 10.000), Boneka Toga Mini (+Rp 15.000), Pin Bros (+Rp 5.000)
+- **Kategori 5 (Pita & Ribbon Tambahan):** Satin Tebal (+Rp 0), Organza Transparan (+Rp 5.000), Chiffon Ruffle (+Rp 7.500), Tali Rami Vintage (+Rp 3.000)
+- **Kategori 6 (Packaging Eksklusif Tambahan):** Kardus Box Jendela Mika (+Rp 12.000), Tas Jinjing PVC Bening Aesthetic (+Rp 8.000), Paper Bag Mewah Lis Gold (+Rp 6.000)
+- **Kategori 7 (Kartu Ucapan & Seal Tambahan):** Kartu Standard Cetak (+Rp 0), Kartu Hotprint Gold Foil (+Rp 5.000), Kartu Vintage Wax Seal Stamp (+Rp 8.000)
+
+#### 5. 6 Titik Temu COD Google Maps Depok
+1. `Kampus UI Depok (Gerbatama & Rotunda)` - Jarak: 2.4 KM (Gratis Ongkir, Lat: -6.3628, Lng: 106.8315)
+2. `Stasiun KRL Pondok Cina (Pintu Timur)` - Jarak: 1.8 KM (Gratis Ongkir, Lat: -6.3688, Lng: 106.8336)
+3. `Universitas Gunadarma (Kampus D Margonda)` - Jarak: 1.4 KM (Gratis Ongkir, Lat: -6.3692, Lng: 106.8322)
+4. `Margo City Mall Depok (Lobby Utama Utara)` - Jarak: 3.1 KM (Gratis Ongkir, Lat: -6.3732, Lng: 106.8345)
+5. `D'Mall Margonda Depok (Lobby Depan)` - Jarak: 3.9 KM (Gratis Ongkir, Lat: -6.3862, Lng: 106.8285)
+6. `Politeknik Negeri Jakarta (PNJ - Gerbang Utama)` - Jarak: 2.8 KM (Gratis Ongkir, Lat: -6.3601, Lng: 106.8272)
+
+#### 6. 3 Kupon Diskon Promo
+- `WISUDAHEMAT`: Diskon Rp 25.000 (Min. Belanja Rp 150.000, Kuota 50)
+- `LOVECHENILLE`: Diskon 10% (Min. Belanja Rp 100.000, Kuota 100)
+- `ONGKIRFREE`: Bebas Ongkir Ekspedisi J&T (Min. Belanja Rp 120.000, Kuota 30)
+
+#### 7. 4 Contoh Transaksi Awal & 10 Sakelar Fitur
+- `INV-20260907-001` (Lunas Midtrans, COD Gerbatama UI, Status: `PAYMENT_CONFIRMED`)
+- `INV-20260907-002` (Ekspedisi J&T, Status: `CRAFTING_BOUQUET`)
+- `INV-20260907-003` (COD Margo City, Status: `QUALITY_CHECK_PASSED`)
+- `INV-20260907-004` (Selesai, Review Bintang 5, Status: `COMPLETED`)
+- 10 Feature Toggles aktif (Mode PO Throttling, Free COD Radius, Midtrans Active, Live Chat Web, Direct WhatsApp Escalation, Promo Banners, dsb).
 
 ---
 

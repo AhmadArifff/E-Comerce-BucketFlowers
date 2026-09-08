@@ -31,6 +31,30 @@ interface AddonOpt {
   icon: string;
 }
 
+interface RibbonOpt {
+  id: string;
+  name: string;
+  desc: string;
+  price: number;
+  emoji: string;
+}
+
+interface PackagingOpt {
+  id: string;
+  name: string;
+  desc: string;
+  price: number;
+  icon: string;
+}
+
+interface GreetingOpt {
+  id: string;
+  name: string;
+  desc: string;
+  price: number;
+  icon: string;
+}
+
 const FLOWERS: FlowerOpt[] = [
   { id: 'tulip', name: 'Tulip Cantik', emoji: '🌷', basePrice: 120000 },
   { id: 'rose', name: 'Mawar Velvet', emoji: '🌹', basePrice: 130000 },
@@ -51,10 +75,30 @@ const WRAPPINGS: WrappingOpt[] = [
   { id: 'clean_oat', name: 'Minimalist Clean Oat', desc: 'Nuansa earth tone aesthetic' },
 ];
 
+const RIBBONS: RibbonOpt[] = [
+  { id: 'satin', name: 'Pita Satin Mengkilap', desc: 'Klasik elegan berkilau', price: 0, emoji: '🎀' },
+  { id: 'organza', name: 'Pita Organza Transparan', desc: 'Kesan dreamy & airy', price: 5000, emoji: '🎗️' },
+  { id: 'chiffon', name: 'Chiffon Ruffle Wave', desc: 'Aksen gelombang Korea', price: 7500, emoji: '🌸' },
+  { id: 'rustic', name: 'Tali Rami Vintage', desc: 'Nuansa rustic estetik', price: 3000, emoji: '🧵' },
+];
+
+const PACKAGINGS: PackagingOpt[] = [
+  { id: 'standard', name: 'Standard Protective Sleeve', desc: 'Plastik florist tebal bening', price: 0, icon: '📦' },
+  { id: 'mika_box', name: 'Box Jendela Mika Eksklusif', desc: 'Kotak kardus kaku mewah', price: 12000, icon: '🎁' },
+  { id: 'pvc_bag', name: 'Tas Jinjing PVC Bening', desc: 'Tas aesthetic praktis wisuda', price: 8000, icon: '🛍️' },
+  { id: 'gold_bag', name: 'Paper Bag Mewah Lis Gold', desc: 'Tas kertas tebal premium', price: 6000, icon: '👜' },
+];
+
+const GREETINGS: GreetingOpt[] = [
+  { id: 'print_standard', name: 'Kartu Standard Cetak', desc: 'Art paper 260gsm cetak rapi', price: 0, icon: '✉️' },
+  { id: 'gold_foil', name: 'Kartu Hotprint Gold Foil', desc: 'Tulisan emas berkilau mewah', price: 5000, icon: '✨' },
+  { id: 'wax_seal', name: 'Vintage Wax Seal Stamp', desc: 'Amplop segel lilin stempel bunga', price: 8000, icon: '📜' },
+];
+
 const ADDONS: AddonOpt[] = [
-  { id: 'led', name: 'Lampu LED Fairy Light', price: 10000, icon: '💡' },
-  { id: 'bear', name: 'Boneka Toga Wisuda Mini', price: 15000, icon: '🧸' },
-  { id: 'card', name: 'Kartu Ucapan Kaligrafi Custom', price: 5000, icon: '💌' },
+  { id: 'led', name: 'Lampu LED Fairy Light (Warm Glow)', price: 10000, icon: '💡' },
+  { id: 'bear', name: 'Boneka Toga Wisuda Mini (10cm)', price: 15000, icon: '🧸' },
+  { id: 'pin', name: 'Pin Bros Kupu-kupu Kristal', price: 5000, icon: '🦋' },
 ];
 
 export const CustomStudioSection: React.FC = () => {
@@ -62,6 +106,9 @@ export const CustomStudioSection: React.FC = () => {
   const [selectedFlower, setSelectedFlower] = useState<FlowerOpt>(FLOWERS[0]);
   const [selectedColor, setSelectedColor] = useState<ColorOpt>(COLORS[0]);
   const [selectedWrapping, setSelectedWrapping] = useState<WrappingOpt>(WRAPPINGS[0]);
+  const [selectedRibbon, setSelectedRibbon] = useState<RibbonOpt>(RIBBONS[0]);
+  const [selectedPackaging, setSelectedPackaging] = useState<PackagingOpt>(PACKAGINGS[0]);
+  const [selectedGreeting, setSelectedGreeting] = useState<GreetingOpt>(GREETINGS[0]);
   const [selectedAddons, setSelectedAddons] = useState<string[]>(['led']);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -76,7 +123,12 @@ export const CustomStudioSection: React.FC = () => {
     return sum + (found ? found.price : 0);
   }, 0);
 
-  const totalPrice = selectedFlower.basePrice + addonsTotal;
+  const totalPrice =
+    selectedFlower.basePrice +
+    selectedRibbon.price +
+    selectedPackaging.price +
+    selectedGreeting.price +
+    addonsTotal;
 
   const handleWhatsAppOrder = () => {
     const activeAddonNames = selectedAddons
@@ -89,8 +141,11 @@ Saya ingin memesan Custom Buket Kawat Bulu dengan detail:
 - Bunga Utama: ${selectedFlower.name} (${selectedFlower.emoji})
 - Warna Kawat Bulu: ${selectedColor.name}
 - Kertas Wrapping: ${selectedWrapping.name}
+- Pilihan Pita: ${selectedRibbon.name} (${selectedRibbon.emoji})
+- Packaging Box: ${selectedPackaging.name}
+- Kartu & Segel: ${selectedGreeting.name}
 - Aksesori Tambahan: ${activeAddonNames || 'Tanpa Aksesori Tambahan'}
-- Estimasi Harga: Rp ${totalPrice.toLocaleString('id-ID')}
+- Estimasi Total: Rp ${totalPrice.toLocaleString('id-ID')}
 
 Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima kasih!`;
 
@@ -123,7 +178,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
       rawCostHpp: Math.round(totalPrice * 0.45),
       image: '/preview-tema-a.jpg',
       category: 'CUSTOM',
-      description: `Buket custom ${selectedFlower.name} (${selectedColor.name}) dengan wrapping ${selectedWrapping.name}${activeAddonNames ? ' dan aksesori: ' + activeAddonNames : ''}.`,
+      description: `Buket custom ${selectedFlower.name} (${selectedColor.name}), wrapping ${selectedWrapping.name}, pita ${selectedRibbon.name}, box ${selectedPackaging.name}, kartu ${selectedGreeting.name}${activeAddonNames ? ' dan aksesori: ' + activeAddonNames : ''}.`,
       stock: 10,
       isReadyStock: false,
       isActive: true,
@@ -156,14 +211,14 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
             Custom Buket Studio Interaktif
           </h2>
           <p className="text-xs sm:text-sm text-theme-text-muted leading-relaxed">
-            Rangkai buket impian Anda sendiri secara live. Pilih bunga utama, variasi warna kawat bulu, tema wrapping, serta aksesori wisuda favorit Anda.
+            Rangkai buket impian Anda sendiri secara live dalam 7 langkah mudah. Pilih jenis bunga, warna kawat bulu, wrapping, pita, packaging box, kartu ucapan wax seal, dan aksesori wisuda favorit.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* STEP CONTROLS (LEFT COLUMN) */}
-          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-theme-border shadow-sm space-y-6">
+          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-theme-border shadow-sm space-y-7">
             
             {/* STEP 1: PILIH BUNGA */}
             <div className="space-y-3">
@@ -255,10 +310,106 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
               </div>
             </div>
 
-            {/* STEP 4: AKSESORI UPSELLING */}
+            {/* STEP 4: PILIHAN PITA & RIBBON */}
             <div className="space-y-3">
               <label className="text-xs font-black uppercase tracking-wider text-theme-text-main flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">4</span>
+                <span>Pita & Ribbon Cantik:</span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {RIBBONS.map((r) => {
+                  const isSelected = selectedRibbon.id === r.id;
+                  return (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setSelectedRibbon(r)}
+                      className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-theme-primary bg-theme-surface-subtle shadow-2xs ring-2 ring-theme-primary/20'
+                          : 'border-theme-border hover:border-theme-primary/40 bg-white'
+                      }`}
+                    >
+                      <div className="text-lg mb-0.5">{r.emoji}</div>
+                      <div className="text-[11px] font-bold text-theme-text-main leading-tight line-clamp-1">{r.name}</div>
+                      <div className="text-[10px] text-theme-primary font-black mt-0.5">
+                        {r.price === 0 ? 'Gratis' : `+Rp ${r.price.toLocaleString('id-ID')}`}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* STEP 5: PACKAGING & DELIVERY BOX */}
+            <div className="space-y-3">
+              <label className="text-xs font-black uppercase tracking-wider text-theme-text-main flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">5</span>
+                <span>Packaging Eksklusif & Delivery:</span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {PACKAGINGS.map((p) => {
+                  const isSelected = selectedPackaging.id === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setSelectedPackaging(p)}
+                      className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-theme-primary bg-theme-surface-subtle shadow-2xs ring-2 ring-theme-primary/20'
+                          : 'border-theme-border hover:border-theme-primary/40 bg-white'
+                      }`}
+                    >
+                      <div className="text-lg mb-0.5">{p.icon}</div>
+                      <div className="text-[11px] font-bold text-theme-text-main leading-tight line-clamp-1">{p.name}</div>
+                      <div className="text-[10px] text-theme-primary font-black mt-0.5">
+                        {p.price === 0 ? 'Standar' : `+Rp ${p.price.toLocaleString('id-ID')}`}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* STEP 6: KARTU UCAPAN & SEAL */}
+            <div className="space-y-3">
+              <label className="text-xs font-black uppercase tracking-wider text-theme-text-main flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">6</span>
+                <span>Kartu Ucapan & Finishing Seal:</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {GREETINGS.map((g) => {
+                  const isSelected = selectedGreeting.id === g.id;
+                  return (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => setSelectedGreeting(g)}
+                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-theme-primary bg-theme-surface-subtle shadow-2xs ring-2 ring-theme-primary/20'
+                          : 'border-theme-border hover:border-theme-primary/40 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-base">{g.icon}</span>
+                        <span className="text-xs font-bold text-theme-text-main truncate">{g.name}</span>
+                      </div>
+                      <div className="text-[10px] text-theme-text-muted">{g.desc}</div>
+                      <div className="text-[10px] text-theme-primary font-extrabold mt-1">
+                        {g.price === 0 ? 'Gratis' : `+Rp ${g.price.toLocaleString('id-ID')}`}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* STEP 7: AKSESORI UPSELLING */}
+            <div className="space-y-3">
+              <label className="text-xs font-black uppercase tracking-wider text-theme-text-main flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">7</span>
                 <span>Tambahan Aksesori (Upselling Add-ons):</span>
               </label>
               <div className="space-y-2">
@@ -308,7 +459,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                 
                 {/* PREVIEW CANVAS */}
                 <div
-                  className="rounded-2xl p-8 text-center border-2 border-dashed border-theme-border flex flex-col items-center justify-center min-h-[190px] transition-colors overflow-hidden"
+                  className="rounded-2xl p-6 text-center border-2 border-dashed border-theme-border flex flex-col items-center justify-center min-h-[220px] transition-colors overflow-hidden"
                   style={{ backgroundColor: `${selectedColor.colorHex}25` }}
                 >
                   <span className="animate-float-hero text-7xl mb-2 inline-block drop-shadow-md transition-transform duration-300 hover:scale-110">
@@ -319,6 +470,19 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                   </div>
                   <div className="text-[10px] text-theme-primary font-semibold">
                     Wrapping: {selectedWrapping.name}
+                  </div>
+                  
+                  {/* DETAIL BADGES */}
+                  <div className="flex flex-wrap items-center gap-1.5 justify-center mt-3 max-w-xs">
+                    <span className="px-2 py-0.5 rounded-full bg-white/90 border border-stone-200 text-[10px] font-bold text-stone-700 flex items-center gap-1 shadow-2xs">
+                      <span>{selectedRibbon.emoji}</span> {selectedRibbon.name}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-white/90 border border-stone-200 text-[10px] font-bold text-stone-700 flex items-center gap-1 shadow-2xs">
+                      <span>{selectedPackaging.icon}</span> {selectedPackaging.name}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-white/90 border border-stone-200 text-[10px] font-bold text-stone-700 flex items-center gap-1 shadow-2xs">
+                      <span>{selectedGreeting.icon}</span> {selectedGreeting.name}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -334,9 +498,21 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                   <strong className="text-stone-800">{selectedWrapping.name}</strong>
                 </div>
                 <div className="flex justify-between text-stone-600">
+                  <span>Pita Ribbon:</span>
+                  <strong className="text-stone-800">{selectedRibbon.name} ({selectedRibbon.price === 0 ? 'Gratis' : `+Rp ${selectedRibbon.price.toLocaleString('id-ID')}`})</strong>
+                </div>
+                <div className="flex justify-between text-stone-600">
+                  <span>Packaging Box:</span>
+                  <strong className="text-stone-800">{selectedPackaging.name} ({selectedPackaging.price === 0 ? 'Standar' : `+Rp ${selectedPackaging.price.toLocaleString('id-ID')}`})</strong>
+                </div>
+                <div className="flex justify-between text-stone-600">
+                  <span>Kartu & Seal:</span>
+                  <strong className="text-stone-800">{selectedGreeting.name} ({selectedGreeting.price === 0 ? 'Gratis' : `+Rp ${selectedGreeting.price.toLocaleString('id-ID')}`})</strong>
+                </div>
+                <div className="flex justify-between text-stone-600">
                   <span>Aksesori Tambahan:</span>
                   <strong className="text-stone-800">
-                    {selectedAddons.length > 0 ? `${selectedAddons.length} item dipilih` : 'Tidak Ada'}
+                    {selectedAddons.length > 0 ? `${selectedAddons.length} item dipilih (+Rp ${addonsTotal.toLocaleString('id-ID')})` : 'Tidak Ada'}
                   </strong>
                 </div>
 
