@@ -29,23 +29,21 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const totalPrice = activePrice * quantity;
 
   const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (isAddedSuccess) return;
-    flyToCart(e.currentTarget, '🌸');
+    if (isAddedSuccess || isProcessingBuy) return;
+    setIsProcessingBuy(true);
     addItem(product, quantity);
     setIsAddedSuccess(true);
+    flyToCart(e.currentTarget, '🌸', () => {
+      onClose();
+      setIsCartOpen(true);
+      setIsProcessingBuy(false);
+      setIsAddedSuccess(false);
+    });
     showMagicToast(
       'Berhasil Ditambahkan! 🌸',
       `${product.name} (${quantity} pcs)`,
-      '🌸',
-      'Lihat Keranjang 🛍️',
-      () => {
-        onClose();
-        setIsCartOpen(true);
-      }
+      '🌸'
     );
-    setTimeout(() => {
-      setIsAddedSuccess(false);
-    }, 1800);
   };
 
   const handleBuyNow = (e: React.MouseEvent<HTMLButtonElement>) => {

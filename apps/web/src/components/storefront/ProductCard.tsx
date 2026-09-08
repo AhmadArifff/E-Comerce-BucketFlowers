@@ -135,20 +135,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
                 addItem(product, 1);
                 flyToCart(e.currentTarget, '🌸', () => {
                   setIsAdding(false);
+                  setIsCartOpen(true);
                 });
                 const price = product.discountPrice ?? product.price;
                 showMagicToast(
                   'Berhasil Ditambahkan! 🌸',
                   `${product.name} (Rp ${price.toLocaleString('id-ID')})`,
-                  '🌸',
-                  'Lihat Keranjang 🛍️',
-                  () => setIsCartOpen(true)
+                  '🌸'
                 );
               }}
               className="btn-add-cart flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              <span>{isAdding ? 'Ditambahkan...' : 'Tambah'}</span>
+              <span>{isAdding ? 'Menerbangkan...' : 'Tambah'}</span>
             </button>
           </div>
         </div>

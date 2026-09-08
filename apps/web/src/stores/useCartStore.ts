@@ -58,11 +58,10 @@ export const useCartStore = create<CartState>()(
             const updated = [...state.items];
             updated[existingIndex].quantity += quantity;
             if (notes) updated[existingIndex].customNotes = notes;
-            return { items: updated, isCartOpen: true };
+            return { items: updated };
           }
           return {
             items: [...state.items, { product, quantity, customNotes: notes }],
-            isCartOpen: true,
           };
         });
       },

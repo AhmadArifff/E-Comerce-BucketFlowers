@@ -87,7 +87,7 @@ export function flyToCart(
   onComplete?: () => void
 ): Promise<void> {
   return new Promise((resolve) => {
-    if (typeof document === 'undefined' || !sourceElement) {
+    if (typeof document === 'undefined') {
       onComplete?.();
       resolve();
       return;
@@ -100,31 +100,48 @@ export function flyToCart(
       return;
     }
 
-    const startRect = sourceElement.getBoundingClientRect();
+    // Determine starting position: fallback to center of screen if sourceElement rect unavailable
+    let startX = window.innerWidth / 2;
+    let startY = window.innerHeight / 2;
+    if (sourceElement) {
+      const startRect = sourceElement.getBoundingClientRect();
+      if (startRect.width > 0 && startRect.height > 0) {
+        startX = startRect.left + startRect.width / 2;
+        startY = startRect.top + startRect.height / 2;
+      }
+    }
+
     const endRect = cartBtn.getBoundingClientRect();
+    const destX = endRect.left + (endRect.width || 40) / 2;
+    const destY = endRect.top + (endRect.height || 40) / 2;
 
     const flyer = document.createElement('div');
     flyer.className = 'magic-flyer';
     flyer.textContent = emoji;
-    flyer.style.left = `${startRect.left + startRect.width / 2 - 24}px`;
-    flyer.style.top = `${startRect.top + startRect.height / 2 - 24}px`;
+    flyer.style.position = 'fixed';
+    flyer.style.zIndex = '999999';
+    flyer.style.left = `${startX - 24}px`;
+    flyer.style.top = `${startY - 24}px`;
+    flyer.style.transform = 'scale(1) rotate(0deg)';
+    flyer.style.opacity = '1';
+    flyer.style.transition = 'none';
     document.body.appendChild(flyer);
 
-    // Force reflow
-    flyer.getBoundingClientRect();
-
-    const destX = endRect.left + endRect.width / 2 - 24;
-    const destY = endRect.top + endRect.height / 2 - 24;
-
-    flyer.style.left = `${destX}px`;
-    flyer.style.top = `${destY}px`;
-    flyer.style.transform = 'scale(0.35) rotate(360deg)';
-    flyer.style.opacity = '0.7';
+    // Two animation frames guarantee initial position paint before transitioning to destination
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        flyer.style.transition = 'all 0.8s cubic-bezier(0.2, 0.9, 0.25, 1)';
+        flyer.style.left = `${destX - 24}px`;
+        flyer.style.top = `${destY - 24}px`;
+        flyer.style.transform = 'scale(0.35) rotate(360deg)';
+        flyer.style.opacity = '0.85';
+      });
+    });
 
     setTimeout(() => {
       flyer.remove();
 
-      // Trigger cart bump animation
+      // Trigger cart bump bounce animation on navbar cart
       window.dispatchEvent(new CustomEvent('cart-bump'));
       cartBtn.classList.add('cart-bump');
       setTimeout(() => {
@@ -132,12 +149,14 @@ export function flyToCart(
       }, 450);
 
       // Spawn 8 radial sparkle bursts at destination cart button center
-      spawnSparkles(endRect.left + endRect.width / 2, endRect.top + endRect.height / 2);
+      spawnSparkles(destX, destY);
 
-      // Call onComplete only after flower hits the cart and sparkles trigger
-      onComplete?.();
-      resolve();
-    }, 750);
+      // Trigger onComplete callback AFTER the animation is 100% finished
+      setTimeout(() => {
+        onComplete?.();
+        resolve();
+      }, 50);
+    }, 800);
   });
 }
 

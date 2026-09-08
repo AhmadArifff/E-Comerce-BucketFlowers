@@ -104,9 +104,11 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
     if (e) {
       flyToCart(e.currentTarget, selectedFlower.emoji, () => {
         setIsAdding(false);
+        setIsCartOpen(true);
       });
     } else {
       setIsAdding(false);
+      setIsCartOpen(true);
     }
     const activeAddonNames = selectedAddons
       .map((id) => ADDONS.find((a) => a.id === id)?.name)
