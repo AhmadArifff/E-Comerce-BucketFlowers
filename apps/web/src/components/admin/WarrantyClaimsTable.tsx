@@ -174,7 +174,7 @@ export const WarrantyClaimsTable: React.FC = () => {
         </div>
 
         {/* Toolbar: Date Range + Filter Pills */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 shrink-0 self-start xl:self-auto">
           <DateRangeFilter value={dateRange} onChange={setDateRange} align="right" />
           <div className="flex items-center gap-1.5 p-1 bg-stone-100 rounded-2xl border border-stone-200">
             {['ALL', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED_REPLACE'].map((status) => (

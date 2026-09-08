@@ -38,11 +38,11 @@ export function TableSortHeader<T extends string>({
             ? 'justify-center'
             : align === 'right'
             ? 'justify-end'
-            : 'justify-between'
+            : 'justify-start'
         }`}
       >
         <span className={isActive ? 'text-rose-600 font-black' : ''}>{label}</span>
-        <span className="inline-flex items-center">
+        <span className="inline-flex items-center shrink-0">
           {isActive ? (
             direction === 'asc' ? (
               <ArrowUp className="w-3.5 h-3.5 text-rose-600 stroke-[2.5]" />

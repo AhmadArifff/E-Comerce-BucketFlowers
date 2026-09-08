@@ -125,11 +125,11 @@ export const FinancialChartCard: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center flex-wrap gap-2.5 text-xs">
+        <div className="flex items-center flex-wrap sm:flex-nowrap gap-2.5 text-xs shrink-0 self-start lg:self-auto">
           <DateRangeFilter value={dateRange} onChange={setDateRange} align="right" />
           <button
             onClick={handleExportExcel}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-bold transition-all shadow-2xs cursor-pointer ml-auto sm:ml-0"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-bold transition-all shadow-2xs cursor-pointer whitespace-nowrap"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Unduh Excel</span>
@@ -493,28 +493,28 @@ export const ReportsView: React.FC = () => {
 
       {/* Reports Table & Export Actions */}
       <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs space-y-5">
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-rose-100">
+        <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-4 pb-4 border-b border-rose-100">
           <div>
             <h2 className="text-base sm:text-lg font-extrabold text-stone-800 tracking-tight">
               Rekapitulasi Penjualan & Margin Bulanan
             </h2>
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-stone-500 mt-0.5">
               Data konsolidasi pesanan lunas, potongan biaya produksi, dan laba operasional studio ({dateRange.presetLabel || 'Rentang Khusus'}).
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 self-start xl:self-auto">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 self-start 2xl:self-auto">
             <DateRangeFilter value={dateRange} onChange={setDateRange} align="right" />
             <button
               onClick={() => handleDownload('CSV')}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-xs font-bold transition-all shadow-2xs cursor-pointer whitespace-nowrap"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
               <span>Ekspor CSV</span>
             </button>
             <button
               onClick={() => handleDownload('XLSX')}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Unduh Excel (.xlsx)</span>
@@ -770,33 +770,45 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
         </button>
       </div>
 
-      {/* Filter and Search */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      {/* Full-width Search & Category Filter */}
+      <div className="space-y-3">
+        <div className="relative w-full">
+          <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Cari nama buket..."
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white transition-all font-mono"
+            placeholder="Cari nama buket bunga, deskripsi, atau ID produk..."
+            className="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs font-medium text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white focus:border-rose-400 transition-all shadow-2xs"
           />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-1 cursor-pointer"
+              title="Hapus pencarian"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        <div className="flex gap-1.5 overflow-x-auto">
+        <div className="flex items-center gap-2 flex-wrap">
           {['ALL', 'Single Stem', 'Graduation', 'Anniversary', 'Mini Bloom'].map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCat(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer border ${
                 selectedCat === cat
-                  ? 'bg-rose-600 text-white shadow-2xs'
-                  : 'bg-stone-50 text-stone-600 hover:bg-rose-50'
+                  ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
+                  : 'bg-stone-50 hover:bg-rose-50 border-stone-200 text-stone-600 hover:text-rose-700'
               }`}
             >
               {cat === 'ALL' ? 'Semua Kategori' : cat}
             </button>
           ))}
+          <span className="text-[11px] font-bold text-stone-400 ml-auto hidden sm:inline">
+            Menampilkan {sortedProducts.length} produk
+          </span>
         </div>
       </div>
 

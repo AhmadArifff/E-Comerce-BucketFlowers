@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { ShoppingBag, CheckCircle2, Scissors, Truck, MapPin, Check, ExternalLink, Printer, Download, Search } from 'lucide-react';
+import { ShoppingBag, CheckCircle2, Scissors, Truck, MapPin, Check, ExternalLink, Printer, Download, Search, X } from 'lucide-react';
 import { useOrderStore, type Order } from '@/stores/useOrderStore';
 import { showMagicToast } from '@/lib/magic-motion';
 import { TableSortHeader, type SortDirection } from './TableSortHeader';
@@ -139,46 +139,70 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
         </div>
       </div>
 
-      {/* Filter Tabs & Date Range Bar */}
-      <div className="px-5 py-3 border-b border-stone-100 bg-stone-50/50 flex flex-col gap-3">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
-            {[
-              { id: 'ALL', label: `Semua (${orders.length})` },
-              { id: 'PENDING', label: `Menunggu Rangkai (${orders.filter((o) => o.currentStep === 1).length})` },
-              { id: 'CRAFTING', label: `Sedang Dirangkai (${orders.filter((o) => o.currentStep === 2).length})` },
-              { id: 'SHIPPED', label: `Siap / Dikirim (${orders.filter((o) => o.currentStep === 3).length})` },
-              { id: 'COMPLETED', label: `Selesai (${orders.filter((o) => o.currentStep === 4).length})` },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setStatusFilter(tab.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+      {/* Filter Tabs & Full-Width Search / Date Range Bar */}
+      <div className="px-5 py-3.5 border-b border-stone-100 bg-stone-50/50 space-y-3">
+        {/* Tier 1: Search Input (Full Width) & Date Range Filter */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {!searchQuery && (
+            <div className="relative flex-1 w-full">
+              <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={internalSearch}
+                onChange={(e) => setInternalSearch(e.target.value)}
+                placeholder="Cari berdasarkan nomor invoice, nama pelanggan, atau nomor WhatsApp..."
+                className="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-white border border-stone-200 text-xs font-medium text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-all shadow-2xs"
+              />
+              {internalSearch && (
+                <button
+                  onClick={() => setInternalSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-1 cursor-pointer"
+                  title="Hapus pencarian"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className="shrink-0 self-start sm:self-auto">
+            <DateRangeFilter value={dateRange} onChange={setDateRange} align="right" />
+          </div>
+        </div>
+
+        {/* Tier 2: Status Filter Tabs (No clipping scrollbar) */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {[
+            { id: 'ALL', label: 'Semua Pesanan', count: orders.length },
+            { id: 'PENDING', label: '1. Menunggu Rangkai', count: orders.filter((o) => o.currentStep === 1).length },
+            { id: 'CRAFTING', label: '2. Sedang Dirangkai', count: orders.filter((o) => o.currentStep === 2).length },
+            { id: 'SHIPPED', label: '3. Siap / Dikirim', count: orders.filter((o) => o.currentStep === 3).length },
+            { id: 'COMPLETED', label: '4. Selesai', count: orders.filter((o) => o.currentStep === 4).length },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setStatusFilter(tab.id as any)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer border flex items-center gap-1.5 ${
+                statusFilter === tab.id
+                  ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
+                  : 'bg-white hover:bg-stone-50 border-stone-200 text-stone-600 hover:text-rose-700'
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
                   statusFilter === tab.id
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'bg-white border border-stone-200 text-stone-600 hover:bg-rose-50'
+                    ? 'bg-white/25 text-white'
+                    : 'bg-stone-100 text-stone-500'
                 }`}
               >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <DateRangeFilter value={dateRange} onChange={setDateRange} align="right" />
-            {!searchQuery && (
-              <div className="relative w-full sm:w-52">
-                <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  value={internalSearch}
-                  onChange={(e) => setInternalSearch(e.target.value)}
-                  placeholder="Filter invoice/nama..."
-                  className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs text-stone-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
-                />
-              </div>
-            )}
-          </div>
+                {tab.count}
+              </span>
+            </button>
+          ))}
+          <span className="text-[11px] font-bold text-stone-400 ml-auto hidden md:inline">
+            Menampilkan {filteredOrders.length} dari {orders.length} pesanan
+          </span>
         </div>
       </div>
 
