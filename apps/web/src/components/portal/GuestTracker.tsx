@@ -7,10 +7,24 @@ import type { MockOrder } from '@chenille/shared';
 import { OrderStepper } from './OrderStepper';
 
 export const GuestTracker: React.FC = () => {
-  const { findOrderByQuery } = useOrderStore();
+  const { findOrderByQuery, updateOrderStep } = useOrderStore();
   const [query, setQuery] = useState('');
   const [searchedOrder, setSearchedOrder] = useState<MockOrder | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+
+  const quickTestInvoices = [
+    { id: 'INV-20260907-001', label: 'INV-20260907-001 (Dewi - Langkah 2)' },
+    { id: 'INV-20260907-002', label: 'INV-20260907-002 (Budi - COD UI)' },
+    { id: 'INV-20260907-003', label: 'INV-20260907-003 (Siti - Selesai)' },
+    { id: '081299281192', label: 'WA 0812-9928-1192' },
+  ];
+
+  const handleQuickSelect = (val: string) => {
+    setQuery(val);
+    const result = findOrderByQuery(val);
+    setSearchedOrder(result);
+    setHasSearched(true);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,6 +34,15 @@ export const GuestTracker: React.FC = () => {
     setHasSearched(true);
   };
 
+  const handleStepClick = (step: number) => {
+    if (!searchedOrder) return;
+    updateOrderStep(searchedOrder.id, step);
+    const updated = findOrderByQuery(searchedOrder.id);
+    if (updated) {
+      setSearchedOrder(updated);
+    }
+  };
+
   return (
     <div className="bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-sm space-y-6">
       <div className="max-w-xl">
@@ -27,8 +50,23 @@ export const GuestTracker: React.FC = () => {
           Lacak Pesanan Cepat (Guest Tracking)
         </h2>
         <p className="text-xs text-stone-500 mt-1">
-          Tidak perlu login! Cukup masukkan Nomor Invoice (contoh: <code>INV-20260907-001</code>) atau Nomor WhatsApp yang Anda gunakan saat pemesanan.
+          Tidak perlu login! Cukup masukkan Nomor Invoice atau Nomor WhatsApp saat pemesanan.
         </p>
+      </div>
+
+      {/* Quick Test Invoices Pills */}
+      <div className="flex items-center gap-2 flex-wrap text-xs">
+        <span className="font-bold text-stone-500 text-[11px]">Coba Langsung (Uji Coba):</span>
+        {quickTestInvoices.map((q) => (
+          <button
+            key={q.id}
+            type="button"
+            onClick={() => handleQuickSelect(q.id)}
+            className="px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-[11px] font-bold transition-all cursor-pointer active:scale-95"
+          >
+            {q.label}
+          </button>
+        ))}
       </div>
 
       <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2.5 max-w-xl">
@@ -44,7 +82,7 @@ export const GuestTracker: React.FC = () => {
         </div>
         <button
           type="submit"
-          className="px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-600/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+          className="px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-600/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           <span>Lacak Live</span>
           <ArrowRight className="w-4 h-4" />
@@ -77,13 +115,14 @@ export const GuestTracker: React.FC = () => {
                 </div>
               </div>
 
-              {/* Stepper with Beam Laser */}
+              {/* Stepper with Beam Laser & Interactive Node Clicking */}
               <div className="py-2">
                 <OrderStepper
                   currentStep={searchedOrder.currentStep}
                   fulfillmentType={searchedOrder.fulfillmentType}
                   meetupPointName={searchedOrder.meetupPointName}
                   courierName={searchedOrder.courierName}
+                  onStepClick={handleStepClick}
                 />
               </div>
 

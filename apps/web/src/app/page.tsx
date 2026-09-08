@@ -40,6 +40,30 @@ export default function StorefrontPage() {
     }
   };
 
+  // Handle URL hash or search params on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '');
+      if (hash) {
+        setActiveSection(hash);
+        setTimeout(() => {
+          const el = document.getElementById(hash);
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const searchParam = params.get('search');
+      if (searchParam) {
+        setSearchQuery(searchParam);
+        setTimeout(() => {
+          const el = document.getElementById('katalog');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 200);
+      }
+    }
+  }, []);
+
   // Intersection observer to highlight current nav menu on scroll
   useEffect(() => {
     const sections = ['home', 'katalog', 'custom', 'lookbook', 'tracking', 'bantuan'];

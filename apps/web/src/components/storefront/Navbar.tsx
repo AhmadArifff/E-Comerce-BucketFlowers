@@ -101,6 +101,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       const el = document.getElementById(id) || document.getElementById(`section-${id}`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.location.href = id === 'home' ? '/' : `/#${id}`;
       }
     }
   };
@@ -225,6 +227,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                 placeholder="Cari buket wisuda, mawar velvet, tulip, sidang, mini pot..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    setIsSearchOpen(false);
+                    if (typeof window !== 'undefined') {
+                      if (window.location.pathname !== '/') {
+                        window.location.href = `/?search=${encodeURIComponent(searchQuery.trim())}`;
+                      } else {
+                        const el = document.getElementById('katalog');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }
+                  }
+                }}
                 className="w-full pl-10 pr-20 py-2 text-xs sm:text-sm bg-theme-surface-subtle border border-theme-border rounded-full focus:outline-none focus:ring-2 focus:ring-theme-primary focus:bg-white transition-all placeholder:text-stone-400"
               />
               <div className="absolute right-2.5 flex items-center gap-1">

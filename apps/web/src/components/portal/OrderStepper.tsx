@@ -10,6 +10,7 @@ interface OrderStepperProps {
   meetupPointName?: string;
   courierName?: string;
   trackingNumber?: string;
+  onStepClick?: (step: number) => void;
 }
 
 export const OrderStepper: React.FC<OrderStepperProps> = ({
@@ -18,6 +19,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
   meetupPointName,
   courierName,
   trackingNumber,
+  onStepClick,
 }) => {
   const steps = [
     {
@@ -78,7 +80,14 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
             const Icon = step.icon;
 
             return (
-              <div key={step.num} className="flex flex-col items-center text-center">
+              <div
+                key={step.num}
+                onClick={() => onStepClick?.(step.num)}
+                className={`flex flex-col items-center text-center transition-all ${
+                  onStepClick ? 'cursor-pointer group' : ''
+                }`}
+                title={onStepClick ? `Uji coba: Lompat ke Langkah ${step.num} (${step.title})` : undefined}
+              >
                 {/* Step Circle Node */}
                 <div
                   className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 ${
@@ -86,8 +95,8 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
                       ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
                       : isCurrent
                       ? 'bg-rose-600 text-white pulse-active-node scale-110 z-20'
-                      : 'bg-white border-2 border-stone-200 text-stone-400'
-                  }`}
+                      : 'bg-white border-2 border-stone-200 text-stone-400 group-hover:border-rose-300 group-hover:text-rose-600'
+                  } ${onStepClick ? 'group-hover:scale-110 active:scale-95' : ''}`}
                 >
                   {isCompleted ? (
                     <Check className="w-5 h-5 stroke-[2.5]" />
@@ -104,7 +113,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
                         ? 'text-rose-600'
                         : isCompleted
                         ? 'text-emerald-700'
-                        : 'text-stone-500'
+                        : 'text-stone-500 group-hover:text-stone-800'
                     }`}
                   >
                     {step.title}
@@ -122,6 +131,12 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
             );
           })}
         </div>
+
+        {onStepClick && (
+          <div className="text-[10px] text-stone-400 font-bold text-center mt-3 flex items-center justify-center gap-1">
+            <span>💡 Mode Uji Coba: Klik node langkah 1–4 untuk menguji animasi laser beam & pembaruan status live.</span>
+          </div>
+        )}
       </div>
 
       {/* MOBILE VERTICAL STEPPER */}
@@ -133,7 +148,13 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
           const Icon = step.icon;
 
           return (
-            <div key={step.num} className="relative flex items-start gap-3">
+            <div
+              key={step.num}
+              onClick={() => onStepClick?.(step.num)}
+              className={`relative flex items-start gap-3 transition-all ${
+                onStepClick ? 'cursor-pointer active:scale-98' : ''
+              }`}
+            >
               {/* Node Indicator */}
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center -ml-[25px] flex-shrink-0 transition-all ${

@@ -1,11 +1,14 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, Ticket, Copy, Check, Gift } from 'lucide-react';
+import { Sparkles, Ticket, Copy, Check, Gift, ShoppingBag } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useCartStore } from '@/stores/useCartStore';
+import { showMagicToast } from '@/lib/magic-motion';
 
 export const PointsAndVouchers: React.FC = () => {
   const { user } = useAuthStore();
+  const { applyVoucher, setIsCartOpen } = useCartStore();
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
 
   const vouchers = [
@@ -28,7 +31,14 @@ export const PointsAndVouchers: React.FC = () => {
   const handleCopy = (code: string) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
+    showMagicToast('Kode Voucher Disalin! 🏷️', `Kupon ${code} berhasil disalin ke clipboard.`, '📋');
     setTimeout(() => setCopiedCode(null), 1500);
+  };
+
+  const handleUseInCart = (code: string) => {
+    applyVoucher(code);
+    setIsCartOpen(true);
+    showMagicToast('Voucher Diterapkan! ✨', `Kupon ${code} langsung dipasang di keranjang belanja.`, '🛒');
   };
 
   return (
@@ -93,22 +103,36 @@ export const PointsAndVouchers: React.FC = () => {
                 <span className="text-[10px] text-stone-400">{v.minSpend}</span>
               </div>
 
-              <button
-                onClick={() => handleCopy(v.code)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-xs shadow-sm transition-all"
-              >
-                {copiedCode === v.code ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-600">Tersalin!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>Salin</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleCopy(v.code)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-xs shadow-2xs transition-all cursor-pointer"
+                  title="Salin kode voucher"
+                >
+                  {copiedCode === v.code ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-600">Tersalin!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Salin</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleUseInCart(v.code)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer active:scale-95"
+                  title="Pakai voucher langsung di keranjang"
+                >
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>Pakai</span>
+                </button>
+              </div>
             </div>
           ))}
         </div>

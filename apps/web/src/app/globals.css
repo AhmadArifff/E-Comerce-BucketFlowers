@@ -189,8 +189,10 @@ body, .font-body {
   text-transform: uppercase;
   font-size: 11.5px;
   box-shadow: 0 4px 14px rgba(107, 45, 92, 0.25);
-  position: relative;
   overflow: hidden;
+}
+[data-theme="tema-b"] .btn-primary-atelier:not(.fixed):not([class*="fixed"]) {
+  position: relative;
 }
 [data-theme="tema-b"] .btn-primary-atelier::after {
   content: '';
@@ -1027,4 +1029,224 @@ body, .font-body {
 .cart-bump {
   animation: cartBumpAnim 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 }
+
+/* ========================================================================
+   UNIVERSAL FLOATING CHAT TRIGGER BUTTON (THEMES A, B, C)
+   ======================================================================== */
+.floating-chat-btn {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 50 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  text-decoration: none !important;
+  width: auto !important;
+}
+.floating-chat-btn:hover {
+  transform: translateY(-2px) !important;
+}
+
+/* Tema A: Soft Korean Pastel Pill */
+[data-theme="tema-a"] .floating-chat-btn {
+  background: #F4A7B9 !important;
+  border: 1.5px solid #F4A7B9 !important;
+  color: #FFFFFF !important;
+  padding: 12px 20px !important;
+  border-radius: 99px !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  box-shadow: 0 8px 24px rgba(244, 167, 185, 0.45) !important;
+}
+[data-theme="tema-a"] .floating-chat-btn:hover {
+  background: #E38EA1 !important;
+  box-shadow: 0 10px 28px rgba(244, 167, 185, 0.55) !important;
+}
+
+/* Tema B: Editorial Velvet Burgundy & Gold (Modern Romantic) */
+[data-theme="tema-b"] .floating-chat-btn {
+  background: #6B2D5C !important;
+  border: 1px solid #D4AF37 !important;
+  color: #FFFFFF !important;
+  padding: 13px 22px !important;
+  border-radius: 6px !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 8px 24px rgba(107, 45, 92, 0.35) !important;
+  position: fixed !important;
+  overflow: hidden !important;
+}
+[data-theme="tema-b"] .floating-chat-btn:hover {
+  background: #541F47 !important;
+  box-shadow: 0 10px 28px rgba(107, 45, 92, 0.45) !important;
+}
+
+/* Tema C: Bubbly Strawberry & Honey Gold (Playful Kawaii) */
+[data-theme="tema-c"] .floating-chat-btn {
+  background: #FF6B81 !important;
+  border: 2px solid #FFEAA7 !important;
+  color: #FFFFFF !important;
+  padding: 12px 22px !important;
+  border-radius: 99px !important;
+  font-weight: 800 !important;
+  font-size: 12.5px !important;
+  box-shadow: 0 8px 24px rgba(255, 107, 129, 0.45) !important;
+}
+[data-theme="tema-c"] .floating-chat-btn:hover {
+  background: #FA5069 !important;
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 12px 28px rgba(255, 107, 129, 0.55) !important;
+}
+
+@media (max-width: 640px) {
+  .floating-chat-btn {
+    bottom: 16px !important;
+    right: 14px !important;
+    padding: 10px 14px !important;
+    font-size: 11.5px !important;
+  }
+}
+
+/* ========================================================================
+   LANDING PAGE QUICK TRACKING TIMELINE (THEMES A, B, C)
+   ======================================================================== */
+.timeline {
+  list-style: none;
+  position: relative;
+  padding: 0;
+  margin: 24px 0 0 0;
+}
+
+/* Static Background Track (Centered at x = 11px) */
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 11px;
+  bottom: 16px;
+  width: 2px;
+  border-radius: 99px;
+  z-index: 1;
+}
+
+/* Magic UI Animated Glowing Laser Beam Pulse (Centered at x = 11px) */
+.timeline::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 11px;
+  width: 6px;
+  height: 48px;
+  border-radius: 99px;
+  pointer-events: none;
+  z-index: 2;
+  animation: magicBeamTimeline 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes magicBeamTimeline {
+  0% {
+    top: 11px;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 64px);
+    opacity: 0;
+  }
+}
+
+.timeline-step {
+  position: relative;
+  padding-left: 36px;
+  margin-bottom: 24px;
+  list-style: none;
+}
+
+.timeline-step:last-child {
+  margin-bottom: 8px;
+}
+
+/* Ring Node (Left: 0, Width: 22px -> Center: 11px) */
+.timeline-step::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #FFFFFF;
+  z-index: 3;
+  transition: all 0.3s ease;
+}
+
+/* Active Pulsing Node (Courier on the way) */
+.timeline-step.active::before {
+  background: #10B981 !important;
+  border: 3.5px solid #FFFFFF !important;
+  box-shadow: 0 0 0 3px #10B981, 0 0 14px rgba(16, 185, 129, 0.65) !important;
+  animation: pulseTimelineActive 1.8s infinite ease-in-out !important;
+}
+
+@keyframes pulseTimelineActive {
+  0%, 100% {
+    box-shadow: 0 0 0 3px #10B981, 0 0 8px rgba(16, 185, 129, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.2), 0 0 18px rgba(16, 185, 129, 0.8);
+    transform: scale(1.1);
+  }
+}
+
+/* --- THEME A (KOREAN PASTEL) --- */
+[data-theme="tema-a"] .timeline::before {
+  background: #FECDD3;
+}
+[data-theme="tema-a"] .timeline::after {
+  background: linear-gradient(180deg, transparent, #059669 25%, #10B981 65%, #6EE7B7 85%, #FFFFFF 98%, transparent);
+  box-shadow: 0 0 8px 1px rgba(16, 185, 129, 0.8), 0 0 16px rgba(52, 211, 153, 0.5);
+}
+[data-theme="tema-a"] .timeline-step::before {
+  border: 3.5px solid #F43F5E;
+  box-shadow: 0 0 0 2px #FFE4E6;
+}
+
+/* --- THEME B (MODERN ROMANTIC) --- */
+[data-theme="tema-b"] .timeline::before {
+  background: #E5C07B;
+}
+[data-theme="tema-b"] .timeline::after {
+  background: linear-gradient(180deg, transparent, #D4AF37 25%, #F59E0B 65%, #FEF3C7 85%, #FFFFFF 98%, transparent);
+  box-shadow: 0 0 8px 1px rgba(212, 175, 55, 0.8), 0 0 16px rgba(245, 158, 11, 0.5);
+}
+[data-theme="tema-b"] .timeline-step::before {
+  border: 3.5px solid #D4AF37;
+  box-shadow: 0 0 0 2px #FEF3C7;
+}
+
+/* --- THEME C (PLAYFUL KAWAII) --- */
+[data-theme="tema-c"] .timeline::before {
+  background: #FFD4DB;
+}
+[data-theme="tema-c"] .timeline::after {
+  background: linear-gradient(180deg, transparent, #FF6B81 25%, #FFA07A 65%, #FFEAA7 85%, #FFFFFF 98%, transparent);
+  box-shadow: 0 0 8px 1px rgba(255, 107, 129, 0.8), 0 0 16px rgba(255, 160, 122, 0.5);
+}
+[data-theme="tema-c"] .timeline-step::before {
+  border: 3.5px solid #FF6B81;
+  box-shadow: 0 0 0 2px #FFE4E6;
+}
+
 

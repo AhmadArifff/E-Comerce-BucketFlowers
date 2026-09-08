@@ -5,6 +5,8 @@ import { persist } from 'zustand/middleware';
 import type { MockOrder, WarrantyClaim, WarrantyStatus } from '@chenille/shared';
 import { MOCK_ORDERS, MOCK_WARRANTY_CLAIMS } from '@chenille/shared';
 
+export type { MockOrder, MockOrder as Order, WarrantyClaim, WarrantyStatus } from '@chenille/shared';
+
 interface OrderState {
   orders: MockOrder[];
   activeOrderId: string;

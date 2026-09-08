@@ -4,10 +4,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Sparkles, MessageSquare, Phone, Bot, CheckCircle } from 'lucide-react';
 import { useChatStore } from '@/stores/useChatStore';
 import { useCartStore } from '@/stores/useCartStore';
+import { useThemeStore } from '@/stores/useThemeStore';
 
 export const LiveChatWidget: React.FC = () => {
   const { isOpen, setIsOpen, messages, sendMessage, escalateToWhatsApp } = useChatStore();
   const { isCartOpen } = useCartStore();
+  const { theme } = useThemeStore();
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -18,11 +20,25 @@ export const LiveChatWidget: React.FC = () => {
     }
   }, [isCartOpen, isOpen, setIsOpen]);
 
-  const presetQuestions = [
-    'Bisa request warna bunga & pita?',
-    'Titik temu COD di kampus mana saja?',
-    'Berapa lama estimasi buket PO wisuda?',
-  ];
+  const presetQuestions =
+    theme === 'tema-b'
+      ? [
+          '🌹 Cek Stok Rose Velvet',
+          '💌 Box Velvet & Wax Seal',
+          '🚗 Kurir Mobil Spesial',
+          '✦ Kombinasi Mawar & Lily',
+        ]
+      : theme === 'tema-c'
+      ? [
+          '🌻 Mau custom buket karakter lucu!',
+          '🎁 Ada kartu ucapan gratis?',
+          '🛵 Bisa kirim hari ini juga?',
+        ]
+      : [
+          'Bisa request warna bunga & pita?',
+          'Titik temu COD di kampus mana saja?',
+          'Berapa lama estimasi buket PO wisuda?',
+        ];
 
   useEffect(() => {
     if (isOpen) {
@@ -37,20 +53,44 @@ export const LiveChatWidget: React.FC = () => {
     setInputText('');
   };
 
+  const getChatTitle = () => {
+    if (theme === 'tema-b') return 'Atelier Concierge Service ✦';
+    if (theme === 'tema-c') return 'CS Florist Gemas 🌻';
+    return 'Asisten Florist Atelier 🌸';
+  };
+
+  const getChatSubtitle = () => {
+    if (theme === 'tema-b') return 'Online • Rania Azzahra & Atelier Privé';
+    if (theme === 'tema-c') return 'Online • Siap Bantu Kamu!';
+    return 'Online • Balas Otomatis Cepat';
+  };
+
+  const getChatAvatar = () => {
+    if (theme === 'tema-b') return '🌹';
+    if (theme === 'tema-c') return '🌻';
+    return '🌸';
+  };
+
   return (
     <>
-      {/* Floating Trigger Button */}
+      {/* Universal Floating Trigger Button (Always Fixed Bottom Right across Themes) */}
       {!isOpen && !isCartOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full btn-primary-atelier text-white font-bold text-xs shadow-2xl hover:scale-105 active:scale-95 transition-all group cursor-pointer"
+          className="floating-chat-btn group"
           aria-label="Tanya Florist Live Chat"
         >
-          <div className="relative">
-            <MessageCircle className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-            <span className="pulse-green-dot w-2.5 h-2.5 rounded-full bg-emerald-400 absolute -top-0.5 -right-0.5 border-2 border-white inline-block" />
+          <div className="relative flex items-center justify-center">
+            {theme === 'tema-b' ? (
+              <MessageCircle className="w-4 h-4 text-[#D4AF37] group-hover:rotate-12 transition-transform" />
+            ) : (
+              <MessageCircle className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+            )}
+            <span className="pulse-green-dot w-2 h-2 rounded-full bg-emerald-400 absolute -top-0.5 -right-0.5 border border-white inline-block" />
           </div>
-          <span className="hidden sm:inline">Tanya Florist</span>
+          <span>
+            {theme === 'tema-c' ? 'Chat Florist Gemas' : 'Tanya Florist'}
+          </span>
         </button>
       )}
 
@@ -60,23 +100,29 @@ export const LiveChatWidget: React.FC = () => {
           {/* Header */}
           <div
             className="p-4 text-white flex items-center justify-between shadow-sm"
-            style={{ background: 'var(--primary)' }}
+            style={{
+              background:
+                theme === 'tema-b'
+                  ? 'linear-gradient(135deg, #4A154B 0%, #6B2D5C 100%)'
+                  : 'var(--primary)',
+              borderBottom: theme === 'tema-b' ? '1px solid #D4AF37' : undefined,
+            }}
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <Bot className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-base border border-white/30">
+                <span>{getChatAvatar()}</span>
               </div>
               <div>
-                <h3 className="text-xs font-bold leading-tight">Asisten Florist Atelier 🌸</h3>
+                <h3 className="text-xs font-bold leading-tight font-heading">{getChatTitle()}</h3>
                 <div className="flex items-center gap-1.5 text-[10px] text-white/90">
                   <span className="pulse-green-dot w-2 h-2 rounded-full bg-emerald-300 inline-block" />
-                  <span>Online • Balas Otomatis Cepat</span>
+                  <span>{getChatSubtitle()}</span>
                 </div>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10"
+              className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
