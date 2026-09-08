@@ -19,8 +19,7 @@ import {
 } from 'lucide-react';
 import { MOCK_PRODUCTS, type ExtendedProduct as Product } from '@chenille/shared';
 import { TableSortHeader, type SortDirection } from './TableSortHeader';
-
-type Timeframe = '7_DAYS' | '30_DAYS';
+import { DateRangeFilter, type DateRange } from './DateRangeFilter';
 
 interface CtrDataPoint {
   label: string;
@@ -116,7 +115,11 @@ const PRODUCT_CTR_EVALUATIONS: Record<string, Omit<ProductCtrEvaluation, 'id'>> 
 };
 
 export const ProductCtrAnalyticsCard: React.FC<{ onOpenBom?: (prod: Product) => void }> = ({ onOpenBom }) => {
-  const [timeframe, setTimeframe] = useState<Timeframe>('7_DAYS');
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: '',
+    endDate: '',
+    presetLabel: '7 Hari Terakhir',
+  });
   const [hoveredPoint, setHoveredPoint] = useState<CtrDataPoint | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
@@ -138,7 +141,21 @@ export const ProductCtrAnalyticsCard: React.FC<{ onOpenBom?: (prod: Product) => 
     }
   };
 
-  const chartData = timeframe === '7_DAYS' ? DATA_7_DAYS : DATA_30_DAYS;
+  const isShortRange = useMemo(() => {
+    if (dateRange.presetLabel === 'Hari Ini' || dateRange.presetLabel === '7 Hari Terakhir') return true;
+    if (dateRange.startDate && dateRange.endDate) {
+      const diffDays = (new Date(dateRange.endDate).getTime() - new Date(dateRange.startDate).getTime()) / 86400000;
+      return diffDays <= 7;
+    }
+    return false;
+  }, [dateRange]);
+
+  const chartData = useMemo(() => {
+    if (isShortRange) {
+      return DATA_7_DAYS;
+    }
+    return DATA_30_DAYS;
+  }, [isShortRange]);
 
   // Aggregate stats
   const totalImpressions = useMemo(() => {
@@ -167,8 +184,8 @@ export const ProductCtrAnalyticsCard: React.FC<{ onOpenBom?: (prod: Product) => 
         actionRecommendation: 'Pertahankan kualitas rangkaian kawat bulu.',
       };
 
-      const clicks = timeframe === '7_DAYS' ? evalData.clicks7d : evalData.clicks30d;
-      const impressions = timeframe === '7_DAYS' ? evalData.impressions7d : evalData.impressions30d;
+      const clicks = isShortRange ? evalData.clicks7d : evalData.clicks30d;
+      const impressions = isShortRange ? evalData.impressions7d : evalData.impressions30d;
       const ctr = parseFloat(((clicks / impressions) * 100).toFixed(1));
 
       return {
@@ -181,7 +198,7 @@ export const ProductCtrAnalyticsCard: React.FC<{ onOpenBom?: (prod: Product) => 
         actionRecommendation: evalData.actionRecommendation,
       };
     });
-  }, [timeframe]);
+  }, [isShortRange]);
 
   const filteredAndSortedProducts = useMemo(() => {
     const list = evaluatedProducts.filter((item) => {
@@ -278,32 +295,9 @@ export const ProductCtrAnalyticsCard: React.FC<{ onOpenBom?: (prod: Product) => 
           </div>
         </div>
 
-        {/* Timeframe Switcher Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-stone-100 rounded-2xl border border-stone-200 self-start lg:self-auto">
-          <button
-            type="button"
-            onClick={() => setTimeframe('7_DAYS')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              timeframe === '7_DAYS'
-                ? 'bg-white text-rose-600 shadow-xs'
-                : 'text-stone-600 hover:text-stone-900'
-            }`}
-          >
-            <Calendar className="w-3.5 h-3.5" />
-            <span>7 Hari Terakhir</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setTimeframe('30_DAYS')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              timeframe === '30_DAYS'
-                ? 'bg-white text-rose-600 shadow-xs'
-                : 'text-stone-600 hover:text-stone-900'
-            }`}
-          >
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>30 Hari (1 Bulan Terakhir)</span>
-          </button>
+        {/* Date Range Filter */}
+        <div className="self-start lg:self-auto">
+          <DateRangeFilter value={dateRange} onChange={setDateRange} />
         </div>
       </div>
 
@@ -322,7 +316,7 @@ export const ProductCtrAnalyticsCard: React.FC<{ onOpenBom?: (prod: Product) => 
           </div>
           <div className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
             <TrendingUp className="w-3 h-3" />
-            <span>{timeframe === '7_DAYS' ? '+14.2% vs pekan lalu' : '+22.8% vs bulan lalu'}</span>
+            <span>{isShortRange ? '+14.2% vs pekan lalu' : '+22.8% vs bulan lalu'}</span>
           </div>
         </div>
 
@@ -383,7 +377,7 @@ export const ProductCtrAnalyticsCard: React.FC<{ onOpenBom?: (prod: Product) => 
             <div className="text-xs font-black text-stone-800 tracking-tight flex items-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5 text-rose-600" />
               <span>
-                Grafik Tren Minat Klik ({timeframe === '7_DAYS' ? '7 Hari Terakhir' : '1 Bulan Terakhir'})
+                Grafik Tren Minat Klik ({dateRange.presetLabel || 'Rentang Tanggal Khusus'})
               </span>
             </div>
             <p className="text-[11px] text-stone-500">

@@ -37,6 +37,7 @@ export interface MockOrder {
   shippingFee: number;
   discountAmount: number;
   flowerPointsEarned: number;
+  adminFee?: number;
   totalAmount: number;
   createdAt: string;
   estimatedDelivery: string;
@@ -372,6 +373,45 @@ export const MOCK_WARRANTY_CLAIMS: WarrantyClaim[] = [
     photoProofUrl: 'https://images.unsplash.com/photo-1520763185298-1b434c919102?auto=format&fit=crop&w=600&q=80',
     createdAt: '2026-09-06T15:30:00Z',
     adminNote: 'Sedang diperiksa oleh Lead Florist untuk penjadwalan kirim tangkai ganti baru.',
+  },
+  {
+    id: 'warr-002',
+    invoiceNumber: 'INV-20260902-045',
+    customerName: 'Alya Putri',
+    customerPhone: '081298765432',
+    issueCategory: 'WRONG_PRODUCT_VARIANT',
+    description: 'Pesan varian mawar dusty pink tetapi yang terkirim warna lavender ungu.',
+    solutionPreference: 'FREE_REPLACEMENT',
+    status: 'APPROVED_REPLACE',
+    photoProofUrl: 'https://images.unsplash.com/photo-1561181286-d3fee7d55364?auto=format&fit=crop&w=600&q=80',
+    createdAt: '2026-09-02T10:15:00Z',
+    adminNote: 'Disetujui ganti baru tanpa perlu retur buket lama.',
+  },
+  {
+    id: 'warr-003',
+    invoiceNumber: 'INV-20260828-012',
+    customerName: 'Dina Maulida',
+    customerPhone: '081345678901',
+    issueCategory: 'WRONG_GREETING_CARD',
+    description: 'Kartu ucapan wisuda salah nama gelar wisudawan.',
+    solutionPreference: 'FREE_REPLACEMENT',
+    status: 'RESOLVED',
+    photoProofUrl: 'https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?auto=format&fit=crop&w=600&q=80',
+    createdAt: '2026-08-28T14:20:00Z',
+    adminNote: 'Kartu ucapan revisi telah dikirimkan ulang dengan kurir instan.',
+  },
+  {
+    id: 'warr-004',
+    invoiceNumber: 'INV-20260907-098',
+    customerName: 'Rian Pratama',
+    customerPhone: '085811223344',
+    issueCategory: 'TRANSIT_DAMAGE_CRUSHED',
+    description: 'Kertas wrapping cellophane kusut parah dan pita terlepas saat diterima dari kurir reguler.',
+    solutionPreference: 'FREE_REPLACEMENT',
+    status: 'SUBMITTED',
+    photoProofUrl: 'https://images.unsplash.com/photo-1508610048659-a06b669e3321?auto=format&fit=crop&w=600&q=80',
+    createdAt: '2026-09-07T09:45:00Z',
+    adminNote: 'Baru diajukan pembeli, menunggu verifikasi foto bukti.',
   },
 ];
 

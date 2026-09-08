@@ -23,6 +23,7 @@ export interface PaymentGatewaysConfig {
     clientKey: string;
     serverKey: string;
     isProduction: boolean;
+    adminFee: number;
   };
   bcaManual: {
     isEnabled: boolean;
@@ -30,11 +31,13 @@ export interface PaymentGatewaysConfig {
     accountNumber: string;
     accountHolder: string;
     branch: string;
+    adminFee: number;
   };
   codCash: {
     isEnabled: boolean;
     maxDistanceKm: number;
     notes: string;
+    adminFee: number;
   };
 }
 
@@ -136,6 +139,7 @@ export const useSettingsStore = create<SettingsState>()(
           clientKey: 'SB-Mid-client-W3nK829dL-Chenille',
           serverKey: 'SB-Mid-server-x82KdpL19-Chenille',
           isProduction: false,
+          adminFee: 2500,
         },
         bcaManual: {
           isEnabled: true,
@@ -143,11 +147,13 @@ export const useSettingsStore = create<SettingsState>()(
           accountNumber: '8420-1928-31',
           accountHolder: 'PT Chenille Atelier Florist',
           branch: 'KCP Margonda Raya Depok',
+          adminFee: 0,
         },
         codCash: {
           isEnabled: true,
           maxDistanceKm: 7.5,
           notes: 'Bayar tunai pas saat serah terima buket di Titik Temu Kampus UI Depok, Gunadarma, atau PNJ.',
+          adminFee: 0,
         },
       },
       wasteMaterials: DEFAULT_WASTE_MATERIALS,

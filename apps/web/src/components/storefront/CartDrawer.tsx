@@ -112,6 +112,16 @@ export const CartDrawer: React.FC = () => {
   const grandTotal = getGrandTotal();
   const userPoints = user?.flowerPoints ?? 120;
 
+  // Configurable Admin Fee based on selected payment gateway
+  const selectedAdminFee =
+    selectedPayment === 'midtrans'
+      ? (paymentGateways.midtrans?.adminFee ?? 0)
+      : selectedPayment === 'bcaManual'
+      ? (paymentGateways.bcaManual?.adminFee ?? 0)
+      : (paymentGateways.codCash?.adminFee ?? 0);
+
+  const finalGrandTotal = grandTotal + selectedAdminFee;
+
   const handleApplyVoucher = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputVoucher.trim()) return;
@@ -207,8 +217,9 @@ export const CartDrawer: React.FC = () => {
       subtotalAmount: subtotal,
       shippingFee,
       discountAmount,
+      adminFee: selectedAdminFee,
       flowerPointsEarned: Math.round(subtotal * 0.001),
-      totalAmount: grandTotal,
+      totalAmount: finalGrandTotal,
       createdAt: new Date().toISOString(),
       estimatedDelivery: 'Besok, 10:00 WIB',
     };
@@ -719,9 +730,14 @@ export const CartDrawer: React.FC = () => {
                             className="mt-1 accent-rose-600"
                           />
                           <div>
-                            <div className="text-xs font-black text-stone-800 flex items-center gap-1.5">
+                            <div className="text-xs font-black text-stone-800 flex items-center gap-1.5 flex-wrap">
                               <CreditCard className="w-3.5 h-3.5 text-theme-primary" />
                               <span>Midtrans Snap QRIS & Virtual Account</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-stone-100 text-stone-700">
+                                {paymentGateways.midtrans.adminFee > 0
+                                  ? `+ Fee Rp ${paymentGateways.midtrans.adminFee.toLocaleString('id-ID')}`
+                                  : 'Bebas Admin'}
+                              </span>
                             </div>
                             <p className="text-[10px] text-stone-500 mt-0.5">
                               QRIS Nasional, GoPay, ShopeePay, VA BCA, Mandiri, BNI (Otomatis & Realtime).
@@ -754,9 +770,14 @@ export const CartDrawer: React.FC = () => {
                             className="mt-1 accent-rose-600"
                           />
                           <div>
-                            <div className="text-xs font-black text-stone-800 flex items-center gap-1.5">
+                            <div className="text-xs font-black text-stone-800 flex items-center gap-1.5 flex-wrap">
                               <Building className="w-3.5 h-3.5 text-blue-600" />
                               <span>Transfer Bank BCA Manual</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-blue-50 text-blue-700">
+                                {paymentGateways.bcaManual.adminFee > 0
+                                  ? `+ Fee Rp ${paymentGateways.bcaManual.adminFee.toLocaleString('id-ID')}`
+                                  : 'Bebas Admin'}
+                              </span>
                             </div>
                             <p className="text-[10px] text-stone-500 mt-0.5">
                               {paymentGateways.bcaManual.accountNumber} a/n {paymentGateways.bcaManual.accountHolder}
@@ -789,9 +810,14 @@ export const CartDrawer: React.FC = () => {
                             className="mt-1 accent-rose-600"
                           />
                           <div>
-                            <div className="text-xs font-black text-stone-800 flex items-center gap-1.5">
+                            <div className="text-xs font-black text-stone-800 flex items-center gap-1.5 flex-wrap">
                               <Banknote className="w-3.5 h-3.5 text-emerald-600" />
                               <span>Bayar Tunai Pas Serah Terima (COD)</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-700">
+                                {paymentGateways.codCash.adminFee > 0
+                                  ? `+ Fee Rp ${paymentGateways.codCash.adminFee.toLocaleString('id-ID')}`
+                                  : 'Bebas Admin'}
+                              </span>
                             </div>
                             <p className="text-[10px] text-stone-500 mt-0.5">
                               {paymentGateways.codCash.notes}
@@ -812,10 +838,35 @@ export const CartDrawer: React.FC = () => {
 
               {/* Step 2 Bottom Checkout Action */}
               <div className="p-4 sm:p-5 border-t border-rose-100 bg-white space-y-3 shadow-lg">
+                <div className="space-y-1 pb-1 border-b border-stone-100 text-xs text-stone-600">
+                  <div className="flex justify-between items-center">
+                    <span>Subtotal:</span>
+                    <span className="font-semibold text-stone-800">Rp {subtotal.toLocaleString('id-ID')}</span>
+                  </div>
+                  {shippingFee > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span>Ongkir:</span>
+                      <span className="font-semibold text-stone-800">Rp {shippingFee.toLocaleString('id-ID')}</span>
+                    </div>
+                  )}
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between items-center text-emerald-600">
+                      <span>Kupon Diskon:</span>
+                      <span className="font-semibold">- Rp {discountAmount.toLocaleString('id-ID')}</span>
+                    </div>
+                  )}
+                  {selectedAdminFee > 0 && (
+                    <div className="flex justify-between items-center text-rose-700 font-medium">
+                      <span>Biaya Admin / Layanan ({selectedPayment === 'midtrans' ? 'Midtrans' : selectedPayment === 'bcaManual' ? 'BCA' : 'COD'}):</span>
+                      <span className="font-bold">+ Rp {selectedAdminFee.toLocaleString('id-ID')}</span>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-stone-500">Total Pembayaran Akhir:</span>
+                  <span className="text-stone-500 font-medium">Total Pembayaran Akhir:</span>
                   <span className="text-base font-black text-theme-primary">
-                    Rp {grandTotal.toLocaleString('id-ID')}
+                    Rp {finalGrandTotal.toLocaleString('id-ID')}
                   </span>
                 </div>
 

@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { TableSortHeader, type SortDirection } from './TableSortHeader';
+import { DateRangeFilter, type DateRange } from './DateRangeFilter';
 import {
   FileSpreadsheet,
   Download,
@@ -55,28 +56,93 @@ import { showMagicToast } from '@/lib/magic-motion';
 // ============================================================================
 export const FinancialChartCard: React.FC = () => {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: '',
+    endDate: '',
+    presetLabel: '30 Hari Terakhir',
+  });
+
+  const is7Days = dateRange.presetLabel === '7 Hari Terakhir' ||
+    (dateRange.startDate && dateRange.endDate &&
+      (new Date(dateRange.endDate).getTime() - new Date(dateRange.startDate).getTime()) <= 7 * 86400000);
+
+  const chartData = useMemo(() => {
+    if (is7Days) {
+      return [
+        { label: 'Sen', sub: '1 Sep', omzet: 1200000, hpp: 510000, laba: 690000, x: 80, yOmzet: 120, yHpp: 155, yLaba: 145 },
+        { label: 'Sel', sub: '2 Sep', omzet: 1450000, hpp: 620000, laba: 830000, x: 175, yOmzet: 105, yHpp: 148, yLaba: 135 },
+        { label: 'Rab', sub: '3 Sep', omzet: 1800000, hpp: 750000, laba: 1050000, x: 270, yOmzet: 85, yHpp: 140, yLaba: 120 },
+        { label: 'Kam', sub: '4 Sep', omzet: 1600000, hpp: 680000, laba: 920000, x: 365, yOmzet: 95, yHpp: 144, yLaba: 128 },
+        { label: 'Jum', sub: '5 Sep', omzet: 2200000, hpp: 900000, laba: 1300000, x: 460, yOmzet: 65, yHpp: 130, yLaba: 105 },
+        { label: 'Sab', sub: '6 Sep', omzet: 2800000, hpp: 1150000, laba: 1650000, x: 555, yOmzet: 40, yHpp: 118, yLaba: 85 },
+        { label: 'Min', sub: '7 Sep', omzet: 2100000, hpp: 880000, laba: 1220000, x: 640, yOmzet: 70, yHpp: 132, yLaba: 110 },
+      ];
+    }
+    return [
+      { label: 'Minggu 1', sub: '1 - 7 Sep', omzet: 8750000, hpp: 3650000, laba: 5100000, x: 100, yOmzet: 97.5, yHpp: 146, yLaba: 131.5 },
+      { label: 'Minggu 2', sub: '8 - 14 Sep', omzet: 11200000, hpp: 4700000, laba: 6500000, x: 280, yOmzet: 57.5, yHpp: 129, yLaba: 108.5 },
+      { label: 'Minggu 3 (Puncak)', sub: '15 - 21 Sep', omzet: 14800000, hpp: 6100000, laba: 8700000, x: 460, yOmzet: 32.5, yHpp: 117.5, yLaba: 95 },
+      { label: 'Minggu 4', sub: '22 - 30 Sep', omzet: 9400000, hpp: 3950000, laba: 5450000, x: 640, yOmzet: 95, yHpp: 145, yLaba: 130 },
+    ];
+  }, [is7Days]);
+
+  const totalOmzetPeriod = chartData.reduce((a, b) => a + b.omzet, 0);
+  const totalLabaPeriod = chartData.reduce((a, b) => a + b.laba, 0);
 
   const handleExportExcel = () => {
-    showMagicToast('Laporan Diunduh 📊', 'Berkas Laporan_Finansial_September_2026.xlsx telah di-generate.', '📥');
+    showMagicToast('Laporan Diunduh 📊', `Berkas Laporan_Finansial_${(dateRange.presetLabel || 'Custom').replace(/\s+/g, '_')}.xlsx telah di-generate.`, '📥');
   };
+
+  const omzetPath = useMemo(() => {
+    return chartData.map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt.x} ${pt.yOmzet}`).join(' ');
+  }, [chartData]);
+
+  const hppPath = useMemo(() => {
+    return chartData.map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt.x} ${pt.yHpp}`).join(' ');
+  }, [chartData]);
+
+  const labaPath = useMemo(() => {
+    return chartData.map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt.x} ${pt.yLaba}`).join(' ');
+  }, [chartData]);
+
+  const polygonPoints = useMemo(() => {
+    const firstX = chartData[0].x;
+    const lastX = chartData[chartData.length - 1].x;
+    const pts = chartData.map((p) => `${p.x},${p.yLaba}`).join(' ');
+    return `${firstX},180 ${pts} ${lastX},180`;
+  }, [chartData]);
 
   return (
     <div className="bg-white rounded-3xl border border-rose-100 p-5 sm:p-7 shadow-xs space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-stone-800 font-extrabold text-sm sm:text-base tracking-tight">
             <TrendingUp className="w-4 h-4 text-rose-600" />
             <span>Grafik Finansial: Omzet vs HPP vs Laba Bersih</span>
           </div>
           <p className="text-xs text-stone-500 mt-0.5">
-            Evaluasi 4 minggu pergerakan omzet, modal bahan kawat bulu, dan profit bersih September 2026.
+            Evaluasi pergerakan omzet, modal bahan kawat bulu, dan laba bersih ({dateRange.presetLabel || 'Rentang Khusus'}).
           </p>
         </div>
 
-        <div className="flex items-center flex-wrap gap-2 text-xs">
+        <div className="flex items-center flex-wrap gap-2.5 text-xs">
+          <DateRangeFilter value={dateRange} onChange={setDateRange} />
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-bold transition-all shadow-2xs cursor-pointer ml-auto sm:ml-0"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Unduh Excel</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Legend & Stats banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-stone-100">
+        <div className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-1.5 text-[11px] font-bold text-stone-600">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-            <span>Omzet</span>
+            <span>Omzet: <strong className="text-stone-800">Rp {totalOmzetPeriod.toLocaleString('id-ID')}</strong></span>
           </div>
           <div className="flex items-center gap-1.5 text-[11px] font-bold text-stone-600">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
@@ -84,16 +150,10 @@ export const FinancialChartCard: React.FC = () => {
           </div>
           <div className="flex items-center gap-1.5 text-[11px] font-bold text-stone-600">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <span>Laba Bersih</span>
+            <span>Laba: <strong className="text-emerald-700">Rp {totalLabaPeriod.toLocaleString('id-ID')}</strong></span>
           </div>
-          <button
-            onClick={handleExportExcel}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-bold transition-all shadow-2xs cursor-pointer ml-auto sm:ml-2"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Unduh Excel</span>
-          </button>
         </div>
+        <span className="text-[10px] text-stone-400 font-medium">Arahkan kursor ke titik grafik untuk detail angka</span>
       </div>
 
       {/* Responsive SVG Chart */}
@@ -122,48 +182,71 @@ export const FinancialChartCard: React.FC = () => {
           <line x1="40" y1="180" x2="680" y2="180" stroke="#E2E8F0" strokeWidth="1.5" />
 
           {/* Y Axis labels */}
-          <text x="32" y="34" fontSize="10" fill="#94A3B8" textAnchor="end">Rp 3.0M</text>
-          <text x="32" y="84" fontSize="10" fill="#94A3B8" textAnchor="end">Rp 2.0M</text>
-          <text x="32" y="134" fontSize="10" fill="#94A3B8" textAnchor="end">Rp 1.0M</text>
+          <text x="32" y="34" fontSize="10" fill="#94A3B8" textAnchor="end">Tinggi</text>
+          <text x="32" y="84" fontSize="10" fill="#94A3B8" textAnchor="end">Sedang</text>
+          <text x="32" y="134" fontSize="10" fill="#94A3B8" textAnchor="end">Normal</text>
           <text x="32" y="184" fontSize="10" fill="#94A3B8" textAnchor="end">Rp 0</text>
 
           {/* Area fill under Laba Bersih */}
-          <polygon points="100,180 100,131 280,108 460,95 640,130 640,180" fill="url(#gradLabaAdmin)" />
+          <polygon points={polygonPoints} fill="url(#gradLabaAdmin)" />
 
           {/* Omzet Path (Pink/Rose) */}
-          <path d="M 100 97.5 Q 190 77.5 280 57.5 T 460 32.5 T 640 95" fill="none" stroke="#F43F5E" strokeWidth="3" strokeLinecap="round" />
+          <path d={omzetPath} fill="none" stroke="#F43F5E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
 
           {/* HPP Path (Amber Dashed) */}
-          <path d="M 100 146 Q 190 137.5 280 129 T 460 117.5 T 640 145" fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeDasharray="4 3" strokeLinecap="round" />
+          <path d={hppPath} fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeDasharray="4 3" strokeLinecap="round" strokeLinejoin="round" />
 
           {/* Laba Bersih Path (Emerald) */}
-          <path d="M 100 131.5 Q 190 120 280 108.5 T 460 95 T 640 130" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" />
+          <path d={labaPath} fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
 
-          {/* Week 1 Points */}
-          <circle cx="100" cy="97.5" r="5" fill="#F43F5E" stroke="#FFFFFF" strokeWidth="2" className="cursor-pointer hover:r-7 transition-all" />
-          <circle cx="100" cy="146" r="4.5" fill="#F59E0B" stroke="#FFFFFF" strokeWidth="2" className="cursor-pointer" />
-          <circle cx="100" cy="131.5" r="5" fill="#10B981" stroke="#FFFFFF" strokeWidth="2" className="cursor-pointer hover:r-7 transition-all" />
-
-          {/* Week 2 Points */}
-          <circle cx="280" cy="57.5" r="5" fill="#F43F5E" stroke="#FFFFFF" strokeWidth="2" className="cursor-pointer hover:r-7 transition-all" />
-          <circle cx="280" cy="129" r="4.5" fill="#F59E0B" stroke="#FFFFFF" strokeWidth="2" className="cursor-pointer" />
-          <circle cx="280" cy="108.5" r="5" fill="#10B981" stroke="#FFFFFF" strokeWidth="2" className="cursor-pointer hover:r-7 transition-all" />
-
-          {/* Week 3 Points (Peak Wisuda) */}
-          <circle cx="460" cy="32.5" r="6" fill="#F43F5E" stroke="#FFFFFF" strokeWidth="2.5" className="cursor-pointer hover:r-8 transition-all" />
-          <circle cx="460" cy="117.5" r="4.5" fill="#F59E0B" stroke="#FFFFFF" strokeWidth="2" className="cursor-pointer" />
-          <circle cx="460" cy="95" r="6" fill="#10B981" stroke="#FFFFFF" strokeWidth="2.5" className="cursor-pointer hover:r-8 transition-all" />
-
-          {/* Week 4 Points */}
-          <circle cx="640" cy="95" r="5" fill="#F43F5E" stroke="#FFFFFF" strokeWidth="2" className="cursor-pointer hover:r-7 transition-all" />
-          <circle cx="640" cy="145" r="4.5" fill="#F59E0B" stroke="#FFFFFF" strokeWidth="2" className="cursor-pointer" />
-          <circle cx="640" cy="130" r="5" fill="#10B981" stroke="#FFFFFF" strokeWidth="2" className="cursor-pointer hover:r-7 transition-all" />
-
-          {/* X Axis Labels */}
-          <text x="100" y="205" fontSize="11" fontWeight="700" fill="#64748B" textAnchor="middle">Minggu 1</text>
-          <text x="280" y="205" fontSize="11" fontWeight="700" fill="#64748B" textAnchor="middle">Minggu 2</text>
-          <text x="460" y="205" fontSize="11" fontWeight="700" fill="#64748B" textAnchor="middle">Minggu 3 (Puncak Wisuda)</text>
-          <text x="640" y="205" fontSize="11" fontWeight="700" fill="#64748B" textAnchor="middle">Minggu 4 (Berjalan)</text>
+          {/* Points */}
+          {chartData.map((pt, i) => (
+            <g key={i}>
+              <circle
+                cx={pt.x}
+                cy={pt.yOmzet}
+                r="5"
+                fill="#F43F5E"
+                stroke="#FFFFFF"
+                strokeWidth="2"
+                className="cursor-pointer hover:r-7 transition-all"
+                onMouseEnter={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setTooltip({ x: pt.x, y: pt.yOmzet - 5, text: `${pt.label} (${pt.sub}): Omzet Rp ${pt.omzet.toLocaleString('id-ID')}` });
+                }}
+                onMouseLeave={() => setTooltip(null)}
+              />
+              <circle
+                cx={pt.x}
+                cy={pt.yHpp}
+                r="4.5"
+                fill="#F59E0B"
+                stroke="#FFFFFF"
+                strokeWidth="2"
+                className="cursor-pointer hover:r-6 transition-all"
+                onMouseEnter={(e) => {
+                  setTooltip({ x: pt.x, y: pt.yHpp - 5, text: `${pt.label} (${pt.sub}): HPP Rp ${pt.hpp.toLocaleString('id-ID')}` });
+                }}
+                onMouseLeave={() => setTooltip(null)}
+              />
+              <circle
+                cx={pt.x}
+                cy={pt.yLaba}
+                r="5"
+                fill="#10B981"
+                stroke="#FFFFFF"
+                strokeWidth="2"
+                className="cursor-pointer hover:r-7 transition-all"
+                onMouseEnter={(e) => {
+                  setTooltip({ x: pt.x, y: pt.yLaba - 5, text: `${pt.label} (${pt.sub}): Laba Bersih Rp ${pt.laba.toLocaleString('id-ID')}` });
+                }}
+                onMouseLeave={() => setTooltip(null)}
+              />
+              <text x={pt.x} y="205" fontSize="11" fontWeight="700" fill="#64748B" textAnchor="middle">
+                {pt.label}
+              </text>
+            </g>
+          ))}
         </svg>
       </div>
     </div>
@@ -280,16 +363,19 @@ export const ProductionCalendarCard: React.FC = () => {
 export const ReportsView: React.FC = () => {
   const { wasteMaterials, getTotalWasteLoss } = useSettingsStore();
   const totalWasteLoss = getTotalWasteLoss();
-  const baseNet = 23600000;
-  const netEvaluated = baseNet - totalWasteLoss;
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: '',
+    endDate: '',
+    presetLabel: 'Semua Waktu',
+  });
 
   const handleDownload = (format: string) => {
-    showMagicToast(`Laporan ${format} Siap! 📈`, `File Laporan_Atelier_2026.${format.toLowerCase()} berhasil diekspor.`, '📄');
+    showMagicToast(`Laporan ${format} Siap! 📈`, `File Laporan_Atelier_${(dateRange.presetLabel || 'Custom').replace(/\s+/g, '_')}.${format.toLowerCase()} berhasil diekspor.`, '📄');
   };
 
   type ReportSortField = 'period' | 'orders' | 'omzet' | 'hpp' | 'net' | 'margin';
   const [sortField, setSortField] = useState<ReportSortField | null>('period');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const handleSort = (field: ReportSortField) => {
     if (sortField === field) {
@@ -305,15 +391,24 @@ export const ReportsView: React.FC = () => {
   };
 
   const rawReportsData = [
-    { period: 'September 2026 (Berjalan)', monthOrder: 9, orders: 58, omzetNum: 8750000, omzet: 'Rp 8.750.000', hppNum: 3650000, hpp: 'Rp 3.650.000', netNum: 5100000, net: 'Rp 5.100.000', marginNum: 58.2, margin: '58.2%' },
-    { period: 'Agustus 2026', monthOrder: 8, orders: 74, omzetNum: 11200000, omzet: 'Rp 11.200.000', hppNum: 4700000, hpp: 'Rp 4.700.000', netNum: 6500000, net: 'Rp 6.500.000', marginNum: 58.0, margin: '58.0%' },
-    { period: 'Juli 2026', monthOrder: 7, orders: 62, omzetNum: 9400000, omzet: 'Rp 9.400.000', hppNum: 3950000, hpp: 'Rp 3.950.000', netNum: 5450000, net: 'Rp 5.450.000', marginNum: 57.9, margin: '57.9%' },
-    { period: 'Juni 2026 (Wisuda Raya)', monthOrder: 6, orders: 95, omzetNum: 14800000, omzet: 'Rp 14.800.000', hppNum: 6100000, hpp: 'Rp 6.100.000', netNum: 8700000, net: 'Rp 8.700.000', marginNum: 58.7, margin: '58.7%' },
+    { period: 'September 2026 (Berjalan)', isoMonth: '2026-09', startDate: '2026-09-01', endDate: '2026-09-30', monthOrder: 9, orders: 58, omzetNum: 8750000, omzet: 'Rp 8.750.000', hppNum: 3650000, hpp: 'Rp 3.650.000', netNum: 5100000, net: 'Rp 5.100.000', marginNum: 58.2, margin: '58.2%' },
+    { period: 'Agustus 2026', isoMonth: '2026-08', startDate: '2026-08-01', endDate: '2026-08-31', monthOrder: 8, orders: 74, omzetNum: 11200000, omzet: 'Rp 11.200.000', hppNum: 4700000, hpp: 'Rp 4.700.000', netNum: 6500000, net: 'Rp 6.500.000', marginNum: 58.0, margin: '58.0%' },
+    { period: 'Juli 2026', isoMonth: '2026-07', startDate: '2026-07-01', endDate: '2026-07-31', monthOrder: 7, orders: 62, omzetNum: 9400000, omzet: 'Rp 9.400.000', hppNum: 3950000, hpp: 'Rp 3.950.000', netNum: 5450000, net: 'Rp 5.450.000', marginNum: 57.9, margin: '57.9%' },
+    { period: 'Juni 2026 (Wisuda Raya)', isoMonth: '2026-06', startDate: '2026-06-01', endDate: '2026-06-30', monthOrder: 6, orders: 95, omzetNum: 14800000, omzet: 'Rp 14.800.000', hppNum: 6100000, hpp: 'Rp 6.100.000', netNum: 8700000, net: 'Rp 8.700.000', marginNum: 58.7, margin: '58.7%' },
+    { period: 'Mei 2026', isoMonth: '2026-05', startDate: '2026-05-01', endDate: '2026-05-31', monthOrder: 5, orders: 50, omzetNum: 7900000, omzet: 'Rp 7.900.000', hppNum: 3300000, hpp: 'Rp 3.300.000', netNum: 4600000, net: 'Rp 4.600.000', marginNum: 58.2, margin: '58.2%' },
   ];
 
+  const filteredReportsData = useMemo(() => {
+    return rawReportsData.filter((r) => {
+      if (dateRange.startDate && r.endDate < dateRange.startDate) return false;
+      if (dateRange.endDate && r.startDate > dateRange.endDate) return false;
+      return true;
+    });
+  }, [dateRange]);
+
   const sortedReports = useMemo(() => {
-    if (!sortField || !sortDirection) return rawReportsData;
-    return [...rawReportsData].sort((a, b) => {
+    if (!sortField || !sortDirection) return filteredReportsData;
+    return [...filteredReportsData].sort((a, b) => {
       let valA: any = a[sortField as keyof typeof a];
       let valB: any = b[sortField as keyof typeof b];
 
@@ -340,22 +435,31 @@ export const ReportsView: React.FC = () => {
       }
       return sortDirection === 'asc' ? valA - valB : valB - valA;
     });
-  }, [sortField, sortDirection]);
+  }, [filteredReportsData, sortField, sortDirection]);
+
+  // Dynamic calculations based on active date range
+  const totalOmzetFiltered = filteredReportsData.reduce((acc, r) => acc + r.omzetNum, 0);
+  const totalHppFiltered = filteredReportsData.reduce((acc, r) => acc + r.hppNum, 0);
+  const totalOrdersFiltered = filteredReportsData.reduce((acc, r) => acc + r.orders, 0);
+  const totalPackingFiltered = Math.round(totalOmzetFiltered * 0.048);
+  const netEvaluated = Math.max(0, totalOmzetFiltered - totalHppFiltered - totalPackingFiltered - totalWasteLoss);
 
   return (
     <div className="space-y-6 admin-view-fade">
       {/* Top summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white rounded-2xl border border-rose-100 p-4 shadow-xs">
-          <div className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Omzet YTD</div>
-          <div className="text-lg font-black text-stone-800 mt-1">Rp 44.150.000</div>
-          <div className="text-[11px] text-emerald-600 font-bold mt-0.5">↑ 24.8% YoY</div>
+          <div className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Omzet ({filteredReportsData.length} Bln)</div>
+          <div className="text-lg font-black text-stone-800 mt-1">Rp {totalOmzetFiltered.toLocaleString('id-ID')}</div>
+          <div className="text-[11px] text-emerald-600 font-bold mt-0.5">Total {totalOrdersFiltered} Pesanan Buket</div>
         </div>
 
         <div className="bg-white rounded-2xl border border-rose-100 p-4 shadow-xs">
           <div className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total HPP Bahan Baku</div>
-          <div className="text-lg font-black text-stone-800 mt-1">Rp 18.400.000</div>
-          <div className="text-[11px] text-stone-400 font-medium mt-0.5">Rata-rata 41.7% Omzet</div>
+          <div className="text-lg font-black text-stone-800 mt-1">Rp {totalHppFiltered.toLocaleString('id-ID')}</div>
+          <div className="text-[11px] text-stone-400 font-medium mt-0.5">
+            {totalOmzetFiltered > 0 ? `${((totalHppFiltered / totalOmzetFiltered) * 100).toFixed(1)}% Omzet` : '0%'}
+          </div>
         </div>
 
         {/* Waste / Scrap Loss Card */}
@@ -374,7 +478,7 @@ export const ReportsView: React.FC = () => {
 
         <div className="bg-white rounded-2xl border border-rose-100 p-4 shadow-xs">
           <div className="text-xs font-bold text-stone-400 uppercase tracking-wider">Packing & Logistik</div>
-          <div className="text-lg font-black text-stone-800 mt-1">Rp 2.150.000</div>
+          <div className="text-lg font-black text-stone-800 mt-1">Rp {totalPackingFiltered.toLocaleString('id-ID')}</div>
           <div className="text-[11px] text-stone-400 font-medium mt-0.5">Box Corrugated & Bubble</div>
         </div>
 
@@ -389,17 +493,18 @@ export const ReportsView: React.FC = () => {
 
       {/* Reports Table & Export Actions */}
       <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-rose-100">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-rose-100">
           <div>
             <h2 className="text-base sm:text-lg font-extrabold text-stone-800 tracking-tight">
               Rekapitulasi Penjualan & Margin Bulanan
             </h2>
             <p className="text-xs text-stone-500">
-              Data konsolidasi pesanan lunas, potongan biaya produksi, dan laba operasional studio.
+              Data konsolidasi pesanan lunas, potongan biaya produksi, dan laba operasional studio ({dateRange.presetLabel || 'Rentang Khusus'}).
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex flex-wrap items-center gap-2.5 self-start xl:self-auto">
+            <DateRangeFilter value={dateRange} onChange={setDateRange} />
             <button
               onClick={() => handleDownload('CSV')}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
@@ -467,28 +572,36 @@ export const ReportsView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {sortedReports.map((row, idx) => (
-                <tr key={idx} className="hover:bg-rose-50/20 transition-colors">
-                  <td className="py-3.5 px-4 font-extrabold text-stone-800">{row.period}</td>
-                  <td className="py-3.5 px-4 font-bold">{row.orders} Buket</td>
-                  <td className="py-3.5 px-4 font-bold text-stone-700">{row.omzet}</td>
-                  <td className="py-3.5 px-4 text-stone-500 font-medium">{row.hpp}</td>
-                  <td className="py-3.5 px-4 font-black text-emerald-600">{row.net}</td>
-                  <td className="py-3.5 px-4">
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-black text-[10px]">
-                      {row.margin}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-center">
-                    <button
-                      onClick={() => handleDownload('XLSX')}
-                      className="px-2.5 py-1 rounded-lg border border-stone-200 hover:border-rose-300 text-stone-600 hover:text-rose-600 text-[11px] font-bold transition-all shadow-2xs cursor-pointer"
-                    >
-                      Unduh
-                    </button>
+              {sortedReports.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-stone-400 font-medium">
+                    Tidak ada data laporan keuangan pada rentang tanggal yang dipilih.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                sortedReports.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-rose-50/20 transition-colors">
+                    <td className="py-3.5 px-4 font-extrabold text-stone-800">{row.period}</td>
+                    <td className="py-3.5 px-4 font-bold">{row.orders} Buket</td>
+                    <td className="py-3.5 px-4 font-bold text-stone-700">{row.omzet}</td>
+                    <td className="py-3.5 px-4 text-stone-500 font-medium">{row.hpp}</td>
+                    <td className="py-3.5 px-4 font-black text-emerald-600">{row.net}</td>
+                    <td className="py-3.5 px-4">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-black text-[10px]">
+                        {row.margin}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-center">
+                      <button
+                        onClick={() => handleDownload('XLSX')}
+                        className="px-2.5 py-1 rounded-lg border border-stone-200 hover:border-rose-300 text-stone-600 hover:text-rose-600 text-[11px] font-bold transition-all shadow-2xs cursor-pointer"
+                      >
+                        Unduh
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -1700,7 +1813,7 @@ export const StoreSettingsView: React.FC = () => {
               </div>
 
               {midtransConfig.isEnabled && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-stone-200/60 animate-in fade-in">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-stone-200/60 animate-in fade-in">
                   <div>
                     <label className="block font-bold text-stone-600 text-[11px] mb-1">Merchant ID</label>
                     <input
@@ -1726,6 +1839,20 @@ export const StoreSettingsView: React.FC = () => {
                       value={midtransConfig.serverKey}
                       onChange={(e) => setMidtransConfig({ ...midtransConfig, serverKey: e.target.value })}
                       className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-stone-600 text-[11px] mb-1">
+                      Biaya Admin / Fee (Rp)
+                    </label>
+                    <input
+                      type="number"
+                      value={midtransConfig.adminFee ?? 0}
+                      onChange={(e) =>
+                        setMidtransConfig({ ...midtransConfig, adminFee: parseFloat(e.target.value) || 0 })
+                      }
+                      placeholder="0"
+                      className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono font-bold text-rose-700"
                     />
                   </div>
                 </div>
@@ -1774,7 +1901,7 @@ export const StoreSettingsView: React.FC = () => {
               </div>
 
               {bcaConfig.isEnabled && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-stone-200/60 animate-in fade-in">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-stone-200/60 animate-in fade-in">
                   <div>
                     <label className="block font-bold text-stone-600 text-[11px] mb-1">Nomor Rekening</label>
                     <input
@@ -1800,6 +1927,20 @@ export const StoreSettingsView: React.FC = () => {
                       value={bcaConfig.branch}
                       onChange={(e) => setBcaConfig({ ...bcaConfig, branch: e.target.value })}
                       className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-stone-600 text-[11px] mb-1">
+                      Biaya Admin / Layanan (Rp)
+                    </label>
+                    <input
+                      type="number"
+                      value={bcaConfig.adminFee ?? 0}
+                      onChange={(e) =>
+                        setBcaConfig({ ...bcaConfig, adminFee: parseFloat(e.target.value) || 0 })
+                      }
+                      placeholder="0"
+                      className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono font-bold text-rose-700"
                     />
                   </div>
                 </div>
@@ -1862,7 +2003,21 @@ export const StoreSettingsView: React.FC = () => {
                       className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
                     />
                   </div>
-                  <div className="sm:col-span-2">
+                  <div>
+                    <label className="block font-bold text-stone-600 text-[11px] mb-1">
+                      Biaya Penanganan COD (Rp)
+                    </label>
+                    <input
+                      type="number"
+                      value={codConfig.adminFee ?? 0}
+                      onChange={(e) =>
+                        setCodConfig({ ...codConfig, adminFee: parseFloat(e.target.value) || 0 })
+                      }
+                      placeholder="0"
+                      className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono font-bold text-rose-700"
+                    />
+                  </div>
+                  <div>
                     <label className="block font-bold text-stone-600 text-[11px] mb-1">
                       Catatan / Instruksi Pembayaran COD
                     </label>

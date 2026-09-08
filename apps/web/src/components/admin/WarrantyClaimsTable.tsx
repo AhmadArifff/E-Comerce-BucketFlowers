@@ -1,19 +1,25 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { ShieldCheck, CheckCircle2, XCircle, Clock, Search, AlertCircle, ExternalLink, Sparkles } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, XCircle, Clock, Search, AlertCircle, ExternalLink, Sparkles, Star, MessageSquare } from 'lucide-react';
 import { useOrderStore } from '@/stores/useOrderStore';
 import type { WarrantyStatus } from '@chenille/shared';
 import { TableSortHeader, type SortDirection } from './TableSortHeader';
+import { DateRangeFilter, type DateRange } from './DateRangeFilter';
 
 export const WarrantyClaimsTable: React.FC = () => {
   const { warrantyClaims, updateWarrantyClaimStatus } = useOrderStore();
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: '',
+    endDate: '',
+    presetLabel: 'Semua Waktu',
+  });
 
-  type ClaimSortField = 'id' | 'customerName' | 'issueCategory' | 'solutionPreference' | 'status';
-  const [sortField, setSortField] = useState<ClaimSortField | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  type ClaimSortField = 'id' | 'customerName' | 'issueCategory' | 'solutionPreference' | 'status' | 'createdAt';
+  const [sortField, setSortField] = useState<ClaimSortField | null>('createdAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const handleSort = (field: ClaimSortField) => {
     if (sortField === field) {
@@ -30,8 +36,19 @@ export const WarrantyClaimsTable: React.FC = () => {
 
   const sortedAndFilteredClaims = useMemo(() => {
     const list = warrantyClaims.filter((c) => {
-      if (filterStatus === 'ALL') return true;
-      return c.status === filterStatus;
+      if (filterStatus !== 'ALL' && c.status !== filterStatus) return false;
+
+      // Date Range Filter
+      if (dateRange.startDate) {
+        const claimDate = c.createdAt.slice(0, 10);
+        if (claimDate < dateRange.startDate) return false;
+      }
+      if (dateRange.endDate) {
+        const claimDate = c.createdAt.slice(0, 10);
+        if (claimDate > dateRange.endDate) return false;
+      }
+
+      return true;
     });
 
     if (!sortField || !sortDirection) return list;
@@ -46,7 +63,65 @@ export const WarrantyClaimsTable: React.FC = () => {
       }
       return sortDirection === 'asc' ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
     });
-  }, [warrantyClaims, filterStatus, sortField, sortDirection]);
+  }, [warrantyClaims, filterStatus, dateRange, sortField, sortDirection]);
+
+  // Mock Customer Reviews for Rating Section
+  const allCustomerReviews = useMemo(() => [
+    {
+      id: 'rev-01',
+      customer: 'Siti Rahmadani',
+      rating: 5,
+      date: '2026-09-07T11:00:00Z',
+      product: 'Buket Tulip Pink Korean Aesthetic',
+      comment: 'Bagus banget bunganya fluffy tebal, wrap kardusnya kokoh dan ada penyangga! Wisuda jadi makin berkesan 🌸',
+    },
+    {
+      id: 'rev-02',
+      customer: 'Budi Wicaksono',
+      rating: 5,
+      date: '2026-09-06T14:20:00Z',
+      product: 'Buket Sunflower Graduation Bear',
+      comment: 'Boneka toganya lucu, kawat bulu kelopaknya rapi simetris. Pengiriman J&T aman sampai tujuan.',
+    },
+    {
+      id: 'rev-03',
+      customer: 'Clarissa Angela',
+      rating: 5,
+      date: '2026-09-04T09:15:00Z',
+      product: 'Royal Amethyst Lavender Crown',
+      comment: 'Warna ungu pastelnya aesthetic sekali! Sangat cocok untuk kado sidang skripsi sahabat.',
+    },
+    {
+      id: 'rev-04',
+      customer: 'Nadia Rahmawati',
+      rating: 4,
+      date: '2026-09-02T16:40:00Z',
+      product: 'Buket Tulip Pink Korean Aesthetic',
+      comment: 'Bunga bagus, kemarin sempat agak tertekan sedikit tapi langsung dibantu CS ramah & solutif!',
+    },
+    {
+      id: 'rev-05',
+      customer: 'Dimas Kurniawan',
+      rating: 5,
+      date: '2026-08-29T10:00:00Z',
+      product: 'Single Stem Rose Burgundy Deluxe',
+      comment: 'Mawar kawat bulu awet tanpa air, pacar saya suka banget. Packaging kardusnya aesthetic premium.',
+    },
+  ], []);
+
+  const filteredReviews = useMemo(() => {
+    return allCustomerReviews.filter((r) => {
+      if (dateRange.startDate) {
+        const rDate = r.date.slice(0, 10);
+        if (rDate < dateRange.startDate) return false;
+      }
+      if (dateRange.endDate) {
+        const rDate = r.date.slice(0, 10);
+        if (rDate > dateRange.endDate) return false;
+      }
+      return true;
+    });
+  }, [allCustomerReviews, dateRange]);
 
   const getStatusBadge = (status: WarrantyStatus) => {
     switch (status) {
@@ -83,60 +158,67 @@ export const WarrantyClaimsTable: React.FC = () => {
   return (
     <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-sm space-y-6">
       {/* Header & Stats */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-rose-100">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-rose-100">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-black text-stone-800 tracking-tight">
-              Pusat Pelayanan Komplain & Garansi 100% Anti-Patah
+              Pusat Pelayanan Komplain & Rating Kepuasan 100% Anti-Patah
             </h2>
             <p className="text-xs text-stone-500">
-              Verifikasi klaim bunga rusak dari pembeli dan terbitkan jadwal perangkaian buket pengganti baru.
+              Verifikasi klaim bunga rusak dari pembeli dan evaluasi ulasan kepuasan pelanggan secara berkala.
             </p>
           </div>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 p-1 bg-stone-100 rounded-2xl border border-stone-200 self-start sm:self-auto">
-          {['ALL', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED_REPLACE'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
-                filterStatus === status
-                  ? 'bg-white text-rose-600 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-            >
-              {status === 'ALL' ? 'Semua' : status === 'SUBMITTED' ? 'Diajukan' : status === 'UNDER_REVIEW' ? 'Ditinjau' : 'Disetujui'}
-            </button>
-          ))}
+        {/* Toolbar: Date Range + Filter Pills */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
+          <DateRangeFilter value={dateRange} onChange={setDateRange} />
+          <div className="flex items-center gap-1.5 p-1 bg-stone-100 rounded-2xl border border-stone-200">
+            {['ALL', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED_REPLACE'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                  filterStatus === status
+                    ? 'bg-white text-rose-600 shadow-sm'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                {status === 'ALL' ? 'Semua' : status === 'SUBMITTED' ? 'Diajukan' : status === 'UNDER_REVIEW' ? 'Ditinjau' : 'Disetujui'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200">
-          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Total Tiket</span>
-          <span className="text-xl font-black text-stone-800">{warrantyClaims.length}</span>
+          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Tiket (Periode Ini)</span>
+          <span className="text-xl font-black text-stone-800">{sortedAndFilteredClaims.length}</span>
         </div>
         <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200">
           <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">Menunggu Review</span>
           <span className="text-xl font-black text-amber-800">
-            {warrantyClaims.filter((c) => c.status === 'SUBMITTED' || c.status === 'UNDER_REVIEW').length}
+            {sortedAndFilteredClaims.filter((c) => c.status === 'SUBMITTED' || c.status === 'UNDER_REVIEW').length}
           </span>
         </div>
         <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-200">
           <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">Ganti Baru Disetujui</span>
           <span className="text-xl font-black text-emerald-800">
-            {warrantyClaims.filter((c) => c.status === 'APPROVED_REPLACE').length}
+            {sortedAndFilteredClaims.filter((c) => c.status === 'APPROVED_REPLACE').length}
           </span>
         </div>
         <div className="bg-rose-50 rounded-2xl p-4 border border-rose-200">
-          <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider block">Garansi Kepuasan</span>
-          <span className="text-xl font-black text-rose-800">100% Garansi</span>
+          <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider block">Rating CSAT Toko</span>
+          <div className="flex items-center gap-1">
+            <span className="text-xl font-black text-rose-800">4.9</span>
+            <Star className="w-4 h-4 fill-amber-400 text-amber-400 inline" />
+            <span className="text-[11px] text-stone-500 font-bold ml-1">(98% Puas)</span>
+          </div>
         </div>
       </div>
 
@@ -148,6 +230,14 @@ export const WarrantyClaimsTable: React.FC = () => {
               <TableSortHeader
                 label="ID & No. Invoice"
                 field="id"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={(f) => handleSort(f as ClaimSortField)}
+                className="py-3 px-4"
+              />
+              <TableSortHeader
+                label="Tanggal"
+                field="createdAt"
                 currentField={sortField}
                 direction={sortDirection}
                 onSort={(f) => handleSort(f as ClaimSortField)}
@@ -192,8 +282,8 @@ export const WarrantyClaimsTable: React.FC = () => {
           <tbody className="divide-y divide-stone-100">
             {sortedAndFilteredClaims.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-stone-400">
-                  Tidak ada tiket klaim dengan status ini.
+                <td colSpan={8} className="py-8 text-center text-stone-400 font-medium">
+                  Tidak ada tiket klaim yang sesuai dengan rentang tanggal dan filter status ini.
                 </td>
               </tr>
             ) : (
@@ -205,6 +295,21 @@ export const WarrantyClaimsTable: React.FC = () => {
                     <td className="py-3.5 px-4 font-mono">
                       <div className="font-extrabold text-stone-800">{claim.id}</div>
                       <div className="text-[11px] text-rose-600 font-bold">{claim.invoiceNumber}</div>
+                    </td>
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <div className="font-semibold text-stone-700 text-xs">
+                        {new Date(claim.createdAt).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </div>
+                      <div className="text-[10px] text-stone-400">
+                        {new Date(claim.createdAt).toLocaleTimeString('id-ID', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })} WIB
+                      </div>
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="font-extrabold text-stone-800">{claim.customerName}</div>
@@ -283,6 +388,75 @@ export const WarrantyClaimsTable: React.FC = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Customer Ratings & CSAT Section */}
+      <div className="mt-8 pt-6 border-t border-rose-100 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Star className="w-5 h-5 text-amber-500 fill-amber-400" />
+              <h3 className="text-sm sm:text-base font-extrabold text-stone-800">
+                Ulasan & Rating Kepuasan Pelanggan (CSAT)
+              </h3>
+            </div>
+            <p className="text-xs text-stone-500 mt-0.5">
+              Ulasan terverifikasi dari pembeli setelah menerima buket mekar sempurna.
+            </p>
+          </div>
+          <div className="text-xs font-bold text-stone-600 bg-stone-100 px-3 py-1.5 rounded-xl self-start sm:self-auto">
+            {filteredReviews.length} Ulasan Ditemukan
+          </div>
+        </div>
+
+        {/* Rating Breakdown & Reviews Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-rose-50/40 rounded-2xl p-4 border border-rose-100 flex flex-col justify-center items-center text-center">
+            <div className="text-4xl font-black text-stone-800">4.9</div>
+            <div className="flex items-center gap-1 my-1.5">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />
+              ))}
+            </div>
+            <div className="text-xs font-bold text-emerald-700">98.4% Pelanggan Puas</div>
+            <div className="text-[10px] text-stone-400 mt-0.5">Berdasarkan 142 Ulasan Terverifikasi</div>
+          </div>
+
+          <div className="md:col-span-2 space-y-3">
+            {filteredReviews.length === 0 ? (
+              <div className="p-6 text-center text-stone-400 text-xs bg-stone-50 rounded-2xl border border-stone-200">
+                Tidak ada ulasan pelanggan pada rentang tanggal ini.
+              </div>
+            ) : (
+              filteredReviews.map((rev) => (
+                <div key={rev.id} className="p-3.5 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5 hover:bg-stone-50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-stone-800">{rev.customer}</span>
+                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full">
+                        Terverifikasi
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-stone-400 font-medium">
+                      {new Date(rev.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs">
+                    <div className="flex">
+                      {Array.from({ length: rev.rating }).map((_, i) => (
+                        <Star key={i} className="w-3 h-3 text-amber-400 fill-amber-400" />
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-stone-400 font-bold ml-1">• {rev.product}</span>
+                  </div>
+                  <p className="text-xs text-stone-600 leading-relaxed italic">
+                    "{rev.comment}"
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Photo Preview Modal */}

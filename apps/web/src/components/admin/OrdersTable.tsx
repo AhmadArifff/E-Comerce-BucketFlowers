@@ -5,18 +5,24 @@ import { ShoppingBag, CheckCircle2, Scissors, Truck, MapPin, Check, ExternalLink
 import { useOrderStore, type Order } from '@/stores/useOrderStore';
 import { showMagicToast } from '@/lib/magic-motion';
 import { TableSortHeader, type SortDirection } from './TableSortHeader';
+import { DateRangeFilter, type DateRange } from './DateRangeFilter';
 
 interface OrdersTableProps {
   searchQuery?: string;
   onPrintResi?: (order: Order) => void;
 }
 
-type OrderSortField = 'invoiceNumber' | 'customerName' | 'items' | 'fulfillment' | 'totalAmount' | 'currentStep';
+type OrderSortField = 'invoiceNumber' | 'customerName' | 'items' | 'fulfillment' | 'totalAmount' | 'currentStep' | 'createdAt';
 
 export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPrintResi }) => {
   const { orders, updateOrderStep } = useOrderStore();
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'CRAFTING' | 'SHIPPED' | 'COMPLETED'>('ALL');
   const [internalSearch, setInternalSearch] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: '',
+    endDate: '',
+    presetLabel: 'Semua Waktu',
+  });
   const [sortField, setSortField] = useState<OrderSortField | null>('currentStep');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
@@ -50,6 +56,16 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
       if (statusFilter === 'SHIPPED' && order.currentStep !== 3) return false;
       if (statusFilter === 'COMPLETED' && order.currentStep !== 4) return false;
 
+      // Date range filter
+      if (dateRange.startDate) {
+        const orderDate = order.createdAt.slice(0, 10);
+        if (orderDate < dateRange.startDate) return false;
+      }
+      if (dateRange.endDate) {
+        const orderDate = order.createdAt.slice(0, 10);
+        if (orderDate > dateRange.endDate) return false;
+      }
+
       // Search query filter
       if (activeSearch.trim()) {
         const q = activeSearch.toLowerCase();
@@ -74,6 +90,9 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
         } else if (sortField === 'fulfillment') {
           valA = a.fulfillmentType;
           valB = b.fulfillmentType;
+        } else if (sortField === 'createdAt') {
+          valA = a.createdAt;
+          valB = b.createdAt;
         }
 
         if (typeof valA === 'string' && typeof valB === 'string') {
@@ -88,7 +107,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
     }
 
     return list;
-  }, [orders, statusFilter, activeSearch, sortField, sortDirection]);
+  }, [orders, statusFilter, activeSearch, dateRange, sortField, sortDirection]);
 
   const handleExportOrdersCsv = () => {
     showMagicToast('Ekspor Pesanan Berhasil! 📦', 'File Pesanan_Chenille_Atelier.csv berhasil diunduh.', '📄');
@@ -120,43 +139,47 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
         </div>
       </div>
 
-      {/* Filter Tabs Bar */}
-      <div className="px-5 py-3 border-b border-stone-100 bg-stone-50/50 flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 overflow-x-auto">
-          {[
-            { id: 'ALL', label: `Semua (${orders.length})` },
-            { id: 'PENDING', label: `Menunggu Rangkai (${orders.filter((o) => o.currentStep === 1).length})` },
-            { id: 'CRAFTING', label: `Sedang Dirangkai (${orders.filter((o) => o.currentStep === 2).length})` },
-            { id: 'SHIPPED', label: `Siap / Dikirim (${orders.filter((o) => o.currentStep === 3).length})` },
-            { id: 'COMPLETED', label: `Selesai (${orders.filter((o) => o.currentStep === 4).length})` },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setStatusFilter(tab.id as any)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer ${
-                statusFilter === tab.id
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'bg-white border border-stone-200 text-stone-600 hover:bg-rose-50'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Quick internal search if header search not provided */}
-        {!searchQuery && (
-          <div className="relative w-full md:w-56">
-            <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              value={internalSearch}
-              onChange={(e) => setInternalSearch(e.target.value)}
-              placeholder="Filter invoice/nama..."
-              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs text-stone-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
-            />
+      {/* Filter Tabs & Date Range Bar */}
+      <div className="px-5 py-3 border-b border-stone-100 bg-stone-50/50 flex flex-col gap-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+            {[
+              { id: 'ALL', label: `Semua (${orders.length})` },
+              { id: 'PENDING', label: `Menunggu Rangkai (${orders.filter((o) => o.currentStep === 1).length})` },
+              { id: 'CRAFTING', label: `Sedang Dirangkai (${orders.filter((o) => o.currentStep === 2).length})` },
+              { id: 'SHIPPED', label: `Siap / Dikirim (${orders.filter((o) => o.currentStep === 3).length})` },
+              { id: 'COMPLETED', label: `Selesai (${orders.filter((o) => o.currentStep === 4).length})` },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setStatusFilter(tab.id as any)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+                  statusFilter === tab.id
+                    ? 'bg-rose-600 text-white shadow-xs'
+                    : 'bg-white border border-stone-200 text-stone-600 hover:bg-rose-50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
-        )}
+
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <DateRangeFilter value={dateRange} onChange={setDateRange} />
+            {!searchQuery && (
+              <div className="relative w-full sm:w-52">
+                <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={internalSearch}
+                  onChange={(e) => setInternalSearch(e.target.value)}
+                  placeholder="Filter invoice/nama..."
+                  className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs text-stone-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -166,6 +189,13 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
               <TableSortHeader
                 label="Invoice / Pemesan"
                 field="invoiceNumber"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={handleSort}
+              />
+              <TableSortHeader
+                label="Tanggal"
+                field="createdAt"
                 currentField={sortField}
                 direction={sortDirection}
                 onSort={handleSort}
@@ -209,8 +239,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
           <tbody className="divide-y divide-stone-100">
             {filteredOrders.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-stone-400 font-medium text-xs">
-                  Tidak ada pesanan yang sesuai dengan filter.
+                <td colSpan={8} className="py-8 text-center text-stone-400 font-medium text-xs">
+                  Tidak ada pesanan yang sesuai dengan filter tanggal atau status.
                 </td>
               </tr>
             ) : (
@@ -228,6 +258,23 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
                           <div className="font-bold text-stone-800">{order.invoiceNumber}</div>
                           <div className="text-[11px] text-stone-500">{order.customerName} ({order.customerPhone})</div>
                         </div>
+                      </div>
+                    </td>
+
+                    {/* Order Date */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <div className="font-semibold text-stone-700 text-xs">
+                        {new Date(order.createdAt).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </div>
+                      <div className="text-[10px] text-stone-400">
+                        {new Date(order.createdAt).toLocaleTimeString('id-ID', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })} WIB
                       </div>
                     </td>
 
