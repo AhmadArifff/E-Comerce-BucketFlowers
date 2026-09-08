@@ -16,6 +16,41 @@ export interface WasteMaterialItem {
   mitigationAction?: string;
 }
 
+export interface RawMaterial {
+  id: string;
+  name: string;
+  category: 'KAWAT_BULU' | 'BATANG_KAWAT' | 'CELLOPHANE' | 'PITA' | 'BONEKA_AKSESORIS' | 'FLORAL_FOAM' | 'LAINNYA';
+  stock: number;
+  minStock: number;
+  unit: string;
+  costPerUnit: number;
+  supplierName: string;
+  supplierContact: string;
+  supplierLink?: string;
+  notes?: string;
+  updatedAt: string;
+}
+
+export interface ProcurementOrder {
+  id: string;
+  materialId: string;
+  materialName: string;
+  supplierName: string;
+  supplierContact?: string;
+  supplierLink?: string;
+  orderDate: string;
+  estimatedArrival: string;
+  actualArrival?: string;
+  qtyOrdered: number;
+  unit: string;
+  costPerUnit: number;
+  totalCost: number;
+  status: 'ORDERED' | 'SHIPPED' | 'ARRIVED' | 'CANCELLED';
+  trackingNumber?: string;
+  isStockAdded: boolean;
+  notes?: string;
+}
+
 export interface PaymentGatewaysConfig {
   midtrans: {
     isEnabled: boolean;
@@ -64,6 +99,8 @@ interface SettingsState {
   paymentGateways: PaymentGatewaysConfig;
   wasteMaterials: WasteMaterialItem[];
   coupons: StoreCoupon[];
+  rawMaterials: RawMaterial[];
+  procurementOrders: ProcurementOrder[];
 
   // Actions
   updateStoreProfile: (profile: {
@@ -83,6 +120,16 @@ interface SettingsState {
   getTotalWasteLoss: () => number;
   toggleCouponActive: (code: string) => void;
   addCoupon: (coupon: StoreCoupon) => void;
+
+  // Raw Materials & Supplier Actions
+  addRawMaterial: (material: Omit<RawMaterial, 'id' | 'updatedAt'>) => void;
+  updateRawMaterial: (id: string, updates: Partial<RawMaterial>) => void;
+  deleteRawMaterial: (id: string) => void;
+
+  // Procurement Restock Actions
+  addProcurementOrder: (order: Omit<ProcurementOrder, 'id' | 'isStockAdded'>) => void;
+  updateProcurementOrderStatus: (orderId: string, newStatus: ProcurementOrder['status']) => void;
+  deleteProcurementOrder: (orderId: string) => void;
 }
 
 const DEFAULT_WASTE_MATERIALS: WasteMaterialItem[] = [
@@ -124,6 +171,145 @@ const DEFAULT_WASTE_MATERIALS: WasteMaterialItem[] = [
   },
 ];
 
+const DEFAULT_RAW_MATERIALS: RawMaterial[] = [
+  {
+    id: 'mat-1',
+    name: 'Batang Kawat Bulu Burgundy (6mm)',
+    category: 'KAWAT_BULU',
+    stock: 450,
+    minStock: 100,
+    unit: 'Batang',
+    costPerUnit: 350,
+    supplierName: 'Toko Kawat Bulu Chenille Jaya Bandung',
+    supplierContact: '081234567890',
+    supplierLink: 'https://shopee.co.id/chenille-jaya-bandung',
+    notes: 'Kawat bulu velvet halus tidak mudah rontok',
+    updatedAt: '2026-09-08T10:00:00Z',
+  },
+  {
+    id: 'mat-2',
+    name: 'Batang Kawat Bulu Hijau Zaitun (6mm)',
+    category: 'KAWAT_BULU',
+    stock: 280,
+    minStock: 80,
+    unit: 'Batang',
+    costPerUnit: 350,
+    supplierName: 'Toko Kawat Bulu Chenille Jaya Bandung',
+    supplierContact: '081234567890',
+    supplierLink: 'https://shopee.co.id/chenille-jaya-bandung',
+    notes: 'Untuk daun dan tangkai buket bunga atelier',
+    updatedAt: '2026-09-08T10:00:00Z',
+  },
+  {
+    id: 'mat-3',
+    name: 'Batang Kawat Bulu Pastel Pink (6mm)',
+    category: 'KAWAT_BULU',
+    stock: 520,
+    minStock: 150,
+    unit: 'Batang',
+    costPerUnit: 350,
+    supplierName: 'Toko Kawat Bulu Chenille Jaya Bandung',
+    supplierContact: '081234567890',
+    supplierLink: 'https://shopee.co.id/chenille-jaya-bandung',
+    notes: 'Bahan utama buket mawar pastel sakura',
+    updatedAt: '2026-09-08T10:00:00Z',
+  },
+  {
+    id: 'mat-4',
+    name: 'Kawat Batang Penyangga Hijau No. 18',
+    category: 'BATANG_KAWAT',
+    stock: 600,
+    minStock: 150,
+    unit: 'Batang',
+    costPerUnit: 500,
+    supplierName: 'Florist Hardware Jakarta Pasar Pagi',
+    supplierContact: '081987654321',
+    supplierLink: 'https://tokopedia.com/floristhardware',
+    notes: 'Batang kawat kokoh panjang 40cm',
+    updatedAt: '2026-09-08T10:00:00Z',
+  },
+  {
+    id: 'mat-5',
+    name: 'Cellophane Korean Matte Maroon Gold',
+    category: 'CELLOPHANE',
+    stock: 85,
+    minStock: 25,
+    unit: 'Lembar',
+    costPerUnit: 4500,
+    supplierName: 'Korean Floral Paper Official Store',
+    supplierContact: '085712345678',
+    supplierLink: 'https://shopee.co.id/korean-floral-paper',
+    notes: 'Waterproof dua sisi lis emas',
+    updatedAt: '2026-09-08T10:00:00Z',
+  },
+  {
+    id: 'mat-6',
+    name: 'Pita Satin Burgundy Mewah 2.5cm',
+    category: 'PITA',
+    stock: 95,
+    minStock: 20,
+    unit: 'Meter',
+    costPerUnit: 2200,
+    supplierName: 'Pita Cantik Grosir Tanah Abang',
+    supplierContact: '081399887766',
+    supplierLink: 'https://shopee.co.id/pitacantikgrosir',
+    notes: 'Satin kilau tebal tahan kusut',
+    updatedAt: '2026-09-08T10:00:00Z',
+  },
+  {
+    id: 'mat-7',
+    name: 'Boneka Wisuda Ber-toga 10cm',
+    category: 'BONEKA_AKSESORIS',
+    stock: 35,
+    minStock: 15,
+    unit: 'Pcs',
+    costPerUnit: 7400,
+    supplierName: 'Souvenir Wisuda Karakter Boneka Cikampek',
+    supplierContact: '081223344556',
+    supplierLink: 'https://shopee.co.id/boneka-wisuda-mini',
+    notes: 'Toga hitam lis kuning emas',
+    updatedAt: '2026-09-08T10:00:00Z',
+  },
+];
+
+const DEFAULT_PROCUREMENT_ORDERS: ProcurementOrder[] = [
+  {
+    id: 'PO-20260907-01',
+    materialId: 'mat-1',
+    materialName: 'Batang Kawat Bulu Burgundy (6mm)',
+    supplierName: 'Toko Kawat Bulu Chenille Jaya Bandung',
+    supplierContact: '081234567890',
+    supplierLink: 'https://shopee.co.id/chenille-jaya-bandung',
+    orderDate: '2026-09-07T09:00:00Z',
+    estimatedArrival: '2026-09-09',
+    qtyOrdered: 200,
+    unit: 'Batang',
+    costPerUnit: 350,
+    totalCost: 70000,
+    status: 'SHIPPED',
+    trackingNumber: 'JP882910293 (J&T Express)',
+    isStockAdded: false,
+    notes: 'Pesanan restock persiapan wisuda UI Depok',
+  },
+  {
+    id: 'PO-20260908-02',
+    materialId: 'mat-5',
+    materialName: 'Cellophane Korean Matte Maroon Gold',
+    supplierName: 'Korean Floral Paper Official Store',
+    supplierContact: '085712345678',
+    supplierLink: 'https://shopee.co.id/korean-floral-paper',
+    orderDate: '2026-09-08T11:00:00Z',
+    estimatedArrival: '2026-09-11',
+    qtyOrdered: 50,
+    unit: 'Lembar',
+    costPerUnit: 4500,
+    totalCost: 225000,
+    status: 'ORDERED',
+    isStockAdded: false,
+    notes: 'Order via Shopee toko official',
+  },
+];
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
@@ -157,6 +343,8 @@ export const useSettingsStore = create<SettingsState>()(
         },
       },
       wasteMaterials: DEFAULT_WASTE_MATERIALS,
+      rawMaterials: DEFAULT_RAW_MATERIALS,
+      procurementOrders: DEFAULT_PROCUREMENT_ORDERS,
       coupons: [
         {
           code: 'WISUDAHEMAT',
@@ -274,6 +462,82 @@ export const useSettingsStore = create<SettingsState>()(
       addCoupon: (coupon) => {
         set((state) => ({
           coupons: [coupon, ...state.coupons],
+        }));
+      },
+
+      addRawMaterial: (material) => {
+        const newMat: RawMaterial = {
+          ...material,
+          id: `mat-${Date.now()}`,
+          updatedAt: new Date().toISOString(),
+        };
+        set((state) => ({
+          rawMaterials: [newMat, ...(state.rawMaterials || DEFAULT_RAW_MATERIALS)],
+        }));
+      },
+
+      updateRawMaterial: (id, updates) => {
+        set((state) => ({
+          rawMaterials: (state.rawMaterials || DEFAULT_RAW_MATERIALS).map((m) =>
+            m.id === id ? { ...m, ...updates, updatedAt: new Date().toISOString() } : m
+          ),
+        }));
+      },
+
+      deleteRawMaterial: (id) => {
+        set((state) => ({
+          rawMaterials: (state.rawMaterials || DEFAULT_RAW_MATERIALS).filter((m) => m.id !== id),
+        }));
+      },
+
+      addProcurementOrder: (order) => {
+        const newPo: ProcurementOrder = {
+          ...order,
+          id: `PO-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(100 + Math.random() * 900)}`,
+          isStockAdded: false,
+        };
+        set((state) => ({
+          procurementOrders: [newPo, ...(state.procurementOrders || DEFAULT_PROCUREMENT_ORDERS)],
+        }));
+      },
+
+      updateProcurementOrderStatus: (orderId, newStatus) => {
+        set((state) => {
+          const orders = state.procurementOrders || DEFAULT_PROCUREMENT_ORDERS;
+          const target = orders.find((o) => o.id === orderId);
+          if (!target) return state;
+
+          const shouldAddStock = newStatus === 'ARRIVED' && !target.isStockAdded;
+          const updatedOrders = orders.map((o) =>
+            o.id === orderId
+              ? {
+                  ...o,
+                  status: newStatus,
+                  actualArrival: newStatus === 'ARRIVED' ? new Date().toISOString().split('T')[0] : o.actualArrival,
+                  isStockAdded: shouldAddStock ? true : o.isStockAdded,
+                }
+              : o
+          );
+
+          let updatedMaterials = state.rawMaterials || DEFAULT_RAW_MATERIALS;
+          if (shouldAddStock) {
+            updatedMaterials = updatedMaterials.map((m) =>
+              m.id === target.materialId || m.name.toLowerCase() === target.materialName.toLowerCase()
+                ? { ...m, stock: m.stock + target.qtyOrdered, updatedAt: new Date().toISOString() }
+                : m
+            );
+          }
+
+          return {
+            procurementOrders: updatedOrders,
+            rawMaterials: updatedMaterials,
+          };
+        });
+      },
+
+      deleteProcurementOrder: (orderId) => {
+        set((state) => ({
+          procurementOrders: (state.procurementOrders || DEFAULT_PROCUREMENT_ORDERS).filter((o) => o.id !== orderId),
         }));
       },
     }),

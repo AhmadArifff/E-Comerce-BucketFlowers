@@ -21,7 +21,7 @@ export function TableSortHeader<T extends string>({
   currentField,
   direction,
   onSort,
-  className = 'py-3 px-4',
+  className = '',
   align = 'left',
 }: TableSortHeaderProps<T>) {
   const isActive = currentField === field;
@@ -29,7 +29,7 @@ export function TableSortHeader<T extends string>({
   return (
     <th
       onClick={() => onSort(field)}
-      className={`${className} cursor-pointer hover:bg-stone-100/80 transition-colors select-none group text-[10px] font-extrabold uppercase tracking-wider text-stone-700`}
+      className={`py-3.5 px-4 cursor-pointer hover:bg-stone-100/80 transition-colors select-none group text-[10px] font-extrabold uppercase tracking-wider text-stone-700 ${className}`}
       title={`Urutkan berdasarkan ${label} (${isActive && direction === 'asc' ? 'Z-A / Terbesar' : 'A-Z / Terkecil'})`}
     >
       <div

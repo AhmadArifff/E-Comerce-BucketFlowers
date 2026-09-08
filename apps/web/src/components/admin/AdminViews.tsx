@@ -818,13 +818,13 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
           <thead className="bg-stone-50 text-stone-700 font-extrabold uppercase text-[10px] tracking-wider border-b border-stone-200">
             <tr>
               <TableSortHeader label="Buket Produk" field="name" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[280px]" />
-              <TableSortHeader label="Kategori" field="category" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[120px]" />
-              <TableSortHeader label="Resep Bahan" field="recipe" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[150px]" />
-              <TableSortHeader label="HPP (Modal)" field="rawCostHpp" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" />
-              <TableSortHeader label="Harga Jual" field="price" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" />
-              <TableSortHeader label="Margin" field="margin" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[100px]" />
-              <TableSortHeader label="Klik (CTR)" field="clicks" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" />
-              <TableSortHeader label="Status Produksi" field="status" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" />
+              <TableSortHeader label="Kategori" field="category" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[120px]" align="center" />
+              <TableSortHeader label="Resep Bahan" field="recipe" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[160px]" align="center" />
+              <TableSortHeader label="HPP (Modal)" field="rawCostHpp" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" align="right" />
+              <TableSortHeader label="Harga Jual" field="price" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" align="right" />
+              <TableSortHeader label="Margin" field="margin" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[100px]" align="center" />
+              <TableSortHeader label="Klik (CTR)" field="clicks" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" align="center" />
+              <TableSortHeader label="Status Produksi" field="status" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" align="center" />
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
@@ -850,12 +850,12 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
                       </div>
                     </div>
                   </td>
-                  <td className="py-3.5 px-4 whitespace-nowrap">
+                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
                     <span className="bg-rose-50 text-rose-700 font-bold px-2.5 py-1 rounded-full text-[10px] border border-rose-100">
                       {prod.category}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 whitespace-nowrap">
+                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
                     <button
                       type="button"
                       onClick={() => setSelectedProdBom(prod)}
@@ -865,25 +865,25 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
                       <span>Lihat Resep BOM</span>
                     </button>
                   </td>
-                  <td className="py-3.5 px-4 font-mono font-bold text-stone-700 whitespace-nowrap">
+                  <td className="py-3.5 px-4 text-right font-mono font-bold text-stone-700 whitespace-nowrap">
                     Rp {prod.rawCostHpp.toLocaleString('id-ID')}
                   </td>
-                  <td className="py-3.5 px-4 font-mono font-black text-rose-600 text-sm whitespace-nowrap">
+                  <td className="py-3.5 px-4 text-right font-mono font-black text-rose-600 text-sm whitespace-nowrap">
                     Rp {price.toLocaleString('id-ID')}
                   </td>
-                  <td className="py-3.5 px-4 whitespace-nowrap">
+                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
                     <span className="bg-emerald-50 text-emerald-700 font-black px-2.5 py-1 rounded-full text-[10px] border border-emerald-200">
                       +{margin}%
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5 font-mono font-black text-stone-800">
+                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                    <div className="inline-flex items-center justify-center gap-1.5 font-mono font-black text-stone-800">
                       <Eye className="w-3.5 h-3.5 text-blue-500" />
                       <span>{mockClicks}</span>
                       <span className="text-[10px] text-stone-400 font-sans font-semibold">({mockCtr}%)</span>
                     </div>
                   </td>
-                  <td className="py-3.5 px-4 whitespace-nowrap">
+                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
                     {prod.isReadyStock ? (
                       <span className="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full text-[10px]">
                         Ready ({prod.stock})

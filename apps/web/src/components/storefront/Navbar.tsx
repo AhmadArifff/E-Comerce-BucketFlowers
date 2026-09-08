@@ -27,16 +27,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [cartBump, setCartBump] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
 
   // Floating sliding pill state
   const [pillStyle, setPillStyle] = useState<{
     left: number;
-    top: number;
     width: number;
-    height: number;
     opacity: number;
-  }>({ left: 0, top: 0, width: 0, height: 0, opacity: 0 });
+  }>({ left: 0, width: 0, opacity: 0 });
 
   const navRef = useRef<HTMLElement>(null);
   const menuRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
@@ -56,9 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       const btnRect = activeBtn.getBoundingClientRect();
       setPillStyle({
         left: btnRect.left - containerRect.left,
-        top: btnRect.top - containerRect.top,
         width: btnRect.width,
-        height: btnRect.height,
         opacity: 1,
       });
     }
@@ -81,21 +76,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
   }, [activeSection]);
-
-  // Track page scroll progress for smooth header progress bar
-  useEffect(() => {
-    const handleScroll = () => {
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (totalHeight > 0) {
-        const progress = Math.min(100, Math.max(0, (window.scrollY / totalHeight) * 100));
-        setScrollProgress(progress);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const totalItems = mounted ? getTotalItems() : 0;
 
@@ -198,17 +178,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* DESKTOP 6 NAVIGATION MENUS — FLOATING MAGNETIC SLIDING PILL */}
           <nav
             ref={navRef}
-            className="relative hidden xl:flex items-center gap-1 2xl:gap-1.5 flex-shrink-0 p-1 bg-stone-100/70 rounded-full border border-stone-200/60"
+            className="relative hidden xl:flex items-center gap-1 2xl:gap-1.5 flex-shrink-0 p-1 bg-stone-100/70 rounded-full border border-stone-200/60 overflow-hidden"
           >
-            {/* The Magnetic Sliding Pink Pill */}
+            {/* The Magnetic Sliding Pink Pill — Anchored inside capsule */}
             <div
-              className="absolute rounded-full pointer-events-none z-0 will-change-transform"
+              className="absolute top-1 bottom-1 rounded-full pointer-events-none z-0 will-change-transform"
               style={{
-                transform: `translate3d(${pillStyle.left}px, ${pillStyle.top}px, 0)`,
+                transform: `translateX(${pillStyle.left}px)`,
                 width: `${pillStyle.width}px`,
-                height: `${pillStyle.height}px`,
                 opacity: pillStyle.opacity,
-                transition: 'transform 550ms cubic-bezier(0.22, 1, 0.36, 1) 60ms, width 550ms cubic-bezier(0.22, 1, 0.36, 1) 60ms, opacity 250ms ease',
+                transition: 'transform 450ms cubic-bezier(0.22, 1, 0.36, 1) 50ms, width 450ms cubic-bezier(0.22, 1, 0.36, 1) 50ms, opacity 200ms ease',
                 background:
                   theme === 'tema-b'
                     ? 'linear-gradient(135deg, #6B2D5C 0%, #8E3A7B 100%)'
@@ -217,8 +196,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'linear-gradient(135deg, #F4A7B9 0%, #FF8DA1 100%)',
                 boxShadow:
                   theme === 'tema-b'
-                    ? '0 4px 14px rgba(107, 45, 92, 0.35)'
-                    : '0 4px 14px rgba(244, 167, 185, 0.45)',
+                    ? '0 2px 8px rgba(107, 45, 92, 0.3)'
+                    : '0 2px 8px rgba(244, 167, 185, 0.35)',
               }}
             />
 
@@ -383,17 +362,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             );
           })}
         </div>
-      </div>
-
-      {/* Pink Scroll Progress Tracker Bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-theme-border/30 overflow-hidden pointer-events-none">
-        <div
-          className="h-full bg-gradient-to-r from-[#F4A7B9] via-rose-400 to-[#FF6B81] transition-all duration-150 ease-out"
-          style={{
-            width: `${scrollProgress}%`,
-            boxShadow: '0 0 10px rgba(244, 167, 185, 0.7)',
-          }}
-        />
       </div>
 
       {/* Mobile Drawer Overlay */}
