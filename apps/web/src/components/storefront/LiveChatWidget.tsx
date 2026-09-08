@@ -3,11 +3,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Sparkles, MessageSquare, Phone, Bot, CheckCircle } from 'lucide-react';
 import { useChatStore } from '@/stores/useChatStore';
+import { useCartStore } from '@/stores/useCartStore';
 
 export const LiveChatWidget: React.FC = () => {
   const { isOpen, setIsOpen, messages, sendMessage, escalateToWhatsApp } = useChatStore();
+  const { isCartOpen } = useCartStore();
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Close live chat if cart drawer is opened to avoid screen overcrowding
+  useEffect(() => {
+    if (isCartOpen && isOpen) {
+      setIsOpen(false);
+    }
+  }, [isCartOpen, isOpen, setIsOpen]);
 
   const presetQuestions = [
     'Bisa request warna bunga & pita?',
@@ -31,7 +40,7 @@ export const LiveChatWidget: React.FC = () => {
   return (
     <>
       {/* Floating Trigger Button */}
-      {!isOpen && (
+      {!isOpen && !isCartOpen && (
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-2xl shadow-rose-600/50 hover:scale-105 active:scale-95 transition-all group cursor-pointer"

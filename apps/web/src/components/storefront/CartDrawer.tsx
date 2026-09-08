@@ -102,11 +102,13 @@ export const CartDrawer: React.FC = () => {
 
     setTimeout(() => {
       addNewOrder(newOrder);
-      clearCart();
       setIsCartOpen(false);
-      setIsCheckingOut(false);
-      router.push('/portal');
-    }, 1000);
+      setTimeout(() => {
+        clearCart();
+        setIsCheckingOut(false);
+        router.push('/portal');
+      }, 200);
+    }, 900);
   };
 
   return (

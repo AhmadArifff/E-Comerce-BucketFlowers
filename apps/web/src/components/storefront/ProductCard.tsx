@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ShoppingBag, Star, Eye, MessageCircle, Clock } from 'lucide-react';
 import type { ExtendedProduct } from '@chenille/shared';
 import { useCartStore } from '@/stores/useCartStore';
@@ -15,6 +15,7 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProduct }) => {
   const { addItem, setIsCartOpen } = useCartStore();
   const { setIsOpen: setChatOpen, sendMessage } = useChatStore();
+  const [isAdding, setIsAdding] = useState(false);
 
   const handleAskAboutProduct = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -126,10 +127,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
               <Eye className="w-3.5 h-3.5" />
             </button>
             <button
+              disabled={isAdding}
               onClick={(e) => {
                 e.stopPropagation();
-                flyToCart(e.currentTarget, '🌸');
+                if (isAdding) return;
+                setIsAdding(true);
                 addItem(product, 1);
+                flyToCart(e.currentTarget, '🌸', () => {
+                  setIsAdding(false);
+                });
                 const price = product.discountPrice ?? product.price;
                 showMagicToast(
                   'Berhasil Ditambahkan! 🌸',
@@ -139,10 +145,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
                   () => setIsCartOpen(true)
                 );
               }}
-              className="btn-add-cart flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all cursor-pointer"
+              className="btn-add-cart flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Tambah</span>
+              <span>{isAdding ? 'Ditambahkan...' : 'Tambah'}</span>
             </button>
           </div>
         </div>

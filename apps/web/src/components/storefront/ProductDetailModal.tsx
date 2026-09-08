@@ -21,6 +21,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [quantity, setQuantity] = useState(1);
   const [greetingCardText, setGreetingCardText] = useState('');
   const [isAddedSuccess, setIsAddedSuccess] = useState(false);
+  const [isProcessingBuy, setIsProcessingBuy] = useState(false);
 
   if (!isOpen || !product) return null;
 
@@ -28,6 +29,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const totalPrice = activePrice * quantity;
 
   const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (isAddedSuccess) return;
     flyToCart(e.currentTarget, '🌸');
     addItem(product, quantity);
     setIsAddedSuccess(true);
@@ -36,7 +38,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       `${product.name} (${quantity} pcs)`,
       '🌸',
       'Lihat Keranjang 🛍️',
-      () => setIsCartOpen(true)
+      () => {
+        onClose();
+        setIsCartOpen(true);
+      }
     );
     setTimeout(() => {
       setIsAddedSuccess(false);
@@ -44,12 +49,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   };
 
   const handleBuyNow = (e: React.MouseEvent<HTMLButtonElement>) => {
-    flyToCart(e.currentTarget, '🌸');
+    if (isProcessingBuy) return;
+    setIsProcessingBuy(true);
     addItem(product, quantity);
-    onClose();
-    setTimeout(() => {
+    // Wait until flower flight (750ms) and sparkle impact finish before closing modal and opening cart drawer
+    flyToCart(e.currentTarget, '🌸', () => {
+      onClose();
       setIsCartOpen(true);
-    }, 300);
+      setIsProcessingBuy(false);
+    });
   };
 
   return (
@@ -220,10 +228,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 </button>
 
                 <button
+                  disabled={isProcessingBuy}
                   onClick={handleBuyNow}
-                  className="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-md shadow-rose-600/20 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                  className="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-md shadow-rose-600/20 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-75 disabled:cursor-not-allowed"
                 >
-                  <span>Beli Sekarang</span>
+                  <span>{isProcessingBuy ? 'Menyiapkan Keranjang...' : 'Beli Sekarang'}</span>
                 </button>
               </div>
             </div>

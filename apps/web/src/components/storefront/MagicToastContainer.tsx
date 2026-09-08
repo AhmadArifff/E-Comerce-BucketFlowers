@@ -9,7 +9,8 @@ export const MagicToastContainer: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = subscribeMagicToast((newToast) => {
-      setToasts((prev) => [...prev, newToast]);
+      // Keep maximum 2 toasts at a time so toasts don't pile up and cover screen elements
+      setToasts((prev) => [...prev.slice(-1), newToast]);
 
       // Automatically remove after 3.5 seconds
       setTimeout(() => {

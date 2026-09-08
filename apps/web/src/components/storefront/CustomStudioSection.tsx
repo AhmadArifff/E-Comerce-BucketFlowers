@@ -63,6 +63,7 @@ export const CustomStudioSection: React.FC = () => {
   const [selectedColor, setSelectedColor] = useState<ColorOpt>(COLORS[0]);
   const [selectedWrapping, setSelectedWrapping] = useState<WrappingOpt>(WRAPPINGS[0]);
   const [selectedAddons, setSelectedAddons] = useState<string[]>(['led']);
+  const [isAdding, setIsAdding] = useState(false);
 
   const toggleAddon = (id: string) => {
     setSelectedAddons((prev) =>
@@ -98,8 +99,14 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
   };
 
   const handleAddToCart = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    if (isAdding) return;
+    setIsAdding(true);
     if (e) {
-      flyToCart(e.currentTarget, selectedFlower.emoji);
+      flyToCart(e.currentTarget, selectedFlower.emoji, () => {
+        setIsAdding(false);
+      });
+    } else {
+      setIsAdding(false);
     }
     const activeAddonNames = selectedAddons
       .map((id) => ADDONS.find((a) => a.id === id)?.name)
@@ -352,11 +359,12 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
 
                 <button
                   type="button"
+                  disabled={isAdding}
                   onClick={(e) => handleAddToCart(e)}
-                  className="w-full py-2.5 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.01] cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.01] cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  <span>+ Masukkan ke Keranjang Belanja</span>
+                  <span>{isAdding ? 'Buket Custom Ditambahkan...' : '+ Masukkan ke Keranjang Belanja'}</span>
                 </button>
               </div>
 

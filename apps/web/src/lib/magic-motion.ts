@@ -78,45 +78,66 @@ export function spawnSparkles(x: number, y: number) {
 
 /**
  * Parabolic flight from clicked source element directly to the navbar cart button
+ * Returns a Promise and accepts an optional onComplete callback so other UI elements (like Cart Drawer)
+ * wait until the flight animation and sparkle burst finish before opening.
  */
-export function flyToCart(sourceElement: HTMLElement | null, emoji = '🌸') {
-  if (typeof document === 'undefined' || !sourceElement) return;
+export function flyToCart(
+  sourceElement: HTMLElement | null,
+  emoji = '🌸',
+  onComplete?: () => void
+): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof document === 'undefined' || !sourceElement) {
+      onComplete?.();
+      resolve();
+      return;
+    }
 
-  const cartBtn = document.querySelector('.btn-nav-cart') || document.getElementById('navCartBtn');
-  if (!cartBtn) return;
+    const cartBtn = document.querySelector('.btn-nav-cart') || document.getElementById('navCartBtn');
+    if (!cartBtn) {
+      onComplete?.();
+      resolve();
+      return;
+    }
 
-  const startRect = sourceElement.getBoundingClientRect();
-  const endRect = cartBtn.getBoundingClientRect();
+    const startRect = sourceElement.getBoundingClientRect();
+    const endRect = cartBtn.getBoundingClientRect();
 
-  const flyer = document.createElement('div');
-  flyer.className = 'magic-flyer';
-  flyer.textContent = emoji;
-  flyer.style.left = `${startRect.left + startRect.width / 2 - 24}px`;
-  flyer.style.top = `${startRect.top + startRect.height / 2 - 24}px`;
-  document.body.appendChild(flyer);
+    const flyer = document.createElement('div');
+    flyer.className = 'magic-flyer';
+    flyer.textContent = emoji;
+    flyer.style.left = `${startRect.left + startRect.width / 2 - 24}px`;
+    flyer.style.top = `${startRect.top + startRect.height / 2 - 24}px`;
+    document.body.appendChild(flyer);
 
-  // Force reflow
-  flyer.getBoundingClientRect();
+    // Force reflow
+    flyer.getBoundingClientRect();
 
-  const destX = endRect.left + endRect.width / 2 - 24;
-  const destY = endRect.top + endRect.height / 2 - 24;
+    const destX = endRect.left + endRect.width / 2 - 24;
+    const destY = endRect.top + endRect.height / 2 - 24;
 
-  flyer.style.left = `${destX}px`;
-  flyer.style.top = `${destY}px`;
-  flyer.style.transform = 'scale(0.35) rotate(360deg)';
-  flyer.style.opacity = '0.7';
+    flyer.style.left = `${destX}px`;
+    flyer.style.top = `${destY}px`;
+    flyer.style.transform = 'scale(0.35) rotate(360deg)';
+    flyer.style.opacity = '0.7';
 
-  setTimeout(() => {
-    flyer.remove();
-
-    // Trigger cart bump animation
-    window.dispatchEvent(new CustomEvent('cart-bump'));
-    cartBtn.classList.add('cart-bump');
     setTimeout(() => {
-      cartBtn.classList.remove('cart-bump');
-    }, 450);
+      flyer.remove();
 
-    // Spawn 8 radial sparkle bursts at destination cart button center
-    spawnSparkles(endRect.left + endRect.width / 2, endRect.top + endRect.height / 2);
-  }, 750);
+      // Trigger cart bump animation
+      window.dispatchEvent(new CustomEvent('cart-bump'));
+      cartBtn.classList.add('cart-bump');
+      setTimeout(() => {
+        cartBtn.classList.remove('cart-bump');
+      }, 450);
+
+      // Spawn 8 radial sparkle bursts at destination cart button center
+      spawnSparkles(endRect.left + endRect.width / 2, endRect.top + endRect.height / 2);
+
+      // Call onComplete only after flower hits the cart and sparkles trigger
+      onComplete?.();
+      resolve();
+    }, 750);
+  });
 }
+

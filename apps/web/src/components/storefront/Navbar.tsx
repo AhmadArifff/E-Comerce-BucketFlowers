@@ -26,8 +26,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [cartBump, setCartBump] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  const totalItems = getTotalItems();
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const totalItems = mounted ? getTotalItems() : 0;
 
   // Trigger Cart Bump Animation when total items change or via custom event
   useEffect(() => {
@@ -65,6 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const handleNavClick = (id: string) => {
     setIsMobileNavOpen(false);
+    setIsSearchOpen(false);
     if (onNavigate) {
       onNavigate(id);
     } else {
@@ -123,7 +129,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             
             {/* Search Toggle Button */}
             <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              onClick={() => {
+                setIsSearchOpen(!isSearchOpen);
+                if (!isSearchOpen) setIsMobileNavOpen(false);
+              }}
               className={`flex items-center justify-center gap-1.5 px-2.5 sm:px-3 h-9 rounded-full border text-xs font-bold transition-all cursor-pointer ${
                 isSearchOpen || searchQuery
                   ? 'border-rose-500 bg-rose-50 text-rose-700 shadow-2xs'
@@ -145,8 +154,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Masuk / Akun Pelanggan"
             >
               <User className="w-3.5 h-3.5 text-rose-600" />
-              <span className="hidden sm:inline">
-                {user ? user.name.split(' ')[0] : 'Masuk'}
+              <span className="hidden sm:inline" suppressHydrationWarning>
+                {mounted && user ? user.name.split(' ')[0] : 'Masuk'}
               </span>
             </Link>
 
@@ -161,14 +170,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <ShoppingBag className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Keranjang</span>
-              <span className="bg-white text-rose-700 text-[10px] font-black px-1.5 py-0.5 rounded-full">
-                {totalItems}
+              <span
+                className="bg-white text-rose-700 text-[10px] font-black px-1.5 py-0.5 rounded-full"
+                suppressHydrationWarning
+              >
+                {mounted ? totalItems : 0}
               </span>
             </button>
 
             {/* Mobile Hamburger Menu */}
             <button
-              onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+              onClick={() => {
+                setIsMobileNavOpen(!isMobileNavOpen);
+                if (!isMobileNavOpen) setIsSearchOpen(false);
+              }}
               className="xl:hidden p-2 text-stone-700 hover:text-rose-600 rounded-lg focus:outline-none"
               aria-label="Toggle Menu"
             >
