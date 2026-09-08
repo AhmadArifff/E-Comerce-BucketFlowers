@@ -32,10 +32,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
   return (
     <div
       onClick={handleCardClick}
-      className="bg-white rounded-3xl border border-rose-100/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group card-hover-3d relative cursor-pointer"
+      className="card-atelier overflow-hidden flex flex-col group relative cursor-pointer"
     >
       {/* Product Image Container */}
-      <div className="relative aspect-square w-full overflow-hidden bg-rose-50/50">
+      <div className="relative aspect-square w-full overflow-hidden bg-theme-surface-subtle">
         <img
           src={product.image}
           alt={product.name}
@@ -46,7 +46,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
         {/* Badge: Best seller / Ready Stock */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
           {product.badge && (
-            <span className="bg-rose-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-md uppercase tracking-wider">
+            <span className="badge-atelier text-[10px] px-2.5 py-1 tracking-wider">
               {product.badge}
             </span>
           )}
@@ -66,7 +66,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
         {/* Quick Consultation Float Button */}
         <button
           onClick={handleAskAboutProduct}
-          className="absolute bottom-3 right-3 p-2 rounded-full bg-white/90 backdrop-blur-sm text-rose-600 hover:bg-rose-600 hover:text-white shadow-md transition-all active:scale-90"
+          className="absolute bottom-3 right-3 p-2 rounded-full bg-white/90 backdrop-blur-sm text-theme-primary hover:bg-theme-primary hover:text-white shadow-md transition-all active:scale-90"
           title="Tanya Florist tentang buket ini"
         >
           <MessageCircle className="w-4 h-4" />
@@ -83,7 +83,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
         <div>
           <div className="flex items-center justify-between text-xs text-stone-400 mb-1">
-            <span className="font-semibold text-rose-500 uppercase tracking-wider text-[10px]">
+            <span className="font-semibold text-theme-primary uppercase tracking-wider text-[10px]">
               {product.category}
             </span>
             <div className="flex items-center gap-1 text-amber-500 font-bold">
@@ -93,7 +93,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
             </div>
           </div>
 
-          <h3 className="font-extrabold text-sm sm:text-base text-stone-800 line-clamp-1 group-hover:text-rose-600 transition-colors">
+          <h3 className="font-extrabold text-sm sm:text-base text-theme-text-main line-clamp-1 group-hover:text-theme-primary transition-colors font-heading">
             {product.name}
           </h3>
 
@@ -103,9 +103,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
         </div>
 
         {/* Price & Action */}
-        <div className="pt-2 border-t border-rose-50 flex items-center justify-between gap-2">
+        <div className="pt-2 border-t border-theme-border/60 flex items-center justify-between gap-2">
           <div>
-            <div className="text-base sm:text-lg font-black text-rose-600 leading-tight">
+            <div className="text-base sm:text-lg font-black text-theme-primary leading-tight">
               Rp {(product.discountPrice ?? product.price).toLocaleString('id-ID')}
             </div>
             {product.discountPrice && (
@@ -144,7 +144,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
                   '🌸'
                 );
               }}
-              className="btn-add-cart flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+              className="btn-card-add cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
               <span>{isAdding ? 'Menerbangkan...' : 'Tambah'}</span>

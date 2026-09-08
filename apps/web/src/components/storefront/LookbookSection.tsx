@@ -66,7 +66,7 @@ export const LookbookSection: React.FC = () => {
           {LOOKBOOK_ITEMS.map((item) => (
             <div
               key={item.id}
-              className="rounded-3xl border border-rose-100/80 bg-white overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between card-tilt-hover"
+              className="card-atelier overflow-hidden flex flex-col justify-between card-tilt-hover"
             >
               {/* PHOTO / VISUAL CONTAINER */}
               <div className={`p-8 bg-gradient-to-br ${item.bgGradient} flex flex-col items-center justify-center relative min-h-[200px]`}>
@@ -81,18 +81,18 @@ export const LookbookSection: React.FC = () => {
               {/* CARD DETAILS */}
               <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
                 <div className="space-y-2">
-                  <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider block">
+                  <span className="text-[10px] font-bold text-theme-primary uppercase tracking-wider block">
                     {item.tags}
                   </span>
-                  <h3 className="text-base font-extrabold text-stone-900 leading-snug">
+                  <h3 className="text-base font-extrabold text-stone-900 leading-snug font-heading">
                     {item.title}
                   </h3>
-                  <p className="text-xs text-stone-600 leading-relaxed italic relative pl-4 border-l-2 border-rose-200">
+                  <p className="text-xs text-stone-600 leading-relaxed italic relative pl-4 border-l-2 border-theme-border">
                     "{item.quote}"
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-stone-100 flex items-center justify-between text-xs font-bold text-stone-700">
+                <div className="pt-3 border-t border-theme-border/60 flex items-center justify-between text-xs font-bold text-stone-700">
                   <span>{item.author}</span>
                   <span className="text-[11px] text-stone-400 font-normal">{item.city}</span>
                 </div>

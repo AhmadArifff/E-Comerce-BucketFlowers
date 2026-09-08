@@ -24,11 +24,11 @@ export const QuickTrackingSection: React.FC = () => {
         
         {/* HEADER */}
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100/70 border border-rose-200 text-rose-700 text-xs font-black uppercase tracking-wider">
-            <Package className="w-3.5 h-3.5 text-rose-600" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-theme-surface-subtle border border-theme-border text-theme-primary text-xs font-black uppercase tracking-wider">
+            <Package className="w-3.5 h-3.5 text-theme-primary" />
             <span>Real-Time Craft Tracker</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight font-heading">
             Lacak Status Pesanan Buket
           </h2>
           <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
@@ -37,7 +37,7 @@ export const QuickTrackingSection: React.FC = () => {
         </div>
 
         {/* SEARCH BOX */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-sm space-y-6">
+        <div className="card-atelier p-6 sm:p-8 space-y-6">
           <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <input
@@ -45,13 +45,13 @@ export const QuickTrackingSection: React.FC = () => {
                 value={invoiceQuery}
                 onChange={(e) => setInvoiceQuery(e.target.value)}
                 placeholder="Masukkan nomor invoice (contoh: INV/20260907/...)"
-                className="w-full pl-10 pr-4 py-3 text-xs sm:text-sm bg-stone-50 border border-rose-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all font-mono"
+                className="w-full pl-10 pr-4 py-3 text-xs sm:text-sm bg-stone-50 border border-theme-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-theme-primary focus:bg-white transition-all font-mono"
               />
               <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
             </div>
             <button
               type="submit"
-              className="btn-shimmer px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="btn-primary-atelier px-6 py-3 text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
               <span>Lacak Sekarang</span>
             </button>
@@ -61,9 +61,9 @@ export const QuickTrackingSection: React.FC = () => {
             <div className={`space-y-6 auth-fade-in transition-transform duration-300 ${isBouncing ? 'scale-[1.02]' : 'scale-100'}`}>
               
               {/* INVOICE DETAILS SUMMARY */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-rose-50/70 border border-rose-200/80 space-y-1 text-xs">
+              <div className="p-4 sm:p-5 rounded-2xl bg-theme-surface-subtle border border-theme-border space-y-1 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-rose-800 text-sm">{invoiceQuery}</span>
+                  <span className="font-extrabold text-theme-primary text-sm">{invoiceQuery}</span>
                   <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-600 text-white">
                     Dalam Pengantaran
                   </span>
@@ -115,11 +115,11 @@ export const QuickTrackingSection: React.FC = () => {
                 </div>
 
                 <div className="flex gap-4 items-start">
-                  <div className="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-md shadow-rose-600/30 animate-pulse">
+                  <div className="w-7 h-7 rounded-full bg-theme-primary text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-md animate-pulse">
                     🚚
                   </div>
                   <div>
-                    <div className="text-xs font-extrabold text-rose-700">
+                    <div className="text-xs font-extrabold text-theme-primary">
                       Paket Telah Diambil Kurir Menuju Alamat Penerima
                     </div>
                     <div className="text-[11px] text-emerald-600 font-bold">

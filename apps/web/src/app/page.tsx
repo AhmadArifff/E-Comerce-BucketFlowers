@@ -99,10 +99,10 @@ export default function StorefrontPage() {
           {/* Section Heading */}
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <div className="text-xs font-black text-rose-600 uppercase tracking-widest mb-1">
+              <div className="text-xs font-black text-theme-primary uppercase tracking-widest mb-1">
                 Koleksi Bunga Kawat Bulu Atelier
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-theme-text-main tracking-tight font-heading">
                 Katalog Lengkap Buket Bunga
               </h2>
               <p className="text-xs sm:text-sm text-stone-500 mt-1">

@@ -123,9 +123,9 @@ export const CartDrawer: React.FC = () => {
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
         <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col drawer-slide-in">
           {/* Header */}
-          <div className="p-4 sm:p-5 border-b border-rose-100 flex items-center justify-between bg-rose-50/40">
+          <div className="p-4 sm:p-5 border-b border-theme-border flex items-center justify-between bg-theme-surface-subtle">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-theme-primary text-white flex items-center justify-center shadow-sm">
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div>
@@ -159,12 +159,12 @@ export const CartDrawer: React.FC = () => {
                 return (
                   <div
                     key={item.product.id}
-                    className="flex gap-3 p-3 rounded-2xl bg-rose-50/30 border border-rose-100"
+                    className="flex gap-3 p-3 rounded-2xl bg-theme-surface-subtle border border-theme-border"
                   >
                     <img
                       src={item.product.image}
                       alt={item.product.name}
-                      className="w-16 h-16 rounded-xl object-cover border border-rose-100 flex-shrink-0"
+                      className="w-16 h-16 rounded-xl object-cover border border-theme-border flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                       <div className="flex items-start justify-between gap-2">
@@ -176,22 +176,22 @@ export const CartDrawer: React.FC = () => {
                             removeItem(item.product.id);
                             showMagicToast('Item Dihapus 🗑️', `${item.product.name} dikeluarkan dari keranjang`, '🗑️');
                           }}
-                          className="text-stone-400 hover:text-rose-600 transition-colors"
+                          className="text-stone-400 hover:text-theme-primary transition-colors"
                           title="Hapus item"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
-                      <div className="text-xs font-black text-rose-600">
+                      <div className="text-xs font-black text-theme-primary">
                         Rp {effectivePrice.toLocaleString('id-ID')}
                       </div>
 
                       <div className="flex items-center justify-between pt-1">
-                        <div className="flex items-center border border-rose-200 bg-white rounded-lg overflow-hidden">
+                        <div className="flex items-center border border-theme-border bg-white rounded-lg overflow-hidden">
                           <button
                             onClick={() => updateQuantity(item.product.id, -1)}
-                            className="p-1 text-stone-600 hover:bg-rose-50"
+                            className="p-1 text-stone-600 hover:bg-stone-100"
                           >
                             <Minus className="w-3 h-3" />
                           </button>
@@ -232,11 +232,11 @@ export const CartDrawer: React.FC = () => {
                       onClick={() => setFulfillmentType('COD_MEETUP_POINT')}
                       className={`p-2.5 rounded-xl border text-left text-xs transition-all flex items-start gap-2 ${
                         fulfillmentType === 'COD_MEETUP_POINT'
-                          ? 'border-rose-500 bg-rose-50 text-rose-700 font-bold shadow-sm'
+                          ? 'border-theme-primary bg-theme-surface-subtle text-theme-primary font-bold shadow-sm ring-1 ring-theme-primary/30'
                           : 'border-stone-200 bg-white text-stone-600'
                       }`}
                     >
-                      <MapPin className="w-4 h-4 flex-shrink-0 text-rose-600 mt-0.5" />
+                      <MapPin className="w-4 h-4 flex-shrink-0 text-theme-primary mt-0.5" />
                       <div>
                         <div>COD Titik Temu</div>
                         <span className="text-[10px] text-emerald-600 font-bold">Gratis Ongkir</span>
@@ -248,11 +248,11 @@ export const CartDrawer: React.FC = () => {
                       onClick={() => setFulfillmentType('COURIER_EXPEDITION')}
                       className={`p-2.5 rounded-xl border text-left text-xs transition-all flex items-start gap-2 ${
                         fulfillmentType === 'COURIER_EXPEDITION'
-                          ? 'border-rose-500 bg-rose-50 text-rose-700 font-bold shadow-sm'
+                          ? 'border-theme-primary bg-theme-surface-subtle text-theme-primary font-bold shadow-sm ring-1 ring-theme-primary/30'
                           : 'border-stone-200 bg-white text-stone-600'
                       }`}
                     >
-                      <Truck className="w-4 h-4 flex-shrink-0 text-rose-600 mt-0.5" />
+                      <Truck className="w-4 h-4 flex-shrink-0 text-theme-primary mt-0.5" />
                       <div>
                         <div>Ekspedisi J&T</div>
                         <span className="text-[10px] text-stone-500 font-medium">Rp 15.000</span>
@@ -374,7 +374,7 @@ export const CartDrawer: React.FC = () => {
                 )}
                 <div className="flex justify-between text-sm sm:text-base font-extrabold text-stone-800 pt-2 border-t border-stone-100">
                   <span>Total Pembayaran</span>
-                  <span className="text-rose-600 font-black">
+                  <span className="text-theme-primary font-black">
                     Rp {grandTotal.toLocaleString('id-ID')}
                   </span>
                 </div>
@@ -383,7 +383,7 @@ export const CartDrawer: React.FC = () => {
               <button
                 onClick={handleCheckout}
                 disabled={isCheckingOut}
-                className="btn-shimmer w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-extrabold text-sm shadow-xl shadow-rose-600/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="btn-primary-atelier w-full py-3.5 text-xs sm:text-sm font-extrabold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
               >
                 {isCheckingOut ? (
                   <>

@@ -13,17 +13,20 @@ export const Footer: React.FC = () => {
           {/* Col 1: Brand Info */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-rose-600 text-white flex items-center justify-center">
+              <div
+                className="w-8 h-8 rounded-lg text-white flex items-center justify-center shadow-xs"
+                style={{ background: 'var(--primary)' }}
+              >
                 <Sparkles className="w-4 h-4" />
               </div>
-              <span className="font-extrabold text-base text-white tracking-tight">
+              <span className="font-extrabold text-base text-white tracking-tight font-heading">
                 {ATELIER_CONFIG.name}
               </span>
             </div>
             <p className="text-xs text-stone-400 leading-relaxed">
               Atelier kerajinan tangan buket bunga berbahan kawat bulu (*pipe cleaner*) estetik di Depok. Melayani pemesanan wisuda kampus, ulang tahun, dan kado spesial.
             </p>
-            <div className="flex items-center gap-2 text-xs text-rose-400 font-semibold">
+            <div className="flex items-center gap-2 text-xs text-theme-primary font-semibold">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>Garansi 100% Anti Layu & Ramah Lingkungan</span>
             </div>
@@ -34,11 +37,11 @@ export const Footer: React.FC = () => {
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">Atelier & Titik Temu</h4>
             <div className="space-y-2 text-xs text-stone-400">
               <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
                 <span>{ATELIER_CONFIG.address}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-rose-500 flex-shrink-0" />
+                <Phone className="w-4 h-4 text-theme-primary flex-shrink-0" />
                 <span>WhatsApp: {ATELIER_CONFIG.phone}</span>
               </div>
               <p className="text-[11px] text-stone-500 pt-1">
@@ -52,17 +55,17 @@ export const Footer: React.FC = () => {
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">Navigasi Cepat</h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link href="/" className="hover:text-rose-400 transition-colors">
+                <Link href="/" className="hover:text-theme-primary transition-colors">
                   Katalog Etalase Toko
                 </Link>
               </li>
               <li>
-                <Link href="/portal" className="hover:text-rose-400 transition-colors">
+                <Link href="/portal" className="hover:text-theme-primary transition-colors">
                   Portal Pelanggan & Lacak Pesanan
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="hover:text-rose-400 transition-colors">
+                <Link href="/login" className="hover:text-theme-primary transition-colors">
                   Masuk Akun Member / Florist
                 </Link>
               </li>

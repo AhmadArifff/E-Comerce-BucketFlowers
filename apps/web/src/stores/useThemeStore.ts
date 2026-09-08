@@ -23,6 +23,11 @@ export const useThemeStore = create<ThemeState>()(
     }),
     {
       name: 'chenille_active_theme',
+      onRehydrateStorage: () => (state) => {
+        if (state?.theme && typeof document !== 'undefined') {
+          document.documentElement.setAttribute('data-theme', state.theme);
+        }
+      },
     }
   )
 );

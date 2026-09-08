@@ -148,14 +148,14 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
         
         {/* SECTION HEADER */}
         <div className="text-center max-w-3xl mx-auto space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100/70 border border-rose-200 text-rose-700 text-xs font-black uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-theme-surface-subtle border border-theme-border text-theme-primary text-xs font-black uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 text-theme-primary" />
             <span>Interactive Bouquet Builder</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-theme-text-main tracking-tight font-heading">
             Custom Buket Studio Interaktif
           </h2>
-          <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
+          <p className="text-xs sm:text-sm text-theme-text-muted leading-relaxed">
             Rangkai buket impian Anda sendiri secara live. Pilih bunga utama, variasi warna kawat bulu, tema wrapping, serta aksesori wisuda favorit Anda.
           </p>
         </div>
@@ -163,12 +163,12 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* STEP CONTROLS (LEFT COLUMN) */}
-          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-sm space-y-6">
+          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-theme-border shadow-sm space-y-6">
             
             {/* STEP 1: PILIH BUNGA */}
             <div className="space-y-3">
-              <label className="text-xs font-black uppercase tracking-wider text-stone-800 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">1</span>
+              <label className="text-xs font-black uppercase tracking-wider text-theme-text-main flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">1</span>
                 <span>Pilih Jenis Bunga Utama:</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -181,13 +181,13 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                       onClick={() => setSelectedFlower(f)}
                       className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
                         isSelected
-                          ? 'border-rose-500 bg-rose-50/80 shadow-2xs ring-2 ring-rose-400/20'
-                          : 'border-stone-200 hover:border-rose-200 bg-white'
+                          ? 'border-theme-primary bg-theme-surface-subtle shadow-2xs ring-2 ring-theme-primary/20'
+                          : 'border-theme-border hover:border-theme-primary/40 bg-white'
                       }`}
                     >
                       <div className="text-2xl mb-1">{f.emoji}</div>
-                      <div className="text-xs font-bold text-stone-800">{f.name}</div>
-                      <div className="text-[10px] text-rose-600 font-extrabold mt-0.5">
+                      <div className="text-xs font-bold text-theme-text-main">{f.name}</div>
+                      <div className="text-[10px] text-theme-primary font-extrabold mt-0.5">
                         Rp {f.basePrice.toLocaleString('id-ID')}
                       </div>
                     </button>
@@ -198,8 +198,8 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
 
             {/* STEP 2: WARNA KAWAT BULU */}
             <div className="space-y-3">
-              <label className="text-xs font-black uppercase tracking-wider text-stone-800 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">2</span>
+              <label className="text-xs font-black uppercase tracking-wider text-theme-text-main flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">2</span>
                 <span>Pilih Warna Kawat Bulu (Chenille Stem):</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -212,15 +212,15 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                       onClick={() => setSelectedColor(c)}
                       className={`p-2.5 rounded-2xl border flex items-center gap-2 transition-all cursor-pointer ${
                         isSelected
-                          ? 'border-rose-500 bg-rose-50/80 shadow-2xs ring-2 ring-rose-400/20'
-                          : 'border-stone-200 hover:border-rose-200 bg-white'
+                          ? 'border-theme-primary bg-theme-surface-subtle shadow-2xs ring-2 ring-theme-primary/20'
+                          : 'border-theme-border hover:border-theme-primary/40 bg-white'
                       }`}
                     >
                       <span
                         className="w-5 h-5 rounded-full border border-black/10 flex-shrink-0 shadow-2xs"
                         style={{ backgroundColor: c.colorHex }}
                       />
-                      <span className="text-xs font-bold text-stone-800 truncate">{c.name}</span>
+                      <span className="text-xs font-bold text-theme-text-main truncate">{c.name}</span>
                     </button>
                   );
                 })}
@@ -229,8 +229,8 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
 
             {/* STEP 3: TEMA WRAPPING */}
             <div className="space-y-3">
-              <label className="text-xs font-black uppercase tracking-wider text-stone-800 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">3</span>
+              <label className="text-xs font-black uppercase tracking-wider text-theme-text-main flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">3</span>
                 <span>Tema Kertas Wrapping (Cellophane):</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -243,12 +243,12 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                       onClick={() => setSelectedWrapping(w)}
                       className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                         isSelected
-                          ? 'border-rose-500 bg-rose-50/80 shadow-2xs ring-2 ring-rose-400/20'
-                          : 'border-stone-200 hover:border-rose-200 bg-white'
+                          ? 'border-theme-primary bg-theme-surface-subtle shadow-2xs ring-2 ring-theme-primary/20'
+                          : 'border-theme-border hover:border-theme-primary/40 bg-white'
                       }`}
                     >
-                      <div className="text-xs font-bold text-stone-800">{w.name}</div>
-                      <div className="text-[10px] text-stone-500 mt-0.5">{w.desc}</div>
+                      <div className="text-xs font-bold text-theme-text-main">{w.name}</div>
+                      <div className="text-[10px] text-theme-text-muted mt-0.5">{w.desc}</div>
                     </button>
                   );
                 })}
@@ -257,8 +257,8 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
 
             {/* STEP 4: AKSESORI UPSELLING */}
             <div className="space-y-3">
-              <label className="text-xs font-black uppercase tracking-wider text-stone-800 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">4</span>
+              <label className="text-xs font-black uppercase tracking-wider text-theme-text-main flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">4</span>
                 <span>Tambahan Aksesori (Upselling Add-ons):</span>
               </label>
               <div className="space-y-2">
@@ -270,22 +270,22 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                       onClick={() => toggleAddon(a.id)}
                       className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
                         isChecked
-                          ? 'border-rose-500 bg-rose-50/80 shadow-2xs'
-                          : 'border-stone-200 hover:border-rose-200 bg-white'
+                          ? 'border-theme-primary bg-theme-surface-subtle shadow-2xs'
+                          : 'border-theme-border hover:border-theme-primary/40 bg-white'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
                         <span className="text-xl">{a.icon}</span>
                         <div>
-                          <div className="text-xs font-bold text-stone-800">{a.name}</div>
-                          <div className="text-[10px] text-stone-500 font-semibold">
+                          <div className="text-xs font-bold text-theme-text-main">{a.name}</div>
+                          <div className="text-[10px] text-theme-text-muted font-semibold">
                             +Rp {a.price.toLocaleString('id-ID')}
                           </div>
                         </div>
                       </div>
                       <div
                         className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-colors ${
-                          isChecked ? 'bg-rose-600 border-rose-600 text-white' : 'border-stone-300 bg-white'
+                          isChecked ? 'bg-theme-primary border-theme-primary text-white' : 'border-stone-300 bg-white'
                         }`}
                       >
                         {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -299,25 +299,25 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
 
           {/* LIVE PREVIEW & PRICE CARD (RIGHT COLUMN) */}
           <div className="lg:col-span-5 space-y-4 sticky top-20">
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-lg space-y-6">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-theme-border shadow-lg space-y-6">
               
               <div>
-                <h3 className="text-sm font-black uppercase tracking-wider text-stone-800 mb-3">
+                <h3 className="text-sm font-black uppercase tracking-wider text-theme-text-main mb-3">
                   Preview Desain Buket
                 </h3>
                 
                 {/* PREVIEW CANVAS */}
                 <div
-                  className="rounded-2xl p-8 text-center border-2 border-dashed border-rose-200 flex flex-col items-center justify-center min-h-[190px] transition-colors overflow-hidden"
+                  className="rounded-2xl p-8 text-center border-2 border-dashed border-theme-border flex flex-col items-center justify-center min-h-[190px] transition-colors overflow-hidden"
                   style={{ backgroundColor: `${selectedColor.colorHex}25` }}
                 >
                   <span className="animate-float-hero text-7xl mb-2 inline-block drop-shadow-md transition-transform duration-300 hover:scale-110">
                     {selectedFlower.emoji}
                   </span>
-                  <div className="text-xs font-black text-stone-800 mt-2">
+                  <div className="text-xs font-black text-theme-text-main mt-2">
                     {selectedFlower.name} • {selectedColor.name}
                   </div>
-                  <div className="text-[10px] text-rose-700 font-semibold">
+                  <div className="text-[10px] text-theme-primary font-semibold">
                     Wrapping: {selectedWrapping.name}
                   </div>
                 </div>
@@ -340,7 +340,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                   </strong>
                 </div>
 
-                <div className="pt-2 border-t border-dashed border-stone-300 flex justify-between items-center text-sm font-black text-rose-600">
+                <div className="pt-2 border-t border-dashed border-stone-300 flex justify-between items-center text-sm font-black text-theme-primary">
                   <span>Estimasi Total:</span>
                   <span className="text-base font-extrabold text-stone-900">
                     Rp {totalPrice.toLocaleString('id-ID')}
@@ -363,7 +363,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                   type="button"
                   disabled={isAdding}
                   onClick={(e) => handleAddToCart(e)}
-                  className="w-full py-2.5 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.01] cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+                  className="w-full py-2.5 px-4 rounded-2xl bg-theme-surface-subtle hover:bg-white text-theme-primary border border-theme-border font-extrabold text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.01] cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>{isAdding ? 'Buket Custom Ditambahkan...' : '+ Masukkan ke Keranjang Belanja'}</span>

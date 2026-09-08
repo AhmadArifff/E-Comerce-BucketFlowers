@@ -27,10 +27,8 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({ selectedCategory
           <button
             key={cat.id}
             onClick={() => onSelectCategory(cat.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 ${
-              isSelected
-                ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20 scale-105'
-                : 'bg-white text-stone-600 border border-stone-200 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50/50'
+            className={`filter-btn-atelier flex items-center gap-2 flex-shrink-0 ${
+              isSelected ? 'active scale-105' : ''
             }`}
           >
             <Icon className="w-3.5 h-3.5" />

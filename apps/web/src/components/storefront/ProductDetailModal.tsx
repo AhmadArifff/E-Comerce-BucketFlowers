@@ -77,24 +77,24 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2">
           {/* Image Side */}
-          <div className="relative aspect-square sm:aspect-auto sm:h-full bg-rose-50 overflow-hidden">
+          <div className="relative aspect-square sm:aspect-auto sm:h-full bg-theme-surface-subtle overflow-hidden">
             <img
               src={product.image}
               alt={product.name}
               className="w-full h-full object-cover"
             />
             {product.badge && (
-              <div className="absolute top-4 left-4 bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
+              <div className="absolute top-4 left-4 badge-atelier text-[10px] font-black uppercase tracking-wider px-2.5 py-1 shadow-md">
                 {product.badge}
               </div>
             )}
-            <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md rounded-2xl p-3 border border-rose-100 flex items-center justify-between text-xs">
+            <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md rounded-2xl p-3 border border-theme-border flex items-center justify-between text-xs">
               <div className="flex items-center gap-1 text-amber-500 font-extrabold">
                 <Star className="w-4 h-4 fill-amber-400" />
                 <span>{product.rating}</span>
                 <span className="text-stone-400 font-normal">({product.reviewCount} ulasan)</span>
               </div>
-              <div className="flex items-center gap-1 text-rose-600 font-bold">
+              <div className="flex items-center gap-1 text-theme-primary font-bold">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Garansi 100%</span>
               </div>
@@ -105,7 +105,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           <div className="p-6 sm:p-7 flex flex-col justify-between space-y-4 max-h-[85vh] overflow-y-auto">
             <div className="space-y-3">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600">
+                <span className="text-[10px] font-black uppercase tracking-widest text-theme-primary">
                   {product.category} Series
                 </span>
                 <h2 className="text-lg sm:text-xl font-black text-stone-800 tracking-tight leading-snug mt-0.5">
@@ -115,7 +115,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
               {/* Pricing */}
               <div className="flex items-baseline gap-2">
-                <span className="text-xl sm:text-2xl font-black text-rose-600">
+                <span className="text-xl sm:text-2xl font-black text-theme-primary">
                   Rp {activePrice.toLocaleString('id-ID')}
                 </span>
                 {product.discountPrice && (
@@ -147,7 +147,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               {/* Bill of Materials Ringkas */}
               <div className="bg-stone-50 rounded-2xl p-3 border border-stone-200 text-xs space-y-1.5">
                 <div className="font-extrabold text-stone-700 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-rose-600" />
+                  <Sparkles className="w-3.5 h-3.5 text-theme-primary" />
                   <span>Komposisi Rangkaian Chenille:</span>
                 </div>
                 <ul className="text-[11px] text-stone-600 list-disc list-inside space-y-0.5">
@@ -195,10 +195,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
 
             {/* Bottom Actions */}
-            <div className="space-y-2 pt-2 border-t border-rose-100">
+            <div className="space-y-2 pt-2 border-t border-theme-border/60">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-stone-500 font-semibold">Total Estimasi:</span>
-                <span className="text-base font-black text-rose-600">
+                <span className="text-base font-black text-theme-primary">
                   Rp {totalPrice.toLocaleString('id-ID')}
                 </span>
               </div>
@@ -209,7 +209,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   className={`py-2.5 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
                     isAddedSuccess
                       ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
-                      : 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
+                      : 'border-theme-border bg-theme-surface-subtle text-theme-primary hover:opacity-90'
                   }`}
                 >
                   {isAddedSuccess ? (
@@ -228,7 +228,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <button
                   disabled={isProcessingBuy}
                   onClick={handleBuyNow}
-                  className="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-md shadow-rose-600/20 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-75 disabled:cursor-not-allowed"
+                  className="btn-primary-atelier py-2.5 text-xs font-black shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-75 disabled:cursor-not-allowed"
                 >
                   <span>{isProcessingBuy ? 'Menyiapkan Keranjang...' : 'Beli Sekarang'}</span>
                 </button>

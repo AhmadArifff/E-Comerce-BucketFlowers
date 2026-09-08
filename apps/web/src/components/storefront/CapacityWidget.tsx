@@ -10,9 +10,9 @@ export const CapacityWidget: React.FC = () => {
   const percentage = Math.round((currentSlots / maxSlots) * 100);
 
   return (
-    <div className="bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 rounded-2xl border border-rose-200/80 p-4 sm:p-5 shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div className="bg-theme-surface-subtle rounded-2xl border border-theme-border p-4 sm:p-5 shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
       <div className="flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center flex-shrink-0 shadow-md shadow-rose-600/20">
+        <div className="w-10 h-10 rounded-xl bg-theme-primary text-white flex items-center justify-center flex-shrink-0 shadow-md">
           <Sparkles className="w-5 h-5" />
         </div>
         <div>
@@ -20,7 +20,7 @@ export const CapacityWidget: React.FC = () => {
             <h4 className="text-xs sm:text-sm font-extrabold text-stone-800">
               Kapasitas Produksi Harian Atelier (Capacity Throttling)
             </h4>
-            <span className="bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+            <span className="bg-white text-theme-primary border border-theme-border text-[10px] font-bold px-2 py-0.5 rounded-full shadow-2xs">
               Live Tracker
             </span>
           </div>
@@ -39,7 +39,7 @@ export const CapacityWidget: React.FC = () => {
         </div>
         <div className="w-full bg-stone-200 h-2.5 rounded-full overflow-hidden">
           <div
-            className="bg-gradient-to-r from-rose-500 to-pink-500 h-full rounded-full transition-all duration-500"
+            className="bg-theme-primary h-full rounded-full transition-all duration-500"
             style={{ width: `${percentage}%` }}
           />
         </div>

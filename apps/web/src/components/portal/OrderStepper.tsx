@@ -57,7 +57,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
   return (
     <div className="w-full">
       {/* DESKTOP & TABLET HORIZONTAL STEPPER */}
-      <div className="hidden sm:block relative mb-8 pt-2">
+      <div className="hidden sm:block relative mb-8">
         {/* Continuous Connecting Line Behind Dots */}
         <div
           className="stepper-track-line"
