@@ -297,7 +297,7 @@ export const ProductCtrAnalyticsCard: React.FC<{ onOpenBom?: (prod: Product) => 
 
         {/* Date Range Filter */}
         <div className="self-start lg:self-auto">
-          <DateRangeFilter value={dateRange} onChange={setDateRange} />
+          <DateRangeFilter value={dateRange} onChange={setDateRange} align="right" />
         </div>
       </div>
 

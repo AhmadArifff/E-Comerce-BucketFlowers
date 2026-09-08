@@ -114,9 +114,9 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-rose-100 shadow-sm overflow-hidden mb-8">
+    <div className="bg-white rounded-3xl border border-rose-100 shadow-sm mb-8">
       {/* Panel Header */}
-      <div className="p-5 border-b border-rose-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-rose-50/20">
+      <div className="p-5 border-b border-rose-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-rose-50/20 rounded-t-3xl">
         <div>
           <h2 className="text-sm sm:text-base font-extrabold text-stone-800">
             Daftar Transaksi & Progres Live Stepper
@@ -165,7 +165,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
           </div>
 
           <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <DateRangeFilter value={dateRange} onChange={setDateRange} />
+            <DateRangeFilter value={dateRange} onChange={setDateRange} align="right" />
             {!searchQuery && (
               <div className="relative w-full sm:w-52">
                 <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -182,7 +182,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-b-3xl">
         <table className="w-full text-left text-xs text-stone-600">
           <thead className="bg-stone-50 border-b border-stone-200 text-stone-700 font-extrabold uppercase text-[10px] tracking-wider">
             <tr>

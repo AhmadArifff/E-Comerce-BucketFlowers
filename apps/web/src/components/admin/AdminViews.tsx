@@ -126,7 +126,7 @@ export const FinancialChartCard: React.FC = () => {
         </div>
 
         <div className="flex items-center flex-wrap gap-2.5 text-xs">
-          <DateRangeFilter value={dateRange} onChange={setDateRange} />
+          <DateRangeFilter value={dateRange} onChange={setDateRange} align="right" />
           <button
             onClick={handleExportExcel}
             className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-bold transition-all shadow-2xs cursor-pointer ml-auto sm:ml-0"
@@ -504,7 +504,7 @@ export const ReportsView: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 self-start xl:self-auto">
-            <DateRangeFilter value={dateRange} onChange={setDateRange} />
+            <DateRangeFilter value={dateRange} onChange={setDateRange} align="right" />
             <button
               onClick={() => handleDownload('CSV')}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
