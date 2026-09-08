@@ -65,7 +65,33 @@ export default function RootLayout({
       lang="id"
       data-theme="tema-a"
       className={`${jakarta.variable} ${cormorant.variable} ${playfair.variable} ${fredoka.variable} ${outfit.variable} ${quicksand.variable}`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('chenille_active_theme');
+                  if (saved) {
+                    var th = 'tema-a';
+                    try {
+                      var parsed = JSON.parse(saved);
+                      th = (parsed && parsed.state && parsed.state.theme) ? parsed.state.theme : (typeof saved === 'string' ? saved.replace(/"/g, '') : 'tema-a');
+                    } catch(e) {
+                      th = saved.replace(/"/g, '');
+                    }
+                    if (['tema-a', 'tema-b', 'tema-c'].indexOf(th) !== -1) {
+                      document.documentElement.setAttribute('data-theme', th);
+                    }
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="font-sans antialiased bg-theme-bg text-theme-text-main min-h-screen flex flex-col">
         {children}
       </body>

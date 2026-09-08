@@ -259,3 +259,23 @@ body {
   animation: magicBeamWarranty 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+/* Magic UI Cart Bump Animation */
+@keyframes cartBumpAnim {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.28) rotate(-6deg); }
+  65% { transform: scale(0.92) rotate(4deg); }
+  100% { transform: scale(1); }
+}
+
+.cart-bump {
+  animation: cartBumpAnim 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+/* 3D Card Hover Perspective */
+.card-tilt-hover {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+.card-tilt-hover:hover {
+  transform: translateY(-5px) scale(1.015);
+}
+

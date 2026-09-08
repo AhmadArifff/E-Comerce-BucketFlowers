@@ -1,213 +1,263 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Search, Palette, User, ShieldCheck, MapPin, Sparkles, Menu, X } from 'lucide-react';
-import { useThemeStore, type ThemeId } from '@/stores/useThemeStore';
+import { ShoppingBag, Search, User, Sparkles, Menu, X } from 'lucide-react';
+import { useThemeStore } from '@/stores/useThemeStore';
 import { useCartStore } from '@/stores/useCartStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 interface NavbarProps {
+  activeSection?: string;
+  onNavigate?: (section: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ searchQuery, setSearchQuery }) => {
-  const { theme, setTheme } = useThemeStore();
+export const Navbar: React.FC<NavbarProps> = ({
+  activeSection = 'home',
+  onNavigate,
+  searchQuery,
+  setSearchQuery,
+}) => {
+  const { theme } = useThemeStore();
   const { getTotalItems, setIsCartOpen } = useCartStore();
   const { user } = useAuthStore();
-  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-
-  const themeOptions: { id: ThemeId; name: string; badge: string; color: string }[] = [
-    { id: 'tema-a', name: 'Tema A: Korean Pastel', badge: 'Soft & Elegant', color: '#E11D48' },
-    { id: 'tema-b', name: 'Tema B: Modern Romantic', badge: 'Luxury Velvet', color: '#9F1239' },
-    { id: 'tema-c', name: 'Tema C: Playful Kawaii', badge: 'Pop & Cheerful', color: '#EA580C' },
-  ];
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [cartBump, setCartBump] = useState(false);
 
   const totalItems = getTotalItems();
 
-  return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-rose-100 shadow-sm transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
-          {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white shadow-md shadow-rose-500/20 group-hover:scale-105 transition-transform">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-base sm:text-lg font-extrabold text-rose-600 tracking-tight block leading-tight">
-                Chenille Atelier
-              </span>
-              <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider block">
-                Buket Kawat Bulu Depok
-              </span>
-            </div>
-          </Link>
+  // Trigger Cart Bump Animation when total items change
+  useEffect(() => {
+    if (totalItems > 0) {
+      setCartBump(true);
+      const timer = setTimeout(() => setCartBump(false), 450);
+      return () => clearTimeout(timer);
+    }
+  }, [totalItems]);
 
-          {/* Search Bar - Desktop */}
-          <div className="hidden md:flex flex-1 max-w-md mx-4">
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Cari buket wisuda, mawar pastel, mini pot..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-sm bg-rose-50/50 border border-rose-200 rounded-full focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all placeholder:text-stone-400"
-              />
-              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-2.5 text-xs text-stone-400 hover:text-stone-600"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
+  const navMenuItems = [
+    { id: 'home', label: 'Beranda' },
+    { id: 'katalog', label: 'Katalog Bunga' },
+    { id: 'custom', label: 'Custom Studio' },
+    { id: 'lookbook', label: 'Lookbook' },
+    { id: 'tracking', label: 'Lacak Pesanan' },
+    { id: 'bantuan', label: 'Bantuan & Garansi' },
+  ];
+
+  const brandInfo = {
+    'tema-a': { title: 'Aesthetic Chenille Flowers', sub: 'Korean Pastel Atelier', icon: '🌸' },
+    'tema-b': { title: 'Aesthetic Chenille Atelier', sub: 'Modern Romantic & Editorial', icon: '🌹' },
+    'tema-c': { title: 'Chenille Kawaii Craft', sub: 'Playful Pastel & Kawaii Dream', icon: '🍭' },
+  }[theme] || { title: 'Aesthetic Chenille Flowers', sub: 'Korean Pastel Atelier', icon: '🌸' };
+
+  const handleNavClick = (id: string) => {
+    setIsMobileNavOpen(false);
+    if (onNavigate) {
+      onNavigate(id);
+    } else {
+      const el = document.getElementById(id) || document.getElementById(`section-${id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  return (
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-rose-100/80 shadow-2xs transition-colors duration-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-3 lg:gap-4">
+          
+          {/* BRAND LOGO */}
+          <div
+            onClick={() => handleNavClick('home')}
+            className="flex items-center gap-2.5 cursor-pointer flex-shrink-0 group"
+          >
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-lg sm:text-xl shadow-md shadow-rose-500/20 group-hover:scale-105 transition-transform flex-shrink-0">
+              <span>{brandInfo.icon}</span>
+            </div>
+            <div className="min-w-0">
+              <span className="text-sm sm:text-base font-black text-stone-900 tracking-tight block leading-tight truncate">
+                {brandInfo.title}
+              </span>
+              <span className="text-[10px] font-bold text-rose-600 uppercase tracking-widest block truncate">
+                {brandInfo.sub}
+              </span>
             </div>
           </div>
 
-          {/* Action Navigation */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Multi-Theme Switcher Button */}
-            <div className="relative">
-              <button
-                onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors shadow-sm"
-                title="Ganti Tema Visual Toko"
-              >
-                <Palette className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">
-                  {theme === 'tema-a' ? 'Korean Pastel' : theme === 'tema-b' ? 'Modern Romantic' : 'Playful Kawaii'}
-                </span>
-              </button>
+          {/* DESKTOP 6 NAVIGATION MENUS — NO WRAPPING */}
+          <nav className="hidden xl:flex items-center gap-1">
+            {navMenuItems.map((menu) => {
+              const isActive = activeSection === menu.id;
+              return (
+                <button
+                  key={menu.id}
+                  onClick={() => handleNavClick(menu.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                    isActive
+                      ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/30'
+                      : 'text-stone-700 hover:text-rose-600 hover:bg-rose-50'
+                  }`}
+                >
+                  {menu.label}
+                </button>
+              );
+            })}
+          </nav>
 
-              {isThemeMenuOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-rose-100 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="text-[11px] font-bold text-stone-400 px-3 py-1.5 uppercase tracking-wider">
-                    Pilih Tema Estetika
-                  </div>
-                  {themeOptions.map((opt) => (
-                    <button
-                      key={opt.id}
-                      onClick={() => {
-                        setTheme(opt.id);
-                        setIsThemeMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-all ${
-                        theme === opt.id
-                          ? 'bg-rose-50 font-bold text-rose-700 border border-rose-200 shadow-sm'
-                          : 'hover:bg-stone-50 text-stone-700'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: opt.color }}
-                        />
-                        <div>
-                          <div className="font-semibold">{opt.name}</div>
-                          <div className="text-[10px] text-stone-500 font-normal">{opt.badge}</div>
-                        </div>
-                      </div>
-                      {theme === opt.id && <span className="text-rose-600 font-bold text-xs">Aktif</span>}
-                    </button>
-                  ))}
-                </div>
+          {/* RIGHT ACTION BUTTONS */}
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+            
+            {/* Desktop Search Input */}
+            <div className="hidden md:flex relative w-48 lg:w-56">
+              <input
+                type="text"
+                placeholder="Cari buket bunga..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-xs bg-stone-50 border border-rose-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all placeholder:text-stone-400"
+              />
+              <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2" />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-2 text-stone-400 hover:text-stone-600"
+                >
+                  <X className="w-3 h-3" />
+                </button>
               )}
             </div>
 
-            {/* Portal Pelanggan / Lacak Link */}
-            <Link
-              href="/portal"
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-stone-700 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Lacak / Portal</span>
-            </Link>
-
-            {/* Admin Hub Link */}
-            <Link
-              href="/admin"
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-stone-700 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
-              <span>Admin Hub</span>
-            </Link>
-
-            {/* Cart Drawer Trigger */}
+            {/* Mobile Search Toggle */}
             <button
-              onClick={() => setIsCartOpen(true)}
-              className="relative flex items-center justify-center w-10 h-10 rounded-full bg-rose-600 text-white hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all"
-              aria-label="Keranjang Belanja"
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className="md:hidden p-2 text-stone-600 hover:text-rose-600 rounded-lg"
+              title="Cari"
             >
-              <ShoppingBag className="w-4 h-4" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-amber-400 text-stone-900 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white animate-pulse">
-                  {totalItems}
-                </span>
-              )}
+              <Search className="w-4 h-4" />
             </button>
 
-            {/* Mobile Menu Toggle */}
+            {/* Masuk / Akun Pelanggan Link */}
+            <Link
+              href="/login"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-rose-200 bg-white hover:bg-rose-50 text-stone-700 text-xs font-bold transition-all shadow-2xs"
+              title="Masuk / Akun Pelanggan"
+            >
+              <User className="w-3.5 h-3.5 text-rose-600" />
+              <span className="hidden sm:inline">
+                {user ? user.name.split(' ')[0] : 'Masuk / Akun'}
+              </span>
+            </Link>
+
+            {/* Cart Drawer Trigger with Magic UI Cart Bump Animation */}
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className={`relative flex items-center justify-center gap-1.5 px-3 sm:px-4 h-9 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md shadow-rose-600/20 active:scale-95 transition-all ${
+                cartBump ? 'cart-bump' : ''
+              }`}
+              aria-label="Keranjang Belanja"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Keranjang</span>
+              <span className="bg-white text-rose-700 text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                {totalItems}
+              </span>
+            </button>
+
+            {/* Mobile Hamburger Menu */}
             <button
               onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
-              className="lg:hidden p-2 text-stone-600 hover:text-rose-600 rounded-lg"
+              className="xl:hidden p-2 text-stone-700 hover:text-rose-600 rounded-lg focus:outline-none"
+              aria-label="Toggle Menu"
             >
               {isMobileNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Search Input */}
-        <div className="md:hidden pb-3 pt-1">
-          <div className="relative w-full">
-            <input
-              type="text"
-              placeholder="Cari buket wisuda, mawar pastel..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs bg-rose-50/60 border border-rose-200 rounded-full focus:outline-none focus:ring-2 focus:ring-rose-500"
-            />
-            <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-2.5" />
-          </div>
-        </div>
-
-        {/* Mobile Nav Drawer */}
-        {isMobileNavOpen && (
-          <div className="lg:hidden border-t border-rose-100 py-3 space-y-2 bg-white">
-            <Link
-              href="/"
-              onClick={() => setIsMobileNavOpen(false)}
-              className="block px-3 py-2 text-sm font-semibold text-rose-600 bg-rose-50 rounded-lg"
-            >
-              Etalase Katalog Toko
-            </Link>
-            <Link
-              href="/portal"
-              onClick={() => setIsMobileNavOpen(false)}
-              className="block px-3 py-2 text-sm font-semibold text-stone-700 hover:bg-rose-50 rounded-lg"
-            >
-              Portal Pelanggan & Lacak Pesanan
-            </Link>
-            <Link
-              href="/admin"
-              onClick={() => setIsMobileNavOpen(false)}
-              className="block px-3 py-2 text-sm font-semibold text-stone-700 hover:bg-rose-50 rounded-lg"
-            >
-              Admin Operations Dashboard
-            </Link>
-            <Link
-              href="/login"
-              onClick={() => setIsMobileNavOpen(false)}
-              className="block px-3 py-2 text-sm font-semibold text-stone-700 hover:bg-rose-50 rounded-lg"
-            >
-              Masuk / Registrasi Akun
-            </Link>
+        {/* Mobile Search Bar Dropdown */}
+        {isSearchOpen && (
+          <div className="md:hidden py-2 border-t border-rose-100 animate-in slide-in-from-top-2 duration-150">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Cari buket wisuda, mawar, mini pot..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-8 py-2 text-xs bg-rose-50/50 border border-rose-200 rounded-full focus:outline-none focus:ring-2 focus:ring-rose-500"
+              />
+              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-2.5 text-stone-400"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
         )}
+
+        {/* Mobile Horizontal Navigation Pills Bar */}
+        <div className="xl:hidden overflow-x-auto scrollbar-none py-2 flex items-center gap-1.5 border-t border-rose-50 -mx-4 px-4">
+          {navMenuItems.map((menu) => {
+            const isActive = activeSection === menu.id;
+            return (
+              <button
+                key={menu.id}
+                onClick={() => handleNavClick(menu.id)}
+                className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 ${
+                  isActive
+                    ? 'bg-rose-500 text-white shadow-2xs'
+                    : 'bg-stone-50 text-stone-700 hover:bg-rose-50'
+                }`}
+              >
+                {menu.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
+
+      {/* Mobile Drawer Overlay */}
+      {isMobileNavOpen && (
+        <div className="xl:hidden border-t border-rose-100 bg-white/95 backdrop-blur-md px-4 py-4 space-y-2 shadow-lg animate-in slide-in-from-top-4 duration-200">
+          <div className="text-[11px] font-extrabold uppercase text-stone-400 px-3 tracking-wider">
+            Menu Navigasi Toko
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {navMenuItems.map((menu) => {
+              const isActive = activeSection === menu.id;
+              return (
+                <button
+                  key={menu.id}
+                  onClick={() => handleNavClick(menu.id)}
+                  className={`p-2.5 rounded-xl text-left text-xs font-bold transition-all ${
+                    isActive
+                      ? 'bg-rose-500 text-white shadow-xs'
+                      : 'hover:bg-rose-50 text-stone-800'
+                  }`}
+                >
+                  {menu.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="pt-3 border-t border-rose-100 flex items-center justify-between text-xs font-bold text-stone-600 px-2">
+            <Link href="/portal" className="hover:text-rose-600">
+              📦 Portal Pelanggan
+            </Link>
+            <Link href="/admin" className="hover:text-rose-600 text-amber-700">
+              ⚙️ Admin Atelier
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

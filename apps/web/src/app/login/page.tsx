@@ -129,10 +129,6 @@ export default function LoginPage() {
     }, 3500);
   };
 
-  const handleThemeChange = (newTheme: ThemeId) => {
-    setTheme(newTheme);
-  };
-
   const quickFillMember = () => {
     setMode('LOGIN');
     setEmailOrPhone('081298317721');
@@ -201,46 +197,13 @@ export default function LoginPage() {
           <span>Kembali ke Etalase Toko</span>
         </Link>
 
-        {/* THEME PRESET SWITCHER PILLS */}
-        <div className="flex items-center gap-1.5 p-1 bg-theme-surface-subtle border border-theme-border rounded-full">
-          <button
-            type="button"
-            onClick={() => handleThemeChange('tema-a')}
-            className={`px-3 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all ${
-              theme === 'tema-a'
-                ? 'bg-rose-600 text-white shadow-xs'
-                : 'text-theme-text-muted hover:text-theme-text-main'
-            }`}
-          >
-            <span>🌸</span>
-            <span className="hidden sm:inline">Korean Pastel</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleThemeChange('tema-b')}
-            className={`px-3 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all ${
-              theme === 'tema-b'
-                ? 'bg-rose-900 text-white shadow-xs'
-                : 'text-theme-text-muted hover:text-theme-text-main'
-            }`}
-          >
-            <span>🌹</span>
-            <span className="hidden sm:inline">Modern Romantic</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleThemeChange('tema-c')}
-            className={`px-3 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all ${
-              theme === 'tema-c'
-                ? 'bg-pink-600 text-white shadow-xs'
-                : 'text-theme-text-muted hover:text-theme-text-main'
-            }`}
-          >
-            <span>🍭</span>
-            <span className="hidden sm:inline">Playful Kawaii</span>
-          </button>
+        {/* ACTIVE THEME BADGE (READ-ONLY FOR PUBLIC / MEMBER) */}
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-theme-surface-subtle border border-theme-border text-xs font-bold text-theme-text-muted shadow-2xs">
+          <span>{currentMeta.icon}</span>
+          <span className="text-theme-text-main font-extrabold">{currentMeta.name}</span>
+          <span className="text-[10px] text-theme-text-muted border-l border-theme-border pl-2 font-semibold hidden sm:inline">
+            Atelier Official
+          </span>
         </div>
       </header>
 

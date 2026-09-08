@@ -30,32 +30,55 @@ Berbeda dengan e-commerce konvensional, bisnis buket kawat bulu memiliki karakte
 
 ```text
 E-COMMERCE CHENILLE FLOWERS SITEMAP
-│
-├── 🛒 STOREFRONT & CUSTOMER PORTAL (apps/web)
-│   ├── Halaman Etalase Multi-Tema (Tema A, Tema B, Tema C)
-│   │   ├── Top Announcement Bar (Promo & Info Kuota Wisuda)
-│   │   ├── Sticky Navbar (Brand, Menu, Search, Link Portal Member, Cart Drawer)
-│   │   ├── Hero Carousel Estetik (Highlight buket wisuda & seasonal)
-│   │   ├── Kartu Filter Kategori (Wisuda, Romantis, Pastel, Karakter, Mini Pot)
-│   │   ├── Grid Katalog Produk Interaktif (Add to Cart, 3D Tilt, View Counter)
-│   │   ├── Floating In-System Web Chat CS (Konsultasi buket di web + Eskalasi WA)
-│   │   └── Cart Drawer (Ringkasan belanja, opsi COD vs Ekspedisi, Checkout)
-│   │
-│   ├── Portal Pelanggan & Pelacakan (/portal)
-│   │   ├── Skenario 1: Guest Tracking (Input No. WhatsApp / Invoice -> Lacak Live)
-│   │   └── Skenario 2: Registered Member Dashboard ("Admin Pelanggan")
-│   │       ├── Header Profile Avatar (Inisial 'SA' / Emoji Kustom)
-│   │       ├── Kartu Active Order Tracking (4-Step Progress Stepper Langsung)
-│   │       ├── Modal Kustomisasi Profil & Pilihan Emoji Avatar (🌸, 🌷, 🧸, 👑, 🎀)
-│   │       ├── Saldo Flower Points & Klaim Voucher Diskon
-│   │       ├── Buku Alamat Pengiriman Tersimpan
-│   │       └── Riwayat Semua Transaksi + Unduh Resi Digital
-│   │
-│   └── Sistem Otentikasi Terpadu (/login)
-│       ├── Dual Tab: Masuk Akun & Daftar Akun Baru
-│       ├── Theme Adaptor (CSS Token otomatis sinkron Tema A, B, atau C)
-│       ├── Theme Selector Pills (Ubah suasana tema langsung di halaman login)
-│       └── 1-Click Fast Login Demo (Member Sarah Amalia & Super Admin Rania Azzahra)
+  ├── 🛒 STOREFRONT & CUSTOMER PORTAL (apps/web)
+  │   ├── Halaman Etalase & Landing Page Terpadu (http://localhost:3000/)
+  │   │   ├── Top Announcement Bar (Promo & Info Kuota Wisuda)
+  │   │   ├── Sticky Navbar (Brand Logo, 6 Menu Utama Tanpa Wrapping, Pencarian, Masuk/Akun, Cart Drawer Bump)
+  │   │   ├── 1. Modul Beranda (#home)
+  │   │   │   ├── Hero Banner Realistik (Preview foto buket asli, badge 100% Handcrafted Chenille Velvet)
+  │   │   │   ├── CTA Ganda: "Jelajahi Katalog 🌸" (#katalog) & "Rangkai Custom ✨" (#custom)
+  │   │   │   ├── 4 Trust Cards: Awet Selamanya, Kardus Box Tebal, COD Titik Temu, Garansi 100% Baru
+  │   │   │   └── Koleksi Favorit Paling Diminati (4 Bestsellers, star rating, view count, 3D tilt hover)
+  │   │   ├── 2. Modul Katalog Bunga (#katalog)
+  │   │   │   ├── Indikator Throttling Kuota Harian (Batas 20 buket/hari agar presisi)
+  │   │   │   ├── Filter Pills: Semua Model (8), Wisuda & Sidang, Romantis, Karakter, Mini Pot
+  │   │   │   └── Grid 8 Buket Lengkap (Badge PO vs Ready, Price was/now, modal detail, Add to Cart)
+  │   │   ├── 3. Modul Custom Studio Interaktif (#custom)
+  │   │   │   ├── Step 1: Bunga Utama (Tulip 🌷, Mawar 🌹, Matahari 🌻, Lavender 🪻)
+  │   │   │   ├── Step 2: Swatch Warna Kawat Bulu (Pastel Pink, Lavender Lilac, Sky Blue, Matcha Sage)
+  │   │   │   ├── Step 3: Pilihan Kertas Wrapping Cellophane (Korean Two-Tone, Lilac Velvet, Clean Oat)
+  │   │   │   ├── Step 4: Aksesori Tambahan Upselling (Lampu LED +10k, Boneka Toga +15k, Kartu Ucapan +5k)
+  │   │   │   ├── Preview Canvas Live Emoji & Label Dinamis
+  │   │   │   ├── Ringkasan Pesanan & Kalkulasi Subtotal Live
+  │   │   │   └── Direct WhatsApp Order Deep Link & Tambah ke Keranjang Web
+  │   │   ├── 4. Modul Lookbook & Inspirasi Pelanggan (#lookbook)
+  │   │   │   ├── Bukti Sosial Wisuda UI 2026, Anniversary 2nd Year, Sidang Skripsi IPB
+  │   │   │   └── Kutipan Testimoni Autentik, Hashtag, dan Lokasi Pelanggan
+  │   │   ├── 5. Modul Lacak Pesanan Cepat (#tracking)
+  │   │   │   ├── Input Cepat No. Invoice (contoh: INV/20260907/FLW-0001)
+  │   │   │   ├── 4-Step Progress Stepper Timeline Real-time (Bayar -> Rangkai -> Packing -> Kurir)
+  │   │   │   └── Tautan Cepat ke Portal Pelanggan Terpadu
+  │   │   ├── 6. Modul Bantuan, Perawatan & Garansi 100% (#bantuan)
+  │   │   │   ├── FAQ Panduan Perawatan (Merapikan kelopak kawat lentur, bersihkan debu tanpa air)
+  │   │   │   └── Banner Kebijakan Garansi 100% Ganti Buket Baru (Free Shipping)
+  │   │   ├── Floating In-System Web Chat CS (Konsultasi buket di web + Eskalasi WA)
+  │   │   └── Cart Drawer (Ringkasan belanja, opsi COD vs Ekspedisi, Kupon, Checkout)
+  │   │
+  │   ├── Portal Pelanggan & Pelacakan (/portal)
+  │   │   ├── Skenario 1: Guest Tracking (Input No. WhatsApp / Invoice -> Lacak Live)
+  │   │   └── Skenario 2: Registered Member Dashboard ("Admin Pelanggan")
+  │   │       ├── Header Profile Avatar (Inisial 'SA' / Emoji Kustom)
+  │   │       ├── Kartu Active Order Tracking (4-Step Progress Stepper Langsung)
+  │   │       ├── Modal Kustomisasi Profil & Pilihan Emoji Avatar (🌸, 🌷, 🧸, 👑, 🎀)
+  │   │       ├── Saldo Flower Points & Klaim Voucher Diskon
+  │   │       ├── Buku Alamat Pengiriman Tersimpan
+  │   │       └── Riwayat Semua Transaksi + Unduh Resi Digital
+  │   │
+  │   └── Sistem Otentikasi Terpadu (/login)
+  │       ├── Dual Tab: Masuk Akun & Daftar Akun Baru
+  │       ├── Theme Adaptor (CSS Token otomatis sinkron Tema A, B, atau C)
+  │       ├── Tata Kelola Tema: Dikunci oleh Admin (Publik Dilarang Mengganti Tema)
+  │       └── 1-Click Fast Login Demo (Member Sarah Amalia & Super Admin Rania Azzahra)
 │
 └── 🛠️ ADMIN OPERATIONS DASHBOARD (apps/web & apps/api)
     ├── 1. Dashboard & Evaluasi Bisnis (KPI Omzet, Laba Bersih, Slot PO, Rating)
@@ -385,11 +408,56 @@ Sistem mendukung perpindahan suasana visual toko secara instan melalui variabel 
   - *Palette:* Coral Pop `#FF6B81`, Warm Butter `#FFF3E0`, Bubblegum Pink `#EC4899`, Slate Navy `#2C3E50`.
   - *Typography:* Nunito Rounded & Outfit.
   - *Vibe:* Ceria, energik, berjiwa muda untuk wisuda sahabat dan kado ulang tahun.
+* **Aturan Tata Kelola Tema (Admin-Only Control Policy):**
+  - **Prinsip Utama:** Tema etalase toko (`tema-a`, `tema-b`, `tema-c`) **hanya dapat dikonfigurasi dan diubah oleh Super Admin dari dalam Admin Panel (`/admin`)**.
+  - **Larangan Halaman Publik:** Dilarang keras menampilkan selector/dropdown/pill tema pada halaman Storefront publik, Customer Portal, ataupun Login Page pengunjung.
+  - **Mekanisme Sinkronisasi Global:** Ketika Super Admin memilih tema baru di Admin Panel (`AdminHeader` atau `FeatureToggles`), sistem menyimpan kunci di `localStorage.setItem('chenille_active_theme', themeKey)` dan memancarkan state Zustand `useThemeStore`. Seluruh tab, sesi pengunjung, halaman login, dan portal otomatis menyesuaikan variabel CSS tokens tanpa perlu refresh halaman.
+  - **Injeksi Anti-Flicker:** Menggunakan inline script pada `<head>` di `layout.tsx` agar browser membaca `chenille_active_theme` sebelum hydration pertama, mencegah terjadinya visual flash tema default.
 * **Strategi Penambahan Tema Baru (Tema D, E, dst.):**
   - Developer cukup mendaftarkan objek tema baru di `@chenille/shared/constants/themes.ts` dan menambahkan CSS selector `[data-theme="tema-d"]`.
   - Seluruh modul etalase, portal member, dan login akan otomatis mewarisi warna serta tipografi baru.
 
-### 7.2 In-System Live Web Chat (Anti-Direct-WA Trap)
+### 7.2 Spesifikasi 6 Modul Utama Storefront Terpadu
+Halaman etalase utama (`http://localhost:3000/`) menyatukan 6 modul interaktif berbasis prototipe desain asli:
+1. **Modul 1: Beranda (#home)**
+   - *Hero Banner:* Menggunakan aset foto resolusi tinggi asli pengrajin (`/preview-tema-a.jpg` / `/preview-tema-b.jpg`), badge `100% Handcrafted Chenille Velvet`, serta tombol ganda eksplorasi katalog dan studio custom.
+   - *4 Trust Cards:*
+     - 🌿 **Awet Selamanya:** Kawat bulu premium anti-rontok & tak pernah layu.
+     - 📦 **Kardus Box Tebal:** Double-wall corrugated box aman dari tekanan kurir.
+     - 🤝 **COD Titik Temu:** Janji temu langsung di kampus UI, Gundar, atau stasiun.
+     - 🛡️ **Garansi 100% Baru:** Ganti buket baru jika rusak saat pengiriman.
+   - *Koleksi Favorit:* 4 buket terlaris dengan rating bintang, jumlah ulasan, view counter, dan 3D tilt hover.
+
+2. **Modul 2: Katalog Lengkap & Filter Kategori (#katalog)**
+   - Filter pills kategori: *Semua Model (8)*, *Wisuda & Sidang*, *Romantis & Valentine*, *Karakter & Hewan*, *Mini Pot Hias Meja*.
+   - Kartu produk interaktif dengan indikator ketersediaan: *Ready Stock* vs *Pre-Order (PO Lead Time)*.
+   - Widget batas kapasitas harian (*Capacity Throttling*: 20 buket/hari).
+
+3. **Modul 3: Custom Studio Interaktif (#custom)**
+   - Pemilih bunga utama: Tulip 🌷 (Rp 120k), Mawar Velvet 🌹 (Rp 130k), Bunga Matahari 🌻 (Rp 115k), Lavender 🪻 (Rp 125k).
+   - Swatch warna kawat bulu (*Chenille Stem*): Pastel Pink, Lavender Lilac, Sky Blue, Matcha Sage.
+   - Pilihan kertas wrapping: Korean Two-Tone Pink, Lilac & White Velvet, Minimalist Clean Oat.
+   - Aksesori tambahan upselling (*BOM Accessories*): Lampu LED Fairy Light (+Rp 10.000), Boneka Toga Wisuda (+Rp 15.000), Kartu Ucapan Kaligrafi (+Rp 5.000).
+   - Live Preview Canvas dengan emoji animasi dinamis dan kalkulasi harga subtotal instan.
+   - Integrasi langsung pemesanan via tautan WhatsApp deep link terstruktur serta tombol tambah ke keranjang website.
+
+4. **Modul 4: Lookbook & Inspirasi Pelanggan (#lookbook)**
+   - Galeri bukti sosial wisuda kampus: Wisuda UI 2026, Anniversary 2nd Year, Sidang Skripsi IPB.
+   - Menampilkan kutipan testimoni autentik pelanggan, foto gradient wrapper tematik, dan nama wisudawan.
+
+5. **Modul 5: Lacak Status Pesanan Cepat (#tracking)**
+   - Input nomor invoice instan (contoh: `INV/20260907/FLW-0001`).
+   - Stepper timeline 4 langkah progres pengerjaan buket: *Pembayaran Terverifikasi -> Sedang Dirangkai -> Selesai Packing -> Diambil Kurir*.
+   - Tombol alihan cepat ke Portal Pelanggan Terpadu (`/portal`).
+
+6. **Modul 6: Bantuan, Perawatan & Garansi 100% (#bantuan)**
+   - *Care Guide FAQ:* Panduan merapikan kembali kelopak bunga kawat yang lentur dalam 10-20 detik, serta cara membersihkan debu menggunakan kuas halus atau hairdryer tanpa air.
+   - *Kebijakan Garansi:* Banner jaminan 100% ganti buket baru gratis ongkir dengan cukup menyertakan video unboxing 1x24 jam tanpa perlu repot mengembalikan buket lama.
+
+### 7.3 Micro-Animations & Standar Visual Feedback
+1. **Magic UI Cart Bump Animation (`cartBumpAnim`):** Tombol keranjang memantul secara elastis (*spring rotate -6deg to +4deg*) setiap kali item berhasil dimasukkan.
+2. **3D Card Hover Tilt (`card-tilt-hover`):** Efek kedalaman perspektif yang mengangkat kartu produk saat disentuh kursor.
+3. **Laser Beam Progress Stepper (`beam-laser-step4` & `beam-laser-warranty`):** Sinar laser horizontal dan vertikal yang berdenyut mulus menandakan alur kerja sedang aktif.
 * **Problem:** Toko online konvensional menaruh tombol WhatsApp mentah sehingga obrolan terpental keluar website, pengguna harus simpan nomor kontak, dan sistem kehilangan jejak analitik chat.
 * **Solusi Terpadu:**
   - Tombol melayang *"Chat CS Pengrajin"* membuka modal chat interaktif di browser.
