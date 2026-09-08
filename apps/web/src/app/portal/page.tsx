@@ -40,7 +40,7 @@ export default function CustomerPortalPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
 
-  const { orders, activeOrderId, setActiveOrderId, updateOrderStep, warrantyClaims } = useOrderStore();
+  const { orders, activeOrderId, setActiveOrderId, updateOrderStep, addNewOrder, warrantyClaims } = useOrderStore();
   const { user } = useAuthStore();
 
   // Sync data-theme attribute on client mount
@@ -49,6 +49,80 @@ export default function CustomerPortalPage() {
   }, [theme]);
 
   const activeOrder = orders.find((o) => o.id === activeOrderId) || orders[0];
+
+  // Fetch live orders from Supabase backend
+  useEffect(() => {
+    fetch('/api/v1/orders')
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data?.length > 0) {
+          const mappedOrders: MockOrder[] = res.data.map((o: any) => ({
+            id: o.id,
+            invoiceNumber: o.id,
+            customerName: o.customer_name,
+            customerPhone: o.customer_phone,
+            customerEmail: o.customer_email,
+            customerAvatarEmoji: '🌸',
+            currentStep: o.current_step || 1,
+            stepStatus: o.order_status,
+            statusLabel:
+              o.current_step === 4
+                ? 'Pesanan Selesai'
+                : o.current_step === 3
+                ? 'Lolos Quality Check'
+                : o.current_step === 2
+                ? 'Sedang Dirangkai'
+                : 'Pembayaran Terkonfirmasi',
+            statusDescription:
+              o.current_step === 4
+                ? 'Buket telah sampai di tangan pelanggan dengan aman.'
+                : o.current_step === 3
+                ? 'Buket telah lolos inspeksi kerapian dan kelopak simetris.'
+                : o.current_step === 2
+                ? 'Florist ahli atelier sedang merangkai kawat bulu pesanan Anda.'
+                : 'Pembayaran pesanan telah diverifikasi oleh sistem atelier.',
+            fulfillmentType: o.fulfillment_type,
+            meetupPointName: o.cod_meetup_name,
+            courierName: o.courier_name,
+            trackingNumber: o.tracking_number,
+            deliveryAddress: o.shipping_address,
+            paymentMethod: o.payment_method,
+            paymentStatus: o.payment_status,
+            items: (o.items || []).map((it: any) => ({
+              productId: it.product_id,
+              productName: it.product_name,
+              productImage: '/images/products/buket-mawar-merah-velvet.jpg',
+              quantity: it.quantity,
+              unitPrice: it.price,
+              subtotal: it.subtotal,
+            })),
+            subtotalAmount: o.total_amount,
+            shippingFee: 0,
+            discountAmount: o.discount_amount || 0,
+            adminFee: 0,
+            flowerPointsEarned: Math.round(o.total_amount * 0.001),
+            totalAmount: o.total_amount,
+            createdAt: o.created_at,
+            estimatedDelivery: 'Besok, 10:00 WIB',
+          }));
+
+          mappedOrders.forEach((mo) => {
+            if (!orders.some((ex) => ex.id === mo.id)) {
+              addNewOrder(mo);
+            }
+          });
+        }
+      })
+      .catch((e) => console.warn('Could not sync orders from backend:', e));
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const inv = params.get('invoice');
+      if (inv) {
+        setActiveOrderId(inv);
+      }
+    }
+  }, []);
 
   // Navigation handler from Navbar when on Portal
   const handleNavigate = (sectionId: string) => {
@@ -68,6 +142,14 @@ export default function CustomerPortalPage() {
   const handleStepAdvance = (step: number) => {
     if (!activeOrder) return;
     updateOrderStep(activeOrder.id, step);
+
+    // Call Supabase backend
+    fetch(`/api/v1/orders/${activeOrder.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ step }),
+    }).catch(() => {});
+
     const stepNames: Record<number, string> = {
       1: 'Pembayaran Terkonfirmasi',
       2: 'Sedang Dirangkai Pengrajin',
@@ -75,7 +157,7 @@ export default function CustomerPortalPage() {
       4: activeOrder.fulfillmentType === 'COD_MEETUP_POINT' ? 'Siap di Titik Temu COD' : 'Dalam Pengiriman Kurir',
     };
     showMagicToast(
-      'Status Diperbarui! ⚡',
+      'Status Diperbarui di Supabase! ⚡',
       `${activeOrder.invoiceNumber} sekarang di Langkah ${step} (${stepNames[step] || ''}).`,
       '🚀'
     );

@@ -61,7 +61,25 @@ export const CartDrawer: React.FC = () => {
   const { user } = useAuthStore();
   const { addNewOrder } = useOrderStore();
   const { paymentGateways, codPoints } = useSettingsStore();
-  const activeMeetupPoints = (codPoints && codPoints.length > 0) ? codPoints : MOCK_MEETUP_POINTS;
+  const [dbCodPoints, setDbCodPoints] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/v1/cod-points')
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data?.length > 0) {
+          setDbCodPoints(res.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const activeMeetupPoints =
+    dbCodPoints.length > 0
+      ? dbCodPoints
+      : codPoints && codPoints.length > 0
+      ? codPoints
+      : MOCK_MEETUP_POINTS;
 
   // Step state: CART or CHECKOUT
   const [step, setStep] = useState<'CART' | 'CHECKOUT'>('CART');
@@ -124,17 +142,37 @@ export const CartDrawer: React.FC = () => {
 
   const finalGrandTotal = grandTotal + selectedAdminFee;
 
-  const handleApplyVoucher = (e: React.FormEvent) => {
+  const handleApplyVoucher = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputVoucher.trim()) return;
-    const res = applyVoucher(inputVoucher);
-    if (res.success) {
-      setVoucherMsg({ type: 'success', text: res.message });
-      setInputVoucher('');
-      showMagicToast('Kupon Berhasil! 🎉', res.message, '🏷️');
-    } else {
-      setVoucherMsg({ type: 'error', text: res.message });
-      showMagicToast('Kupon Tidak Valid ⚠️', res.message, '⚠️');
+
+    try {
+      const res = await fetch('/api/v1/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: inputVoucher.trim(), subtotal }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setVoucherMsg({ type: 'success', text: data.message });
+        applyVoucher(inputVoucher.trim());
+        setInputVoucher('');
+        showMagicToast('Kupon Berhasil! 🎉', data.message, '🏷️');
+      } else {
+        setVoucherMsg({ type: 'error', text: data.error });
+        showMagicToast('Kupon Tidak Valid ⚠️', data.error, '⚠️');
+      }
+    } catch {
+      const res = applyVoucher(inputVoucher);
+      if (res.success) {
+        setVoucherMsg({ type: 'success', text: res.message });
+        setInputVoucher('');
+        showMagicToast('Kupon Berhasil! 🎉', res.message, '🏷️');
+      } else {
+        setVoucherMsg({ type: 'error', text: res.message });
+        showMagicToast('Kupon Tidak Valid ⚠️', res.message, '⚠️');
+      }
     }
   };
 
@@ -144,7 +182,7 @@ export const CartDrawer: React.FC = () => {
     setStep('CHECKOUT');
   };
 
-  const handleConfirmOrder = (e: React.FormEvent) => {
+  const handleConfirmOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) return;
 
@@ -169,7 +207,6 @@ export const CartDrawer: React.FC = () => {
     setFormError(null);
     setIsCheckingOut(true);
 
-    const invoiceNo = `INV-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${Math.floor(100 + Math.random() * 900)}`;
     const selectedMeetup = activeMeetupPoints.find((m) => m.id === selectedCodPointId) || activeMeetupPoints[0];
 
     const paymentStatus: 'PAYMENT_CONFIRMED' | 'WAITING_PAYMENT' | 'PAID_ON_COD' =
@@ -179,64 +216,106 @@ export const CartDrawer: React.FC = () => {
         ? 'PAID_ON_COD'
         : 'WAITING_PAYMENT';
 
-    const newOrder: MockOrder = {
-      id: `ord-${Date.now()}`,
-      invoiceNumber: invoiceNo,
-      customerName: customerName.trim(),
-      customerPhone: customerPhone.trim(),
-      customerEmail: customerEmail.trim(),
-      customerAvatarEmoji: user?.avatarEmoji || '🌸',
-      currentStep: 1, // PAYMENT_CONFIRMED
-      stepStatus: 'PAYMENT_CONFIRMED',
-      statusLabel: selectedPayment === 'midtrans' ? 'Pembayaran QRIS Lunas' : 'Menunggu Konfirmasi',
-      statusDescription:
-        selectedPayment === 'midtrans'
-          ? 'Pembayaran via QRIS Midtrans berhasil diverifikasi otomatis oleh atelier.'
-          : selectedPayment === 'bcaManual'
-          ? 'Transfer BCA Manual tersimpan. Silakan konfirmasi bukti transfer via WhatsApp CS.'
-          : 'Pesanan COD tersimpan. Siapkan uang pas saat serah terima di titik temu.',
-      fulfillmentType,
-      meetupPointName:
-        fulfillmentType === 'COD_MEETUP_POINT'
-          ? `${selectedMeetup?.name || 'Titik Temu Kampus'} ${codMeetupNotes ? `(${codMeetupNotes})` : ''}`
-          : undefined,
-      courierName: fulfillmentType === 'COURIER_EXPEDITION' ? 'J&T Express Fragile (Biteship Aggregator)' : undefined,
-      trackingNumber:
-        fulfillmentType === 'COURIER_EXPEDITION'
-          ? `BTE-${Math.floor(10000000 + Math.random() * 90000000)}`
-          : undefined,
-      deliveryAddress: fulfillmentType === 'COURIER_EXPEDITION' ? deliveryAddress.trim() : undefined,
-      paymentMethod: selectedPayment,
-      paymentStatus,
+    const orderPayload = {
+      customer_name: customerName.trim(),
+      customer_phone: customerPhone.trim(),
+      customer_email: customerEmail.trim(),
+      recipient_name: customerName.trim(),
+      fulfillment_type: fulfillmentType,
+      shipping_address: fulfillmentType === 'COURIER_EXPEDITION' ? deliveryAddress.trim() : null,
+      cod_meetup_id: fulfillmentType === 'COD_MEETUP_POINT' ? selectedMeetup?.id || null : null,
+      cod_notes: codMeetupNotes || null,
+      coupon_code: voucherCode || null,
+      payment_method:
+        selectedPayment === 'bcaManual'
+          ? 'MANUAL_BANK_BCA'
+          : selectedPayment === 'codCash'
+          ? 'COD_CASH_ON_DELIVERY'
+          : 'MIDTRANS_SNAP_QRIS',
+      theme_used: 'TEMA_A_KOREAN_PASTEL',
       items: items.map((i) => ({
-        productId: i.product.id,
-        productName: i.product.name,
-        productImage: i.product.image,
+        product_id: i.product.id,
         quantity: i.quantity,
-        unitPrice: i.product.discountPrice ?? i.product.price,
-        subtotal: (i.product.discountPrice ?? i.product.price) * i.quantity,
       })),
-      subtotalAmount: subtotal,
-      shippingFee,
-      discountAmount,
-      adminFee: selectedAdminFee,
-      flowerPointsEarned: Math.round(subtotal * 0.001),
-      totalAmount: finalGrandTotal,
-      createdAt: new Date().toISOString(),
-      estimatedDelivery: 'Besok, 10:00 WIB',
     };
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/v1/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload),
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        setIsCheckingOut(false);
+        setFormError(data.error || 'Gagal membuat pesanan.');
+        showMagicToast('Gagal Checkout ⚠️', data.error || 'Stok tidak mencukupi.', '⚠️');
+        return;
+      }
+
+      const savedOrder = data.data;
+      const invoiceNo = savedOrder.id;
+
+      const newOrder: MockOrder = {
+        id: invoiceNo,
+        invoiceNumber: invoiceNo,
+        customerName: customerName.trim(),
+        customerPhone: customerPhone.trim(),
+        customerEmail: customerEmail.trim(),
+        customerAvatarEmoji: user?.avatarEmoji || '🌸',
+        currentStep: 1, // PAYMENT_CONFIRMED
+        stepStatus: 'PAYMENT_CONFIRMED',
+        statusLabel: selectedPayment === 'midtrans' ? 'Pembayaran QRIS Lunas' : 'Menunggu Konfirmasi',
+        statusDescription:
+          selectedPayment === 'midtrans'
+            ? 'Pembayaran via QRIS Midtrans berhasil diverifikasi otomatis di database Supabase.'
+            : selectedPayment === 'bcaManual'
+            ? 'Transfer BCA Manual tersimpan di Supabase. Silakan konfirmasi bukti via WhatsApp CS.'
+            : 'Pesanan COD tersimpan di Supabase. Siapkan uang pas saat serah terima di titik temu.',
+        fulfillmentType,
+        meetupPointName:
+          fulfillmentType === 'COD_MEETUP_POINT'
+            ? `${selectedMeetup?.name || 'Titik Temu Kampus'} ${codMeetupNotes ? `(${codMeetupNotes})` : ''}`
+            : undefined,
+        courierName: fulfillmentType === 'COURIER_EXPEDITION' ? 'J&T Express Fragile (Biteship Aggregator)' : undefined,
+        trackingNumber:
+          fulfillmentType === 'COURIER_EXPEDITION'
+            ? `BTE-${Math.floor(10000000 + Math.random() * 90000000)}`
+            : undefined,
+        deliveryAddress: fulfillmentType === 'COURIER_EXPEDITION' ? deliveryAddress.trim() : undefined,
+        paymentMethod: selectedPayment,
+        paymentStatus,
+        items: items.map((i) => ({
+          productId: i.product.id,
+          productName: i.product.name,
+          productImage: i.product.image,
+          quantity: i.quantity,
+          unitPrice: i.product.discountPrice ?? i.product.price,
+          subtotal: (i.product.discountPrice ?? i.product.price) * i.quantity,
+        })),
+        subtotalAmount: subtotal,
+        shippingFee,
+        discountAmount,
+        adminFee: selectedAdminFee,
+        flowerPointsEarned: Math.round(subtotal * 0.001),
+        totalAmount: finalGrandTotal,
+        createdAt: new Date().toISOString(),
+        estimatedDelivery: 'Besok, 10:00 WIB',
+      };
+
       addNewOrder(newOrder);
       setIsCartOpen(false);
-      setTimeout(() => {
-        clearCart();
-        setIsCheckingOut(false);
-        setStep('CART');
-        showMagicToast('Pesanan Berhasil Dibuat! 🌸', `${invoiceNo} siap dipantau langsung di Portal Pelanggan.`, '✨');
-        router.push('/portal');
-      }, 200);
-    }, 900);
+      clearCart();
+      setIsCheckingOut(false);
+      setStep('CART');
+      showMagicToast('Pesanan Berhasil Disimpan di Supabase! 🌸', `${invoiceNo} siap dipantau langsung di Portal Pelanggan.`, '✨');
+      router.push(`/portal?invoice=${invoiceNo}`);
+    } catch (err) {
+      console.error('Checkout error:', err);
+      setIsCheckingOut(false);
+      setFormError('Koneksi ke backend terputus. Silakan coba lagi.');
+    }
   };
 
   return (

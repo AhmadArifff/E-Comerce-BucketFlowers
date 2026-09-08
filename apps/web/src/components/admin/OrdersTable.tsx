@@ -15,7 +15,7 @@ interface OrdersTableProps {
 type OrderSortField = 'invoiceNumber' | 'customerName' | 'items' | 'fulfillment' | 'totalAmount' | 'currentStep' | 'createdAt';
 
 export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPrintResi }) => {
-  const { orders, updateOrderStep } = useOrderStore();
+  const { orders, updateOrderStep, addNewOrder } = useOrderStore();
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'CRAFTING' | 'SHIPPED' | 'COMPLETED'>('ALL');
   const [internalSearch, setInternalSearch] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -25,6 +25,76 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
   });
   const [sortField, setSortField] = useState<OrderSortField | null>('currentStep');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  // Sync with Supabase API
+  React.useEffect(() => {
+    fetch('/api/v1/orders')
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data?.length > 0) {
+          res.data.forEach((o: any) => {
+            if (!orders.some((ex) => ex.id === o.id)) {
+              addNewOrder({
+                id: o.id,
+                invoiceNumber: o.id,
+                customerName: o.customer_name,
+                customerPhone: o.customer_phone,
+                customerEmail: o.customer_email,
+                customerAvatarEmoji: '🌸',
+                currentStep: o.current_step || 1,
+                stepStatus: o.order_status,
+                statusLabel:
+                  o.current_step === 4
+                    ? 'Pesanan Selesai'
+                    : o.current_step === 3
+                    ? 'Lolos Quality Check'
+                    : o.current_step === 2
+                    ? 'Sedang Dirangkai'
+                    : 'Pembayaran Terkonfirmasi',
+                statusDescription: 'Tersinkron dengan Supabase atelier.',
+                fulfillmentType: o.fulfillment_type,
+                meetupPointName: o.cod_meetup_name,
+                courierName: o.courier_name,
+                trackingNumber: o.tracking_number,
+                deliveryAddress: o.shipping_address,
+                paymentMethod: o.payment_method,
+                paymentStatus: o.payment_status,
+                items: (o.items || []).map((it: any) => ({
+                  productId: it.product_id,
+                  productName: it.product_name,
+                  productImage: '/images/products/buket-mawar-merah-velvet.jpg',
+                  quantity: it.quantity,
+                  unitPrice: it.price,
+                  subtotal: it.subtotal,
+                })),
+                subtotalAmount: o.total_amount,
+                shippingFee: 0,
+                discountAmount: o.discount_amount || 0,
+                adminFee: 0,
+                flowerPointsEarned: Math.round(o.total_amount * 0.001),
+                totalAmount: o.total_amount,
+                createdAt: o.created_at,
+                estimatedDelivery: 'Besok, 10:00 WIB',
+              });
+            }
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleUpdateStep = (orderId: string, newStep: number) => {
+    updateOrderStep(orderId, newStep);
+    fetch(`/api/v1/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ step: newStep }),
+    })
+      .then(() => {
+        showMagicToast('Status Disimpan ke Supabase! 🌸', `${orderId} diset ke Langkah ${newStep}.`, '✅');
+      })
+      .catch(() => {});
+  };
 
   const activeSearch = searchQuery || internalSearch;
 
@@ -375,7 +445,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
                           return (
                             <button
                               key={btn.step}
-                              onClick={() => updateOrderStep(order.id, btn.step)}
+                              onClick={() => handleUpdateStep(order.id, btn.step)}
                               className={`h-7 px-2.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 whitespace-nowrap cursor-pointer ${
                                 isCurrent
                                   ? 'bg-rose-600 text-white shadow-xs font-extrabold scale-102'

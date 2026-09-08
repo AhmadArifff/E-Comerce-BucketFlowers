@@ -25,6 +25,19 @@ export default function StorefrontPage() {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<ExtendedProduct | null>(null);
+  const [productsList, setProductsList] = useState<ExtendedProduct[]>(MOCK_PRODUCTS);
+
+  // Fetch real products from Supabase API
+  useEffect(() => {
+    fetch('/api/v1/products')
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && res.data?.products?.length > 0) {
+          setProductsList(res.data.products);
+        }
+      })
+      .catch((err) => console.warn('Could not load products from Supabase API, using fallback:', err));
+  }, []);
 
   // Sync data-theme attribute on client mount
   useEffect(() => {
@@ -88,7 +101,7 @@ export default function StorefrontPage() {
 
   // Filtered products list
   const filteredProducts = useMemo(() => {
-    return MOCK_PRODUCTS.filter((product) => {
+    return productsList.filter((product) => {
       const matchCategory =
         selectedCategory === 'ALL' || product.category.toLowerCase() === selectedCategory.toLowerCase();
       const matchSearch =
@@ -97,7 +110,7 @@ export default function StorefrontPage() {
         product.category.toLowerCase().includes(searchQuery.toLowerCase());
       return matchCategory && matchSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [productsList, selectedCategory, searchQuery]);
 
   return (
     <div className="flex-1 flex flex-col">
