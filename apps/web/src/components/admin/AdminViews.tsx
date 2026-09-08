@@ -692,14 +692,14 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
         <table className="w-full text-left text-xs text-stone-600">
           <thead className="bg-stone-50 text-stone-700 font-extrabold uppercase text-[10px] tracking-wider border-b border-stone-200">
             <tr>
-              <TableSortHeader label="Buket Produk" field="name" currentField={sortField} direction={sortDirection} onSort={handleSort} />
-              <TableSortHeader label="Kategori" field="category" currentField={sortField} direction={sortDirection} onSort={handleSort} />
-              <TableSortHeader label="Resep Bahan" field="recipe" currentField={sortField} direction={sortDirection} onSort={handleSort} />
-              <TableSortHeader label="HPP (Modal)" field="rawCostHpp" currentField={sortField} direction={sortDirection} onSort={handleSort} />
-              <TableSortHeader label="Harga Jual" field="price" currentField={sortField} direction={sortDirection} onSort={handleSort} />
-              <TableSortHeader label="Margin" field="margin" currentField={sortField} direction={sortDirection} onSort={handleSort} />
-              <TableSortHeader label="Klik (CTR)" field="clicks" currentField={sortField} direction={sortDirection} onSort={handleSort} />
-              <TableSortHeader label="Status Produksi" field="status" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+              <TableSortHeader label="Buket Produk" field="name" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[280px]" />
+              <TableSortHeader label="Kategori" field="category" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[120px]" />
+              <TableSortHeader label="Resep Bahan" field="recipe" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[150px]" />
+              <TableSortHeader label="HPP (Modal)" field="rawCostHpp" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" />
+              <TableSortHeader label="Harga Jual" field="price" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" />
+              <TableSortHeader label="Margin" field="margin" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[100px]" />
+              <TableSortHeader label="Klik (CTR)" field="clicks" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" />
+              <TableSortHeader label="Status Produksi" field="status" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" />
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
@@ -712,53 +712,53 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
 
               return (
                 <tr key={prod.id} className="hover:bg-rose-50/20 transition-colors">
-                  <td className="py-3.5 px-4">
+                  <td className="py-3.5 px-4 min-w-[280px]">
                     <div className="flex items-center gap-3">
                       <img
                         src={prod.image}
                         alt={prod.name}
-                        className="w-11 h-11 rounded-xl object-cover border border-rose-100"
+                        className="w-12 h-12 rounded-2xl object-cover border border-rose-100 shadow-2xs shrink-0"
                       />
-                      <div>
-                        <div className="font-extrabold text-stone-800">{prod.name}</div>
-                        <span className="text-[10px] text-stone-400">ID: {prod.id}</span>
+                      <div className="min-w-0">
+                        <div className="font-extrabold text-stone-800 text-xs leading-snug">{prod.name}</div>
+                        <span className="text-[10px] text-stone-400 font-mono">ID: {prod.id}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3.5 px-4">
-                    <span className="bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                  <td className="py-3.5 px-4 whitespace-nowrap">
+                    <span className="bg-rose-50 text-rose-700 font-bold px-2.5 py-1 rounded-full text-[10px] border border-rose-100">
                       {prod.category}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4">
+                  <td className="py-3.5 px-4 whitespace-nowrap">
                     <button
                       type="button"
                       onClick={() => setSelectedProdBom(prod)}
-                      className="px-2.5 py-1 rounded-xl border border-rose-200 bg-rose-50/60 hover:bg-rose-100 text-rose-700 font-bold text-[10px] flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+                      className="px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50/80 hover:bg-rose-100 text-rose-700 font-extrabold text-[11px] inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95 whitespace-nowrap"
                     >
-                      <Layers className="w-3 h-3 text-rose-600" />
+                      <Layers className="w-3.5 h-3.5 text-rose-600" />
                       <span>Lihat Resep BOM</span>
                     </button>
                   </td>
-                  <td className="py-3.5 px-4 font-bold text-stone-600">
+                  <td className="py-3.5 px-4 font-mono font-bold text-stone-700 whitespace-nowrap">
                     Rp {prod.rawCostHpp.toLocaleString('id-ID')}
                   </td>
-                  <td className="py-3.5 px-4 font-black text-rose-600">
+                  <td className="py-3.5 px-4 font-mono font-black text-rose-600 text-sm whitespace-nowrap">
                     Rp {price.toLocaleString('id-ID')}
                   </td>
-                  <td className="py-3.5 px-4">
-                    <span className="bg-emerald-50 text-emerald-700 font-black px-2 py-0.5 rounded-full text-[10px]">
+                  <td className="py-3.5 px-4 whitespace-nowrap">
+                    <span className="bg-emerald-50 text-emerald-700 font-black px-2.5 py-1 rounded-full text-[10px] border border-emerald-200">
                       +{margin}%
                     </span>
                   </td>
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-1.5 font-extrabold text-stone-800">
+                  <td className="py-3.5 px-4 whitespace-nowrap">
+                    <div className="flex items-center gap-1.5 font-mono font-black text-stone-800">
                       <Eye className="w-3.5 h-3.5 text-blue-500" />
                       <span>{mockClicks}</span>
-                      <span className="text-[10px] text-stone-400 font-semibold">({mockCtr}%)</span>
+                      <span className="text-[10px] text-stone-400 font-sans font-semibold">({mockCtr}%)</span>
                     </div>
                   </td>
-                  <td className="py-3.5 px-4">
+                  <td className="py-3.5 px-4 whitespace-nowrap">
                     {prod.isReadyStock ? (
                       <span className="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full text-[10px]">
                         Ready ({prod.stock})
@@ -1057,16 +1057,11 @@ export const CreateCouponModal: React.FC<{
 };
 
 // ============================================================================
-// 6. PROMOS & COUPONS VIEW (WITHOUT TOGGLE, WITH CREATE FORM & TABLE SORTING)
+// 6. PROMOS & COUPONS VIEW (WITH ACTIVE/INACTIVE TOGGLES & CREATE FORM)
 // ============================================================================
 export const PromosView: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [coupons, setCoupons] = useState([
-    { code: 'WISUDAHEMAT', discount: 'Diskon Rp 25.000', discountVal: 25000, minSpend: 'Min. Belanja Rp 150.000', minSpendVal: 150000, used: 14, quota: 50, active: true, expiry: '30 Sep 2026' },
-    { code: 'LOVECHENILLE', discount: 'Diskon 10%', discountVal: 10, minSpend: 'Tanpa Minimum', minSpendVal: 0, used: 28, quota: 100, active: true, expiry: '15 Okt 2026' },
-    { code: 'GRATISONGKIR5K', discount: 'Gratis Ongkir Rp 10.000', discountVal: 10000, minSpend: 'Min. Belanja Rp 100.000', minSpendVal: 100000, used: 42, quota: 60, active: true, expiry: '05 Okt 2026' },
-    { code: 'MEMBERGOLD15', discount: 'Diskon Eksklusif 15%', discountVal: 15, minSpend: 'Khusus Member Gold', minSpendVal: 0, used: 8, quota: 20, active: true, expiry: '31 Des 2026' },
-  ]);
+  const { coupons, toggleCouponActive, addCoupon } = useSettingsStore();
 
   type CouponSortField = 'code' | 'discount' | 'minSpend' | 'used' | 'expiry' | 'active';
   const [sortField, setSortField] = useState<CouponSortField | null>('used');
@@ -1114,25 +1109,39 @@ export const PromosView: React.FC = () => {
   }, [coupons, sortField, sortDirection]);
 
   const handleAddCoupon = (newCoupon: any) => {
-    setCoupons((prev) => [
-      {
-        ...newCoupon,
-        discountVal: 20000,
-        minSpendVal: 100000,
-      },
-      ...prev,
-    ]);
+    addCoupon({
+      code: newCoupon.code,
+      discount: newCoupon.discount,
+      discountType:
+        newCoupon.discountType === 'PERCENT'
+          ? 'PERCENTAGE'
+          : newCoupon.discountType === 'ONGKIR'
+          ? 'FREE_SHIPPING'
+          : 'NOMINAL',
+      discountVal: newCoupon.discountVal,
+      minSpend: newCoupon.minSpend,
+      minSpendVal: newCoupon.minSpendVal,
+      used: 0,
+      quota: newCoupon.quota,
+      active: true,
+      expiry: newCoupon.expiry,
+      description: newCoupon.description,
+    });
+    showMagicToast('Kupon Berhasil Dibuat 🏷️', `Kupon ${newCoupon.code} telah diterbitkan dan aktif.`, '🎉');
   };
 
   return (
     <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs space-y-6 admin-view-fade">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-rose-100">
         <div>
-          <h2 className="text-base sm:text-lg font-extrabold text-stone-800 tracking-tight">
-            Pemasaran & Manajemen Kupon Diskon
+          <h2 className="text-base sm:text-lg font-extrabold text-stone-800 tracking-tight flex items-center gap-2">
+            <span>Pemasaran & Manajemen Kupon Diskon</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700">
+              Voucher Studio
+            </span>
           </h2>
           <p className="text-xs text-stone-500">
-            Kupon potongan harga dan gratis ongkir untuk pelanggan tanpa sakelar toggle manual.
+            Kelola kupon diskon nominal, persentase, dan gratis ongkir. Lengkap dengan sakelar toggle aktif/nonaktif sewaktu-waktu.
           </p>
         </div>
 
@@ -1145,12 +1154,16 @@ export const PromosView: React.FC = () => {
         </button>
       </div>
 
-      {/* Coupon Cards Grid */}
+      {/* Coupon Cards Grid with Active/Inactive Toggle */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {sortedCoupons.map((coupon) => (
           <div
             key={coupon.code}
-            className="p-5 rounded-2xl border bg-white border-rose-200 shadow-sm transition-all"
+            className={`p-5 rounded-2xl border transition-all ${
+              coupon.active
+                ? 'bg-white border-rose-200 shadow-sm'
+                : 'bg-stone-50/60 border-stone-200 opacity-75'
+            }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1160,11 +1173,43 @@ export const PromosView: React.FC = () => {
                 </span>
               </div>
 
-              {/* Status Badge - Static without toggle switch */}
-              <span className="text-xs font-bold px-3 py-1 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200 inline-flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>Kupon Aktif</span>
-              </span>
+              {/* Status Badge + Interactive Toggle Switch */}
+              <div className="flex items-center gap-2.5">
+                <span
+                  className={`text-xs font-bold px-2.5 py-1 rounded-full border inline-flex items-center gap-1.5 ${
+                    coupon.active
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-stone-100 text-stone-600 border-stone-300'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      coupon.active ? 'bg-emerald-500' : 'bg-stone-400'
+                    }`}
+                  />
+                  <span>{coupon.active ? 'Kupon Aktif' : 'Nonaktif'}</span>
+                </span>
+
+                <label
+                  className="relative inline-flex items-center cursor-pointer select-none"
+                  title={coupon.active ? 'Klik untuk menonaktifkan kupon' : 'Klik untuk mengaktifkan kupon'}
+                >
+                  <input
+                    type="checkbox"
+                    checked={coupon.active}
+                    onChange={() => {
+                      toggleCouponActive(coupon.code);
+                      showMagicToast(
+                        !coupon.active ? 'Kupon Diaktifkan 🏷️' : 'Kupon Dinonaktifkan ⏸️',
+                        `Kupon ${coupon.code} sekarang ${!coupon.active ? 'aktif & bisa dipakai di checkout.' : 'dinonaktifkan sementara.'}`,
+                        !coupon.active ? '✅' : '⏸️'
+                      );
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-8 h-4.5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-rose-600"></div>
+                </label>
+              </div>
             </div>
 
             <div className="mt-3 space-y-1 text-xs">
@@ -1184,7 +1229,7 @@ export const PromosView: React.FC = () => {
               <div className="w-full h-2 rounded-full bg-stone-100 overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full"
-                  style={{ width: `${(coupon.used / coupon.quota) * 100}%` }}
+                  style={{ width: `${Math.min((coupon.used / coupon.quota) * 100, 100)}%` }}
                 />
               </div>
             </div>
@@ -1196,9 +1241,9 @@ export const PromosView: React.FC = () => {
       <div className="pt-4 border-t border-stone-100 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-black text-stone-800 uppercase tracking-wider">
-            Tabel Daftar Seluruh Voucher & Kupon ({coupons.length})
+            Tabel Seluruh Voucher &amp; Kupon ({coupons.length})
           </span>
-          <span className="text-[11px] text-stone-400">Klik header kolom untuk mengurutkan data (Asc / Desc)</span>
+          <span className="text-[11px] text-stone-400">Gunakan toogle untuk aktivasi instan kupon sewaktu-waktu</span>
         </div>
 
         <div className="overflow-x-auto border border-stone-200 rounded-2xl">
@@ -1210,7 +1255,7 @@ export const PromosView: React.FC = () => {
                 <TableSortHeader label="Min. Belanja" field="minSpend" currentField={sortField} direction={sortDirection} onSort={handleSort} />
                 <TableSortHeader label="Penggunaan Kupon" field="used" currentField={sortField} direction={sortDirection} onSort={handleSort} />
                 <TableSortHeader label="Masa Berlaku" field="expiry" currentField={sortField} direction={sortDirection} onSort={handleSort} />
-                <TableSortHeader label="Status Kupon" field="active" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+                <TableSortHeader label="Status &amp; Toogle Kupon" field="active" currentField={sortField} direction={sortDirection} onSort={handleSort} />
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
@@ -1224,9 +1269,33 @@ export const PromosView: React.FC = () => {
                   </td>
                   <td className="py-3 px-4 text-stone-600">{c.expiry}</td>
                   <td className="py-3 px-4">
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      Aktif
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          c.active
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-stone-100 text-stone-500 border-stone-200'
+                        }`}
+                      >
+                        {c.active ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={c.active}
+                          onChange={() => {
+                            toggleCouponActive(c.code);
+                            showMagicToast(
+                              !c.active ? 'Kupon Diaktifkan 🏷️' : 'Kupon Dinonaktifkan ⏸️',
+                              `Kupon ${c.code} sekarang ${!c.active ? 'aktif.' : 'nonaktif.'}`,
+                              !c.active ? '✅' : '⏸️'
+                            );
+                          }}
+                          className="sr-only peer"
+                        />
+                        <div className="w-7 h-4 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-rose-600"></div>
+                      </label>
+                    </div>
                   </td>
                 </tr>
               ))}

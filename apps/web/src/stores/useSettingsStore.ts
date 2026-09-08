@@ -38,6 +38,20 @@ export interface PaymentGatewaysConfig {
   };
 }
 
+export interface StoreCoupon {
+  code: string;
+  discount: string;
+  discountType: 'PERCENTAGE' | 'NOMINAL' | 'FREE_SHIPPING';
+  discountVal: number;
+  minSpend: string;
+  minSpendVal: number;
+  used: number;
+  quota: number;
+  active: boolean;
+  expiry: string;
+  description?: string;
+}
+
 interface SettingsState {
   storeName: string;
   tagline: string;
@@ -46,6 +60,7 @@ interface SettingsState {
   dailyQuota: number;
   paymentGateways: PaymentGatewaysConfig;
   wasteMaterials: WasteMaterialItem[];
+  coupons: StoreCoupon[];
 
   // Actions
   updateStoreProfile: (profile: {
@@ -63,6 +78,8 @@ interface SettingsState {
   addWasteMaterial: (item: Omit<WasteMaterialItem, 'id' | 'totalLoss' | 'reportedAt'>) => void;
   removeWasteMaterial: (id: string) => void;
   getTotalWasteLoss: () => number;
+  toggleCouponActive: (code: string) => void;
+  addCoupon: (coupon: StoreCoupon) => void;
 }
 
 const DEFAULT_WASTE_MATERIALS: WasteMaterialItem[] = [
@@ -134,6 +151,60 @@ export const useSettingsStore = create<SettingsState>()(
         },
       },
       wasteMaterials: DEFAULT_WASTE_MATERIALS,
+      coupons: [
+        {
+          code: 'WISUDAHEMAT',
+          discount: 'Diskon Rp 25.000',
+          discountType: 'NOMINAL',
+          discountVal: 25000,
+          minSpend: 'Min. Belanja Rp 150.000',
+          minSpendVal: 150000,
+          used: 14,
+          quota: 50,
+          active: true,
+          expiry: '30 Sep 2026',
+          description: 'Voucher spesial musim wisuda',
+        },
+        {
+          code: 'LOVECHENILLE',
+          discount: 'Diskon 10%',
+          discountType: 'PERCENTAGE',
+          discountVal: 10,
+          minSpend: 'Tanpa Minimum',
+          minSpendVal: 0,
+          used: 28,
+          quota: 100,
+          active: true,
+          expiry: '15 Okt 2026',
+          description: 'Diskon perkenalan atelier bunga',
+        },
+        {
+          code: 'GRATISONGKIR5K',
+          discount: 'Gratis Ongkir Rp 10.000',
+          discountType: 'FREE_SHIPPING',
+          discountVal: 10000,
+          minSpend: 'Min. Belanja Rp 100.000',
+          minSpendVal: 100000,
+          used: 42,
+          quota: 60,
+          active: true,
+          expiry: '05 Okt 2026',
+          description: 'Subsidi ongkir kurir J&T Fragile',
+        },
+        {
+          code: 'MEMBERGOLD15',
+          discount: 'Diskon Eksklusif 15%',
+          discountType: 'PERCENTAGE',
+          discountVal: 15,
+          minSpend: 'Khusus Member Gold',
+          minSpendVal: 0,
+          used: 8,
+          quota: 20,
+          active: true,
+          expiry: '31 Des 2026',
+          description: 'Privilege VIP loyal member',
+        },
+      ],
 
       updateStoreProfile: (profile) => {
         set((state) => ({ ...state, ...profile }));
@@ -184,6 +255,20 @@ export const useSettingsStore = create<SettingsState>()(
 
       getTotalWasteLoss: () => {
         return get().wasteMaterials.reduce((sum, item) => sum + item.totalLoss, 0);
+      },
+
+      toggleCouponActive: (code) => {
+        set((state) => ({
+          coupons: state.coupons.map((c) =>
+            c.code === code ? { ...c, active: !c.active } : c
+          ),
+        }));
+      },
+
+      addCoupon: (coupon) => {
+        set((state) => ({
+          coupons: [coupon, ...state.coupons],
+        }));
       },
     }),
     {

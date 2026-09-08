@@ -23,6 +23,7 @@ import {
   ChangePasswordModal,
   AddProductModal,
 } from '@/components/admin/AdminViews';
+import { ProductCtrAnalyticsCard } from '@/components/admin/ProductCtrAnalyticsCard';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('DASHBOARD');
@@ -76,6 +77,7 @@ export default function AdminPage() {
           {activeTab === 'DASHBOARD' && (
             <div className="space-y-6 admin-view-fade">
               <KpiCards />
+              <ProductCtrAnalyticsCard />
               <FinancialChartCard />
               <ProductionCalendarCard />
               <OrdersTable searchQuery={searchQuery} onPrintResi={handlePrintResi} />
