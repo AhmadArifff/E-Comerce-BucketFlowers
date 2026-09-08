@@ -1641,3 +1641,191 @@ Strategi pengujian multi-layer untuk menjamin stabilitas dan keandalan sistem se
 - **Lighthouse**: Target score ≥ 90 (Performance, Accessibility, Best Practices, SEO) pada halaman storefront.
 - **Concurrent Checkout Stress Test**: Simulasi 50 user checkout bersamaan → validasi tidak ada oversell (atomic lock bekerja).
 - **Database Query Optimization**: Query produk dengan pagination harus < 100ms pada 1.000 produk.
+
+---
+
+## 15. Spesifikasi Master Sistem Animasi Interaktif, Micro-Interactions & Magic UI Engine
+
+Berdasarkan audit menyeluruh terhadap artefak prototype desain pada direktori `desain-tampilan/` (`tema-a-korean-pastel`, `tema-b-modern-romantic`, `tema-c-playful-kawaii`, `customer-portal`, `admin-dashboard`, dan `login`), sistem antarmuka web wajib mengimplementasikan seluruh ekosistem animasi interaktif dan Magic UI untuk menghadirkan pengalaman pengguna yang hidup, responsif, dan bernilai estetika tinggi (*delightful & premium*).
+
+### 15.1 Filosofi Motion & Standar Teknis
+1. **GPU-Accelerated (60-120fps):** Seluruh animasi berbasis `transform` (translate, scale, rotate) dan `opacity` untuk menghindari layout thrashing/reflow.
+2. **Spring Physics & Natural Easing:** Menggunakan cubic-bezier terkalibrasi (`cubic-bezier(0.16, 1, 0.3, 1)` untuk ease-out fluid dan `cubic-bezier(0.175, 0.885, 0.32, 1.275)` untuk spring bounce/pop).
+3. **Accessibility (`prefers-reduced-motion`):** Tetap menghormati preferensi aksesibilitas pengguna sistem operasi dengan mematikan animasi berulang jika requested.
+
+---
+
+### 15.2 Magic UI Fly-to-Cart & Particle Burst System
+Fitur utama yang memberikan kepuasan visual instan saat pengunjung memasukkan buket ke keranjang belanja:
+
+```
+[Tombol "Tambah ke Keranjang"]
+       │
+       ▼ (Klik Pengguna)
+1. Hitung Koordinat Awal: getBoundingClientRect(sourceBtn)
+2. Hitung Koordinat Tujuan: getBoundingClientRect(navCartBtn)
+3. Spawn .magic-flyer (Bulatan 48px berisi emoji buket 🌸)
+       │
+       ▼ (Terbang Parabolik 750ms: cubic-bezier(0.2, 0.8, 0.2, 1))
+   Scale: 1.0 ➔ 0.35 | Rotate: 0deg ➔ 360deg | Opacity: 1 ➔ 0.7
+       │
+       ▼ (Tiba di Icon Keranjang Navbar)
+4. Hapus .magic-flyer dari DOM
+5. Tambahkan class .cart-bump pada navbar cart (Wiggle 450ms)
+6. Ledakkan spawnSparkles(): 8 partikel (🌸, ✨, 💖, 🌷) meledak radial
+7. Tampilkan Sonner Magic Toast di pojok kiri bawah (Countdown bar 3.5s)
+```
+
+#### Spesifikasi Elemen Fly-to-Cart:
+- **Flyer Element (`.magic-flyer`):**
+  - Ukuran: 48x48px, bulat penuh (`border-radius: 50%`), background putih dengan border 2px `--primary-border`, bayangan `0 8px 24px rgba(...)`.
+  - Durasi Terbang: `750ms` menggunakan kurva `cubic-bezier(0.2, 0.8, 0.2, 1)`.
+- **Cart Bump Animation (`@keyframes cartBumpAnim`):**
+  - `0% { transform: scale(1); }`
+  - `35% { transform: scale(1.3) rotate(-6deg); }`
+  - `65% { transform: scale(0.92) rotate(4deg); }`
+  - `100% { transform: scale(1); }`
+  - Durasi: `450ms` spring easing.
+- **Sparkle Burst Explosion (`spawnSparkles(x, y)`):**
+  - Jumlah: 8 partikel radial dengan variasi emoji `['🌸', '✨', '💖', '🌷']`.
+  - Fisika: Jarak sebar 35px - 60px dengan sudut rotasi merata `(i / 8) * 2π`.
+  - Animasi (`@keyframes sparkleFade`): Bergerak ke koordinat CSS variables `--tx`, `--ty` sambil mengecil ke `scale(0.2)` dan memudar dalam `600ms`.
+
+---
+
+### 15.3 Magic UI Sonner-Style Interactive Toast Notification
+Sistem notifikasi mengambang non-blocking yang menggantikan alert konvensional:
+- **Lokasi & Posisi:** Mengambang di sudut kiri-bawah (`bottom: 28px; left: 28px`), z-index: `99999`.
+- **Struktur Visual:**
+  - Glassmorphism: `background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(14px);`
+  - Border: 1.5px solid bertema pastel, radius 18px, bayangan elevasi halus.
+  - Thumbnail: Kotak rounded 46x46px dengan latar pastel dan emoji produk.
+  - Teks: Judul tebal (*bold*), deskripsi produk, dan harga terformat.
+  - Action Button: Tombol pill "Lihat Keranjang 🛍️" yang langsung membuka Cart Drawer ketika diklik.
+  - Countdown Progress Bar: Garis horizontal 3px di bagian dasar kartu yang menyusut dari 100% ke 0% (`@keyframes toastTimer 3.5s linear forwards`).
+- **Dismissal Physics:** Jika diabaikan selama 3.5 detik atau tombol dismiss ditekan, toast bertransisi `translateY(20px) scale(0.9)` dengan opacity 0 selama 300ms sebelum di-unmount.
+
+---
+
+### 15.4 Modul Etalase & Katalog Produk
+1. **Card 3D Perspective Tilt (`card-tilt-hover`):**
+   - Transisi elevasi `-6px` pada sumbu Y saat kursor melayang di atas kartu produk.
+   - Peningkatan saturasi bayangan mengikuti warna aksen tema aktif (`box-shadow: 0 12px 28px rgba(...)`).
+   - Zoom mikro gambar produk (`scale(1.05)`) dengan transisi halus 500ms.
+2. **Category Filter Tabs:**
+   - Transisi indikator pill kategori aktif dengan efek spring scale mikro (`active-cat`).
+   - Transisi fade-in saat daftar produk berganti filter kategori.
+3. **Quick Detail Modal Zoom (`modal-zoom-in`):**
+   - Transisi pembukaan dialog modal dari `scale(0.92)` ke `scale(1)` dengan backdrop blur bertahap.
+   - Tombol "+ Keranjang" di dalam modal terintegrasi penuh dengan engine Fly-to-Cart.
+
+---
+
+### 15.5 Announcement Bar & Hero Section
+1. **Multi-Theme Dynamic Announcement Bar:**
+   - **Tema A (Korean Pastel):** Gradien pink pastel bergerak terus-menerus (`gradientMove 8s ease infinite`).
+   - **Tema C (Playful Kawaii):** Gradien pelangi menyapu horizontal ceria (`rainbowMove 6s linear infinite`).
+   - **Tema B (Modern Romantic):** Latar belakang luxury dark shimmer dengan pencahayaan emas lembut.
+2. **Hero Floating Badges & Mascots:**
+   - Floating Mascot/Icon: Melayang naik-turun halus (`floatHero 3s ease-in-out infinite`: `-8px` offset, rotasi `3deg`).
+   - Floating Secondary Badge: Melayang lebih tenang (`floatHeroSlow 4s ease-in-out infinite`: `-6px` offset, rotasi `2deg`).
+3. **CTA Button Shimmer (`btnShimmer`):**
+   - Garis cahaya kilap bersudut 120 derajat bergerak melintasi tombol setiap 3 detik untuk menarik perhatian pengunjung.
+
+---
+
+### 15.6 Custom Studio Interaktif
+1. **Live Preview Canvas:**
+   - Model buket utama di kanvas tengah mengambang secara kontinyu dengan `animate-float-hero`.
+   - Transisi pergantian bunga/warna seketika dengan efek spring scale kecil saat swatch warna diklik.
+2. **Swatch & Option Selection Feedback:**
+   - Pilihan warna kawat bulu dan kertas wrapping memicu ring outline aktif dan elevasi bayangan seketika.
+3. **Upselling Addons Checkbox:**
+   - Kotak centang aksesori (Lampu LED, Boneka Toga, Kartu Ucapan) memantul (*bounce*) saat dicentang, disertai kalkulasi harga total yang ter-update live.
+4. **Tombol Masukkan Keranjang Custom:**
+   - Memicu Fly-to-Cart dengan emoji bunga yang dipilih (🌷, 🌹, 🌻, 🪻) menuju ikon keranjang navbar.
+
+---
+
+### 15.7 Cart Drawer & Alur Checkout
+1. **Drawer Slide-in Physics:**
+   - Menggunakan cubic bezier presisi `slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1)` dari sisi kanan layar.
+2. **Micro-interaction Kuantitas (+/-):**
+   - Tombol kuantitas memiliki efek active scale `0.9` untuk feedback sentuhan yang nyata.
+3. **Kupon Diskon Validation:**
+   - Feedback visual instan dengan toast Sonner saat kode voucher dimasukkan (`WISUDA10K`).
+4. **Opsi Pengiriman (COD vs Kurir):**
+   - Transisi accordion halus saat membuka peta titik temu COD kampus.
+5. **Modal Pembayaran QRIS & Timer:**
+   - Dialog popup dengan animasi `zoomIn`.
+   - Timer hitung mundur 15 menit (`qrisTimer`) yang berdetak setiap detik hingga simulasi pembayaran berhasil.
+
+---
+
+### 15.8 Customer Portal & Logistics Laser Magic Beam
+Fitur unggulan visual pelacakan pengiriman:
+1. **Horizontal Desktop Stepper:**
+   - Garis konektor antar titik status dilengkapi laser beam animasi (`magicBeamStep2`, `magicBeamStep3`, `magicBeamStep4`) yang bergerak sepanjang rel progres pesanan.
+2. **Vertical Mobile Timeline:**
+   - Jalur rel vertikal dengan laser beam menyala (`magicBeamVertical`) yang mengalir ke bawah menuju status aktif.
+3. **Breathing Node Rings:**
+   - Titik status pesanan aktif berdenyut dengan concentric glowing rings:
+     - `pulseActiveNode`: Denyutan merah/pink rose untuk status kurir berjalan.
+     - `pulseWarrantyNode`: Denyutan kuning amber untuk status klaim garansi aktif.
+     - `pulseTimelineActive`: Denyutan hijau emerald untuk pesanan selesai.
+4. **Input Invoice Search Bounce:**
+   - Saat nomor invoice diverifikasi, kartu timeline bergetar/memantul lembut (`transform: scale(1.02)` kembali ke `scale(1)`).
+
+---
+
+### 15.9 In-System Live Chat Concierge
+1. **Popup Window Spring (`chatPopup`):**
+   - Jendela obrolan memantul dari kanan bawah dengan kurva `cubic-bezier(0.16, 1, 0.3, 1)`.
+2. **Online Beacon Pulse (`pulseGreen`):**
+   - Lampu indikator status florist online berdenyut terus-menerus.
+3. **Message Bubble Insertion:**
+   - Balasan otomatis asisten atelier muncul dengan transisi fade-up lembut.
+
+---
+
+### 15.10 Admin Operations Dashboard
+1. **Theme Switcher Live Preview Frame:**
+   - Transisi responsif saat admin beralih antara ukuran viewport Desktop (100%), Tablet (768px), dan Mobile (375px).
+2. **View Tabs Transition (`fadeInView`):**
+   - Pergantian modul menu admin (Dashboard, Pesanan, Produk, COD Maps, Toggles, dsb.) menggunakan transisi `fadeInView 0.28s cubic-bezier(0.16, 1, 0.3, 1)`.
+3. **Header Dropdown & Profile Menu (`fadeInDropdown`):**
+   - Menu profil dan pemilih tema meluncur turun dengan lembut.
+4. **Database Status Indicator (`pulseDot`):**
+   - Titik status koneksi Supabase berkedip perlahan menandakan koneksi live.
+5. **Thermal Resi Modal & COD Maps Modal (`modalFade`):**
+   - Transisi pembukaan dialog modal cetak thermal resi dan manajemen titik kumpul COD.
+
+---
+
+### 15.11 Sistem Otentikasi (/login)
+1. **Demo Role Quick-Fill Cards:**
+   - Kartu role Sarah Amalia (Member) dan Rania Azzahra (Admin) memiliki interaksi `card-tilt-hover` yang mengundang klik pengguna.
+2. **Tab Switcher Fade (`fadeInAuth`):**
+   - Transisi form Masuk vs Daftar Akun berpindah dengan mulus tanpa jeda layar.
+3. **Button Shimmer & Loading State:**
+   - Tombol submit formulir memancarkan `btnShimmer` dan menampilkan spinner saat autentikasi berlangsung.
+
+---
+
+### 15.12 Matriks Pemetaan Animasi: Prototype vs Implementasi Frontend
+
+| Kategori Animasi | Nama / Class di Prototype HTML | Implementasi Frontend Next.js | Status |
+|------------------|--------------------------------|-------------------------------|:------:|
+| **Fly-to-Cart** | `flyToCartAnimation(btn, emoji)` | `useMagicMotion` + `MagicFlyer` | Ready to Implement |
+| **Cart Bump** | `@keyframes cartBumpAnim`, `.cart-bump` | `Navbar.tsx` `#navCartBtn` + CSS | Connected via Event |
+| **Sparkle Burst**| `spawnSparkles(x, y)`, `.magic-sparkle` | `spawnSparkles()` DOM helper | Ready to Implement |
+| **Magic Toast** | `showToast()`, `.magic-toast`, `toastTimer` | Global Sonner-style `MagicToastContainer` | Ready to Implement |
+| **Card Tilt 3D**| `.product-card:hover`, `.card-hover-3d` | CSS `card-tilt-hover` | Verified Active |
+| **Hero Float** | `@keyframes floatHero`, `.animate-float-hero` | `HeroSection.tsx` | Verified Active |
+| **Button Shimmer**| `@keyframes btnShimmer`, `.btn-shimmer` | `globals.css` + Action Buttons | Verified Active |
+| **Laser Beam Stepper**| `@keyframes magicBeamStep2..4`, `magicBeamVertical` | `OrderStepper.tsx` + `globals.css` | Verified Active |
+| **Node Breathing**| `@keyframes pulseActiveNode`, `pulseWarrantyNode` | `OrderStepper.tsx`, `WarrantyClaimModal` | Verified Active |
+| **Drawer Slide** | `@keyframes slideLeft`, `.drawer-slide-in` | `CartDrawer.tsx` | Verified Active |
+| **Chat Popup** | `@keyframes chatPopup`, `.chat-popup-anim` | `LiveChatWidget.tsx` | Verified Active |
+| **Admin View Fade**| `@keyframes fadeInView`, `.admin-view-fade` | `apps/web/src/app/admin/page.tsx` | Verified Active |
+

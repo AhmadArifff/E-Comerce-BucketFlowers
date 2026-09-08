@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Star, Sparkles, ShoppingBag, Clock, ShieldCheck, Heart, Check, Plus, Minus } from 'lucide-react';
 import type { ExtendedProduct } from '@chenille/shared';
 import { useCartStore } from '@/stores/useCartStore';
+import { flyToCart, showMagicToast } from '@/lib/magic-motion';
 
 interface ProductDetailModalProps {
   product: ExtendedProduct | null;
@@ -26,18 +27,29 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const activePrice = product.discountPrice ?? product.price;
   const totalPrice = activePrice * quantity;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
+    flyToCart(e.currentTarget, '🌸');
     addItem(product, quantity);
     setIsAddedSuccess(true);
+    showMagicToast(
+      'Berhasil Ditambahkan! 🌸',
+      `${product.name} (${quantity} pcs)`,
+      '🌸',
+      'Lihat Keranjang 🛍️',
+      () => setIsCartOpen(true)
+    );
     setTimeout(() => {
       setIsAddedSuccess(false);
     }, 1800);
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = (e: React.MouseEvent<HTMLButtonElement>) => {
+    flyToCart(e.currentTarget, '🌸');
     addItem(product, quantity);
     onClose();
-    setIsCartOpen(true);
+    setTimeout(() => {
+      setIsCartOpen(true);
+    }, 300);
   };
 
   return (

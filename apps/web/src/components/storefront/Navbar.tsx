@@ -29,7 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const totalItems = getTotalItems();
 
-  // Trigger Cart Bump Animation when total items change
+  // Trigger Cart Bump Animation when total items change or via custom event
   useEffect(() => {
     if (totalItems > 0) {
       setCartBump(true);
@@ -37,6 +37,16 @@ export const Navbar: React.FC<NavbarProps> = ({
       return () => clearTimeout(timer);
     }
   }, [totalItems]);
+
+  useEffect(() => {
+    const handleBump = () => {
+      setCartBump(true);
+      const timer = setTimeout(() => setCartBump(false), 450);
+      return () => clearTimeout(timer);
+    };
+    window.addEventListener('cart-bump', handleBump);
+    return () => window.removeEventListener('cart-bump', handleBump);
+  }, []);
 
   const navMenuItems = [
     { id: 'home', label: 'Beranda' },
@@ -154,8 +164,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Cart Drawer Trigger with Magic UI Cart Bump Animation */}
             <button
+              id="navCartBtn"
               onClick={() => setIsCartOpen(true)}
-              className={`relative flex items-center justify-center gap-1.5 px-3 sm:px-4 h-9 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md shadow-rose-600/20 active:scale-95 transition-all ${
+              className={`btn-nav-cart relative flex items-center justify-center gap-1.5 px-3 sm:px-4 h-9 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md shadow-rose-600/20 active:scale-95 transition-all ${
                 cartBump ? 'cart-bump' : ''
               }`}
               aria-label="Keranjang Belanja"

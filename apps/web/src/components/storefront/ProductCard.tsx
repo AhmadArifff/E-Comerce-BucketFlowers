@@ -5,6 +5,7 @@ import { ShoppingBag, Star, Eye, MessageCircle, Clock } from 'lucide-react';
 import type { ExtendedProduct } from '@chenille/shared';
 import { useCartStore } from '@/stores/useCartStore';
 import { useChatStore } from '@/stores/useChatStore';
+import { flyToCart, showMagicToast } from '@/lib/magic-motion';
 
 interface ProductCardProps {
   product: ExtendedProduct;
@@ -12,7 +13,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProduct }) => {
-  const { addItem } = useCartStore();
+  const { addItem, setIsCartOpen } = useCartStore();
   const { setIsOpen: setChatOpen, sendMessage } = useChatStore();
 
   const handleAskAboutProduct = (e: React.MouseEvent) => {
@@ -127,9 +128,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                flyToCart(e.currentTarget, '🌸');
                 addItem(product, 1);
+                const price = product.discountPrice ?? product.price;
+                showMagicToast(
+                  'Berhasil Ditambahkan! 🌸',
+                  `${product.name} (Rp ${price.toLocaleString('id-ID')})`,
+                  '🌸',
+                  'Lihat Keranjang 🛍️',
+                  () => setIsCartOpen(true)
+                );
               }}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all"
+              className="btn-add-cart flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all cursor-pointer"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
               <span>Tambah</span>

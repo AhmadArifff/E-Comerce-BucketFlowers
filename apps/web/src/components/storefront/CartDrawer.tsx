@@ -7,6 +7,7 @@ import { useCartStore } from '@/stores/useCartStore';
 import { useOrderStore } from '@/stores/useOrderStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { MOCK_MEETUP_POINTS, type MockOrder } from '@chenille/shared';
+import { showMagicToast } from '@/lib/magic-motion';
 
 export const CartDrawer: React.FC = () => {
   const router = useRouter();
@@ -54,8 +55,10 @@ export const CartDrawer: React.FC = () => {
     if (res.success) {
       setVoucherMsg({ type: 'success', text: res.message });
       setInputVoucher('');
+      showMagicToast('Kupon Berhasil! 🎉', res.message, '🏷️');
     } else {
       setVoucherMsg({ type: 'error', text: res.message });
+      showMagicToast('Kupon Tidak Valid ⚠️', res.message, '⚠️');
     }
   };
 
@@ -167,8 +170,12 @@ export const CartDrawer: React.FC = () => {
                           {item.product.name}
                         </h4>
                         <button
-                          onClick={() => removeItem(item.product.id)}
+                          onClick={() => {
+                            removeItem(item.product.id);
+                            showMagicToast('Item Dihapus 🗑️', `${item.product.name} dikeluarkan dari keranjang`, '🗑️');
+                          }}
                           className="text-stone-400 hover:text-rose-600 transition-colors"
+                          title="Hapus item"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

@@ -3,14 +3,19 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Search, Package, CheckCircle2, Clock, Truck, ShieldCheck, ArrowRight } from 'lucide-react';
+import { showMagicToast } from '@/lib/magic-motion';
 
 export const QuickTrackingSection: React.FC = () => {
   const [invoiceQuery, setInvoiceQuery] = useState('INV/20260907/FLW-0001');
   const [isSearched, setIsSearched] = useState(true);
+  const [isBouncing, setIsBouncing] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSearched(true);
+    setIsBouncing(true);
+    showMagicToast('Invoice Terverifikasi! 🚚', `${invoiceQuery} dalam perjalanan kurir`, '📦');
+    setTimeout(() => setIsBouncing(false), 350);
   };
 
   return (
@@ -53,7 +58,7 @@ export const QuickTrackingSection: React.FC = () => {
           </form>
 
           {isSearched && (
-            <div className="space-y-6 auth-fade-in">
+            <div className={`space-y-6 auth-fade-in transition-transform duration-300 ${isBouncing ? 'scale-[1.02]' : 'scale-100'}`}>
               
               {/* INVOICE DETAILS SUMMARY */}
               <div className="p-4 sm:p-5 rounded-2xl bg-rose-50/70 border border-rose-200/80 space-y-1 text-xs">

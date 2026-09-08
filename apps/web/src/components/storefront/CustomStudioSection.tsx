@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Sparkles, MessageCircle, ShoppingBag, Check, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '@/stores/useCartStore';
+import { flyToCart, showMagicToast } from '@/lib/magic-motion';
 
 interface FlowerOpt {
   id: string;
@@ -96,7 +97,10 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
     window.open(`https://wa.me/6281298317721?text=${encoded}`, '_blank');
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    if (e) {
+      flyToCart(e.currentTarget, selectedFlower.emoji);
+    }
     const activeAddonNames = selectedAddons
       .map((id) => ADDONS.find((a) => a.id === id)?.name)
       .filter(Boolean)
@@ -119,7 +123,14 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
       rating: 5.0,
       reviewCount: 1,
     });
-    setIsCartOpen(true);
+
+    showMagicToast(
+      'Buket Custom Ditambahkan! ✨',
+      `${selectedFlower.name} (${selectedColor.name}) - Rp ${totalPrice.toLocaleString('id-ID')}`,
+      selectedFlower.emoji,
+      'Lihat Keranjang 🛍️',
+      () => setIsCartOpen(true)
+    );
   };
 
   return (
@@ -341,7 +352,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
 
                 <button
                   type="button"
-                  onClick={handleAddToCart}
+                  onClick={(e) => handleAddToCart(e)}
                   className="w-full py-2.5 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.01] cursor-pointer"
                 >
                   <ShoppingBag className="w-4 h-4" />
