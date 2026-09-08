@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { CodPoint } from '@chenille/shared';
 
 export interface WasteMaterialItem {
   id: string;
@@ -130,6 +131,13 @@ interface SettingsState {
   addProcurementOrder: (order: Omit<ProcurementOrder, 'id' | 'isStockAdded'>) => void;
   updateProcurementOrderStatus: (orderId: string, newStatus: ProcurementOrder['status']) => void;
   deleteProcurementOrder: (orderId: string) => void;
+
+  // COD Meetup Points Actions
+  codPoints: CodPoint[];
+  addCodPoint: (point: Omit<CodPoint, 'id'>) => CodPoint;
+  updateCodPoint: (id: string, updates: Partial<CodPoint>) => void;
+  deleteCodPoint: (id: string) => void;
+  resetCodPointsToDefault: () => void;
 }
 
 const DEFAULT_WASTE_MATERIALS: WasteMaterialItem[] = [
@@ -310,6 +318,69 @@ const DEFAULT_PROCUREMENT_ORDERS: ProcurementOrder[] = [
   },
 ];
 
+export const DEFAULT_COD_POINTS: CodPoint[] = [
+  {
+    id: 'cod-001',
+    name: 'Universitas Indonesia (Gerbatama & Rotunda)',
+    fullAddress: 'Jl. Margonda Raya No. 100, Pondok Cina, Kec. Beji, Kota Depok, Jawa Barat 16424',
+    googleMapsUrl: 'https://maps.google.com/?q=-6.3628,106.8315',
+    embedQuery: 'Universitas Indonesia Depok',
+    distanceKm: 2.4,
+    deliveryNotes: 'Titik serah terima buket di pos satpam Gerbatama / Lobby Rotunda Rektorat UI',
+    isActive: true,
+  },
+  {
+    id: 'cod-002',
+    name: 'Universitas Gunadarma Kampus D Margonda',
+    fullAddress: 'Jl. Margonda Raya No. 100, Pondok Cina, Beji, Kota Depok, Jawa Barat 16424',
+    googleMapsUrl: 'https://maps.google.com/?q=Universitas+Gunadarma+Kampus+D',
+    embedQuery: 'Universitas Gunadarma Kampus D',
+    distanceKm: 1.4,
+    deliveryNotes: 'Titik temu di lobi depan Gedung 1 Kampus D Margonda / pos keamanan gerbang utama',
+    isActive: true,
+  },
+  {
+    id: 'cod-003',
+    name: 'Margo City Mall Depok (Lobby Utama Utara)',
+    fullAddress: 'Jl. Margonda Raya No. 358, Kemiri Muka, Kec. Beji, Kota Depok, Jawa Barat 16423',
+    googleMapsUrl: 'https://maps.google.com/?q=-6.3732,106.8345',
+    embedQuery: 'Margo City Mall Depok',
+    distanceKm: 3.1,
+    deliveryNotes: 'Tempat serah terima dekat Starbucks / Lobby Utama Drop-off Mobil',
+    isActive: true,
+  },
+  {
+    id: 'cod-004',
+    name: 'Stasiun KRL Pondok Cina (Pintu Timur)',
+    fullAddress: 'Pondok Cina, Kec. Beji, Kota Depok, Jawa Barat 16424',
+    googleMapsUrl: 'https://maps.google.com/?q=-6.3688,106.8336',
+    embedQuery: 'Stasiun Pondok Cina Depok',
+    distanceKm: 1.8,
+    deliveryNotes: 'Serah terima cepat di depan minimarket pintu keluar stasiun sebelah timur',
+    isActive: true,
+  },
+  {
+    id: 'cod-005',
+    name: "D'Mall Margonda Depok (Area Lobby Utama)",
+    fullAddress: 'Jl. Margonda Raya No. 88, Kemiri Muka, Kec. Beji, Kota Depok, Jawa Barat 16423',
+    googleMapsUrl: 'https://maps.google.com/?q=-6.3862,106.8285',
+    embedQuery: 'DMall Depok Margonda',
+    distanceKm: 3.9,
+    deliveryNotes: 'Titik temu area perkantoran Margonda & lobby depan dekat hotel Santika',
+    isActive: true,
+  },
+  {
+    id: 'cod-006',
+    name: 'Politeknik Negeri Jakarta (PNJ - Lobi Utama)',
+    fullAddress: 'Kukusan, Kec. Beji, Kota Depok, Jawa Barat 16425',
+    googleMapsUrl: 'https://maps.google.com/?q=Politeknik+Negeri+Jakarta',
+    embedQuery: 'Politeknik Negeri Jakarta',
+    distanceKm: 2.8,
+    deliveryNotes: 'Titik temu di gerbang utama / pos satpam PNJ Kukusan',
+    isActive: true,
+  },
+];
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
@@ -345,6 +416,7 @@ export const useSettingsStore = create<SettingsState>()(
       wasteMaterials: DEFAULT_WASTE_MATERIALS,
       rawMaterials: DEFAULT_RAW_MATERIALS,
       procurementOrders: DEFAULT_PROCUREMENT_ORDERS,
+      codPoints: DEFAULT_COD_POINTS,
       coupons: [
         {
           code: 'WISUDAHEMAT',
@@ -539,6 +611,35 @@ export const useSettingsStore = create<SettingsState>()(
         set((state) => ({
           procurementOrders: (state.procurementOrders || DEFAULT_PROCUREMENT_ORDERS).filter((o) => o.id !== orderId),
         }));
+      },
+
+      addCodPoint: (point) => {
+        const newPoint: CodPoint = {
+          ...point,
+          id: `cod-${Date.now()}`,
+        };
+        set((state) => ({
+          codPoints: [newPoint, ...(state.codPoints || DEFAULT_COD_POINTS)],
+        }));
+        return newPoint;
+      },
+
+      updateCodPoint: (id, updates) => {
+        set((state) => ({
+          codPoints: (state.codPoints || DEFAULT_COD_POINTS).map((pt) =>
+            pt.id === id ? { ...pt, ...updates } : pt
+          ),
+        }));
+      },
+
+      deleteCodPoint: (id) => {
+        set((state) => ({
+          codPoints: (state.codPoints || DEFAULT_COD_POINTS).filter((pt) => pt.id !== id),
+        }));
+      },
+
+      resetCodPointsToDefault: () => {
+        set({ codPoints: DEFAULT_COD_POINTS });
       },
     }),
     {

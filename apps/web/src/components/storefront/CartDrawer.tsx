@@ -24,6 +24,7 @@ import {
   Mail,
   Home,
   ShieldCheck,
+  ExternalLink,
 } from 'lucide-react';
 import { useCartStore } from '@/stores/useCartStore';
 import { useOrderStore } from '@/stores/useOrderStore';
@@ -59,7 +60,8 @@ export const CartDrawer: React.FC = () => {
 
   const { user } = useAuthStore();
   const { addNewOrder } = useOrderStore();
-  const { paymentGateways } = useSettingsStore();
+  const { paymentGateways, codPoints } = useSettingsStore();
+  const activeMeetupPoints = (codPoints && codPoints.length > 0) ? codPoints : MOCK_MEETUP_POINTS;
 
   // Step state: CART or CHECKOUT
   const [step, setStep] = useState<'CART' | 'CHECKOUT'>('CART');
@@ -168,7 +170,7 @@ export const CartDrawer: React.FC = () => {
     setIsCheckingOut(true);
 
     const invoiceNo = `INV-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${Math.floor(100 + Math.random() * 900)}`;
-    const selectedMeetup = MOCK_MEETUP_POINTS.find((m) => m.id === selectedCodPointId);
+    const selectedMeetup = activeMeetupPoints.find((m) => m.id === selectedCodPointId) || activeMeetupPoints[0];
 
     const paymentStatus: 'PAYMENT_CONFIRMED' | 'WAITING_PAYMENT' | 'PAID_ON_COD' =
       selectedPayment === 'midtrans'
@@ -407,21 +409,54 @@ export const CartDrawer: React.FC = () => {
                       </div>
 
                       {fulfillmentType === 'COD_MEETUP_POINT' && (
-                        <div className="pt-1">
+                        <div className="pt-1 space-y-2">
                           <label className="text-[11px] font-semibold text-stone-600 block mb-1">
                             Pilih Titik Temu Kampus / Mall Terverifikasi:
                           </label>
                           <select
                             value={selectedCodPointId}
                             onChange={(e) => setSelectedCodPointId(e.target.value)}
-                            className="w-full text-xs p-2.5 bg-white border border-rose-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="w-full text-xs p-2.5 bg-white border border-rose-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
                           >
-                            {MOCK_MEETUP_POINTS.map((pt) => (
+                            {activeMeetupPoints.map((pt) => (
                               <option key={pt.id} value={pt.id}>
-                                {pt.name} ({pt.distanceKm} KM)
+                                {pt.name} ({pt.distanceKm} KM {pt.distanceKm <= 5 ? '• Gratis Ongkir' : ''})
                               </option>
                             ))}
                           </select>
+
+                          {/* Detail & Direct Link Google Maps */}
+                          {(() => {
+                            const curPt = activeMeetupPoints.find((p) => p.id === selectedCodPointId) || activeMeetupPoints[0];
+                            if (!curPt) return null;
+                            return (
+                              <div className="p-2.5 bg-rose-50/70 border border-rose-200/80 rounded-xl text-xs space-y-1.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-extrabold text-stone-800 text-[11px] flex items-center gap-1">
+                                    <MapPin className="w-3.5 h-3.5 text-rose-600 flex-shrink-0" />
+                                    <span>{curPt.name}</span>
+                                  </span>
+                                  <a
+                                    href={curPt.googleMapsUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-white px-2 py-0.5 rounded-md border border-rose-200 flex items-center gap-1 shadow-2xs hover:bg-rose-50 transition-colors flex-shrink-0"
+                                  >
+                                    <span>Buka Google Maps</span>
+                                    <ExternalLink className="w-2.5 h-2.5" />
+                                  </a>
+                                </div>
+                                <p className="text-[10.5px] text-stone-600 leading-tight">
+                                  {curPt.fullAddress}
+                                </p>
+                                {curPt.deliveryNotes && (
+                                  <p className="text-[10px] text-stone-500 italic">
+                                    💡 {curPt.deliveryNotes}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>
@@ -673,11 +708,22 @@ export const CartDrawer: React.FC = () => {
                   ) : (
                     <div className="space-y-2">
                       <div className="p-2.5 bg-white border border-stone-200 rounded-xl">
-                        <div className="text-xs font-bold text-stone-800 flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-theme-primary" />
-                          <span>
-                            {MOCK_MEETUP_POINTS.find((p) => p.id === selectedCodPointId)?.name || 'Titik Temu UI'}
-                          </span>
+                        <div className="text-xs font-bold text-stone-800 flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-1.5 truncate">
+                            <MapPin className="w-3.5 h-3.5 text-theme-primary flex-shrink-0" />
+                            <span className="truncate">
+                              {activeMeetupPoints.find((p) => p.id === selectedCodPointId)?.name || 'Titik Temu UI'}
+                            </span>
+                          </div>
+                          <a
+                            href={activeMeetupPoints.find((p) => p.id === selectedCodPointId)?.googleMapsUrl || 'https://maps.google.com/?q=Margonda+Raya+Depok'}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[10px] font-bold text-rose-600 flex items-center gap-0.5 hover:underline flex-shrink-0"
+                          >
+                            <span>Maps</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
                         </div>
                         <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">
                           Bebas Ongkir ke Lokasi Ini
