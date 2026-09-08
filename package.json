@@ -22,10 +22,14 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@types/pg": "^8.23.1",
     "turbo": "^2.4.0",
     "typescript": "^5.7.3"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "pg": "^8.23.0"
   }
 }
