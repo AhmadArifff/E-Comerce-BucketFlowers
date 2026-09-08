@@ -35,9 +35,18 @@ import {
   KeyRound,
   Sparkles,
   Lock,
+  CreditCard,
+  Building,
+  Banknote,
+  Layers,
+  Archive,
+  Trash2,
+  Info,
+  ShieldCheck,
 } from 'lucide-react';
 import { MOCK_PRODUCTS, type ExtendedProduct as Product } from '@chenille/shared';
 import { useThemeStore, type ThemeId } from '@/stores/useThemeStore';
+import { useSettingsStore, type WasteMaterialItem } from '@/stores/useSettingsStore';
 import { showMagicToast } from '@/lib/magic-motion';
 
 // ============================================================================
@@ -268,6 +277,11 @@ export const ProductionCalendarCard: React.FC = () => {
 // 3. REPORTS & EXCEL EXPORT VIEW
 // ============================================================================
 export const ReportsView: React.FC = () => {
+  const { wasteMaterials, getTotalWasteLoss } = useSettingsStore();
+  const totalWasteLoss = getTotalWasteLoss();
+  const baseNet = 23600000;
+  const netEvaluated = baseNet - totalWasteLoss;
+
   const handleDownload = (format: string) => {
     showMagicToast(`Laporan ${format} Siap! 📈`, `File Laporan_Atelier_2026.${format.toLowerCase()} berhasil diekspor.`, '📄');
   };
@@ -282,29 +296,45 @@ export const ReportsView: React.FC = () => {
   return (
     <div className="space-y-6 admin-view-fade">
       {/* Top summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl border border-rose-100 p-5 shadow-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="bg-white rounded-2xl border border-rose-100 p-4 shadow-xs">
           <div className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Omzet YTD</div>
-          <div className="text-xl font-black text-stone-800 mt-1">Rp 44.150.000</div>
+          <div className="text-lg font-black text-stone-800 mt-1">Rp 44.150.000</div>
           <div className="text-[11px] text-emerald-600 font-bold mt-0.5">↑ 24.8% YoY</div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-rose-100 p-5 shadow-xs">
+        <div className="bg-white rounded-2xl border border-rose-100 p-4 shadow-xs">
           <div className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total HPP Bahan Baku</div>
-          <div className="text-xl font-black text-stone-800 mt-1">Rp 18.400.000</div>
+          <div className="text-lg font-black text-stone-800 mt-1">Rp 18.400.000</div>
           <div className="text-[11px] text-stone-400 font-medium mt-0.5">Rata-rata 41.7% Omzet</div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-rose-100 p-5 shadow-xs">
-          <div className="text-xs font-bold text-stone-400 uppercase tracking-wider">Biaya Packing & Logistik</div>
-          <div className="text-xl font-black text-stone-800 mt-1">Rp 2.150.000</div>
+        {/* Waste / Scrap Loss Card */}
+        <div className="bg-white rounded-2xl border border-rose-200 bg-rose-50/30 p-4 shadow-xs">
+          <div className="text-xs font-bold text-rose-600 uppercase tracking-wider flex items-center gap-1">
+            <Archive className="w-3.5 h-3.5 text-rose-600" />
+            <span>Kerugian Bahan Rusak</span>
+          </div>
+          <div className="text-lg font-black text-rose-700 mt-1">
+            -Rp {totalWasteLoss.toLocaleString('id-ID')}
+          </div>
+          <div className="text-[11px] text-rose-600 font-bold mt-0.5">
+            {wasteMaterials.length} Batch Afkir Terlacak
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-rose-100 p-4 shadow-xs">
+          <div className="text-xs font-bold text-stone-400 uppercase tracking-wider">Packing & Logistik</div>
+          <div className="text-lg font-black text-stone-800 mt-1">Rp 2.150.000</div>
           <div className="text-[11px] text-stone-400 font-medium mt-0.5">Box Corrugated & Bubble</div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-emerald-200 bg-emerald-50/40 p-5 shadow-xs">
-          <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Laba Bersih Bersih Toko</div>
-          <div className="text-xl font-black text-emerald-700 mt-1">Rp 23.600.000</div>
-          <div className="text-[11px] text-emerald-700 font-extrabold mt-0.5">Margin Rata-rata 53.4%</div>
+        <div className="bg-white rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 shadow-xs">
+          <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Laba Bersih Evaluasi</div>
+          <div className="text-lg font-black text-emerald-700 mt-1">
+            Rp {netEvaluated.toLocaleString('id-ID')}
+          </div>
+          <div className="text-[11px] text-emerald-700 font-extrabold mt-0.5">Setelah Potong Afkir</div>
         </div>
       </div>
 
@@ -378,6 +408,59 @@ export const ReportsView: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Spoilage & Damaged Materials Evaluation Section */}
+      <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-rose-100">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-stone-800 text-sm">
+                Evaluasi Laporan Kerugian Bahan Baku Gudang (Spoilage & Waste)
+              </h3>
+              <p className="text-[11px] text-stone-500">
+                Pencatatan bahan lama atau tidak layak pakai guna evaluasi cepat potensi kerugian atelier.
+              </p>
+            </div>
+          </div>
+
+          <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-extrabold text-xs rounded-full">
+            Status: Kerugian Terkendali (-{((totalWasteLoss / 18400000) * 100).toFixed(2)}% dari HPP)
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {wasteMaterials.slice(0, 3).map((wst) => (
+            <div key={wst.id} className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 space-y-1.5">
+              <div className="flex items-start justify-between">
+                <span className="text-xs font-bold text-stone-800 truncate">{wst.materialName}</span>
+                <span className="text-[10px] text-rose-600 font-extrabold bg-rose-50 px-2 py-0.5 rounded-full">
+                  -Rp {wst.totalLoss.toLocaleString('id-ID')}
+                </span>
+              </div>
+              <div className="text-[11px] text-stone-500">
+                Jumlah Rusak: <strong>{wst.qty} {wst.unit}</strong> • Alasan:{' '}
+                <span className="text-rose-700 font-semibold">{wst.reason.replace('_', ' ')}</span>
+              </div>
+              {wst.mitigationAction && (
+                <div className="text-[10px] text-emerald-700 bg-emerald-50/60 p-1.5 rounded-lg font-medium">
+                  💡 Mitigasi: {wst.mitigationAction}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs flex items-center justify-between">
+          <span className="text-stone-600">
+            Kelola pencatatan bahan rusak lengkap atau tambah catatan baru di tab{' '}
+            <strong>Bahan Rusak / Afkir</strong> pada modul Kalkulator BOM.
+          </span>
+          <span className="font-bold text-rose-600">Total Akumulasi: Rp {totalWasteLoss.toLocaleString('id-ID')}</span>
+        </div>
+      </div>
     </div>
   );
 };
@@ -388,6 +471,7 @@ export const ReportsView: React.FC = () => {
 export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ onOpenAddModal }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCat, setSelectedCat] = useState('ALL');
+  const [selectedProdBom, setSelectedProdBom] = useState<Product | null>(null);
 
   const filtered = MOCK_PRODUCTS.filter((prod) => {
     const matchName = prod.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -395,15 +479,26 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
     return matchName && matchCat;
   });
 
+  // Mock recipe ingredients generator based on product ID
+  const getProductRecipe = (prod: Product) => {
+    return [
+      { name: 'Batang Kawat Bulu Utama (6mm)', qty: 32, unit: 'Batang', cost: 350, subtotal: 11200 },
+      { name: 'Kawat Batang Penyangga Hijau No. 18', qty: 12, unit: 'Batang', cost: 500, subtotal: 6000 },
+      { name: 'Kertas Cellophane Korean Matte Waterproof', qty: 2, unit: 'Lembar', cost: 4500, subtotal: 9000 },
+      { name: 'Pita Satin Burgundy Mewah 2.5cm', qty: 1.5, unit: 'Meter', cost: 2200, subtotal: 3300 },
+      { name: 'Aksesoris / Kartu Ucapan / Box Kemas', qty: 1, unit: 'Pcs', cost: prod.rawCostHpp - 29500 > 0 ? prod.rawCostHpp - 29500 : 5000, subtotal: prod.rawCostHpp - 29500 > 0 ? prod.rawCostHpp - 29500 : 5000 },
+    ];
+  };
+
   return (
     <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs space-y-6 admin-view-fade">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-rose-100">
         <div>
           <h2 className="text-base sm:text-lg font-black text-stone-800 tracking-tight">
-            Katalog Produk & Minat Klik Pengunjung (CTR)
+            Katalog Produk & Resep Bahan Baku (BOM)
           </h2>
           <p className="text-xs text-stone-500">
-            Pantau metrik buket yang paling banyak dilihat calon pembeli dan kelola kuota PO per varian.
+            Daftar buket, kebutuhan bahan baku tiap produk, validasi HPP, dan performa klik CTR.
           </p>
         </div>
 
@@ -446,17 +541,18 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
         </div>
       </div>
 
-      {/* Products Table with CTR */}
+      {/* Products Table with CTR and BOM */}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs text-stone-600">
           <thead className="bg-stone-50 text-stone-700 font-extrabold uppercase text-[10px] tracking-wider border-b border-stone-200">
             <tr>
               <th className="py-3 px-4">Buket Produk</th>
               <th className="py-3 px-4">Kategori</th>
+              <th className="py-3 px-4">Resep Bahan</th>
               <th className="py-3 px-4">HPP (Modal)</th>
               <th className="py-3 px-4">Harga Jual</th>
               <th className="py-3 px-4">Margin</th>
-              <th className="py-3 px-4">Klik Etalase (CTR)</th>
+              <th className="py-3 px-4">Klik (CTR)</th>
               <th className="py-3 px-4">Status Produksi</th>
             </tr>
           </thead>
@@ -488,6 +584,16 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
                       {prod.category}
                     </span>
                   </td>
+                  <td className="py-3.5 px-4">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProdBom(prod)}
+                      className="px-2.5 py-1 rounded-xl border border-rose-200 bg-rose-50/60 hover:bg-rose-100 text-rose-700 font-bold text-[10px] flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+                    >
+                      <Layers className="w-3 h-3 text-rose-600" />
+                      <span>Lihat Resep BOM</span>
+                    </button>
+                  </td>
                   <td className="py-3.5 px-4 font-bold text-stone-600">
                     Rp {prod.rawCostHpp.toLocaleString('id-ID')}
                   </td>
@@ -502,14 +608,14 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-1.5 font-extrabold text-stone-800">
                       <Eye className="w-3.5 h-3.5 text-blue-500" />
-                      <span>{mockClicks} klik</span>
+                      <span>{mockClicks}</span>
                       <span className="text-[10px] text-stone-400 font-semibold">({mockCtr}%)</span>
                     </div>
                   </td>
                   <td className="py-3.5 px-4">
                     {prod.isReadyStock ? (
                       <span className="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full text-[10px]">
-                        Ready Stock ({prod.stock})
+                        Ready ({prod.stock})
                       </span>
                     ) : (
                       <span className="bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-full text-[10px]">
@@ -523,6 +629,96 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
           </tbody>
         </table>
       </div>
+
+      {/* Modal View Resep Bahan Baku untuk 1 Produk */}
+      {selectedProdBom && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-lg bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-rose-100 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+              <div className="flex items-center gap-2">
+                <Layers className="w-5 h-5 text-rose-600" />
+                <div>
+                  <h3 className="font-extrabold text-stone-800 text-sm">Resep Bahan Baku (BOM): 1 Produk</h3>
+                  <span className="text-[11px] text-stone-500">{selectedProdBom.name}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedProdBom(null)}
+                className="p-1 rounded-full text-stone-400 hover:text-stone-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="text-xs text-stone-600">
+                Komposisi bahan baku yang dihabiskan untuk merangkai 1 unit buket ini:
+              </div>
+
+              <div className="border border-stone-200 rounded-2xl overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-stone-50 text-stone-700 font-extrabold text-[10px] uppercase border-b border-stone-200">
+                    <tr>
+                      <th className="py-2.5 px-3">Bahan</th>
+                      <th className="py-2.5 px-3">Kuantitas</th>
+                      <th className="py-2.5 px-3">Subtotal HPP</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100 text-[11px]">
+                    {getProductRecipe(selectedProdBom).map((ing, i) => (
+                      <tr key={i} className="hover:bg-stone-50/50">
+                        <td className="py-2 px-3 font-semibold text-stone-800">{ing.name}</td>
+                        <td className="py-2 px-3 text-stone-600">
+                          {ing.qty} {ing.unit}
+                        </td>
+                        <td className="py-2 px-3 font-bold text-rose-600">
+                          Rp {ing.subtotal.toLocaleString('id-ID')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Financial Verification Alert */}
+              <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-stone-500">Total HPP Produksi:</span>
+                  <span className="font-bold text-stone-800">
+                    Rp {selectedProdBom.rawCostHpp.toLocaleString('id-ID')}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-stone-500">Harga Jual Etalase:</span>
+                  <span className="font-bold text-rose-600">
+                    Rp {(selectedProdBom.discountPrice ?? selectedProdBom.price).toLocaleString('id-ID')}
+                  </span>
+                </div>
+                <div className="flex justify-between pt-1 border-t border-stone-200 font-extrabold text-emerald-700">
+                  <span>Margin Bersih Per Buket:</span>
+                  <span>
+                    +Rp{' '}
+                    {(
+                      (selectedProdBom.discountPrice ?? selectedProdBom.price) - selectedProdBom.rawCostHpp
+                    ).toLocaleString('id-ID')}{' '}
+                    (Validasi Aman ✅)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedProdBom(null)}
+                className="px-5 py-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-bold transition-all cursor-pointer"
+              >
+                Tutup Resep
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -826,99 +1022,364 @@ export const MaintenanceThemeView: React.FC = () => {
 // 7. STORE SETTINGS VIEW
 // ============================================================================
 export const StoreSettingsView: React.FC = () => {
-  const [storeName, setStoreName] = useState('Chenille Atelier Depok');
-  const [tagline, setTagline] = useState('Buket Bunga Kawat Bulu Chenille Premium & Graduation Florist');
-  const [waNumber, setWaNumber] = useState('+62 812-9928-1192');
-  const [studioAddress, setStudioAddress] = useState('Jl. Margonda Raya No. 120, Beji, Kota Depok, Jawa Barat 16424');
-  const [dailyQuota, setDailyQuota] = useState('25');
-  const [midtransId, setMidtransId] = useState('G-10293847-CHENILLE');
+  const {
+    storeName,
+    tagline,
+    waNumber,
+    studioAddress,
+    dailyQuota,
+    paymentGateways,
+    updateStoreProfile,
+    togglePaymentGateway,
+    updatePaymentGatewayConfig,
+  } = useSettingsStore();
+
+  const [formProfile, setFormProfile] = useState({
+    storeName,
+    tagline,
+    waNumber,
+    studioAddress,
+    dailyQuota: String(dailyQuota),
+  });
+
+  const [midtransConfig, setMidtransConfig] = useState({ ...paymentGateways.midtrans });
+  const [bcaConfig, setBcaConfig] = useState({ ...paymentGateways.bcaManual });
+  const [codConfig, setCodConfig] = useState({ ...paymentGateways.codCash });
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    showMagicToast('Pengaturan Tersimpan! ⚙️', 'Konfigurasi atelier dan pembayaran Midtrans berhasil diperbarui.', '💾');
+    updateStoreProfile({
+      storeName: formProfile.storeName,
+      tagline: formProfile.tagline,
+      waNumber: formProfile.waNumber,
+      studioAddress: formProfile.studioAddress,
+      dailyQuota: parseInt(formProfile.dailyQuota) || 25,
+    });
+    updatePaymentGatewayConfig('midtrans', midtransConfig);
+    updatePaymentGatewayConfig('bcaManual', bcaConfig);
+    updatePaymentGatewayConfig('codCash', codConfig);
+    showMagicToast('Pengaturan Tersimpan! ⚙️', 'Konfigurasi profil atelier & payment gateway berhasil disinkronkan ke checkout.', '💾');
   };
 
   return (
     <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs space-y-6 admin-view-fade">
-      <div className="pb-4 border-b border-rose-100">
-        <h2 className="text-base sm:text-lg font-black text-stone-800 tracking-tight">
-          Pengaturan Atelier & Kredensial Bisnis
-        </h2>
-        <p className="text-xs text-stone-500">
-          Kelola profil toko resmi, nomor kontak CS, batasan kuota pesanan harian, dan integrasi payment gateway.
-        </p>
+      <div className="pb-4 border-b border-rose-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-base sm:text-lg font-black text-stone-800 tracking-tight">
+            Pengaturan Atelier & Konfigurasi Payment Gateway
+          </h2>
+          <p className="text-xs text-stone-500">
+            Kelola profil studio, aktivasi metode pembayaran checkout (Midtrans, BCA, COD), dan kredensial API.
+          </p>
+        </div>
+
+        <button
+          onClick={handleSave}
+          type="button"
+          className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-md shadow-rose-600/20 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
+        >
+          Simpan Semua Pengaturan
+        </button>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-5 text-xs">
-        {/* Profile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <form onSubmit={handleSave} className="space-y-6 text-xs">
+        {/* SECTION 1: PROFIL ATELIER */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Building className="w-4 h-4 text-rose-600" />
+            <span className="text-xs font-black uppercase text-stone-700 tracking-wider">
+              1. Profil Atelier & Kuota Harian
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block font-bold text-stone-700 mb-1">Nama Studio Atelier</label>
+              <input
+                type="text"
+                value={formProfile.storeName}
+                onChange={(e) => setFormProfile({ ...formProfile, storeName: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-stone-700 mb-1">Nomor WhatsApp CS Resmi</label>
+              <input
+                type="text"
+                value={formProfile.waNumber}
+                onChange={(e) => setFormProfile({ ...formProfile, waNumber: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+              />
+            </div>
+          </div>
+
           <div>
-            <label className="block font-bold text-stone-700 mb-1">Nama Studio Atelier</label>
+            <label className="block font-bold text-stone-700 mb-1">Tagline Toko</label>
             <input
               type="text"
-              value={storeName}
-              onChange={(e) => setStoreName(e.target.value)}
+              value={formProfile.tagline}
+              onChange={(e) => setFormProfile({ ...formProfile, tagline: e.target.value })}
               className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
             />
           </div>
 
-          <div>
-            <label className="block font-bold text-stone-700 mb-1">Nomor WhatsApp CS Resmi</label>
-            <input
-              type="text"
-              value={waNumber}
-              onChange={(e) => setWaNumber(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-2">
+              <label className="block font-bold text-stone-700 mb-1">Alamat Fisik Workshop / Studio</label>
+              <input
+                type="text"
+                value={formProfile.studioAddress}
+                onChange={(e) => setFormProfile({ ...formProfile, studioAddress: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-stone-700 mb-1">Kapasitas Slot PO (Buket/Hari)</label>
+              <input
+                type="number"
+                value={formProfile.dailyQuota}
+                onChange={(e) => setFormProfile({ ...formProfile, dailyQuota: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+              />
+            </div>
           </div>
         </div>
 
-        <div>
-          <label className="block font-bold text-stone-700 mb-1">Tagline Toko</label>
-          <input
-            type="text"
-            value={tagline}
-            onChange={(e) => setTagline(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
-          />
-        </div>
-
-        <div>
-          <label className="block font-bold text-stone-700 mb-1">Alamat Fisik Studio / Workshop</label>
-          <textarea
-            rows={2}
-            value={studioAddress}
-            onChange={(e) => setStudioAddress(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
-          />
-        </div>
-
-        {/* Quota & Payment */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-stone-100">
-          <div>
-            <label className="block font-bold text-stone-700 mb-1">Kapasitas Slot PO Harian (Buket/Hari)</label>
-            <input
-              type="number"
-              value={dailyQuota}
-              onChange={(e) => setDailyQuota(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
-            />
-            <span className="text-[10px] text-stone-400 mt-1 block">
-              Sistem akan otomatis menutup checkout PO jika kuota harian tercapai.
+        {/* SECTION 2: PAYMENT GATEWAYS MANAGEMENT */}
+        <div className="pt-4 border-t border-stone-100 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-rose-600" />
+              <span className="text-xs font-black uppercase text-stone-700 tracking-wider">
+                2. Manajemen Payment Gateway (Aktifkan / Nonaktifkan & Kredensial)
+              </span>
+            </div>
+            <span className="text-[11px] text-stone-400">
+              Metode yang dinonaktifkan tidak akan muncul di formulir checkout pelanggan.
             </span>
           </div>
 
-          <div>
-            <label className="block font-bold text-stone-700 mb-1">Merchant ID Midtrans Snap QRIS</label>
-            <input
-              type="text"
-              value={midtransId}
-              onChange={(e) => setMidtransId(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
-            />
-            <span className="text-[10px] text-stone-400 mt-1 block">
-              Koneksi verifikasi otomatis QRIS Nasional & GoPay.
-            </span>
+          <div className="space-y-4">
+            {/* 1. MIDTRANS SNAP */}
+            <div className="p-4 sm:p-5 rounded-2xl border border-stone-200 bg-stone-50/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <CreditCard className="w-4 h-4 text-rose-600" />
+                  <div>
+                    <h4 className="font-extrabold text-stone-800 text-xs">
+                      Midtrans Snap QRIS & Virtual Account (Otomatis)
+                    </h4>
+                    <span className="text-[10px] text-stone-500">
+                      QRIS Nasional, GoPay, ShopeePay, VA BCA, BNI, Mandiri.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      midtransConfig.isEnabled
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-stone-200 text-stone-600'
+                    }`}
+                  >
+                    {midtransConfig.isEnabled ? 'Aktif di Checkout' : 'Nonaktif'}
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={midtransConfig.isEnabled}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setMidtransConfig({ ...midtransConfig, isEnabled: val });
+                        togglePaymentGateway('midtrans', val);
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
+                  </label>
+                </div>
+              </div>
+
+              {midtransConfig.isEnabled && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-stone-200/60 animate-in fade-in">
+                  <div>
+                    <label className="block font-bold text-stone-600 text-[11px] mb-1">Merchant ID</label>
+                    <input
+                      type="text"
+                      value={midtransConfig.merchantId}
+                      onChange={(e) => setMidtransConfig({ ...midtransConfig, merchantId: e.target.value })}
+                      className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-stone-600 text-[11px] mb-1">Client Key</label>
+                    <input
+                      type="text"
+                      value={midtransConfig.clientKey}
+                      onChange={(e) => setMidtransConfig({ ...midtransConfig, clientKey: e.target.value })}
+                      className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-stone-600 text-[11px] mb-1">Server Key</label>
+                    <input
+                      type="password"
+                      value={midtransConfig.serverKey}
+                      onChange={(e) => setMidtransConfig({ ...midtransConfig, serverKey: e.target.value })}
+                      className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 2. BCA MANUAL */}
+            <div className="p-4 sm:p-5 rounded-2xl border border-stone-200 bg-stone-50/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <Building className="w-4 h-4 text-blue-600" />
+                  <div>
+                    <h4 className="font-extrabold text-stone-800 text-xs">
+                      Transfer Bank BCA Manual (Konfirmasi WhatsApp)
+                    </h4>
+                    <span className="text-[10px] text-stone-500">
+                      Pelanggan mentransfer ke rekening atelier dan mengirim bukti bayar ke WA CS.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      bcaConfig.isEnabled
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-stone-200 text-stone-600'
+                    }`}
+                  >
+                    {bcaConfig.isEnabled ? 'Aktif di Checkout' : 'Nonaktif'}
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={bcaConfig.isEnabled}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setBcaConfig({ ...bcaConfig, isEnabled: val });
+                        togglePaymentGateway('bcaManual', val);
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
+                  </label>
+                </div>
+              </div>
+
+              {bcaConfig.isEnabled && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-stone-200/60 animate-in fade-in">
+                  <div>
+                    <label className="block font-bold text-stone-600 text-[11px] mb-1">Nomor Rekening</label>
+                    <input
+                      type="text"
+                      value={bcaConfig.accountNumber}
+                      onChange={(e) => setBcaConfig({ ...bcaConfig, accountNumber: e.target.value })}
+                      className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-stone-600 text-[11px] mb-1">Atas Nama Rekening</label>
+                    <input
+                      type="text"
+                      value={bcaConfig.accountHolder}
+                      onChange={(e) => setBcaConfig({ ...bcaConfig, accountHolder: e.target.value })}
+                      className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-stone-600 text-[11px] mb-1">Kantor Cabang</label>
+                    <input
+                      type="text"
+                      value={bcaConfig.branch}
+                      onChange={(e) => setBcaConfig({ ...bcaConfig, branch: e.target.value })}
+                      className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 3. COD CASH */}
+            <div className="p-4 sm:p-5 rounded-2xl border border-stone-200 bg-stone-50/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <Banknote className="w-4 h-4 text-emerald-600" />
+                  <div>
+                    <h4 className="font-extrabold text-stone-800 text-xs">
+                      Cash on Delivery (COD) Titik Temu Kampus / Mall
+                    </h4>
+                    <span className="text-[10px] text-stone-500">
+                      Pembayaran tunai langsung saat penyerahan buket di titik temu terverifikasi.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      codConfig.isEnabled
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-stone-200 text-stone-600'
+                    }`}
+                  >
+                    {codConfig.isEnabled ? 'Aktif di Checkout' : 'Nonaktif'}
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={codConfig.isEnabled}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setCodConfig({ ...codConfig, isEnabled: val });
+                        togglePaymentGateway('codCash', val);
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
+                  </label>
+                </div>
+              </div>
+
+              {codConfig.isEnabled && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-stone-200/60 animate-in fade-in">
+                  <div>
+                    <label className="block font-bold text-stone-600 text-[11px] mb-1">
+                      Radius Maksimal COD (KM)
+                    </label>
+                    <input
+                      type="number"
+                      value={codConfig.maxDistanceKm}
+                      onChange={(e) =>
+                        setCodConfig({ ...codConfig, maxDistanceKm: parseFloat(e.target.value) || 0 })
+                      }
+                      className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block font-bold text-stone-600 text-[11px] mb-1">
+                      Catatan / Instruksi Pembayaran COD
+                    </label>
+                    <input
+                      type="text"
+                      value={codConfig.notes}
+                      onChange={(e) => setCodConfig({ ...codConfig, notes: e.target.value })}
+                      className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -927,7 +1388,7 @@ export const StoreSettingsView: React.FC = () => {
             type="submit"
             className="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer"
           >
-            Simpan Pengaturan
+            Simpan Konfigurasi
           </button>
         </div>
       </form>
@@ -1217,48 +1678,104 @@ export const AddProductModal: React.FC<{
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Graduation');
   const [price, setPrice] = useState('145000');
-  const [hpp, setHpp] = useState('45000');
   const [leadDays, setLeadDays] = useState('2');
   const [isReadyStock, setIsReadyStock] = useState(true);
 
+  // BOM Recipe Ingredients for 1 product
+  interface IngredientItem {
+    id: string;
+    name: string;
+    qty: number;
+    unit: string;
+    costPerUnit: number;
+  }
+
+  const [ingredients, setIngredients] = useState<IngredientItem[]>([
+    { id: '1', name: 'Batang Kawat Bulu Utama (6mm)', qty: 30, unit: 'Batang', costPerUnit: 350 },
+    { id: '2', name: 'Kawat Batang Penyangga No. 18', qty: 10, unit: 'Batang', costPerUnit: 500 },
+    { id: '3', name: 'Cellophane Korean Matte Waterproof', qty: 2, unit: 'Lembar', costPerUnit: 4500 },
+    { id: '4', name: 'Pita Satin Mewah Burgundy 2.5cm', qty: 1.5, unit: 'Meter', costPerUnit: 2200 },
+  ]);
+
   if (!isOpen) return null;
+
+  const handleAddIngredient = () => {
+    const newItem: IngredientItem = {
+      id: `ing-${Date.now()}`,
+      name: 'Bahan Tambahan Kawat/Aksesoris',
+      qty: 1,
+      unit: 'Pcs',
+      costPerUnit: 1000,
+    };
+    setIngredients([...ingredients, newItem]);
+  };
+
+  const handleRemoveIngredient = (id: string) => {
+    setIngredients(ingredients.filter((item) => item.id !== id));
+  };
+
+  const handleUpdateIngredient = (id: string, field: keyof IngredientItem, value: any) => {
+    setIngredients(
+      ingredients.map((item) => {
+        if (item.id === id) {
+          return { ...item, [field]: value };
+        }
+        return item;
+      })
+    );
+  };
+
+  const calculatedHpp = ingredients.reduce((sum, item) => sum + item.qty * item.costPerUnit, 0);
+  const numericPrice = parseInt(price) || 0;
+  const isPriceBelowHpp = numericPrice < calculatedHpp;
+  const calculatedProfit = numericPrice - calculatedHpp;
+  const calculatedMargin = numericPrice > 0 ? Math.round((calculatedProfit / numericPrice) * 100) : 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isPriceBelowHpp) {
+      showMagicToast('Gagal Validasi HPP ⚠️', 'Harga jual tidak boleh kurang dari total biaya bahan baku (HPP).', '❌');
+      return;
+    }
     onClose();
-    showMagicToast('Produk Ditambahkan! 🌸', `Buket "${name || 'Buket Baru'}" berhasil didaftarkan ke katalog atelier.`, '✨');
+    showMagicToast('Produk Ditambahkan! 🌸', `Buket "${name || 'Buket Baru'}" berhasil didaftarkan dengan HPP Rp ${calculatedHpp.toLocaleString('id-ID')}.`, '✨');
   };
 
-  const calculatedProfit = (parseInt(price) || 0) - (parseInt(hpp) || 0);
-  const calculatedMargin = parseInt(price) > 0 ? Math.round((calculatedProfit / parseInt(price)) * 100) : 0;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in">
-      <div className="w-full max-w-lg bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-rose-100 space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+      <div className="w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-rose-100 space-y-4 my-8">
         <div className="flex items-center justify-between pb-3 border-b border-stone-100">
           <div className="flex items-center gap-2">
             <Package className="w-5 h-5 text-rose-600" />
-            <h3 className="font-extrabold text-stone-800 text-sm">Tambah Buket Bunga Kawat Bulu Baru</h3>
+            <div>
+              <h3 className="font-extrabold text-stone-800 text-sm">Tambah Buket Baru & Resep Bahan Baku (BOM)</h3>
+              <span className="text-[11px] text-stone-500">
+                Wajib mencantumkan bahan baku untuk 1 buket. Harga jual tidak boleh kurang dari HPP.
+              </span>
+            </div>
           </div>
           <button onClick={onClose} className="p-1 rounded-full text-stone-400 hover:text-stone-600 cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
-          <div>
-            <label className="block font-bold text-stone-700 mb-1">Nama Buket</label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Contoh: Sunflower Sunshine Graduation Bouquet"
-              className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          {/* Basic Info */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-2">
+              <label className="block font-bold text-stone-700 mb-1">
+                Nama Buket Produk <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Contoh: Sunflower Sunshine Graduation Bouquet"
+                className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+              />
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block font-bold text-stone-700 mb-1">Kategori</label>
               <select
@@ -1271,6 +1788,121 @@ export const AddProductModal: React.FC<{
                 <option value="Single Stem">Single Stem Minimalist</option>
                 <option value="Mini Bloom">Mini Bloom Table Decor</option>
               </select>
+            </div>
+          </div>
+
+          {/* BOM Recipe Ingredients Builder */}
+          <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-rose-600" />
+                <span className="font-extrabold text-stone-800 text-xs">
+                  Bahan Baku yang Dibutuhkan untuk 1 Produk Buket Ini (Resep BOM):
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddIngredient}
+                className="px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer"
+              >
+                <Plus className="w-3 h-3" />
+                <span>Tambah Bahan</span>
+              </button>
+            </div>
+
+            <div className="overflow-x-auto bg-white rounded-xl border border-stone-200">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-stone-50 text-stone-600 font-extrabold text-[10px] uppercase border-b border-stone-200">
+                  <tr>
+                    <th className="py-2 px-3">Nama Bahan</th>
+                    <th className="py-2 px-2 w-16">Jumlah</th>
+                    <th className="py-2 px-2 w-20">Satuan</th>
+                    <th className="py-2 px-2 w-24">Harga/Unit</th>
+                    <th className="py-2 px-3 w-28">Subtotal HPP</th>
+                    <th className="py-2 px-2 text-center w-8">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100 text-[11px]">
+                  {ingredients.map((ing) => {
+                    const subtotal = ing.qty * ing.costPerUnit;
+                    return (
+                      <tr key={ing.id}>
+                        <td className="py-1.5 px-3">
+                          <input
+                            type="text"
+                            value={ing.name}
+                            onChange={(e) => handleUpdateIngredient(ing.id, 'name', e.target.value)}
+                            className="w-full font-semibold text-stone-800 bg-transparent border-b border-transparent focus:border-rose-400 focus:outline-none text-[11px]"
+                          />
+                        </td>
+                        <td className="py-1.5 px-2">
+                          <input
+                            type="number"
+                            value={ing.qty}
+                            onChange={(e) =>
+                              handleUpdateIngredient(ing.id, 'qty', parseFloat(e.target.value) || 0)
+                            }
+                            className="w-14 p-1 bg-stone-50 border border-stone-200 rounded text-center font-bold text-[11px]"
+                          />
+                        </td>
+                        <td className="py-1.5 px-2 text-stone-500 font-medium">{ing.unit}</td>
+                        <td className="py-1.5 px-2">
+                          <input
+                            type="number"
+                            value={ing.costPerUnit}
+                            onChange={(e) =>
+                              handleUpdateIngredient(ing.id, 'costPerUnit', parseFloat(e.target.value) || 0)
+                            }
+                            className="w-20 p-1 bg-stone-50 border border-stone-200 rounded font-mono font-bold text-[11px]"
+                          />
+                        </td>
+                        <td className="py-1.5 px-3 font-bold text-rose-600">
+                          Rp {subtotal.toLocaleString('id-ID')}
+                        </td>
+                        <td className="py-1.5 px-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveIngredient(ing.id)}
+                            className="text-stone-400 hover:text-rose-600 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex justify-between items-center text-xs pt-1">
+              <span className="text-stone-500">Total HPP Dihitung Otomatis:</span>
+              <span className="text-sm font-black text-rose-700">
+                Rp {calculatedHpp.toLocaleString('id-ID')}
+              </span>
+            </div>
+          </div>
+
+          {/* Pricing & Strict HPP Validation */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-stone-700 mb-1">
+                Harga Jual Konsumen (Rp) <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="number"
+                required
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className={`w-full px-3.5 py-2 rounded-xl text-xs font-mono font-bold focus:outline-none focus:ring-2 ${
+                  isPriceBelowHpp
+                    ? 'border-2 border-rose-500 bg-rose-50 text-rose-700 focus:ring-rose-500'
+                    : 'border border-stone-200 bg-stone-50 text-stone-800 focus:ring-rose-500/20 focus:bg-white'
+                }`}
+              />
+              <span className="text-[10px] text-stone-400 mt-0.5 block">
+                Harus lebih besar atau sama dengan HPP (Rp {calculatedHpp.toLocaleString('id-ID')}).
+              </span>
             </div>
 
             <div>
@@ -1286,42 +1918,38 @@ export const AddProductModal: React.FC<{
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block font-bold text-stone-700 mb-1">Biaya Pokok / HPP (Rp)</label>
-              <input
-                type="number"
-                required
-                value={hpp}
-                onChange={(e) => setHpp(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
-              />
+          {/* HPP STRICT VALIDATION ERROR BANNER */}
+          {isPriceBelowHpp && (
+            <div className="p-3.5 bg-rose-50 border-2 border-rose-300 rounded-2xl flex items-start gap-2.5 animate-in fade-in">
+              <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="font-black text-rose-800 text-xs uppercase tracking-wide">
+                  Validasi Gagal: Harga Jual Kurang Dari HPP!
+                </div>
+                <p className="text-[11px] text-rose-700 mt-0.5">
+                  Harga jual (Rp {numericPrice.toLocaleString('id-ID')}) lebih rendah dari HPP bahan baku (Rp{' '}
+                  {calculatedHpp.toLocaleString('id-ID')}). Potensi kerugian atelier:{' '}
+                  <strong>Rp {(calculatedHpp - numericPrice).toLocaleString('id-ID')} per buket</strong>. Harap naikkan
+                  harga jual minimal Rp {calculatedHpp.toLocaleString('id-ID')}.
+                </p>
+              </div>
             </div>
-
-            <div>
-              <label className="block font-bold text-stone-700 mb-1">Harga Jual Konsumen (Rp)</label>
-              <input
-                type="number"
-                required
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
-              />
-            </div>
-          </div>
+          )}
 
           {/* Margin Preview Card */}
-          <div className="p-3 bg-rose-50/60 rounded-xl border border-rose-200 flex items-center justify-between">
-            <span className="text-stone-600 font-bold">Proyeksi Laba Bersih:</span>
-            <div className="text-right">
-              <span className="font-extrabold text-emerald-700 text-sm">
-                +Rp {calculatedProfit.toLocaleString('id-ID')}
-              </span>
-              <span className="ml-1.5 text-[10px] font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
-                {calculatedMargin}% Margin
-              </span>
+          {!isPriceBelowHpp && (
+            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between">
+              <span className="text-emerald-900 font-bold">Proyeksi Laba Bersih Per Buket:</span>
+              <div className="text-right">
+                <span className="font-extrabold text-emerald-700 text-sm">
+                  +Rp {calculatedProfit.toLocaleString('id-ID')}
+                </span>
+                <span className="ml-1.5 text-[10px] font-black bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full">
+                  {calculatedMargin}% Margin Sehat
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-2 border-t border-stone-100">
             <button
@@ -1333,7 +1961,8 @@ export const AddProductModal: React.FC<{
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer"
+              disabled={isPriceBelowHpp || !name.trim() || calculatedHpp === 0}
+              className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Simpan ke Katalog
             </button>

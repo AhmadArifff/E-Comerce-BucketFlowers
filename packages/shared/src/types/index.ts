@@ -20,6 +20,7 @@ export interface UserProfile {
   role: Role;
   avatarEmoji: string;
   flowerPoints: number;
+  address?: string;
 }
 
 export interface CodPoint {

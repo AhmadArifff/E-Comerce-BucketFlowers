@@ -39,16 +39,8 @@ export default function CustomerPortalPage() {
   const [activeTab, setActiveTab] = useState<'MEMBER' | 'GUEST'>('MEMBER');
   const [searchQuery, setSearchQuery] = useState('');
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
-  const [isCreateTestOrderOpen, setIsCreateTestOrderOpen] = useState(false);
 
-  // New Test Order Form State
-  const [testBouquetId, setTestBouquetId] = useState(MOCK_PRODUCTS[0]?.id || 'prod-01');
-  const [testCustomerName, setTestCustomerName] = useState('Siti Anggraini');
-  const [testCustomerPhone, setTestCustomerPhone] = useState('0812-9876-5432');
-  const [testFulfillment, setTestFulfillment] = useState<'COD_MEETUP_POINT' | 'COURIER_EXPEDITION'>('COD_MEETUP_POINT');
-  const [testMeetupId, setTestMeetupId] = useState(MOCK_MEETUP_POINTS[0]?.id || 'cod-01');
-
-  const { orders, activeOrderId, setActiveOrderId, updateOrderStep, addNewOrder, warrantyClaims } = useOrderStore();
+  const { orders, activeOrderId, setActiveOrderId, updateOrderStep, warrantyClaims } = useOrderStore();
   const { user } = useAuthStore();
 
   // Sync data-theme attribute on client mount
@@ -89,53 +81,6 @@ export default function CustomerPortalPage() {
     );
   };
 
-  // Handle Create New Test Order
-  const handleCreateTestOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    const chosenProduct = MOCK_PRODUCTS.find((p) => p.id === testBouquetId) || MOCK_PRODUCTS[0];
-    const chosenMeetup = MOCK_MEETUP_POINTS.find((m) => m.id === testMeetupId) || MOCK_MEETUP_POINTS[0];
-    const price = chosenProduct.discountPrice ?? chosenProduct.price;
-    const invNumber = `INV-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${Math.floor(100 + Math.random() * 900)}`;
-
-    const newMock: MockOrder = {
-      id: `ord-${Date.now()}`,
-      invoiceNumber: invNumber,
-      customerName: testCustomerName.trim() || 'Pelanggan Uji Coba',
-      customerPhone: testCustomerPhone.trim() || '0812-9988-7711',
-      customerEmail: 'customer.test@chenille.com',
-      customerAvatarEmoji: '🌸',
-      currentStep: 1,
-      stepStatus: 'PAYMENT_CONFIRMED',
-      statusLabel: 'Pembayaran Terkonfirmasi',
-      statusDescription: 'Pesanan uji coba berhasil dibuat. Menunggu antrean florist perangkai kawat bulu.',
-      fulfillmentType: testFulfillment,
-      meetupPointName: testFulfillment === 'COD_MEETUP_POINT' ? chosenMeetup.name : undefined,
-      courierName: testFulfillment === 'COURIER_EXPEDITION' ? 'J&T Express Fragile' : undefined,
-      trackingNumber: testFulfillment === 'COURIER_EXPEDITION' ? `BTE-${Math.floor(10000000 + Math.random() * 90000000)}` : undefined,
-      items: [
-        {
-          productId: chosenProduct.id,
-          productName: chosenProduct.name,
-          productImage: chosenProduct.image,
-          quantity: 1,
-          unitPrice: price,
-          subtotal: price,
-        },
-      ],
-      subtotalAmount: price,
-      shippingFee: 0,
-      discountAmount: 0,
-      flowerPointsEarned: Math.floor(price / 1000),
-      totalAmount: price,
-      createdAt: new Date().toISOString(),
-      estimatedDelivery: 'Besok, 10:00 WIB',
-    };
-
-    addNewOrder(newMock);
-    setIsCreateTestOrderOpen(false);
-    setActiveTab('MEMBER');
-    showMagicToast('Pesanan Uji Coba Dibuat! 🌸', `${newMock.invoiceNumber} berhasil ditambahkan dan aktif dipantau.`, '✨');
-  };
 
   // Filtered orders for order history
   const filteredOrders = orders.filter((ord) => {
@@ -170,14 +115,6 @@ export default function CustomerPortalPage() {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => setIsCreateTestOrderOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
-              title="Buat pesanan simulasi baru untuk pengujian"
-            >
-              <Plus className="w-4 h-4" />
-              <span>+ Uji Coba Pesanan Baru</span>
-            </button>
 
             <div className="flex p-1 bg-stone-100 rounded-2xl border border-stone-200">
               <button
@@ -531,127 +468,7 @@ export default function CustomerPortalPage() {
         )}
       </main>
 
-      {/* CREATE TEST ORDER MODAL */}
-      {isCreateTestOrderOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-lg bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-rose-100 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-stone-100">
-              <div className="flex items-center gap-2">
-                <Package className="w-5 h-5 text-rose-600" />
-                <h3 className="font-extrabold text-stone-800 text-sm">Buat Pesanan Uji Coba Baru</h3>
-              </div>
-              <button
-                onClick={() => setIsCreateTestOrderOpen(false)}
-                className="p-1 rounded-full text-stone-400 hover:text-stone-600 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
 
-            <form onSubmit={handleCreateTestOrder} className="space-y-3.5 text-xs">
-              <div>
-                <label className="block font-bold text-stone-700 mb-1">Pilih Produk Buket</label>
-                <select
-                  value={testBouquetId}
-                  onChange={(e) => setTestBouquetId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
-                >
-                  {MOCK_PRODUCTS.map((prod) => (
-                    <option key={prod.id} value={prod.id}>
-                      {prod.name} - Rp {(prod.discountPrice ?? prod.price).toLocaleString('id-ID')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-stone-700 mb-1">Nama Pemesan</label>
-                  <input
-                    type="text"
-                    required
-                    value={testCustomerName}
-                    onChange={(e) => setTestCustomerName(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-stone-700 mb-1">Nomor WhatsApp</label>
-                  <input
-                    type="text"
-                    required
-                    value={testCustomerPhone}
-                    onChange={(e) => setTestCustomerPhone(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-stone-700 mb-1">Metode Pengiriman</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setTestFulfillment('COD_MEETUP_POINT')}
-                    className={`p-2.5 rounded-xl border text-xs font-bold text-left transition-all cursor-pointer ${
-                      testFulfillment === 'COD_MEETUP_POINT'
-                        ? 'bg-rose-50 border-rose-500 text-rose-700 shadow-2xs'
-                        : 'bg-stone-50 border-stone-200 text-stone-600'
-                    }`}
-                  >
-                    📍 COD Titik Temu UI
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTestFulfillment('COURIER_EXPEDITION')}
-                    className={`p-2.5 rounded-xl border text-xs font-bold text-left transition-all cursor-pointer ${
-                      testFulfillment === 'COURIER_EXPEDITION'
-                        ? 'bg-rose-50 border-rose-500 text-rose-700 shadow-2xs'
-                        : 'bg-stone-50 border-stone-200 text-stone-600'
-                    }`}
-                  >
-                    🚚 Kurir J&T Fragile
-                  </button>
-                </div>
-              </div>
-
-              {testFulfillment === 'COD_MEETUP_POINT' && (
-                <div>
-                  <label className="block font-bold text-stone-700 mb-1">Pilih Titik Temu Kampus</label>
-                  <select
-                    value={testMeetupId}
-                    onChange={(e) => setTestMeetupId(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
-                  >
-                    {MOCK_MEETUP_POINTS.map((pt) => (
-                      <option key={pt.id} value={pt.id}>
-                        {pt.name} ({pt.distanceKm} km dari atelier)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-stone-100">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateTestOrderOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-stone-200 text-xs font-bold text-stone-600 hover:bg-stone-50 cursor-pointer"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
-                >
-                  Buat & Lacak Sekarang
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Warranty Modal */}
       <WarrantyClaimModal

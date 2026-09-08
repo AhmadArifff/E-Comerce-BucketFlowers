@@ -40,6 +40,9 @@ export interface MockOrder {
   totalAmount: number;
   createdAt: string;
   estimatedDelivery: string;
+  deliveryAddress?: string;
+  paymentMethod?: string;
+  paymentStatus?: 'WAITING_PAYMENT' | 'PAYMENT_CONFIRMED' | 'PAID_ON_COD';
 }
 
 export const MOCK_PRODUCTS: ExtendedProduct[] = [
