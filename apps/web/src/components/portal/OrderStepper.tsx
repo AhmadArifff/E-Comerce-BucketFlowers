@@ -85,7 +85,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
                     isCompleted
                       ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
                       : isCurrent
-                      ? 'bg-rose-600 text-white ring-4 ring-rose-100 shadow-lg shadow-rose-600/30 scale-110'
+                      ? 'bg-rose-600 text-white pulse-active-node scale-110 z-20'
                       : 'bg-white border-2 border-stone-200 text-stone-400'
                   }`}
                 >
@@ -140,7 +140,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
                   isCompleted
                     ? 'bg-emerald-500 text-white shadow-sm'
                     : isCurrent
-                    ? 'bg-rose-600 text-white ring-4 ring-rose-100'
+                    ? 'bg-emerald-500 text-white pulse-timeline-active z-20'
                     : 'bg-white border-2 border-stone-300 text-stone-400'
                 }`}
               >

@@ -69,16 +69,16 @@ export const WarrantyClaimModal: React.FC<WarrantyClaimModalProps> = ({
       />
 
       {/* Modal Dialog */}
-      <div className="relative bg-white rounded-3xl shadow-2xl border border-rose-100 max-w-xl w-full p-6 sm:p-8 z-10 my-auto animate-in zoom-in-95 duration-200">
+      <div className="relative bg-white rounded-3xl shadow-2xl border border-rose-100 max-w-xl w-full p-6 sm:p-8 z-10 my-auto modal-zoom-in">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 flex items-center justify-center transition-all"
+          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 flex items-center justify-center transition-all cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
 
         {isSubmitted ? (
-          <div className="text-center py-6 space-y-4 animate-in fade-in">
+          <div className="text-center py-6 space-y-4 auth-fade-in">
             <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
               <CheckCircle2 className="w-8 h-8" />
             </div>

@@ -116,7 +116,7 @@ export const CartDrawer: React.FC = () => {
 
       {/* Slide-over panel */}
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
-        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col drawer-slide-in">
           {/* Header */}
           <div className="p-4 sm:p-5 border-b border-rose-100 flex items-center justify-between bg-rose-50/40">
             <div className="flex items-center gap-2">
@@ -374,7 +374,7 @@ export const CartDrawer: React.FC = () => {
               <button
                 onClick={handleCheckout}
                 disabled={isCheckingOut}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-extrabold text-sm shadow-xl shadow-rose-600/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="btn-shimmer w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-extrabold text-sm shadow-xl shadow-rose-600/30 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 {isCheckingOut ? (
                   <>

@@ -44,7 +44,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
                 <button
                   type="button"
                   onClick={() => handleAction('katalog')}
-                  className="px-6 py-3 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-950/60 flex items-center gap-2 transition-all hover:scale-105 cursor-pointer"
+                  className="btn-shimmer px-6 py-3 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-950/60 flex items-center gap-2 transition-all hover:scale-105 cursor-pointer"
                 >
                   <span>Lihat Koleksi Mewah 🌹</span>
                   <ArrowRight className="w-4 h-4" />
@@ -70,7 +70,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-5 sm:p-6">
                   <div className="text-left w-full flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-black/60 px-2.5 py-1 rounded-full border border-amber-400/40">
+                      <span className="animate-float-hero text-[10px] font-black uppercase tracking-widest text-amber-400 bg-black/60 px-2.5 py-1 rounded-full border border-amber-400/40 inline-block">
                         ✦ 100% Velvet Chenille Stem
                       </span>
                       <div className="text-base sm:text-lg font-bold text-white mt-1">Midnight Velvet & Champagne Gold</div>
@@ -84,22 +84,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
 
           {/* 4 TRUST CARDS */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 pt-4 border-t border-[#3D1A34]">
-            <div className="p-4 rounded-2xl bg-[#240F20] border border-[#481E40] space-y-1 text-left">
+            <div className="card-tilt-hover p-4 rounded-2xl bg-[#240F20] border border-[#481E40] space-y-1 text-left cursor-default">
               <div className="text-2xl">🌹</div>
               <div className="text-xs font-bold text-white">Awet Selamanya</div>
               <div className="text-[11px] text-stone-400">Kawat bulu premium anti-rontok & tak pernah layu</div>
             </div>
-            <div className="p-4 rounded-2xl bg-[#240F20] border border-[#481E40] space-y-1 text-left">
+            <div className="card-tilt-hover p-4 rounded-2xl bg-[#240F20] border border-[#481E40] space-y-1 text-left cursor-default">
               <div className="text-2xl">📦</div>
               <div className="text-xs font-bold text-white">Rigid Hardbox</div>
               <div className="text-[11px] text-stone-400">Packaging kokoh mewah tahan benturan ekspedisi</div>
             </div>
-            <div className="p-4 rounded-2xl bg-[#240F20] border border-[#481E40] space-y-1 text-left">
+            <div className="card-tilt-hover p-4 rounded-2xl bg-[#240F20] border border-[#481E40] space-y-1 text-left cursor-default">
               <div className="text-2xl">🤝</div>
               <div className="text-xs font-bold text-white">COD Eksklusif</div>
               <div className="text-[11px] text-stone-400">Janji temu langsung di kampus UI & Margo City</div>
             </div>
-            <div className="p-4 rounded-2xl bg-[#240F20] border border-[#481E40] space-y-1 text-left">
+            <div className="card-tilt-hover p-4 rounded-2xl bg-[#240F20] border border-[#481E40] space-y-1 text-left cursor-default">
               <div className="text-2xl">🛡️</div>
               <div className="text-xs font-bold text-white">Garansi 100% Baru</div>
               <div className="text-[11px] text-stone-400">Ganti buket baru gratis jika rusak di perjalanan</div>
@@ -133,7 +133,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
                 <button
                   type="button"
                   onClick={() => handleAction('katalog')}
-                  className="px-6 py-3 rounded-full bg-orange-600 hover:bg-orange-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-orange-600/30 flex items-center gap-2 transition-all hover:scale-105 cursor-pointer"
+                  className="btn-shimmer px-6 py-3 rounded-full bg-orange-600 hover:bg-orange-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-orange-600/30 flex items-center gap-2 transition-all hover:scale-105 cursor-pointer"
                 >
                   <span>Jelajahi Buket Lucu 🌻</span>
                   <ArrowRight className="w-4 h-4" />
@@ -152,13 +152,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
             <div className="lg:col-span-5 flex justify-center">
               <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-square rounded-3xl overflow-hidden shadow-xl border-4 border-yellow-300 bg-amber-100 flex items-center justify-center group">
                 <div className="text-center p-6 space-y-3">
-                  <div className="text-7xl group-hover:scale-110 transition-transform">🌻🧸</div>
+                  <div className="animate-float-hero text-7xl inline-block drop-shadow-md">🌻🧸</div>
                   <div className="font-extrabold text-stone-900 text-lg">Sunshine Bear Graduation</div>
                   <div className="text-xs text-orange-700 font-bold bg-white px-3 py-1 rounded-full shadow-xs inline-block">
                     100% Bulu Halus & Topi Toga Nama
                   </div>
                 </div>
-                <div className="absolute top-3 right-3 bg-yellow-400 text-stone-900 text-[10px] font-black px-2.5 py-1 rounded-full shadow-xs">
+                <div className="animate-bounce-in absolute top-3 right-3 bg-yellow-400 text-stone-900 text-[10px] font-black px-2.5 py-1 rounded-full shadow-xs">
                   ⭐ Favorit Wisudawan
                 </div>
               </div>
@@ -167,22 +167,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
 
           {/* 4 TRUST CARDS */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 pt-4 border-t border-orange-200">
-            <div className="p-4 rounded-2xl bg-white border border-orange-200 space-y-1 text-left shadow-2xs">
+            <div className="card-tilt-hover p-4 rounded-2xl bg-white border border-orange-200 space-y-1 text-left shadow-2xs cursor-default">
               <div className="text-2xl">🌿</div>
               <div className="text-xs font-bold text-stone-900">Awet Selamanya</div>
               <div className="text-[11px] text-stone-500">Bunga kawat bulu tahan tahunan tanpa rontok</div>
             </div>
-            <div className="p-4 rounded-2xl bg-white border border-orange-200 space-y-1 text-left shadow-2xs">
+            <div className="card-tilt-hover p-4 rounded-2xl bg-white border border-orange-200 space-y-1 text-left shadow-2xs cursor-default">
               <div className="text-2xl">📦</div>
               <div className="text-xs font-bold text-stone-900">Kardus Tebal Double</div>
               <div className="text-[11px] text-stone-500">Aman dikirim ke seluruh Indonesia tanpa gepeng</div>
             </div>
-            <div className="p-4 rounded-2xl bg-white border border-orange-200 space-y-1 text-left shadow-2xs">
+            <div className="card-tilt-hover p-4 rounded-2xl bg-white border border-orange-200 space-y-1 text-left shadow-2xs cursor-default">
               <div className="text-2xl">🤝</div>
               <div className="text-xs font-bold text-stone-900">COD Gratis Kampus</div>
               <div className="text-[11px] text-stone-500">Bebas ongkir UI, Gundar, dan PNJ Depok</div>
             </div>
-            <div className="p-4 rounded-2xl bg-white border border-orange-200 space-y-1 text-left shadow-2xs">
+            <div className="card-tilt-hover p-4 rounded-2xl bg-white border border-orange-200 space-y-1 text-left shadow-2xs cursor-default">
               <div className="text-2xl">🛡️</div>
               <div className="text-xs font-bold text-stone-900">Garansi 100% Ganti</div>
               <div className="text-[11px] text-stone-500">Langsung dikirim baru bila rusak saat pengiriman</div>
@@ -216,7 +216,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
               <button
                 type="button"
                 onClick={() => handleAction('katalog')}
-                className="px-6 py-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-rose-600/30 flex items-center gap-2 transition-all hover:scale-105 cursor-pointer"
+                className="btn-shimmer px-6 py-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-rose-600/30 flex items-center gap-2 transition-all hover:scale-105 cursor-pointer"
               >
                 <span>Jelajahi Katalog 🌸</span>
                 <ArrowRight className="w-4 h-4" />
@@ -239,7 +239,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
                 alt="Preview Koleksi Buket Bunga Kawat Bulu Korean Pastel Atelier"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-rose-600 text-xs font-black px-3 py-1.5 rounded-full shadow-md border border-rose-100 flex items-center gap-1.5">
+              <div className="animate-float-hero absolute top-4 left-4 bg-white/95 backdrop-blur-md text-rose-600 text-xs font-black px-3 py-1.5 rounded-full shadow-md border border-rose-100 flex items-center gap-1.5">
                 <span>🌸 100% Handcrafted Chenille Velvet</span>
               </div>
               <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md p-3.5 rounded-2xl border border-rose-100 shadow-lg flex items-center justify-between">
@@ -258,22 +258,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
 
         {/* 4 TRUST CARDS (SEPERTI DI DESAIN TAMPILAN) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 pt-4 border-t border-rose-100">
-          <div className="p-4 rounded-2xl bg-white border border-rose-100 space-y-1 text-left shadow-2xs hover:shadow-xs transition-shadow">
+          <div className="card-tilt-hover p-4 rounded-2xl bg-white border border-rose-100 space-y-1 text-left shadow-2xs hover:shadow-xs transition-shadow cursor-default">
             <div className="text-2xl">🌿</div>
             <div className="text-xs font-extrabold text-stone-900">Awet Selamanya</div>
             <div className="text-[11px] text-stone-500">Kawat bulu premium anti-rontok & tak pernah layu</div>
           </div>
-          <div className="p-4 rounded-2xl bg-white border border-rose-100 space-y-1 text-left shadow-2xs hover:shadow-xs transition-shadow">
+          <div className="card-tilt-hover p-4 rounded-2xl bg-white border border-rose-100 space-y-1 text-left shadow-2xs hover:shadow-xs transition-shadow cursor-default">
             <div className="text-2xl">📦</div>
             <div className="text-xs font-extrabold text-stone-900">Kardus Box Tebal</div>
             <div className="text-[11px] text-stone-500">Double-wall box aman dari tekanan kurir</div>
           </div>
-          <div className="p-4 rounded-2xl bg-white border border-rose-100 space-y-1 text-left shadow-2xs hover:shadow-xs transition-shadow">
+          <div className="card-tilt-hover p-4 rounded-2xl bg-white border border-rose-100 space-y-1 text-left shadow-2xs hover:shadow-xs transition-shadow cursor-default">
             <div className="text-2xl">🤝</div>
             <div className="text-xs font-extrabold text-stone-900">COD Titik Temu</div>
             <div className="text-[11px] text-stone-500">Janji temu langsung di kampus UI atau stasiun</div>
           </div>
-          <div className="p-4 rounded-2xl bg-white border border-rose-100 space-y-1 text-left shadow-2xs hover:shadow-xs transition-shadow">
+          <div className="card-tilt-hover p-4 rounded-2xl bg-white border border-rose-100 space-y-1 text-left shadow-2xs hover:shadow-xs transition-shadow cursor-default">
             <div className="text-2xl">🛡️</div>
             <div className="text-xs font-extrabold text-stone-900">Garansi 100% Baru</div>
             <div className="text-[11px] text-stone-500">Ganti buket baru jika rusak saat pengiriman</div>

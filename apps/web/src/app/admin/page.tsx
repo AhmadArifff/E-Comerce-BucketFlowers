@@ -44,7 +44,7 @@ export default function AdminPage() {
         <main className="p-4 sm:p-6 lg:p-8 flex-1 max-w-7xl w-full">
           {/* OVERVIEW TAB */}
           {activeTab === 'OVERVIEW' && (
-            <div className="space-y-6 animate-in fade-in">
+            <div className="space-y-6 admin-view-fade">
               <KpiCards />
               <OrdersTable />
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -56,14 +56,14 @@ export default function AdminPage() {
 
           {/* ORDERS TAB */}
           {activeTab === 'ORDERS' && (
-            <div className="animate-in fade-in">
+            <div className="admin-view-fade">
               <OrdersTable />
             </div>
           )}
 
           {/* PRODUCTS & INVENTORY TAB */}
           {activeTab === 'PRODUCTS' && (
-            <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-sm space-y-6 animate-in fade-in">
+            <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-sm space-y-6 admin-view-fade">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-rose-100">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm">
@@ -156,35 +156,35 @@ export default function AdminPage() {
 
           {/* CLAIMS & WARRANTY TAB */}
           {activeTab === 'CLAIMS' && (
-            <div className="animate-in fade-in">
+            <div className="admin-view-fade">
               <WarrantyClaimsTable />
             </div>
           )}
 
           {/* BOM CALCULATOR TAB */}
           {activeTab === 'BOM_CALCULATOR' && (
-            <div className="animate-in fade-in">
+            <div className="admin-view-fade">
               <BOMCalculatorModal />
             </div>
           )}
 
           {/* COD MAPS TAB */}
           {activeTab === 'COD_MAPS' && (
-            <div className="animate-in fade-in">
+            <div className="admin-view-fade">
               <CODMapModal />
             </div>
           )}
 
           {/* CS WEBCHAT HUB TAB */}
           {activeTab === 'CS_HUB' && (
-            <div className="animate-in fade-in">
+            <div className="admin-view-fade">
               <CSHubModal />
             </div>
           )}
 
           {/* FEATURE TOGGLES TAB */}
           {activeTab === 'FEATURE_TOGGLES' && (
-            <div className="animate-in fade-in">
+            <div className="admin-view-fade">
               <FeatureToggles />
             </div>
           )}

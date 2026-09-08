@@ -34,12 +34,12 @@ export const LiveChatWidget: React.FC = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-2xl shadow-rose-600/50 hover:scale-105 active:scale-95 transition-all group"
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-2xl shadow-rose-600/50 hover:scale-105 active:scale-95 transition-all group cursor-pointer"
           aria-label="Tanya Florist Live Chat"
         >
           <div className="relative">
             <MessageCircle className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 absolute -top-0.5 -right-0.5 border-2 border-rose-600 animate-pulse" />
+            <span className="pulse-green-dot w-2.5 h-2.5 rounded-full bg-emerald-400 absolute -top-0.5 -right-0.5 border-2 border-rose-600 inline-block" />
           </div>
           <span className="hidden sm:inline">Tanya Florist</span>
         </button>
@@ -47,7 +47,7 @@ export const LiveChatWidget: React.FC = () => {
 
       {/* Chat Window Dialog */}
       {isOpen && (
-        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-96 bg-white rounded-3xl shadow-2xl border border-rose-100 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[550px] h-[520px]">
+        <div className="chat-popup-anim fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-96 bg-white rounded-3xl shadow-2xl border border-rose-100 flex flex-col overflow-hidden max-h-[550px] h-[520px]">
           {/* Header */}
           <div className="p-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -57,7 +57,7 @@ export const LiveChatWidget: React.FC = () => {
               <div>
                 <h3 className="text-xs font-bold leading-tight">Asisten Florist Atelier 🌸</h3>
                 <div className="flex items-center gap-1.5 text-[10px] text-rose-100">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+                  <span className="pulse-green-dot w-2 h-2 rounded-full bg-emerald-300 inline-block" />
                   <span>Online • Balas Otomatis Cepat</span>
                 </div>
               </div>

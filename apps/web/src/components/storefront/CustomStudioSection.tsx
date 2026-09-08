@@ -288,10 +288,10 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                 
                 {/* PREVIEW CANVAS */}
                 <div
-                  className="rounded-2xl p-8 text-center border-2 border-dashed border-rose-200 flex flex-col items-center justify-center min-h-[190px] transition-colors"
+                  className="rounded-2xl p-8 text-center border-2 border-dashed border-rose-200 flex flex-col items-center justify-center min-h-[190px] transition-colors overflow-hidden"
                   style={{ backgroundColor: `${selectedColor.colorHex}25` }}
                 >
-                  <span className="text-7xl mb-2 transition-transform duration-300 hover:scale-110">
+                  <span className="animate-float-hero text-7xl mb-2 inline-block drop-shadow-md transition-transform duration-300 hover:scale-110">
                     {selectedFlower.emoji}
                   </span>
                   <div className="text-xs font-black text-stone-800 mt-2">
@@ -333,7 +333,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                 <button
                   type="button"
                   onClick={handleWhatsAppOrder}
-                  className="w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="btn-shimmer w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span>Kirim Pesanan ke WhatsApp Pengrajin</span>
@@ -342,7 +342,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  className="w-full py-2.5 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.01] cursor-pointer"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>+ Masukkan ke Keranjang Belanja</span>

@@ -72,7 +72,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ activeTab, onOpenMobil
           </button>
 
           {isThemeOpen && (
-            <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-rose-100 p-2.5 z-50 animate-in fade-in zoom-in-95">
+            <div className="fade-in-dropdown absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-rose-100 p-2.5 z-50">
               <div className="px-2 py-1.5 border-b border-stone-100 mb-1">
                 <div className="text-[11px] font-extrabold text-stone-900 flex items-center gap-1.5">
                   <Palette className="w-3.5 h-3.5 text-rose-600" />
@@ -124,7 +124,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ activeTab, onOpenMobil
         <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold">
           <Database className="w-3.5 h-3.5" />
           <span>Supabase: Terhubung</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="status-dot-pulse w-2 h-2 rounded-full bg-emerald-500 inline-block" />
         </div>
 
         {/* Current User Badge */}

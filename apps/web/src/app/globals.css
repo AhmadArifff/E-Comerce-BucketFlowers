@@ -87,6 +87,218 @@ body {
   box-shadow: 0 16px 32px rgba(225, 29, 72, 0.1);
 }
 
+/* 3D Card Hover Perspective */
+.card-tilt-hover {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+.card-tilt-hover:hover {
+  transform: translateY(-5px) scale(1.015);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+/* ==========================================================================
+   KEYFRAME ANIMATIONS FROM DESAIN-TAMPILAN PROTOTYPE
+   ========================================================================== */
+
+/* 1. TOP ANNOUNCEMENT BAR MOVING GRADIENTS */
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-gradient-move {
+  background-size: 200% 100%;
+  animation: gradientMove 8s ease infinite;
+}
+
+@keyframes rainbowMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-rainbow-move {
+  background-size: 300% 100%;
+  animation: rainbowMove 10s ease infinite;
+}
+
+/* 2. BUTTON SHIMMER LIGHT SWEEP */
+@keyframes btnShimmer {
+  0% { left: -60%; }
+  35%, 100% { left: 130%; }
+}
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transform: rotate(25deg);
+  animation: btnShimmer 3.5s infinite;
+  pointer-events: none;
+}
+
+/* 3. HERO & MASCOT FLOATING ANIMATION */
+@keyframes floatHero {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float-hero {
+  animation: floatHero 3s ease-in-out infinite;
+}
+
+@keyframes floatHeroSlow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(2deg); }
+}
+.animate-float-slow {
+  animation: floatHeroSlow 4s ease-in-out infinite;
+}
+
+/* 4. BOUNCE IN (SPRING POPUP) */
+@keyframes bounceIn {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-bounce-in {
+  animation: bounceIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* 5. DRAWER SLIDE-IN (CUBIC BEZIER) */
+@keyframes slideLeft {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.drawer-slide-in {
+  animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 6. CHAT POPUP (SPRING MODAL) */
+@keyframes chatPopup {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.chat-popup-anim {
+  animation: chatPopup 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 7. ZOOM IN (MODALS, QRIS & LIGHTBOX) */
+@keyframes zoomIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.modal-zoom-in {
+  animation: zoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 8. STEPPER ACTIVE NODE BREATHING PULSE */
+@keyframes pulseActiveNode {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.2), 0 0 18px rgba(244, 63, 94, 0.45);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 8px rgba(225, 29, 72, 0.1), 0 0 26px rgba(244, 63, 94, 0.7);
+  }
+}
+.pulse-active-node {
+  animation: pulseActiveNode 2s infinite ease-in-out;
+}
+
+/* 9. WARRANTY ACTIVE NODE BREATHING PULSE */
+@keyframes pulseWarrantyNode {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25), 0 0 12px rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 7px rgba(245, 158, 11, 0.15), 0 0 20px rgba(245, 158, 11, 0.7);
+  }
+}
+.pulse-warranty-node {
+  animation: pulseWarrantyNode 1.8s infinite ease-in-out;
+}
+
+/* 10. VERTICAL TIMELINE ACTIVE NODE PULSE */
+@keyframes pulseTimelineActive {
+  0%, 100% {
+    box-shadow: 0 0 0 3px #10B981, 0 0 8px rgba(16, 185, 129, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.2), 0 0 18px rgba(16, 185, 129, 0.8);
+    transform: scale(1.1);
+  }
+}
+.pulse-timeline-active {
+  animation: pulseTimelineActive 1.8s infinite ease-in-out;
+}
+
+/* 11. GREEN CHAT DOT PULSE */
+@keyframes pulseGreen {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+.pulse-green-dot {
+  animation: pulseGreen 2s infinite;
+}
+
+/* 12. ADMIN HEADER PULSE DOT */
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+.status-dot-pulse {
+  animation: pulseDot 2s infinite;
+}
+
+/* 13. ADMIN DROPDOWN FADE IN */
+@keyframes fadeInDropdown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-dropdown {
+  animation: fadeInDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 14. ADMIN VIEW SWITCHER FADE IN */
+@keyframes fadeInView {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.admin-view-fade {
+  animation: fadeInView 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 15. AUTH TAB & FORM FADE IN */
+@keyframes fadeInAuth {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.auth-fade-in {
+  animation: fadeInAuth 0.3s ease;
+}
+
+/* 16. TOAST SLIDE UP & TIMER */
+@keyframes toastSlideUp {
+  from { transform: translateY(30px) scale(0.9); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes toastTimer {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+.toast-slide-up {
+  animation: toastSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Horizontal Stepper Connected Line */
 .stepper-track-line {
   position: absolute;
@@ -223,7 +435,7 @@ body {
   pointer-events: none;
   background: linear-gradient(180deg, transparent, #059669 25%, #10B981 60%, #6EE7B7 85%, #FFFFFF 98%, transparent);
   box-shadow: 0 0 10px 2px rgba(16, 185, 129, 0.85), 0 0 18px rgba(52, 211, 153, 0.5);
-  animation: magicBeamVertical 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: magicBeamVertical 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 /* Warranty Stepper Laser Beam */
@@ -269,13 +481,5 @@ body {
 
 .cart-bump {
   animation: cartBumpAnim 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-}
-
-/* 3D Card Hover Perspective */
-.card-tilt-hover {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
-}
-.card-tilt-hover:hover {
-  transform: translateY(-5px) scale(1.015);
 }
 

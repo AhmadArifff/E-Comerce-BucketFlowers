@@ -46,14 +46,14 @@ export const QuickTrackingSection: React.FC = () => {
             </div>
             <button
               type="submit"
-              className="px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="btn-shimmer px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Lacak Sekarang</span>
             </button>
           </form>
 
           {isSearched && (
-            <div className="space-y-6 animate-in fade-in duration-200">
+            <div className="space-y-6 auth-fade-in">
               
               {/* INVOICE DETAILS SUMMARY */}
               <div className="p-4 sm:p-5 rounded-2xl bg-rose-50/70 border border-rose-200/80 space-y-1 text-xs">
