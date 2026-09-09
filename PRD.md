@@ -4,8 +4,8 @@
 **Arsitektur:** Enterprise Turborepo Monorepo (`apps/web` + `apps/api` + `packages/shared`) + Vercel Deployment + Supabase PostgreSQL  
 **Standar Operasional:** Shopify-Grade Operations, Google Maps Geofencing, Multi-Theme Engine & Real-Time Logistics  
 **Role / Penulis:** Senior Product Manager, Lead Architect & Tech Critic Reviewer  
-**Tanggal Rilis:** 2026-09-07  
-**Versi:** v2.2 (Complete Pre-Development Specification — Checkout Flow, Payment Gateway, Logistics, RBAC, API Contract, Image Storage, Loyalty Points, Search Engine, Notifications & Testing Strategy)  
+**Tanggal Rilis:** 2026-09-09  
+**Versi:** v2.3 (Complete Specification — Admin Settings Panel for Payment Gateway & Shipping Logistics, Midtrans Snap Sandbox, Biteship Logistics Testing Mode, Checkout Flow, RBAC, API Contract, Supabase Storage, Loyalty Points, Search Engine, Notifications & Testing Strategy)  
 **Status:** Approved for Full Implementation & Git Release  
 **Tech Stack Baseline:** Turborepo 2.x, Next.js 15+ (App Router), Express.js (ESM Module on Vercel Serverless), Prisma ORM (Supabase PostgreSQL with PgBouncer Connection Pooling), Better Auth (RBAC & Session Rotation), Tailwind CSS + Design Tokens, Midtrans Snap SDK, Biteship Logistics API, Google Maps Embed & URL Schemes, Result Pattern (`@chenille/shared`), Pino Structured Logging.
 
@@ -1017,6 +1017,83 @@ Notifikasi otomatis dikirim via WhatsApp API gateway (rekomendasi: **Fonnte** �
    - Jika pengiriman WA gagal (timeout/error), retry hingga **3x** dengan interval 30 detik, 2 menit, 10 menit (exponential backoff).
    - Jika tetap gagal setelah 3x retry → log warning ke Pino logger, admin mendapat notifikasi di dashboard.
 
+### 7.20 Spesifikasi Modul Pengaturan Toko, Manajemen Payment Gateway & Jasa Kirim (Admin Menu #13)
+
+Modul **Pengaturan Toko & Kredensial API** (`/admin` tab `SETTINGS`) berfungsi sebagai pusat kendali operasional tunggal (*Single Control Panel*) bagi Super Admin untuk mengelola identitas atelier, mengaktifkan/menonaktifkan metode pembayaran dan kurir logistik secara dinamis tanpa perlu deploy ulang kode, serta memvalidasi kredensial API gateway secara real-time.
+
+```text
+ADMIN SETTINGS VIEW HIERARCHY
+  ├── 1. Profil Atelier & Kuota Harian
+  │    ├── Nama Studio Atelier, Tagline, No. WA Resmi
+  │    ├── Alamat Fisik Workshop / Studio (Margonda Depok)
+  │    └── Kapasitas Slot PO Harian (Throttling)
+  │
+  ├── 2. Manajemen Payment Gateway (Aktifkan / Nonaktifkan & Kredensial) [Sesuai Mockup UI]
+  │    ├── Card 1: Midtrans Snap QRIS & Virtual Account (Otomatis)
+  │    │    ├── Toggle: Aktif di Checkout (On/Off)
+  │    │    ├── Fields: Merchant ID, Client Key, Server Key (Masked Password)
+  │    │    └── Biaya Admin / Fee (Rp)
+  │    ├── Card 2: Transfer Bank BCA Manual (Konfirmasi WhatsApp)
+  │    │    ├── Toggle: Aktif di Checkout (On/Off)
+  │    │    ├── Fields: Nomor Rekening, Atas Nama Rekening, Kantor Cabang
+  │    │    └── Biaya Admin / Layanan (Rp)
+  │    └── Card 3: Cash on Delivery (COD) Titik Temu Kampus / Mall
+  │         ├── Toggle: Aktif di Checkout (On/Off)
+  │         ├── Fields: Radius Maksimal COD (KM), Biaya Penanganan COD (Rp)
+  │         └── Catatan / Instruksi Pembayaran COD
+  │
+  └── 3. Manajemen Jasa Kirim & Logistik (Biteship API & Kurir Ekspedisi)
+       ├── Card 1: Integrasi Biteship API Aggregator
+       │    ├── Toggle: Aktifkan Kalkulasi Ongkir Otomatis Biteship (On/Off)
+       │    ├── Mode: Testing Sandbox vs Live Production
+       │    ├── Fields: Biteship API Key (Masked Password), Nama Pengirim, No. HP Pengirim
+       │    ├── Alamat Asal Pickup Gudang (Alamat & Kode Pos Origin: 16424 Beji Depok)
+       │    ├── Biaya Penanganan / Packing Kardus Tebal & Bubble Wrap (Rp)
+       │    └── Tombol Diagnostik: "Tes Koneksi API Biteship" (Status: Terhubung / Gagal)
+       └── Card 2: Filter Kurir Ekspedisi yang Diaktifkan di Checkout
+            ├── Kurir Reguler: J&T Express (jnt), JNE Express (jne), SiCepat (sicepat)
+            ├── Kurir Alternatif: AnterAja (anteraja)
+            └── Kurir Instant: GoSend (gosend), GrabExpress (grab)
+```
+
+#### 1. Rincian Formulir Pengaturan Payment Gateway (Sesuai Desain Mockup)
+Setiap metode pembayaran memiliki sakelar independen `Aktif di Checkout`. Metode yang dinonaktifkan **otomatis disembunyikan dari formulir checkout pelanggan** di etalase web:
+
+| Metode Pembayaran | Field Konfigurasi | Tipe Input | Nilai Default / Contoh | Dampak ke Pelanggan |
+| :--- | :--- | :--- | :--- | :--- |
+| **Midtrans Snap QRIS & VA** | • Status Aktif<br>• Merchant ID<br>• Client Key<br>• Server Key<br>• Biaya Admin (Rp) | Toggle<br>Text<br>Text<br>Password<br>Number | `true`<br>`M602203518`<br>`Mid-client-Xi4Kpe2EP7_nAsfZ`<br>`Mid-server-*****`<br>`Rp 2.500` | Membuka popup modal Midtrans Snap untuk scan QRIS Nasional (GoPay, ShopeePay, OVO, Dana) dan nomor Virtual Account Bank. |
+| **Transfer BCA Manual** | • Status Aktif<br>• No. Rekening<br>• Atas Nama<br>• Kantor Cabang<br>• Biaya Layanan (Rp) | Toggle<br>Text (Mono)<br>Text<br>Text<br>Number | `true`<br>`8420-1928-31`<br>`PT Chenille Atelier Florist`<br>`KCP Margonda Raya Depok`<br>`Rp 0` | Pelanggan mentransfer manual ke rekening atelier, lalu mengirimkan foto bukti transfer via WhatsApp CS / Portal. |
+| **Cash on Delivery (COD)** | • Status Aktif<br>• Radius Maksimal (KM)<br>• Biaya COD (Rp)<br>• Catatan Instruksi | Toggle<br>Number<br>Number<br>Text | `true`<br>`7.5 KM`<br>`Rp 0`<br>`Bayar tunai pas serah terima buket di Titik Temu Kampus` | Membatasi opsi COD hanya jika lokasi titik temu dalam radius maksimal. Pembeli membayar tunai saat serah terima. |
+
+#### 2. Rincian Formulir Pengaturan Jasa Kirim & Logistik Kurir
+Admin dapat mengontrol aggregator kurir Biteship dan menentukan kurir mana saja yang aktif melayani pengiriman:
+
+| Komponen Pengaturan | Field Konfigurasi | Tipe Input | Deskripsi & Fungsi |
+| :--- | :--- | :--- | :--- |
+| **Biteship API Core** | • Status Logistik Otomatis<br>• Environment Mode<br>• Biteship API Key | Toggle<br>Radio Switch<br>Password (Masked) | Jika aktif, checkout melakukan kalkulasi ongkir live via Biteship. Mode Sandbox menggunakan simulasi tarif, Live menggunakan kurir nyata. |
+| **Alamat Pickup Origin** | • Nama Pengirim / Toko<br>• No. HP Pickup<br>• Alamat Gudang Workshop<br>• Kode Pos Origin | Text<br>Text<br>Text<br>Number (Mono) | Lokasi asal kurir menjemput paket buket. Default: Jl. Margonda Raya No. 108, Pondok Cina, Beji, Depok 16424. |
+| **Seleksi Kurir Aktif** | • J&T Express (`jnt`)<br>• JNE Express (`jne`)<br>• SiCepat (`sicepat`)<br>• AnterAja (`anteraja`)<br>• GoSend Instant (`gosend`) | Multi-Checkbox / Switch Pills per Kurir | Hanya kurir yang dicentang yang akan di-query ke Biteship Rates API dan ditampilkan opsi layanannya kepada pembeli. |
+| **Biaya Tambahan Packing** | • Biaya Pengemasan (Rp) | Number | Tambahan biaya flat untuk packing kardus tebal double-wall corrugated + bubble wrap per pengiriman (default: Rp 0). |
+| **Diagnostik API** | • Tombol "Tes Koneksi API"<br>• Status Badge | Action Button<br>Badge Indikator | Melakukan ping ke `https://api.biteship.com/v1/couriers` untuk validasi API key dan menampilkan status: `🟢 Terhubung (Testing/Live)` atau `🔴 Gagal`. |
+
+#### 3. Arsitektur Penyimpanan Kredensial & Keamanan (Security Hierarchy)
+Untuk memenuhi standar keamanan industri dan kebijakan GitHub Push Protection:
+1. **Aturan Masking Kredensial Rahasia:**
+   - Kunci rahasia backend (`Server Key Midtrans`, `Biteship API Key`) **DILARANG KERAS** dikembalikan dalam bentuk plain-text ke API publik atau frontend.
+   - Endpoint `GET /api/v1/admin/settings` mengembalikan kunci rahasia dalam format ter-masking: `Mid-server-*****` atau `biteship_test.*****`.
+   - Hanya Super Admin terautentikasi yang dapat meng-update nilai kunci rahasia melalui request `PATCH /api/v1/admin/settings/*`.
+2. **Dual-Layer Fallback (Database vs Environment Variables):**
+   - **Prioritas 1 (Database):** Jika Super Admin telah mengonfigurasi dan menyimpan kredensial melalui Panel Pengaturan Admin, sistem memprioritaskan nilai dari tabel database `payment_gateway_configs` dan `logistics_configs`.
+   - **Prioritas 2 (Environment Variables):** Jika tabel database kosong / belum di-setup, sistem secara otomatis *fallback* menggunakan nilai dari `.env` (`MIDTRANS_SERVER_KEY`, `BITESHIP_API_KEY`).
+   - Pendekatan ini menjamin sistem tetap berjalan saat inisialisasi awal (*zero setup interruption*) sekaligus memberikan kendali penuh kepada admin untuk mengganti API key tanpa deploy ulang.
+
+#### 4. API Endpoints Kontrak Modul Pengaturan
+- `GET /api/v1/admin/settings/all`: Mengambil profil toko, konfigurasi payment gateway, dan konfigurasi logistik kurir (kunci server di-masking).
+- `PATCH /api/v1/admin/settings/profile`: Memperbarui nama toko, tagline, nomor WhatsApp, dan kuota PO harian.
+- `PATCH /api/v1/admin/settings/payment`: Memperbarui aktivasi gateway, biaya admin, nomor rekening BCA, parameter COD, dan kredensial Midtrans.
+- `PATCH /api/v1/admin/settings/logistics`: Memperbarui aktivasi Biteship, pilihan kurir aktif, alamat pickup, dan API key.
+- `POST /api/v1/admin/settings/logistics/test`: Melakukan pengujian koneksi ke API Biteship dengan API key yang sedang terpasang.
+
 ---
 
 ## 8. Skema Database & Infrastruktur Supabase PostgreSQL
@@ -1707,6 +1784,22 @@ model PaymentGatewayConfig {
   max_distance_km  Decimal?           @db.Decimal(4, 1) // Khusus COD Cash
   notes            String?            @db.Text
   updated_at       DateTime           @updatedAt
+}
+
+model LogisticsConfig {
+  id                  String   @id @default("biteship_setting")
+  is_enabled          Boolean  @default(true)
+  is_production       Boolean  @default(false)
+  api_key_masked      String?  // Masked key untuk display panel admin
+  origin_name         String   @default("Aesthetic Chenille Flowers Atelier")
+  origin_phone        String   @default("081234567890")
+  origin_address      String   @default("Jl. Margonda Raya No. 108, Pondok Cina, Beji, Kota Depok, Jawa Barat 16424")
+  origin_postal_code  Int      @default(16424)
+  origin_latitude     Decimal  @default(-6.3728) @db.Decimal(10, 7)
+  origin_longitude    Decimal  @default(106.8315) @db.Decimal(10, 7)
+  active_couriers     String[] @default(["jne", "jnt", "sicepat", "gosend"])
+  extra_packing_fee   Decimal  @default(0) @db.Decimal(10, 2)
+  updated_at          DateTime @updatedAt
 }
 
 model FeatureToggle {
