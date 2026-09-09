@@ -462,6 +462,11 @@ export default function CustomerPortalPage() {
                           </span>
                         </div>
                         <p className="text-xs text-stone-600">{claim.description}</p>
+                        {claim.replacementAwb && (
+                          <div className="text-[11px] font-mono text-emerald-700 font-bold bg-emerald-50/80 px-2.5 py-1 rounded-xl border border-emerald-200 mt-1 inline-block">
+                            📦 Resi Pengganti Baru: {claim.replacementAwb}
+                          </div>
+                        )}
                         {claim.adminNote && (
                           <div className="text-[11px] text-stone-500 italic bg-white p-2 rounded-xl border border-stone-200 mt-1">
                             Catatan Atelier: &ldquo;{claim.adminNote}&rdquo;

@@ -108,6 +108,8 @@ export interface WarrantyClaim {
   solutionPreference: 'FREE_REPLACEMENT' | 'REFUND';
   status: WarrantyStatus;
   photoProofUrl?: string;
+  videoProofUrl?: string;
+  replacementAwb?: string;
   createdAt: string;
   adminNote?: string;
 }
