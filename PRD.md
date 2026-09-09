@@ -727,6 +727,50 @@ Seluruh transaksi pembayaran diproses melalui **Midtrans Snap** (popup overlay) 
    - Sandbox URL: `https://app.sandbox.midtrans.com/snap/snap.js`
    - Production URL: `https://app.midtrans.com/snap/snap.js`
 
+5. **Kredensial Midtrans Sandbox (Aktif & Terverifikasi):**
+
+   | Parameter | Nilai | Keterangan |
+   |-----------|-------|------------|
+   | **Dashboard URL** | [dashboard.sandbox.midtrans.com](https://dashboard.sandbox.midtrans.com/settings/access-keys/credentials) | Portal konfigurasi Sandbox |
+   | **Merchant ID** | `M602203518` | Identitas unik merchant di ekosistem Midtrans |
+   | **Client Key** | `Mid-client-Xi4Kpe2EP7_nAsfZ` | Digunakan di frontend (`snap.js` script tag `data-client-key`) |
+   | **Server Key** | `Mid-server-*****` *(tersimpan di `.env`, lihat Dashboard Midtrans)* | Digunakan di backend untuk Snap API call & webhook signature verification (**RAHASIA — jangan ekspos ke frontend atau Git**) |
+
+   **Konfigurasi Environment Variables (`.env`):**
+   ```env
+   # ===== MIDTRANS SNAP SDK (SANDBOX — AKTIF) =====
+   MIDTRANS_SERVER_KEY="Mid-server-***** (lihat .env lokal / Dashboard Midtrans)"
+   MIDTRANS_CLIENT_KEY="Mid-client-Xi4Kpe2EP7_nAsfZ"
+   MIDTRANS_IS_PRODUCTION="false"
+   MIDTRANS_MERCHANT_ID="M602203518"
+
+   # Frontend (apps/web/.env.local)
+   NEXT_PUBLIC_MIDTRANS_CLIENT_KEY="Mid-client-Xi4Kpe2EP7_nAsfZ"
+   ```
+
+   **Webhook Notification URL (Set di Dashboard Midtrans):**
+   - **Development (lokal):** Gunakan [ngrok](https://ngrok.com) atau [localtunnel](https://localtunnel.me) untuk expose `localhost:4000` → `https://xxxx.ngrok.io/api/v1/payment/webhook`
+   - **Production (Vercel):** `https://[DOMAIN-VERCEL].vercel.app/api/v1/payment/webhook`
+   - **Cara set:** Dashboard Midtrans → Settings → Configuration → Payment Notification URL
+
+   **Panduan Migrasi ke Production:**
+   1. Lengkapi onboarding di Dashboard Midtrans (upload KTP + NPWP pemilik bisnis).
+   2. Tunggu approval dari tim Midtrans (estimasi 1–3 hari kerja).
+   3. Setelah disetujui, salin Production Keys (`Mid-server-xxx`, `Mid-client-xxx` tanpa prefix `SB-`).
+   4. Update `.env` dengan Production keys dan set `MIDTRANS_IS_PRODUCTION="true"`.
+   5. Lakukan transaksi test Production dengan nominal kecil (Rp 10.000) untuk verifikasi end-to-end.
+
+   **Biaya Midtrans per Transaksi Berhasil:**
+   | Metode Pembayaran | Biaya |
+   |-------------------|-------|
+   | QRIS (GoPay, ShopeePay, OVO) | 0.7% dari nilai transaksi |
+   | Virtual Account (BCA, BNI, Mandiri) | Rp 4.000 flat per transaksi |
+   | Kartu Kredit/Debit | 2.9% + Rp 2.000 |
+   | GoPay Direct | 2% dari nilai transaksi |
+   | Alfamart / Indomaret | Rp 5.000 flat |
+
+   > **Catatan:** Tidak ada biaya bulanan/tahunan. Midtrans hanya mengenakan biaya per transaksi berhasil. Settlement (pencairan ke rekening bank merchant) dilakukan **T+2 hari kerja**.
+
 ### 7.14 Spesifikasi Integrasi Logistik Biteship API
 
 Biteship digunakan sebagai aggregator logistik untuk cek ongkir, booking kurir, dan tracking resi otomatis:
