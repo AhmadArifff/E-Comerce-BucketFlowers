@@ -49,12 +49,14 @@ import {
   RefreshCw,
   Terminal,
   CheckCheck,
+  Upload,
 } from 'lucide-react';
 import { MOCK_PRODUCTS, type ExtendedProduct as Product } from '@chenille/shared';
 import { useThemeStore, type ThemeId } from '@/stores/useThemeStore';
 import { useSettingsStore, type WasteMaterialItem } from '@/stores/useSettingsStore';
 import { useOrderStore } from '@/stores/useOrderStore';
 import { showMagicToast } from '@/lib/magic-motion';
+import { getApiUrl } from '@/lib/api-client';
 
 // ============================================================================
 // 1. FINANCIAL MULTI-LINE SVG CHART CARD
@@ -1487,7 +1489,7 @@ export const MaintenanceThemeView: React.FC = () => {
       resetOrdersToDefault();
 
       try {
-        await fetch('/api/admin/migrate-refresh', { method: 'POST' });
+        await fetch(getApiUrl('/api/v1/admin/migrate-refresh'), { method: 'POST' });
       } catch (err) {
         console.warn('API migrate refresh background notification:', err);
       }
@@ -2578,6 +2580,9 @@ export const AddProductModal: React.FC<{
   const [price, setPrice] = useState('145000');
   const [leadDays, setLeadDays] = useState('2');
   const [isReadyStock, setIsReadyStock] = useState(true);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Master Bahan Baku database reference
   const MASTER_RAW_MATERIALS = [
@@ -2657,14 +2662,90 @@ export const AddProductModal: React.FC<{
   const calculatedProfit = numericPrice - calculatedHpp;
   const calculatedMargin = numericPrice > 0 ? Math.round((calculatedProfit / numericPrice) * 100) : 0;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        showMagicToast('Ukuran File Terlalu Besar ⚠️', 'Maksimal ukuran gambar adalah 2 MB.', '⚠️');
+        return;
+      }
+      setSelectedFile(file);
+      const objUrl = URL.createObjectURL(file);
+      setPreviewUrl(objUrl);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isPriceBelowHpp) {
       showMagicToast('Gagal Validasi HPP ⚠️', 'Harga jual tidak boleh kurang dari total biaya bahan baku (HPP).', '❌');
       return;
     }
-    onClose();
-    showMagicToast('Produk Ditambahkan! 🌸', `Buket "${name || 'Buket Baru'}" berhasil didaftarkan dengan HPP Rp ${calculatedHpp.toLocaleString('id-ID')}.`, '✨');
+
+    setIsSubmitting(true);
+    let finalImageUrl = previewUrl || '/images/uploads/default-bouquet.png';
+
+    // 1. Upload foto buket jika dipilih
+    if (selectedFile) {
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('slug', name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+
+        const uploadRes = await fetch(getApiUrl('/api/v1/products/upload-image'), {
+          method: 'POST',
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        if (uploadData.success && uploadData.data?.url) {
+          finalImageUrl = uploadData.data.url;
+        }
+      } catch (uploadErr) {
+        console.warn('Image upload error:', uploadErr);
+      }
+    }
+
+    // 2. Simpan produk ke Supabase DB
+    try {
+      const res = await fetch(getApiUrl('/api/v1/products'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          category_id:
+            category === 'Graduation'
+              ? 'cat-wisuda'
+              : category === 'Anniversary'
+              ? 'cat-romantis'
+              : 'cat-karakter',
+          price: numericPrice,
+          raw_cost_hpp: calculatedHpp,
+          stock: 15,
+          po_lead_days: parseInt(leadDays, 10) || 2,
+          is_ready_stock: isReadyStock,
+          image_url: finalImageUrl,
+          description: `Buket ${name.trim()} kawat bulu premium 100% handcrafted atelier.`,
+        }),
+      });
+
+      const data = await res.json();
+      setIsSubmitting(false);
+
+      if (data.success) {
+        onClose();
+        showMagicToast(
+          'Produk Berhasil Ditambahkan! 🌸',
+          `Buket "${name}" tersimpan di Supabase dengan HPP Rp ${calculatedHpp.toLocaleString('id-ID')}.`,
+          '✨'
+        );
+      } else {
+        showMagicToast('Gagal Menambah Produk ⚠️', data.error || 'Terjadi kesalahan sistem.', '⚠️');
+      }
+    } catch (err) {
+      setIsSubmitting(false);
+      console.error('Error adding product:', err);
+      showMagicToast('Gagal Menambah Produk ⚠️', 'Koneksi ke backend API terputus.', '⚠️');
+    }
   };
 
   return (
@@ -2714,6 +2795,41 @@ export const AddProductModal: React.FC<{
                 <option value="Single Stem">Single Stem Minimalist</option>
                 <option value="Mini Bloom">Mini Bloom Table Decor</option>
               </select>
+            </div>
+          </div>
+
+          {/* Image Upload Box */}
+          <div>
+            <label className="block font-bold text-stone-700 mb-1">
+              Foto Produk Buket (Supabase Storage)
+            </label>
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-stone-50 border border-stone-200">
+              <div className="w-14 h-14 rounded-xl bg-white border border-stone-200 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-inner">
+                {previewUrl ? (
+                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <Upload className="w-5 h-5 text-stone-300" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <input
+                  type="file"
+                  id="bouquet-photo-input"
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="bouquet-photo-input"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-200 hover:border-rose-300 text-stone-700 font-bold text-[11px] shadow-sm hover:bg-rose-50/50 cursor-pointer transition-colors"
+                >
+                  <Upload className="w-3.5 h-3.5 text-rose-500" />
+                  <span>{selectedFile ? 'Ganti Foto Buket' : 'Pilih Foto Buket'}</span>
+                </label>
+                <p className="text-[10px] text-stone-400 mt-1 truncate">
+                  {selectedFile ? selectedFile.name : 'PNG, JPG, WEBP maks 2 MB (Disimpan ke Supabase Storage)'}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -2903,10 +3019,17 @@ export const AddProductModal: React.FC<{
             </button>
             <button
               type="submit"
-              disabled={isPriceBelowHpp || !name.trim() || calculatedHpp === 0}
-              className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isPriceBelowHpp || !name.trim() || calculatedHpp === 0 || isSubmitting}
+              className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
-              Simpan ke Katalog
+              {isSubmitting ? (
+                <>
+                  <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Mengunggah & Menyimpan...</span>
+                </>
+              ) : (
+                <span>Simpan ke Supabase</span>
+              )}
             </button>
           </div>
         </form>

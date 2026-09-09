@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, ShoppingBag, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
 import { useOrderStore } from '@/stores/useOrderStore';
+import { getApiUrl } from '@/lib/api-client';
 
 export const KpiCards: React.FC = () => {
   const { orders } = useOrderStore();
@@ -19,7 +20,7 @@ export const KpiCards: React.FC = () => {
   } | null>(null);
 
   useEffect(() => {
-    fetch('/api/v1/admin/dashboard')
+    fetch(getApiUrl('/api/v1/admin/dashboard'))
       .then((r) => r.json())
       .then((res) => {
         if (res.success && res.data?.kpis) {

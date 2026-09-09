@@ -19,6 +19,8 @@ import type { ExtendedProduct } from '@chenille/shared';
 import { MOCK_PRODUCTS } from '@chenille/shared';
 import { useThemeStore } from '@/stores/useThemeStore';
 
+import { getApiUrl } from '@/lib/api-client';
+
 export default function StorefrontPage() {
   const { theme } = useThemeStore();
   const [activeSection, setActiveSection] = useState('home');
@@ -27,9 +29,9 @@ export default function StorefrontPage() {
   const [selectedProduct, setSelectedProduct] = useState<ExtendedProduct | null>(null);
   const [productsList, setProductsList] = useState<ExtendedProduct[]>(MOCK_PRODUCTS);
 
-  // Fetch real products from Supabase API
+  // Fetch real products from Supabase API via backend engine
   useEffect(() => {
-    fetch('/api/v1/products')
+    fetch(getApiUrl('/api/v1/products'))
       .then((res) => res.json())
       .then((res) => {
         if (res.success && res.data?.products?.length > 0) {

@@ -1,20 +1,21 @@
 {
   "name": "e-commerce-bucket-flowers",
   "private": true,
-  "version": "2.1.0",
+  "version": "2.2.0",
   "packageManager": "npm@10.8.2",
   "scripts": {
     "dev": "turbo run dev",
     "dev:web": "npm run dev --workspace=chenille-flowers-web",
+    "dev:api": "npm run dev --workspace=@chenille/api",
     "build": "turbo run build",
     "build:web": "npm run build --workspace=chenille-flowers-web",
+    "build:api": "npm run build --workspace=@chenille/api",
     "build:shared": "npm run build --workspace=@chenille/shared",
-    "kill:port": "npx -y kill-port 3000",
+    "kill:port": "npx -y kill-port 3000 4000",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
-    "db:push": "npx prisma db push --schema=prisma/schema.prisma",
-    "db:studio": "npx prisma studio --schema=prisma/schema.prisma",
-    "db:generate": "npx prisma generate --schema=prisma/schema.prisma",
+    "prisma:generate": "npm run prisma:generate --workspace=@chenille/api",
+    "prisma:push": "npm run prisma:push --workspace=@chenille/api",
     "clean": "turbo run clean"
   },
   "workspaces": [
@@ -26,10 +27,10 @@
     "turbo": "^2.4.0",
     "typescript": "^5.7.3"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "dependencies": {
     "pg": "^8.23.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

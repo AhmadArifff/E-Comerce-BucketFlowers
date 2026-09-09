@@ -16,6 +16,7 @@ import { useOrderStore } from '@/stores/useOrderStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { showMagicToast } from '@/lib/magic-motion';
+import { getApiUrl } from '@/lib/api-client';
 import { MOCK_PRODUCTS, MOCK_MEETUP_POINTS, type MockOrder } from '@chenille/shared';
 import {
   Package,
@@ -50,9 +51,9 @@ export default function CustomerPortalPage() {
 
   const activeOrder = orders.find((o) => o.id === activeOrderId) || orders[0];
 
-  // Fetch live orders from Supabase backend
+  // Fetch live orders from Supabase backend via apps/api
   useEffect(() => {
-    fetch('/api/v1/orders')
+    fetch(getApiUrl('/api/v1/orders'))
       .then((r) => r.json())
       .then((res) => {
         if (res.success && res.data?.length > 0) {
@@ -144,7 +145,7 @@ export default function CustomerPortalPage() {
     updateOrderStep(activeOrder.id, step);
 
     // Call Supabase backend
-    fetch(`/api/v1/orders/${activeOrder.id}`, {
+    fetch(getApiUrl(`/api/v1/orders/${activeOrder.id}`), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ step }),

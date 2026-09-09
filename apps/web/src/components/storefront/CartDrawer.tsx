@@ -30,11 +30,14 @@ import { useCartStore } from '@/stores/useCartStore';
 import { useOrderStore } from '@/stores/useOrderStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
+import { getApiUrl } from '@/lib/api-client';
+import { useMidtransSnap } from '@/hooks/useMidtransSnap';
 import { MOCK_MEETUP_POINTS, type MockOrder } from '@chenille/shared';
 import { showMagicToast } from '@/lib/magic-motion';
 
 export const CartDrawer: React.FC = () => {
   const router = useRouter();
+  const { pay: payWithMidtrans } = useMidtransSnap();
   const {
     items,
     isCartOpen,
@@ -64,7 +67,7 @@ export const CartDrawer: React.FC = () => {
   const [dbCodPoints, setDbCodPoints] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('/api/v1/cod-points')
+    fetch(getApiUrl('/api/v1/cod-points'))
       .then((r) => r.json())
       .then((res) => {
         if (res.success && res.data?.length > 0) {
@@ -147,7 +150,7 @@ export const CartDrawer: React.FC = () => {
     if (!inputVoucher.trim()) return;
 
     try {
-      const res = await fetch('/api/v1/coupons/validate', {
+      const res = await fetch(getApiUrl('/api/v1/coupons/validate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: inputVoucher.trim(), subtotal }),
@@ -240,7 +243,7 @@ export const CartDrawer: React.FC = () => {
     };
 
     try {
-      const res = await fetch('/api/v1/orders', {
+      const res = await fetch(getApiUrl('/api/v1/orders'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload),
@@ -303,6 +306,44 @@ export const CartDrawer: React.FC = () => {
         createdAt: new Date().toISOString(),
         estimatedDelivery: 'Besok, 10:00 WIB',
       };
+
+      // Handle Midtrans Snap Payment Gateway
+      if (selectedPayment === 'midtrans' && savedOrder.snap_token) {
+        payWithMidtrans(savedOrder.snap_token, invoiceNo, finalGrandTotal, {
+          onSuccess: (result) => {
+            addNewOrder({
+              ...newOrder,
+              paymentStatus: 'PAYMENT_CONFIRMED',
+              statusLabel: 'Pembayaran QRIS Lunas',
+              statusDescription: `Pembayaran lunas terkonfirmasi Midtrans (${result.payment_type || 'QRIS'}).`,
+            });
+            setIsCartOpen(false);
+            clearCart();
+            setIsCheckingOut(false);
+            setStep('CART');
+            showMagicToast('Pembayaran Midtrans Berhasil! 🌸', `Invoice ${invoiceNo} berhasil diverifikasi.`, '✨');
+            router.push(`/portal?invoice=${invoiceNo}`);
+          },
+          onPending: () => {
+            addNewOrder(newOrder);
+            setIsCartOpen(false);
+            clearCart();
+            setIsCheckingOut(false);
+            setStep('CART');
+            showMagicToast('Menunggu Pembayaran ⏳', `Silakan selesaikan tagihan untuk ${invoiceNo}.`, '⏳');
+            router.push(`/portal?invoice=${invoiceNo}`);
+          },
+          onError: () => {
+            setIsCheckingOut(false);
+            showMagicToast('Pembayaran Gagal ⚠️', 'Transaksi dibatalkan atau waktu habis.', '⚠️');
+          },
+          onClose: () => {
+            setIsCheckingOut(false);
+            showMagicToast('Jendela Ditutup', 'Pembayaran Midtrans belum selesai.', 'ℹ️');
+          },
+        });
+        return;
+      }
 
       addNewOrder(newOrder);
       setIsCartOpen(false);

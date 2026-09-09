@@ -1,5 +1,6 @@
 /**
- * Standardized API client for calling /api/v1 endpoints with auto-fallback and type safety
+ * Standardized API client for calling backend endpoints (apps/api on port 4000)
+ * with auto-fallback and type safety.
  */
 
 export interface ApiResponse<T = any> {
@@ -9,11 +10,32 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
+/**
+ * Resolves an API path to the full backend URL (http://localhost:4000/api/v1/...)
+ */
+export function getApiUrl(path: string): string {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  const clean = path.startsWith('/') ? path : `/${path}`;
+  if (clean.startsWith('/api/v1')) {
+    return clean.replace('/api/v1', API_BASE_URL);
+  }
+  if (clean.startsWith('/api')) {
+    const baseWithoutV1 = API_BASE_URL.replace(/\/v1\/?$/, '');
+    return clean.replace('/api', baseWithoutV1);
+  }
+  return `${API_BASE_URL}${clean}`;
+}
+
 export async function fetchApi<T = any>(
   endpoint: string,
   options?: RequestInit
 ): Promise<ApiResponse<T>> {
-  const url = endpoint.startsWith('http') ? endpoint : endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = getApiUrl(endpoint);
 
   try {
     const res = await fetch(url, {

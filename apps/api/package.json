@@ -1,0 +1,37 @@
+{
+  "name": "@chenille/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "npx prisma generate && tsc",
+    "start": "node dist/server.js",
+    "lint": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "clean": "node -e \"try{require('fs').rmSync('dist',{recursive:true,force:true})}catch(e){}\""
+  },
+  "dependencies": {
+    "@chenille/shared": "*",
+    "@prisma/client": "^6.19.3",
+    "@supabase/supabase-js": "^2.48.1",
+    "@types/multer": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "multer": "^2.3.0",
+    "pg": "^8.23.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.4",
+    "@types/pg": "^8.21.0",
+    "prisma": "^6.19.3",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

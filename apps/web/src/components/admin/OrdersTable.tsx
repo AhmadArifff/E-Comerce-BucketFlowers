@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { ShoppingBag, CheckCircle2, Scissors, Truck, MapPin, Check, ExternalLink, Printer, Download, Search, X } from 'lucide-react';
 import { useOrderStore, type Order } from '@/stores/useOrderStore';
 import { showMagicToast } from '@/lib/magic-motion';
+import { getApiUrl } from '@/lib/api-client';
 import { TableSortHeader, type SortDirection } from './TableSortHeader';
 import { DateRangeFilter, type DateRange } from './DateRangeFilter';
 
@@ -26,9 +27,9 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
   const [sortField, setSortField] = useState<OrderSortField | null>('currentStep');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-  // Sync with Supabase API
+  // Sync with Supabase API via apps/api
   React.useEffect(() => {
-    fetch('/api/v1/orders')
+    fetch(getApiUrl('/api/v1/orders'))
       .then((r) => r.json())
       .then((res) => {
         if (res.success && res.data?.length > 0) {
@@ -85,7 +86,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
 
   const handleUpdateStep = (orderId: string, newStep: number) => {
     updateOrderStep(orderId, newStep);
-    fetch(`/api/v1/orders/${orderId}`, {
+    fetch(getApiUrl(`/api/v1/orders/${orderId}`), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ step: newStep }),
