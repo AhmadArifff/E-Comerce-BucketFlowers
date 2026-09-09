@@ -50,6 +50,7 @@ import {
   Terminal,
   CheckCheck,
   Upload,
+  Truck,
 } from 'lucide-react';
 import { MOCK_PRODUCTS, type ExtendedProduct as Product } from '@chenille/shared';
 import { useThemeStore, type ThemeId } from '@/stores/useThemeStore';
@@ -1887,9 +1888,12 @@ export const StoreSettingsView: React.FC = () => {
     studioAddress,
     dailyQuota,
     paymentGateways,
+    logisticsConfig,
     updateStoreProfile,
     togglePaymentGateway,
     updatePaymentGatewayConfig,
+    updateLogisticsConfig,
+    toggleCourierActive,
   } = useSettingsStore();
 
   const [formProfile, setFormProfile] = useState({
@@ -1903,6 +1907,45 @@ export const StoreSettingsView: React.FC = () => {
   const [midtransConfig, setMidtransConfig] = useState({ ...paymentGateways.midtrans });
   const [bcaConfig, setBcaConfig] = useState({ ...paymentGateways.bcaManual });
   const [codConfig, setCodConfig] = useState({ ...paymentGateways.codCash });
+  const [logisticsForm, setLogisticsForm] = useState({ ...logisticsConfig });
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [testApiState, setTestApiState] = useState<{
+    status: 'idle' | 'testing' | 'success' | 'error';
+    message: string;
+    servicesCount?: number;
+  }>({ status: 'idle', message: '' });
+
+  const handleTestBiteship = async () => {
+    setTestApiState({ status: 'testing', message: 'Menghubungi server Biteship...' });
+    try {
+      const res = await fetch(getApiUrl('/api/v1/admin/settings/logistics/test'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: logisticsForm.apiKey }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTestApiState({
+          status: 'success',
+          message: `${data.message} (${data.totalServices} Layanan Kurir Terdeteksi - ${data.mode})`,
+          servicesCount: data.totalServices,
+        });
+        showMagicToast('API Biteship Terhubung! 🚚', `${data.totalServices} layanan kurir aktif terverifikasi.`, '✅');
+      } else {
+        setTestApiState({
+          status: 'error',
+          message: data.error || 'Gagal memverifikasi API Key Biteship.',
+        });
+        showMagicToast('Koneksi Biteship Gagal ⚠️', data.error || 'Periksa kembali API Key Anda.', '❌');
+      }
+    } catch (err: any) {
+      setTestApiState({
+        status: 'error',
+        message: 'Koneksi ke backend API terputus.',
+      });
+      showMagicToast('Koneksi Error ⚠️', 'Gagal memanggil endpoint test backend.', '❌');
+    }
+  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1916,7 +1959,28 @@ export const StoreSettingsView: React.FC = () => {
     updatePaymentGatewayConfig('midtrans', midtransConfig);
     updatePaymentGatewayConfig('bcaManual', bcaConfig);
     updatePaymentGatewayConfig('codCash', codConfig);
-    showMagicToast('Pengaturan Tersimpan! ⚙️', 'Konfigurasi profil atelier & payment gateway berhasil disinkronkan ke checkout.', '💾');
+    updateLogisticsConfig(logisticsForm);
+
+    // Sync to backend DB
+    fetch(getApiUrl('/api/v1/admin/settings/logistics'), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        is_enabled: logisticsForm.isEnabled,
+        is_production: logisticsForm.isProduction,
+        api_key: logisticsForm.apiKey,
+        origin_name: logisticsForm.originName,
+        origin_phone: logisticsForm.originPhone,
+        origin_address: logisticsForm.originAddress,
+        origin_postal_code: logisticsForm.originPostalCode,
+        active_couriers: Object.entries(logisticsForm.activeCouriers)
+          .filter(([_, v]) => v)
+          .map(([k]) => k),
+        extra_packing_fee: logisticsForm.extraPackingFee,
+      }),
+    }).catch((err) => console.warn('Sync logistics settings error:', err));
+
+    showMagicToast('Pengaturan Tersimpan! ⚙️', 'Konfigurasi profil atelier, payment gateway & logistik kurir berhasil disinkronkan.', '💾');
   };
 
   return (
@@ -2279,6 +2343,403 @@ export const StoreSettingsView: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 3: LOGISTICS & COURIER MANAGEMENT */}
+        <div className="pt-4 border-t border-stone-100 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Truck className="w-4 h-4 text-rose-600" />
+              <span className="text-xs font-black uppercase text-stone-700 tracking-wider">
+                3. Manajemen Jasa Kirim & Logistik (Biteship API & Kurir Ekspedisi)
+              </span>
+            </div>
+            <span className="text-[11px] text-stone-400">
+              Kurir yang dinonaktifkan tidak akan muncul pada pilihan ongkir pelanggan saat checkout.
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {/* 1. BITESHIP AGGREGATOR CARD */}
+            <div className="p-4 sm:p-5 rounded-2xl border border-stone-200 bg-stone-50/50 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-bold">
+                    <Truck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-stone-800 text-xs flex items-center gap-2">
+                      <span>Biteship Logistics Aggregator (Kalkulasi Ongkir Otomatis)</span>
+                      <span
+                        className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
+                          logisticsForm.isProduction
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {logisticsForm.isProduction ? 'Live Mode' : 'Testing Sandbox'}
+                      </span>
+                    </h4>
+                    <span className="text-[10px] text-stone-500">
+                      Mengkalkulasi ongkir real-time kurir ekspedisi (J&T, JNE, SiCepat, GoSend) & pembuatan resi otomatis.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      logisticsForm.isEnabled
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-stone-200 text-stone-600'
+                    }`}
+                  >
+                    {logisticsForm.isEnabled ? 'Aktif di Checkout' : 'Nonaktif'}
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={logisticsForm.isEnabled}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setLogisticsForm({ ...logisticsForm, isEnabled: val });
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
+                  </label>
+                </div>
+              </div>
+
+              {logisticsForm.isEnabled && (
+                <div className="space-y-3 pt-3 border-t border-stone-200/60 animate-in fade-in">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {/* Mode Toggle */}
+                    <div>
+                      <label className="block font-bold text-stone-600 text-[11px] mb-1">Mode Lingkungan</label>
+                      <select
+                        value={logisticsForm.isProduction ? 'live' : 'testing'}
+                        onChange={(e) =>
+                          setLogisticsForm({
+                            ...logisticsForm,
+                            isProduction: e.target.value === 'live',
+                          })
+                        }
+                        className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-semibold"
+                      >
+                        <option value="testing">Testing / Sandbox Mode</option>
+                        <option value="live">Live Production (Kurir Riil)</option>
+                      </select>
+                    </div>
+
+                    {/* API Key */}
+                    <div className="sm:col-span-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-stone-600 text-[11px]">
+                          Biteship API Key
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="text-[10px] text-rose-600 font-bold hover:underline cursor-pointer"
+                        >
+                          {showApiKey ? 'Sembunyikan' : 'Tampilkan'}
+                        </button>
+                      </div>
+                      <input
+                        type={showApiKey ? 'text' : 'password'}
+                        value={logisticsForm.apiKey}
+                        onChange={(e) => setLogisticsForm({ ...logisticsForm, apiKey: e.target.value })}
+                        placeholder="biteship_test.eyJ..."
+                        className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
+                      />
+                    </div>
+
+                    {/* Extra Packing Fee */}
+                    <div>
+                      <label className="block font-bold text-stone-600 text-[11px] mb-1">
+                        Biaya Packing Kardus (Rp)
+                      </label>
+                      <input
+                        type="number"
+                        value={logisticsForm.extraPackingFee ?? 0}
+                        onChange={(e) =>
+                          setLogisticsForm({
+                            ...logisticsForm,
+                            extraPackingFee: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        placeholder="0"
+                        className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono font-bold text-rose-700"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Origin Details */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="sm:col-span-2">
+                      <label className="block font-bold text-stone-600 text-[11px] mb-1">
+                        Alamat Asal Pickup Workshop (Origin Atelier)
+                      </label>
+                      <input
+                        type="text"
+                        value={logisticsForm.originAddress}
+                        onChange={(e) =>
+                          setLogisticsForm({ ...logisticsForm, originAddress: e.target.value })
+                        }
+                        className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-stone-600 text-[11px] mb-1">
+                        Kode Pos Origin
+                      </label>
+                      <input
+                        type="number"
+                        value={logisticsForm.originPostalCode}
+                        onChange={(e) =>
+                          setLogisticsForm({
+                            ...logisticsForm,
+                            originPostalCode: parseInt(e.target.value, 10) || 16424,
+                          })
+                        }
+                        className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* API Test Diagnostics Bar */}
+                  <div className="pt-2 border-t border-stone-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleTestBiteship}
+                        disabled={testApiState.status === 'testing'}
+                        className="px-3.5 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-bold text-[11px] shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <RefreshCw
+                          className={`w-3.5 h-3.5 ${testApiState.status === 'testing' ? 'animate-spin' : ''}`}
+                        />
+                        <span>{testApiState.status === 'testing' ? 'Menguji API...' : 'Tes Koneksi API Biteship'}</span>
+                      </button>
+
+                      {testApiState.status === 'success' && (
+                        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1 animate-in fade-in">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>{testApiState.message}</span>
+                        </span>
+                      )}
+
+                      {testApiState.status === 'error' && (
+                        <span className="text-[11px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg flex items-center gap-1 animate-in fade-in">
+                          <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                          <span>{testApiState.message}</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <span className="text-[10px] text-stone-400">
+                      Terhubung ke API Biteship v1 via HTTPS Serverless
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 2. COURIER FILTER SELECTION CARD */}
+            <div className="p-4 sm:p-5 rounded-2xl border border-stone-200 bg-stone-50/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-extrabold text-stone-800 text-xs">
+                    Kurir Ekspedisi yang Diaktifkan di Checkout
+                  </h4>
+                  <span className="text-[10px] text-stone-500">
+                    Pilih ekspedisi mana saja yang ingin Anda aktifkan untuk pengiriman buket bunga kawat bulu.
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700">
+                  {Object.values(logisticsForm.activeCouriers).filter(Boolean).length} Kurir Aktif
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2">
+                {/* J&T */}
+                <div
+                  className={`p-3 rounded-xl border transition-all ${
+                    logisticsForm.activeCouriers.jnt
+                      ? 'bg-white border-rose-300 shadow-xs'
+                      : 'bg-stone-100 border-stone-200 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-black text-xs text-stone-800">🚚 J&T Express</span>
+                    <input
+                      type="checkbox"
+                      checked={logisticsForm.activeCouriers.jnt}
+                      onChange={(e) =>
+                        setLogisticsForm({
+                          ...logisticsForm,
+                          activeCouriers: {
+                            ...logisticsForm.activeCouriers,
+                            jnt: e.target.checked,
+                          },
+                        })
+                      }
+                      className="rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                    />
+                  </div>
+                  <span className="text-[10px] text-stone-500 block">Layanan: EZ & Super</span>
+                  <span
+                    className={`text-[9px] font-bold mt-1 inline-block ${
+                      logisticsForm.activeCouriers.jnt ? 'text-emerald-700' : 'text-stone-400'
+                    }`}
+                  >
+                    {logisticsForm.activeCouriers.jnt ? '● Aktif' : '○ Nonaktif'}
+                  </span>
+                </div>
+
+                {/* JNE */}
+                <div
+                  className={`p-3 rounded-xl border transition-all ${
+                    logisticsForm.activeCouriers.jne
+                      ? 'bg-white border-rose-300 shadow-xs'
+                      : 'bg-stone-100 border-stone-200 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-black text-xs text-stone-800">📦 JNE Express</span>
+                    <input
+                      type="checkbox"
+                      checked={logisticsForm.activeCouriers.jne}
+                      onChange={(e) =>
+                        setLogisticsForm({
+                          ...logisticsForm,
+                          activeCouriers: {
+                            ...logisticsForm.activeCouriers,
+                            jne: e.target.checked,
+                          },
+                        })
+                      }
+                      className="rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                    />
+                  </div>
+                  <span className="text-[10px] text-stone-500 block">Layanan: REG & YES</span>
+                  <span
+                    className={`text-[9px] font-bold mt-1 inline-block ${
+                      logisticsForm.activeCouriers.jne ? 'text-emerald-700' : 'text-stone-400'
+                    }`}
+                  >
+                    {logisticsForm.activeCouriers.jne ? '● Aktif' : '○ Nonaktif'}
+                  </span>
+                </div>
+
+                {/* SiCepat */}
+                <div
+                  className={`p-3 rounded-xl border transition-all ${
+                    logisticsForm.activeCouriers.sicepat
+                      ? 'bg-white border-rose-300 shadow-xs'
+                      : 'bg-stone-100 border-stone-200 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-black text-xs text-stone-800">⚡ SiCepat</span>
+                    <input
+                      type="checkbox"
+                      checked={logisticsForm.activeCouriers.sicepat}
+                      onChange={(e) =>
+                        setLogisticsForm({
+                          ...logisticsForm,
+                          activeCouriers: {
+                            ...logisticsForm.activeCouriers,
+                            sicepat: e.target.checked,
+                          },
+                        })
+                      }
+                      className="rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                    />
+                  </div>
+                  <span className="text-[10px] text-stone-500 block">Layanan: BEST & HALU</span>
+                  <span
+                    className={`text-[9px] font-bold mt-1 inline-block ${
+                      logisticsForm.activeCouriers.sicepat ? 'text-emerald-700' : 'text-stone-400'
+                    }`}
+                  >
+                    {logisticsForm.activeCouriers.sicepat ? '● Aktif' : '○ Nonaktif'}
+                  </span>
+                </div>
+
+                {/* GoSend */}
+                <div
+                  className={`p-3 rounded-xl border transition-all ${
+                    logisticsForm.activeCouriers.gosend
+                      ? 'bg-white border-rose-300 shadow-xs'
+                      : 'bg-stone-100 border-stone-200 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-black text-xs text-stone-800">🛵 GoSend Instant</span>
+                    <input
+                      type="checkbox"
+                      checked={logisticsForm.activeCouriers.gosend}
+                      onChange={(e) =>
+                        setLogisticsForm({
+                          ...logisticsForm,
+                          activeCouriers: {
+                            ...logisticsForm.activeCouriers,
+                            gosend: e.target.checked,
+                          },
+                        })
+                      }
+                      className="rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                    />
+                  </div>
+                  <span className="text-[10px] text-stone-500 block">Instant & Same Day</span>
+                  <span
+                    className={`text-[9px] font-bold mt-1 inline-block ${
+                      logisticsForm.activeCouriers.gosend ? 'text-emerald-700' : 'text-stone-400'
+                    }`}
+                  >
+                    {logisticsForm.activeCouriers.gosend ? '● Aktif' : '○ Nonaktif'}
+                  </span>
+                </div>
+
+                {/* AnterAja */}
+                <div
+                  className={`p-3 rounded-xl border transition-all ${
+                    logisticsForm.activeCouriers.anteraja
+                      ? 'bg-white border-rose-300 shadow-xs'
+                      : 'bg-stone-100 border-stone-200 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-black text-xs text-stone-800">🏃 AnterAja</span>
+                    <input
+                      type="checkbox"
+                      checked={logisticsForm.activeCouriers.anteraja}
+                      onChange={(e) =>
+                        setLogisticsForm({
+                          ...logisticsForm,
+                          activeCouriers: {
+                            ...logisticsForm.activeCouriers,
+                            anteraja: e.target.checked,
+                          },
+                        })
+                      }
+                      className="rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                    />
+                  </div>
+                  <span className="text-[10px] text-stone-500 block">Regular Service</span>
+                  <span
+                    className={`text-[9px] font-bold mt-1 inline-block ${
+                      logisticsForm.activeCouriers.anteraja ? 'text-emerald-700' : 'text-stone-400'
+                    }`}
+                  >
+                    {logisticsForm.activeCouriers.anteraja ? '● Aktif' : '○ Nonaktif'}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -65,7 +65,7 @@ export const CartDrawer: React.FC = () => {
 
   const { user } = useAuthStore();
   const { addNewOrder } = useOrderStore();
-  const { paymentGateways, codPoints } = useSettingsStore();
+  const { paymentGateways, codPoints, logisticsConfig } = useSettingsStore();
   const [dbCodPoints, setDbCodPoints] = useState<any[]>([]);
   const [courierOptions, setCourierOptions] = useState<any[]>([]);
   const [isLoadingCouriers, setIsLoadingCouriers] = useState(false);
@@ -86,12 +86,19 @@ export const CartDrawer: React.FC = () => {
   useEffect(() => {
     if (fulfillmentType === 'COURIER_EXPEDITION' && courierOptions.length === 0) {
       setIsLoadingCouriers(true);
+      const activeCouriersStr = logisticsConfig?.activeCouriers
+        ? Object.entries(logisticsConfig.activeCouriers)
+            .filter(([_, active]) => active)
+            .map(([code]) => code)
+            .join(',')
+        : 'jne,jnt,sicepat,gosend';
+
       fetch(getApiUrl('/api/v1/logistics/rates'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           destination_postal_code: 16424,
-          couriers: 'jne,jnt,sicepat,gosend,grab',
+          couriers: activeCouriersStr || 'jne,jnt,sicepat,gosend',
         }),
       })
         .then((r) => r.json())
@@ -106,7 +113,7 @@ export const CartDrawer: React.FC = () => {
         .catch((err) => console.warn('Could not fetch courier rates:', err))
         .finally(() => setIsLoadingCouriers(false));
     }
-  }, [fulfillmentType, courierOptions.length, selectedCourier, setSelectedCourier]);
+  }, [fulfillmentType, courierOptions.length, selectedCourier, setSelectedCourier, logisticsConfig]);
 
   const activeMeetupPoints =
     dbCodPoints.length > 0

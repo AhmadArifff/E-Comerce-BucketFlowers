@@ -77,6 +77,25 @@ export interface PaymentGatewaysConfig {
   };
 }
 
+export interface LogisticsConfig {
+  isEnabled: boolean;
+  isProduction: boolean;
+  apiKey: string;
+  apiKeyMasked: string;
+  originName: string;
+  originPhone: string;
+  originAddress: string;
+  originPostalCode: number;
+  activeCouriers: {
+    jnt: boolean;
+    jne: boolean;
+    sicepat: boolean;
+    anteraja: boolean;
+    gosend: boolean;
+  };
+  extraPackingFee: number;
+}
+
 export interface StoreCoupon {
   code: string;
   discount: string;
@@ -98,6 +117,7 @@ interface SettingsState {
   studioAddress: string;
   dailyQuota: number;
   paymentGateways: PaymentGatewaysConfig;
+  logisticsConfig: LogisticsConfig;
   wasteMaterials: WasteMaterialItem[];
   coupons: StoreCoupon[];
   rawMaterials: RawMaterial[];
@@ -116,6 +136,8 @@ interface SettingsState {
     gateway: K,
     config: Partial<PaymentGatewaysConfig[K]>
   ) => void;
+  updateLogisticsConfig: (config: Partial<LogisticsConfig>) => void;
+  toggleCourierActive: (courier: keyof LogisticsConfig['activeCouriers'], isEnabled: boolean) => void;
   addWasteMaterial: (item: Omit<WasteMaterialItem, 'id' | 'totalLoss' | 'reportedAt'>) => void;
   removeWasteMaterial: (id: string) => void;
   getTotalWasteLoss: () => number;
@@ -414,6 +436,24 @@ export const useSettingsStore = create<SettingsState>()(
           adminFee: 0,
         },
       },
+      logisticsConfig: {
+        isEnabled: true,
+        isProduction: false,
+        apiKey: '',
+        apiKeyMasked: 'biteship_test.*****ncZo',
+        originName: 'Aesthetic Chenille Flowers Atelier',
+        originPhone: '081234567890',
+        originAddress: 'Jl. Margonda Raya No. 108, Pondok Cina, Beji, Kota Depok, Jawa Barat 16424',
+        originPostalCode: 16424,
+        activeCouriers: {
+          jnt: true,
+          jne: true,
+          sicepat: true,
+          anteraja: true,
+          gosend: true,
+        },
+        extraPackingFee: 0,
+      },
       wasteMaterials: DEFAULT_WASTE_MATERIALS,
       rawMaterials: DEFAULT_RAW_MATERIALS,
       procurementOrders: DEFAULT_PROCUREMENT_ORDERS,
@@ -496,6 +536,27 @@ export const useSettingsStore = create<SettingsState>()(
             [gateway]: {
               ...state.paymentGateways[gateway],
               ...config,
+            },
+          },
+        }));
+      },
+
+      updateLogisticsConfig: (config) => {
+        set((state) => ({
+          logisticsConfig: {
+            ...state.logisticsConfig,
+            ...config,
+          },
+        }));
+      },
+
+      toggleCourierActive: (courier, isEnabled) => {
+        set((state) => ({
+          logisticsConfig: {
+            ...state.logisticsConfig,
+            activeCouriers: {
+              ...state.logisticsConfig.activeCouriers,
+              [courier]: isEnabled,
             },
           },
         }));
