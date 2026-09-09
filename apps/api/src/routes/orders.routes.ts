@@ -101,6 +101,32 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/v1/orders/quota-status
+router.get('/quota-status', async (_req, res) => {
+  try {
+    const settingsRes = await pool.query('SELECT daily_po_limit FROM store_settings LIMIT 1;');
+    const dailyLimit = settingsRes.rows[0]?.daily_po_limit || 25;
+
+    const todayOrdersRes = await pool.query(
+      `SELECT COUNT(*)::int as count FROM orders WHERE created_at >= CURRENT_DATE AND order_status != 'CANCELLED';`
+    );
+    const todayCount = todayOrdersRes.rows[0]?.count || 0;
+    const poSlotsRemaining = Math.max(0, dailyLimit - todayCount);
+
+    return res.json({
+      success: true,
+      data: {
+        daily_po_limit: dailyLimit,
+        today_orders_count: todayCount,
+        po_slots_remaining: poSlotsRemaining,
+        is_quota_full: poSlotsRemaining === 0,
+      },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // GET /api/v1/orders/track/:phone
 router.get('/track/:phone', async (req, res) => {
   try {
@@ -109,23 +135,33 @@ router.get('/track/:phone', async (req, res) => {
 
     const sql = `
       SELECT 
-        o.id,
-        o.id as invoice_number,
-        o.customer_name,
-        o.customer_phone,
-        o.total_amount::float as total_amount,
-        o.payment_status,
-        o.order_status,
-        o.current_step,
-        o.tracking_number,
-        o.courier_name,
-        o.created_at
+        o.*,
+        cod.name as cod_meetup_name,
+        cod.full_address as cod_meetup_address,
+        cod.google_maps_url as cod_maps_url
       FROM orders o
-      WHERE o.customer_phone LIKE $1
-      ORDER BY o.created_at DESC
+      LEFT JOIN cod_meetup_points cod ON o.cod_meetup_id = cod.id
+      WHERE o.customer_phone LIKE $1 OR o.customer_phone = $2
+      ORDER BY o.created_at DESC;
     `;
-    const result = await pool.query(sql, [`%${cleanPhone}%`]);
-    return res.json({ success: true, data: result.rows });
+    const result = await pool.query(sql, [`%${cleanPhone}%`, phone]);
+
+    const ordersWithDetails = await Promise.all(
+      result.rows.map(async (order) => {
+        const itemsRes = await pool.query('SELECT * FROM order_items WHERE order_id = $1;', [order.id]);
+        const histRes = await pool.query(
+          'SELECT * FROM order_status_histories WHERE order_id = $1 ORDER BY step_number ASC, created_at ASC;',
+          [order.id]
+        );
+        return {
+          ...order,
+          items: itemsRes.rows,
+          histories: histRes.rows,
+        };
+      })
+    );
+
+    return res.json({ success: true, data: ordersWithDetails });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
   }
@@ -211,6 +247,19 @@ router.post('/', async (req, res) => {
 
     await client.query('BEGIN');
 
+    // 1. Capacity Throttling Check (Daily PO Quota)
+    const settingsRes = await client.query('SELECT daily_po_limit FROM store_settings LIMIT 1;');
+    const dailyLimit = settingsRes.rows[0]?.daily_po_limit || 25;
+
+    const todayOrdersRes = await client.query(
+      `SELECT COUNT(*)::int as count FROM orders WHERE created_at >= CURRENT_DATE AND order_status != 'CANCELLED';`
+    );
+    const todayCount = todayOrdersRes.rows[0]?.count || 0;
+
+    if (todayCount >= dailyLimit) {
+      throw new Error(`Kuota Pre-Order hari ini telah penuh (${todayCount}/${dailyLimit} pesanan). Silakan memesan kembali untuk slot pengiriman besok.`);
+    }
+
     const productIds = items.map((i: any) => i.product_id).filter(Boolean);
     const prodRes = await client.query(
       `SELECT id, name, price, discount_price, raw_cost_hpp, stock, is_active FROM products WHERE id = ANY($1) FOR UPDATE;`,
@@ -251,7 +300,14 @@ router.post('/', async (req, res) => {
         custom_specs_json: item.custom_specs_json || null,
       });
 
-      await client.query(`UPDATE products SET stock = stock - $1 WHERE id = $2;`, [qty, prod.id]);
+      // Atomic Inventory Decrement Lock
+      const updateStockRes = await client.query(
+        `UPDATE products SET stock = stock - $1 WHERE id = $2 AND stock >= $1 RETURNING stock;`,
+        [qty, prod.id]
+      );
+      if (updateStockRes.rowCount === 0) {
+        throw new Error(`Stok untuk produk "${prod.name}" tidak mencukupi untuk memenuhi pesanan.`);
+      }
     }
 
     let discountAmount = 0;
@@ -534,6 +590,16 @@ router.patch('/:id', async (req, res) => {
         ) VALUES ($1, $2, $3, $4, 'Admin', NOW());`,
         [id, targetStep, targetInfo.title, note || targetInfo.desc]
       );
+    }
+
+    // Restore stock if cancelled
+    if (order_status === 'CANCELLED') {
+      const itemsToRestore = await client.query('SELECT product_id, quantity FROM order_items WHERE order_id = $1;', [id]);
+      for (const it of itemsToRestore.rows) {
+        if (it.product_id) {
+          await client.query('UPDATE products SET stock = stock + $1 WHERE id = $2;', [it.quantity, it.product_id]);
+        }
+      }
     }
 
     await client.query('COMMIT');
