@@ -827,6 +827,44 @@ Biteship digunakan sebagai aggregator logistik untuk cek ongkir, booking kurir, 
    - Jika API Biteship tidak merespons (timeout 10 detik), admin dapat input nomor resi manual di panel order.
    - Tracking status diupdate manual oleh admin pada stepper order.
 
+7. **Kredensial Biteship Testing Mode (Aktif & Terverifikasi):**
+
+   | Parameter | Nilai | Keterangan |
+   |-----------|-------|------------|
+   | **Dashboard URL** | [dashboard.biteship.com](https://dashboard.biteship.com) | Portal konfigurasi & monitoring |
+   | **Nama Toko** | `Buket Flowers Kawat Bulu` | Nama merchant terdaftar di Biteship |
+   | **API Key (Testing)** | `biteship_test.*****` *(tersimpan di `.env`, lihat Dashboard Biteship)* | JWT-based API key untuk Testing Mode (**RAHASIA — jangan ekspos ke Git**) |
+   | **Mode** | Testing | Belum terhubung ke kurir live, menggunakan simulasi tarif & resi |
+
+   **Konfigurasi Environment Variables (`.env`):**
+   ```env
+   # ===== BITESHIP LOGISTICS AGGREGATOR (TESTING MODE — AKTIF) =====
+   BITESHIP_API_KEY="biteship_test.***** (lihat .env lokal / Dashboard Biteship)"
+   ```
+
+   **Webhook Tracking URL (Set di Dashboard Biteship):**
+   - **Development (lokal):** Gunakan ngrok → `https://xxxx.ngrok.io/api/v1/logistics/webhook`
+   - **Production (Vercel):** `https://[DOMAIN-VERCEL].vercel.app/api/v1/logistics/webhook`
+   - **Cara set:** Dashboard Biteship → Integrasi → Webhook → Event: `order.status_updated`
+
+   **Panduan Migrasi ke Live Mode:**
+   1. Login ke Dashboard Biteship → switch dari **Testing** ke **Live Mode** di sidebar.
+   2. Klik **"Aktivasi Order API"** → isi informasi bisnis (nama toko, alamat pickup Atelier Margonda Depok).
+   3. Pilih kurir yang ingin diaktifkan (JNE, J&T, SiCepat, GoSend, GrabExpress).
+   4. Buat **Live API Key** baru (`biteship_live.xxxxx`) dan update `.env`.
+   5. Isi saldo Biteship untuk pembayaran ongkir kurir.
+   6. Test dispatch pengiriman pertama dengan paket kecil untuk verifikasi end-to-end.
+
+   **Biaya Biteship:**
+   | Item | Biaya |
+   |------|-------|
+   | Registrasi & Integrasi | **Gratis** |
+   | Rates API (cek ongkir) | ~Rp 5 per request |
+   | Order API (buat pesanan + resi) | **Gratis** |
+   | Ongkir ke pelanggan | Sesuai tarif resmi kurir (tanpa markup) |
+
+   > **Catatan:** Tidak ada biaya bulanan. Tarif ongkir yang muncul di Biteship adalah tarif resmi dari kurir tanpa markup. Biaya Rates API sangat murah (~Rp 5/hit, 1000 cek ongkir/bulan = ~Rp 5.000).
+
 ### 7.15 Spesifikasi Autentikasi, Otorisasi & RBAC Matrix (Better Auth)
 
 Sistem menggunakan **Better Auth** untuk autentikasi berbasis session dengan Role-Based Access Control (RBAC):
