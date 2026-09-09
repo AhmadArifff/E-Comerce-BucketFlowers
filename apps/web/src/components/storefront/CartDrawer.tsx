@@ -48,6 +48,8 @@ export const CartDrawer: React.FC = () => {
     setFulfillmentType,
     selectedCodPointId,
     setSelectedCodPointId,
+    selectedCourier,
+    setSelectedCourier,
     voucherCode,
     discountAmount,
     applyVoucher,
@@ -65,7 +67,10 @@ export const CartDrawer: React.FC = () => {
   const { addNewOrder } = useOrderStore();
   const { paymentGateways, codPoints } = useSettingsStore();
   const [dbCodPoints, setDbCodPoints] = useState<any[]>([]);
+  const [courierOptions, setCourierOptions] = useState<any[]>([]);
+  const [isLoadingCouriers, setIsLoadingCouriers] = useState(false);
 
+  // Fetch active COD points from Postgres API
   useEffect(() => {
     fetch(getApiUrl('/api/v1/cod-points'))
       .then((r) => r.json())
@@ -76,6 +81,32 @@ export const CartDrawer: React.FC = () => {
       })
       .catch(() => {});
   }, []);
+
+  // Fetch live courier rates from Biteship Logistics API
+  useEffect(() => {
+    if (fulfillmentType === 'COURIER_EXPEDITION' && courierOptions.length === 0) {
+      setIsLoadingCouriers(true);
+      fetch(getApiUrl('/api/v1/logistics/rates'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destination_postal_code: 16424,
+          couriers: 'jne,jnt,sicepat,gosend,grab',
+        }),
+      })
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.success && res.data?.length > 0) {
+            setCourierOptions(res.data);
+            if (!selectedCourier) {
+              setSelectedCourier(res.data[0]);
+            }
+          }
+        })
+        .catch((err) => console.warn('Could not fetch courier rates:', err))
+        .finally(() => setIsLoadingCouriers(false));
+    }
+  }, [fulfillmentType, courierOptions.length, selectedCourier, setSelectedCourier]);
 
   const activeMeetupPoints =
     dbCodPoints.length > 0
@@ -226,6 +257,10 @@ export const CartDrawer: React.FC = () => {
       recipient_name: customerName.trim(),
       fulfillment_type: fulfillmentType,
       shipping_address: fulfillmentType === 'COURIER_EXPEDITION' ? deliveryAddress.trim() : null,
+      courier_name:
+        fulfillmentType === 'COURIER_EXPEDITION'
+          ? (selectedCourier ? `${selectedCourier.courier_name} (${selectedCourier.courier_service_name})` : 'JNE Express Reguler')
+          : null,
       cod_meetup_id: fulfillmentType === 'COD_MEETUP_POINT' ? selectedMeetup?.id || null : null,
       cod_notes: codMeetupNotes || null,
       coupon_code: voucherCode || null,
@@ -522,17 +557,88 @@ export const CartDrawer: React.FC = () => {
                         >
                           <Truck className="w-4 h-4 flex-shrink-0 text-theme-primary mt-0.5" />
                           <div>
-                            <div>Ekspedisi J&T</div>
-                            <span className="text-[10px] text-stone-500 font-medium">Rp 15.000</span>
+                            <div>Ekspedisi Kurir</div>
+                            <span className="text-[10px] text-stone-500 font-medium">
+                              {selectedCourier ? `Rp ${selectedCourier.shipment_fee.toLocaleString('id-ID')}` : 'Mulai Rp 11.000'}
+                            </span>
                           </div>
                         </button>
                       </div>
 
+                      {/* Biteship Multi-Courier Rates Selector */}
+                      {fulfillmentType === 'COURIER_EXPEDITION' && (
+                        <div className="pt-2 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] font-semibold text-stone-600 block">
+                              Pilih Layanan Ekspedisi (Biteship API):
+                            </label>
+                            <span className="text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+                              Asal: Margonda Depok
+                            </span>
+                          </div>
+
+                          {isLoadingCouriers ? (
+                            <div className="p-4 bg-stone-50 border border-stone-200 rounded-2xl text-center text-xs text-stone-500 animate-pulse">
+                              <span>Menghitung tarif kurir Biteship...</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
+                              {courierOptions.map((c: any, idx: number) => {
+                                const isSelected =
+                                  selectedCourier?.courier_code === c.courier_code &&
+                                  selectedCourier?.courier_service_code === c.courier_service_code;
+                                return (
+                                  <div
+                                    key={idx}
+                                    onClick={() => setSelectedCourier(c)}
+                                    className={`p-2.5 rounded-xl border text-xs flex items-center justify-between cursor-pointer transition-all ${
+                                      isSelected
+                                        ? 'border-theme-primary bg-theme-surface-subtle text-theme-primary shadow-xs ring-1 ring-theme-primary/30 font-bold'
+                                        : 'border-stone-200 bg-white hover:bg-stone-50 text-stone-700'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                          isSelected
+                                            ? 'border-theme-primary bg-theme-primary text-white'
+                                            : 'border-stone-300'
+                                        }`}
+                                      >
+                                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                      </div>
+                                      <div>
+                                        <div className="font-bold text-stone-800">{c.courier_name}</div>
+                                        <div className="text-[10px] text-stone-500">
+                                          {c.courier_service_name} • {c.duration}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="font-extrabold text-stone-900">
+                                        Rp {c.shipment_fee.toLocaleString('id-ID')}
+                                      </div>
+                                      <div className="text-[9px] text-emerald-600 font-bold">{c.etd}</div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* COD Meetup Points Selector */}
                       {fulfillmentType === 'COD_MEETUP_POINT' && (
                         <div className="pt-1 space-y-2">
-                          <label className="text-[11px] font-semibold text-stone-600 block mb-1">
-                            Pilih Titik Temu Kampus / Mall Terverifikasi:
-                          </label>
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] font-semibold text-stone-600 block">
+                              Pilih Titik Temu Kampus / Mall Terverifikasi:
+                            </label>
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                              Radius ≤ 5 KM Bebas Ongkir
+                            </span>
+                          </div>
                           <select
                             value={selectedCodPointId}
                             onChange={(e) => setSelectedCodPointId(e.target.value)}
@@ -540,7 +646,7 @@ export const CartDrawer: React.FC = () => {
                           >
                             {activeMeetupPoints.map((pt) => (
                               <option key={pt.id} value={pt.id}>
-                                {pt.name} ({pt.distanceKm} KM {pt.distanceKm <= 5 ? '• Gratis Ongkir' : ''})
+                                {pt.name} ({pt.distanceKm || pt.distance_km} KM • {Number(pt.distanceKm || pt.distance_km) <= 5 ? 'Gratis Ongkir' : 'Ongkir Rp 10.000'})
                               </option>
                             ))}
                           </select>
@@ -549,6 +655,7 @@ export const CartDrawer: React.FC = () => {
                           {(() => {
                             const curPt = activeMeetupPoints.find((p) => p.id === selectedCodPointId) || activeMeetupPoints[0];
                             if (!curPt) return null;
+                            const distance = Number(curPt.distanceKm || curPt.distance_km || 2.5);
                             return (
                               <div className="p-2.5 bg-rose-50/70 border border-rose-200/80 rounded-xl text-xs space-y-1.5">
                                 <div className="flex items-center justify-between gap-2">
@@ -557,7 +664,7 @@ export const CartDrawer: React.FC = () => {
                                     <span>{curPt.name}</span>
                                   </span>
                                   <a
-                                    href={curPt.googleMapsUrl}
+                                    href={curPt.googleMapsUrl || curPt.google_maps_url}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-white px-2 py-0.5 rounded-md border border-rose-200 flex items-center gap-1 shadow-2xs hover:bg-rose-50 transition-colors flex-shrink-0"
@@ -567,11 +674,19 @@ export const CartDrawer: React.FC = () => {
                                   </a>
                                 </div>
                                 <p className="text-[10.5px] text-stone-600 leading-tight">
-                                  {curPt.fullAddress}
+                                  {curPt.fullAddress || curPt.full_address}
                                 </p>
-                                {curPt.deliveryNotes && (
+                                <div className="flex items-center justify-between text-[10px] pt-0.5">
+                                  <span className="text-stone-500">
+                                    Jarak dari Atelier: <strong>{distance} KM</strong>
+                                  </span>
+                                  <span className={`font-bold px-1.5 py-0.2 rounded ${distance <= 5 ? 'text-emerald-700 bg-emerald-100' : 'text-amber-700 bg-amber-100'}`}>
+                                    {distance <= 5 ? '✓ Gratis Ongkir' : '+Rp 10.000'}
+                                  </span>
+                                </div>
+                                {(curPt.deliveryNotes || curPt.delivery_notes) && (
                                   <p className="text-[10px] text-stone-500 italic">
-                                    💡 {curPt.deliveryNotes}
+                                    💡 {curPt.deliveryNotes || curPt.delivery_notes}
                                   </p>
                                 )}
                               </div>

@@ -18,6 +18,7 @@ import {
 import { ATELIER_CONFIG, type CodPoint } from '@chenille/shared';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { showMagicToast } from '@/lib/magic-motion';
+import { getApiUrl } from '@/lib/api-client';
 
 // Presets data matching the official prototype
 const COD_PRESETS: Record<
@@ -200,6 +201,7 @@ export const CODMapModal: React.FC = () => {
       )
     ) {
       deleteCodPoint(point.id);
+      fetch(getApiUrl(`/api/v1/cod-points/${point.id}`), { method: 'DELETE' }).catch(() => {});
       showMagicToast(
         'Titik COD Dihapus 🗑️',
         `Titik temu "${point.name}" telah dihapus dari sistem.`,
@@ -454,6 +456,18 @@ export const CODMapModal: React.FC = () => {
       deliveryNotes: notes,
       isActive: true,
     });
+
+    fetch(getApiUrl('/api/v1/cod-points'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        full_address: address || `Area sekitar ${name}, Depok`,
+        google_maps_url: mapsUrl,
+        distance_km: dist,
+        delivery_notes: notes,
+      }),
+    }).catch((err) => console.warn('Could not sync COD point to DB:', err));
 
     setIsAddModalOpen(false);
     handleFocusPoint(savedPoint);

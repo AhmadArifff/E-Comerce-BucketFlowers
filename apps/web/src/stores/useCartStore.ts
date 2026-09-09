@@ -15,6 +15,8 @@ interface CartState {
   isCartOpen: boolean;
   fulfillmentType: 'COD_MEETUP_POINT' | 'COURIER_EXPEDITION';
   selectedCodPointId: string;
+  selectedCourier: any | null;
+  customShippingFee: number | null;
   voucherCode: string;
   discountAmount: number;
   usePoints: boolean;
@@ -26,6 +28,8 @@ interface CartState {
   updateQuantity: (productId: string, delta: number) => void;
   setFulfillmentType: (type: 'COD_MEETUP_POINT' | 'COURIER_EXPEDITION') => void;
   setSelectedCodPointId: (id: string) => void;
+  setSelectedCourier: (courier: any | null) => void;
+  setCustomShippingFee: (fee: number | null) => void;
   applyVoucher: (code: string) => { success: boolean; message: string };
   removeVoucher: () => void;
   togglePoints: (userBalance: number) => void;
@@ -44,6 +48,8 @@ export const useCartStore = create<CartState>()(
       isCartOpen: false,
       fulfillmentType: 'COD_MEETUP_POINT',
       selectedCodPointId: 'cod-001',
+      selectedCourier: null,
+      customShippingFee: null,
       voucherCode: '',
       discountAmount: 0,
       usePoints: false,
@@ -87,8 +93,18 @@ export const useCartStore = create<CartState>()(
         });
       },
 
-      setFulfillmentType: (type) => set({ fulfillmentType: type }),
+      setFulfillmentType: (type) =>
+        set((state) => ({
+          fulfillmentType: type,
+          customShippingFee: type === 'COD_MEETUP_POINT' ? 0 : state.customShippingFee,
+        })),
       setSelectedCodPointId: (id) => set({ selectedCodPointId: id }),
+      setSelectedCourier: (courier) =>
+        set({
+          selectedCourier: courier,
+          customShippingFee: courier ? courier.shipment_fee : null,
+        }),
+      setCustomShippingFee: (fee) => set({ customShippingFee: fee }),
 
       applyVoucher: (code) => {
         const clean = code.trim().toUpperCase();
@@ -119,6 +135,8 @@ export const useCartStore = create<CartState>()(
       clearCart: () =>
         set({
           items: [],
+          selectedCourier: null,
+          customShippingFee: null,
           voucherCode: '',
           discountAmount: 0,
           usePoints: false,
@@ -134,8 +152,9 @@ export const useCartStore = create<CartState>()(
       },
 
       getShippingFee: () => {
-        const { fulfillmentType } = get();
-        return fulfillmentType === 'COD_MEETUP_POINT' ? 0 : 15000;
+        const { fulfillmentType, customShippingFee } = get();
+        if (fulfillmentType === 'COD_MEETUP_POINT') return 0;
+        return customShippingFee !== null ? customShippingFee : 11000;
       },
 
       getGrandTotal: () => {

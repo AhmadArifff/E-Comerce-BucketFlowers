@@ -230,6 +230,7 @@ router.post('/', async (req, res) => {
       recipient_name,
       fulfillment_type = 'COD_MEETUP_POINT',
       shipping_address = '',
+      courier_name = null,
       cod_meetup_id = null,
       cod_notes = '',
       coupon_code = null,
@@ -351,16 +352,16 @@ router.post('/', async (req, res) => {
     const insertOrderSql = `
       INSERT INTO orders (
         id, customer_name, customer_phone, customer_email, recipient_name,
-        fulfillment_type, shipping_address, cod_meetup_id, cod_notes,
+        fulfillment_type, shipping_address, courier_name, cod_meetup_id, cod_notes,
         total_amount, discount_amount, coupon_id, total_hpp_cost,
         payment_method, payment_status, order_status, current_step,
         theme_used, created_at, updated_at
       ) VALUES (
         $1, $2, $3, $4, $5,
-        $6, $7, $8, $9,
-        $10, $11, $12, $13,
-        $14, 'UNPAID', 'PAYMENT_CONFIRMED', 1,
-        $15, NOW(), NOW()
+        $6, $7, $8, $9, $10,
+        $11, $12, $13, $14,
+        $15, 'UNPAID', 'PAYMENT_CONFIRMED', 1,
+        $16, NOW(), NOW()
       )
       RETURNING *;
     `;
@@ -373,6 +374,7 @@ router.post('/', async (req, res) => {
       recipient_name || customer_name,
       validFulfillment,
       shipping_address || null,
+      courier_name || null,
       cod_meetup_id || null,
       cod_notes || null,
       totalAmount,

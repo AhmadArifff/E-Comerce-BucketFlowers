@@ -12,6 +12,7 @@ import customStudioRoutes from './custom-studio.routes.js';
 import procurementRoutes from './procurement.routes.js';
 import paymentRoutes from './payment.routes.js';
 import otpRoutes from './otp.routes.js';
+import logisticsRoutes from './logistics.routes.js';
 
 const apiV1Router = Router();
 
@@ -19,6 +20,7 @@ apiV1Router.use('/products', productsRoutes);
 apiV1Router.use('/orders', ordersRoutes);
 apiV1Router.use('/payment', paymentRoutes);
 apiV1Router.use('/otp', otpRoutes);
+apiV1Router.use('/logistics', logisticsRoutes);
 apiV1Router.use('/cod-points', codRoutes);
 apiV1Router.use('/raw-materials', materialsRoutes);
 apiV1Router.use('/admin', adminRoutes);
