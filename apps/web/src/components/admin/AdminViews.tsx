@@ -51,6 +51,7 @@ import {
   CheckCheck,
   Upload,
   Truck,
+  MessageSquare,
 } from 'lucide-react';
 import { MOCK_PRODUCTS, type ExtendedProduct as Product } from '@chenille/shared';
 import { useThemeStore, type ThemeId } from '@/stores/useThemeStore';
@@ -1889,11 +1890,13 @@ export const StoreSettingsView: React.FC = () => {
     dailyQuota,
     paymentGateways,
     logisticsConfig,
+    notificationConfig,
     updateStoreProfile,
     togglePaymentGateway,
     updatePaymentGatewayConfig,
     updateLogisticsConfig,
     toggleCourierActive,
+    updateNotificationConfig,
   } = useSettingsStore();
 
   const [formProfile, setFormProfile] = useState({
@@ -1909,10 +1912,21 @@ export const StoreSettingsView: React.FC = () => {
   const [codConfig, setCodConfig] = useState({ ...paymentGateways.codCash });
   const [logisticsForm, setLogisticsForm] = useState({ ...logisticsConfig });
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showWaApiKey, setShowWaApiKey] = useState(false);
   const [testApiState, setTestApiState] = useState<{
     status: 'idle' | 'testing' | 'success' | 'error';
     message: string;
     servicesCount?: number;
+  }>({ status: 'idle', message: '' });
+  const [notifForm, setNotifForm] = useState({
+    isEnabled: notificationConfig.isEnabled,
+    apiKey: notificationConfig.apiKey || '',
+    senderDevice: notificationConfig.senderDevice || '081234567890',
+    events: { ...notificationConfig.events },
+  });
+  const [waTestState, setWaTestState] = useState<{
+    status: 'idle' | 'testing' | 'success' | 'error';
+    message: string;
   }>({ status: 'idle', message: '' });
 
   const handleTestBiteship = async () => {
@@ -1944,6 +1958,38 @@ export const StoreSettingsView: React.FC = () => {
         message: 'Koneksi ke backend API terputus.',
       });
       showMagicToast('Koneksi Error ⚠️', 'Gagal memanggil endpoint test backend.', '❌');
+    }
+  };
+
+  const handleTestWa = async () => {
+    setWaTestState({ status: 'testing', message: 'Mengirim pesan tes via Fonnte...' });
+    try {
+      const res = await fetch(getApiUrl('/api/v1/admin/settings/notifications/test'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          api_key: notifForm.apiKey || undefined,
+          target_phone: notifForm.senderDevice || undefined,
+          sender_device: notifForm.senderDevice || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWaTestState({
+          status: 'success',
+          message: data.data?.message || 'Koneksi WhatsApp berhasil!',
+        });
+        showMagicToast('WhatsApp Terhubung! 📱', data.data?.message || 'Pesan tes berhasil dikirim.', '✅');
+      } else {
+        setWaTestState({
+          status: 'error',
+          message: data.data?.message || data.error || 'Gagal menguji koneksi Fonnte.',
+        });
+        showMagicToast('Koneksi WhatsApp Gagal ⚠️', data.data?.message || 'Periksa API Key.', '❌');
+      }
+    } catch (err: any) {
+      setWaTestState({ status: 'error', message: 'Koneksi ke backend API terputus.' });
+      showMagicToast('Koneksi Error ⚠️', 'Gagal memanggil endpoint test WhatsApp.', '❌');
     }
   };
 
@@ -1980,7 +2026,20 @@ export const StoreSettingsView: React.FC = () => {
       }),
     }).catch((err) => console.warn('Sync logistics settings error:', err));
 
-    showMagicToast('Pengaturan Tersimpan! ⚙️', 'Konfigurasi profil atelier, payment gateway & logistik kurir berhasil disinkronkan.', '💾');
+    // Sync notification settings to backend DB
+    updateNotificationConfig(notifForm);
+    fetch(getApiUrl('/api/v1/admin/settings/notifications'), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        is_enabled: notifForm.isEnabled,
+        api_key: notifForm.apiKey || undefined,
+        sender_device: notifForm.senderDevice,
+        events: notifForm.events,
+      }),
+    }).catch((err) => console.warn('Sync notification settings error:', err));
+
+    showMagicToast('Pengaturan Tersimpan! ⚙️', 'Konfigurasi profil atelier, payment gateway, logistik kurir & notifikasi WA berhasil disinkronkan.', '💾');
   };
 
   return (
@@ -2741,6 +2800,158 @@ export const StoreSettingsView: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* SECTION 4: WHATSAPP NOTIFICATION (FONNTE API GATEWAY) */}
+        <div className="space-y-4 pt-4 border-t border-rose-100">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-emerald-600" />
+            <span className="text-xs font-black uppercase text-stone-700 tracking-wider">
+              4. Notifikasi WhatsApp Otomatis (Fonnte API Gateway)
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {/* Master Toggle */}
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <span className="font-extrabold text-stone-800 text-xs flex items-center gap-1.5">
+                    📱 WhatsApp Auto-Notification
+                  </span>
+                  <p className="text-[10px] text-stone-500 mt-0.5">
+                    Kirim notifikasi WA otomatis saat status pesanan berubah
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-[9px] font-bold ${notifForm.isEnabled ? 'text-emerald-600' : 'text-stone-400'}`}>
+                    {notifForm.isEnabled ? 'AKTIF' : 'NONAKTIF'}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={notifForm.isEnabled}
+                    onChange={(e) => setNotifForm({ ...notifForm, isEnabled: e.target.checked })}
+                    className="rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {notifForm.isEnabled && (
+                <div className="space-y-3 mt-3 pt-3 border-t border-emerald-200/50">
+                  {/* API Key */}
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1 text-[11px]">Fonnte API Key</label>
+                    <div className="relative">
+                      <input
+                        type={showWaApiKey ? 'text' : 'password'}
+                        value={notifForm.apiKey}
+                        onChange={(e) => setNotifForm({ ...notifForm, apiKey: e.target.value })}
+                        placeholder="Masukkan API Key dari dashboard fonnte.com"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-emerald-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20 pr-20"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowWaApiKey(!showWaApiKey)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-emerald-600 hover:text-emerald-800 cursor-pointer"
+                      >
+                        {showWaApiKey ? 'SEMBUNYIKAN' : 'TAMPILKAN'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Sender Device */}
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1 text-[11px]">Nomor Device WA Pengirim</label>
+                    <input
+                      type="text"
+                      value={notifForm.senderDevice}
+                      onChange={(e) => setNotifForm({ ...notifForm, senderDevice: e.target.value })}
+                      placeholder="081234567890"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-emerald-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    />
+                    <p className="text-[9px] text-stone-400 mt-0.5">
+                      Nomor HP yang terdaftar & scan QR di dashboard Fonnte
+                    </p>
+                  </div>
+
+                  {/* Test Connection Button */}
+                  <button
+                    type="button"
+                    onClick={handleTestWa}
+                    disabled={waTestState.status === 'testing'}
+                    className={`w-full px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all active:scale-[0.97] cursor-pointer ${
+                      waTestState.status === 'success'
+                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                        : waTestState.status === 'error'
+                          ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
+                          : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
+                    }`}
+                  >
+                    {waTestState.status === 'testing' ? '⏳ Menguji Koneksi Fonnte...' :
+                     waTestState.status === 'success' ? '✅ Koneksi Berhasil!' :
+                     waTestState.status === 'error' ? '❌ Koneksi Gagal' :
+                     '🧪 Tes Kirim Pesan WhatsApp'}
+                  </button>
+                  {waTestState.message && (
+                    <p className={`text-[10px] ${waTestState.status === 'error' ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {waTestState.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Event Triggers */}
+            {notifForm.isEnabled && (
+              <div className="p-4 rounded-2xl bg-white border border-stone-200">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-extrabold text-stone-800 text-xs">🔔 Kontrol Event Trigger</span>
+                  <span className="text-[9px] text-stone-400 font-bold">
+                    {Object.values(notifForm.events).filter(Boolean).length}/7 Aktif
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {([
+                    { key: 'orderCreated' as const, icon: '✅', label: 'Order Created', desc: 'Saat pesanan baru dibuat' },
+                    { key: 'craftingStarted' as const, icon: '✂️', label: 'Crafting Started', desc: 'Buket mulai dirangkai' },
+                    { key: 'qualityCheck' as const, icon: '🔍', label: 'Quality Check', desc: 'Lolos pemeriksaan kualitas' },
+                    { key: 'inDelivery' as const, icon: '🚚', label: 'In Delivery', desc: 'Sedang dikirim ke alamat' },
+                    { key: 'completed' as const, icon: '🎉', label: 'Completed', desc: 'Pesanan selesai diterima' },
+                    { key: 'warrantySubmitted' as const, icon: '📋', label: 'Warranty Submitted', desc: 'Klaim garansi diajukan' },
+                    { key: 'warrantyApproved' as const, icon: '✅', label: 'Warranty Approved', desc: 'Klaim garansi disetujui' },
+                  ]).map((ev) => (
+                    <div
+                      key={ev.key}
+                      className={`p-2.5 rounded-xl border transition-all flex items-center justify-between ${
+                        notifForm.events[ev.key]
+                          ? 'bg-emerald-50 border-emerald-200'
+                          : 'bg-stone-50 border-stone-200 opacity-60'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">{ev.icon}</span>
+                        <div>
+                          <span className="text-[10px] font-extrabold text-stone-800 block">{ev.label}</span>
+                          <span className="text-[9px] text-stone-400">{ev.desc}</span>
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={notifForm.events[ev.key]}
+                        onChange={(e) =>
+                          setNotifForm({
+                            ...notifForm,
+                            events: { ...notifForm.events, [ev.key]: e.target.checked },
+                          })
+                        }
+                        className="rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

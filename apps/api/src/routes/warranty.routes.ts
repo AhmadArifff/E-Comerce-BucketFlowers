@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import { pool } from '../config/database.js';
 import { uploadProductImage } from '../services/storage.service.js';
+import { sendOrderNotification } from '../services/whatsapp.service.js';
 
 const router = Router();
 
@@ -127,6 +128,15 @@ router.post('/', async (req, res) => {
       console.warn('Could not update order warranty_status:', ordErr);
     }
 
+    // 🔔 Fire-and-forget WhatsApp notification (PRD 7.19: WARRANTY_SUBMITTED)
+    if (customer_phone) {
+      sendOrderNotification('WARRANTY_SUBMITTED', {
+        phone: customer_phone,
+        claimId: id,
+        orderId: order_id,
+      }).catch(() => {});
+    }
+
     return res.json({
       success: true,
       data: result.rows[0],
@@ -159,7 +169,18 @@ router.patch('/:id', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Klaim garansi tidak ditemukan.' });
     }
 
-    return res.json({ success: true, data: result.rows[0] });
+    // 🔔 Fire-and-forget WhatsApp notification (PRD 7.19: WARRANTY_APPROVED)
+    const claim = result.rows[0];
+    if (status === 'APPROVED_REPLACE' && claim.customer_phone) {
+      sendOrderNotification('WARRANTY_APPROVED', {
+        phone: claim.customer_phone,
+        claimId: id,
+        orderId: claim.order_id,
+        awb: replacement_awb || undefined,
+      }).catch(() => {});
+    }
+
+    return res.json({ success: true, data: claim });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
   }

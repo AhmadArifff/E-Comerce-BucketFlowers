@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import { pool } from '../config/database.js';
+import { sendOrderNotification } from '../services/whatsapp.service.js';
 
 const router = Router();
 
@@ -417,6 +418,15 @@ router.post('/', async (req, res) => {
 
     await client.query('COMMIT');
 
+    // 🔔 Fire-and-forget WhatsApp notification (PRD 7.19: ORDER_CREATED)
+    sendOrderNotification('ORDER_CREATED', {
+      phone: customer_phone,
+      invoice: invoiceNumber,
+      orderId: newOrder.id,
+      leadTime: '1-2 hari kerja',
+      portalUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/portal`,
+    }).catch(() => {}); // swallow — notification failure must not affect order flow
+
     let snapToken: string | null = null;
     let redirectUrl: string | null = null;
 
@@ -606,9 +616,49 @@ router.patch('/:id', async (req, res) => {
 
     await client.query('COMMIT');
 
+    // 🔔 Fire-and-forget WhatsApp notifications (PRD 7.19: Status Update Events)
+    const updatedOrder = updateRes.rows[0];
+    const customerPhone = updatedOrder.customer_phone;
+    const invoiceId = updatedOrder.id;
+
+    if (customerPhone) {
+      // Map step changes to notification events
+      if (targetStep === 2) {
+        sendOrderNotification('CRAFTING_STARTED', {
+          phone: customerPhone,
+          invoice: invoiceId,
+          orderId: invoiceId,
+          etd: 'hari ini',
+        }).catch(() => {});
+      } else if (targetStep === 3) {
+        sendOrderNotification('QUALITY_CHECK', {
+          phone: customerPhone,
+          invoice: invoiceId,
+          orderId: invoiceId,
+        }).catch(() => {});
+      } else if (targetStep === 4) {
+        sendOrderNotification('COMPLETED', {
+          phone: customerPhone,
+          invoice: invoiceId,
+          orderId: invoiceId,
+          points: 10,
+        }).catch(() => {});
+      }
+
+      // Tracking number updated = IN_DELIVERY
+      if (tracking_number && tracking_number !== updatedOrder.tracking_number) {
+        sendOrderNotification('IN_DELIVERY', {
+          phone: customerPhone,
+          invoice: invoiceId,
+          orderId: invoiceId,
+          awb: tracking_number,
+        }).catch(() => {});
+      }
+    }
+
     return res.json({
       success: true,
-      data: updateRes.rows[0],
+      data: updatedOrder,
       message: 'Status pesanan berhasil diperbarui.',
     });
   } catch (error: any) {

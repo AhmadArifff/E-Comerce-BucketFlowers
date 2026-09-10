@@ -96,6 +96,23 @@ export interface LogisticsConfig {
   extraPackingFee: number;
 }
 
+export interface NotificationConfig {
+  isEnabled: boolean;
+  apiKeyMasked: string;
+  apiKey: string;
+  hasValidKey: boolean;
+  senderDevice: string;
+  events: {
+    orderCreated: boolean;
+    craftingStarted: boolean;
+    qualityCheck: boolean;
+    inDelivery: boolean;
+    completed: boolean;
+    warrantySubmitted: boolean;
+    warrantyApproved: boolean;
+  };
+}
+
 export interface StoreCoupon {
   code: string;
   discount: string;
@@ -118,6 +135,7 @@ interface SettingsState {
   dailyQuota: number;
   paymentGateways: PaymentGatewaysConfig;
   logisticsConfig: LogisticsConfig;
+  notificationConfig: NotificationConfig;
   wasteMaterials: WasteMaterialItem[];
   coupons: StoreCoupon[];
   rawMaterials: RawMaterial[];
@@ -161,6 +179,10 @@ interface SettingsState {
   deleteCodPoint: (id: string) => void;
   resetCodPointsToDefault: () => void;
   resetAllSettingsToDefault: () => void;
+
+  // Notification Actions
+  updateNotificationConfig: (config: Partial<NotificationConfig>) => void;
+  toggleNotificationEvent: (event: keyof NotificationConfig['events'], isEnabled: boolean) => void;
 }
 
 const DEFAULT_WASTE_MATERIALS: WasteMaterialItem[] = [
@@ -454,6 +476,22 @@ export const useSettingsStore = create<SettingsState>()(
         },
         extraPackingFee: 0,
       },
+      notificationConfig: {
+        isEnabled: false,
+        apiKeyMasked: '',
+        apiKey: '',
+        hasValidKey: false,
+        senderDevice: '081234567890',
+        events: {
+          orderCreated: true,
+          craftingStarted: true,
+          qualityCheck: true,
+          inDelivery: true,
+          completed: true,
+          warrantySubmitted: true,
+          warrantyApproved: true,
+        },
+      },
       wasteMaterials: DEFAULT_WASTE_MATERIALS,
       rawMaterials: DEFAULT_RAW_MATERIALS,
       procurementOrders: DEFAULT_PROCUREMENT_ORDERS,
@@ -716,6 +754,31 @@ export const useSettingsStore = create<SettingsState>()(
           procurementOrders: DEFAULT_PROCUREMENT_ORDERS,
           codPoints: DEFAULT_COD_POINTS,
         });
+      },
+
+      // --- Notification Config Actions ---
+      updateNotificationConfig: (config) => {
+        set((state) => ({
+          notificationConfig: {
+            ...state.notificationConfig,
+            ...config,
+            events: config.events
+              ? { ...state.notificationConfig.events, ...config.events }
+              : state.notificationConfig.events,
+          },
+        }));
+      },
+
+      toggleNotificationEvent: (event, isEnabled) => {
+        set((state) => ({
+          notificationConfig: {
+            ...state.notificationConfig,
+            events: {
+              ...state.notificationConfig.events,
+              [event]: isEnabled,
+            },
+          },
+        }));
       },
     }),
     {

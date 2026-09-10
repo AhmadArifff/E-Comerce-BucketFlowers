@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../config/database.js';
+import { testWhatsAppConnection } from '../services/whatsapp.service.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -188,12 +189,47 @@ router.get('/settings/all', async (req, res) => {
       },
     };
 
+    // Notification config
+    const notifRes = await pool.query(`SELECT * FROM notification_configs WHERE id = 'wa_fonnte_setting' LIMIT 1;`);
+    let notifConfig = notifRes.rows[0];
+
+    if (!notifConfig) {
+      notifConfig = {
+        is_enabled: false,
+        sender_device: process.env.WA_SENDER_DEVICE || '081234567890',
+        event_order_created: true,
+        event_crafting_started: true,
+        event_quality_check: true,
+        event_in_delivery: true,
+        event_completed: true,
+        event_warranty_submitted: true,
+        event_warranty_approved: true,
+      };
+    }
+
+    const notificationData = {
+      isEnabled: notifConfig.is_enabled,
+      apiKeyMasked: maskSecretKey(notifConfig.api_key),
+      hasValidKey: Boolean(notifConfig.api_key && !notifConfig.api_key.includes('xxxx') && notifConfig.api_key.length > 10),
+      senderDevice: notifConfig.sender_device || process.env.WA_SENDER_DEVICE || '081234567890',
+      events: {
+        orderCreated: notifConfig.event_order_created,
+        craftingStarted: notifConfig.event_crafting_started,
+        qualityCheck: notifConfig.event_quality_check,
+        inDelivery: notifConfig.event_in_delivery,
+        completed: notifConfig.event_completed,
+        warrantySubmitted: notifConfig.event_warranty_submitted,
+        warrantyApproved: notifConfig.event_warranty_approved,
+      },
+    };
+
     return res.json({
       success: true,
       data: {
         profile: store,
         payment: paymentData,
         logistics: logisticsData,
+        notifications: notificationData,
       },
     });
   } catch (error: any) {
@@ -444,6 +480,161 @@ router.post('/migrate-refresh', async (req, res) => {
     });
   } catch (error: any) {
     console.error('Error running migrate refresh:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ==========================================================================
+// NOTIFICATION SETTINGS (WhatsApp / Fonnte Gateway)
+// ==========================================================================
+
+// PATCH /api/v1/admin/settings/notifications
+router.patch('/settings/notifications', async (req, res) => {
+  try {
+    const {
+      is_enabled,
+      api_key,
+      sender_device,
+      events,
+    } = req.body;
+
+    const shouldUpdateKey = api_key && !api_key.includes('*****');
+
+    const currentRes = await pool.query(`SELECT * FROM notification_configs WHERE id = 'wa_fonnte_setting' LIMIT 1;`);
+
+    let sql: string;
+    let params: any[];
+
+    if (currentRes.rows.length === 0) {
+      sql = `
+        INSERT INTO notification_configs (
+          id, is_enabled, api_key, sender_device,
+          event_order_created, event_crafting_started, event_quality_check,
+          event_in_delivery, event_completed, event_warranty_submitted, event_warranty_approved,
+          updated_at
+        ) VALUES (
+          'wa_fonnte_setting', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()
+        ) RETURNING *;
+      `;
+      params = [
+        is_enabled ?? false,
+        shouldUpdateKey ? api_key : null,
+        sender_device || '081234567890',
+        events?.orderCreated ?? true,
+        events?.craftingStarted ?? true,
+        events?.qualityCheck ?? true,
+        events?.inDelivery ?? true,
+        events?.completed ?? true,
+        events?.warrantySubmitted ?? true,
+        events?.warrantyApproved ?? true,
+      ];
+    } else {
+      sql = `
+        UPDATE notification_configs
+        SET is_enabled = COALESCE($1, is_enabled),
+            ${shouldUpdateKey ? 'api_key = $2,' : ''}
+            sender_device = COALESCE($3, sender_device),
+            event_order_created = COALESCE($4, event_order_created),
+            event_crafting_started = COALESCE($5, event_crafting_started),
+            event_quality_check = COALESCE($6, event_quality_check),
+            event_in_delivery = COALESCE($7, event_in_delivery),
+            event_completed = COALESCE($8, event_completed),
+            event_warranty_submitted = COALESCE($9, event_warranty_submitted),
+            event_warranty_approved = COALESCE($10, event_warranty_approved),
+            updated_at = NOW()
+        WHERE id = 'wa_fonnte_setting'
+        RETURNING *;
+      `;
+      params = [
+        is_enabled,
+        shouldUpdateKey ? api_key : null,
+        sender_device,
+        events?.orderCreated,
+        events?.craftingStarted,
+        events?.qualityCheck,
+        events?.inDelivery,
+        events?.completed,
+        events?.warrantySubmitted,
+        events?.warrantyApproved,
+      ];
+    }
+
+    const result = await pool.query(sql, params);
+    const row = result.rows[0];
+
+    return res.json({
+      success: true,
+      data: {
+        isEnabled: row.is_enabled,
+        apiKeyMasked: maskSecretKey(row.api_key),
+        senderDevice: row.sender_device,
+        events: {
+          orderCreated: row.event_order_created,
+          craftingStarted: row.event_crafting_started,
+          qualityCheck: row.event_quality_check,
+          inDelivery: row.event_in_delivery,
+          completed: row.event_completed,
+          warrantySubmitted: row.event_warranty_submitted,
+          warrantyApproved: row.event_warranty_approved,
+        },
+      },
+      message: 'Pengaturan notifikasi WhatsApp berhasil disimpan.',
+    });
+  } catch (error: any) {
+    console.error('Error saving notification settings:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/v1/admin/settings/notifications/test
+router.post('/settings/notifications/test', async (req, res) => {
+  try {
+    const { api_key, target_phone, sender_device } = req.body;
+    const result = await testWhatsAppConnection(api_key, target_phone, sender_device);
+    return res.json({ success: result.success, data: result });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/admin/notifications/logs
+router.get('/notifications/logs', async (req, res) => {
+  try {
+    const limit = Math.min(100, parseInt((req.query.limit as string) || '50', 10));
+    const offset = parseInt((req.query.offset as string) || '0', 10);
+    const status = req.query.status as string | undefined;
+
+    let sql = `SELECT * FROM notification_logs`;
+    const params: any[] = [];
+    let idx = 1;
+
+    if (status) {
+      sql += ` WHERE status = $${idx}`;
+      params.push(status);
+      idx++;
+    }
+
+    sql += ` ORDER BY created_at DESC LIMIT $${idx} OFFSET $${idx + 1};`;
+    params.push(limit, offset);
+
+    const result = await pool.query(sql, params);
+
+    const countSql = status
+      ? `SELECT count(*)::int as total FROM notification_logs WHERE status = $1;`
+      : `SELECT count(*)::int as total FROM notification_logs;`;
+    const countParams = status ? [status] : [];
+    const countRes = await pool.query(countSql, countParams);
+
+    return res.json({
+      success: true,
+      data: result.rows,
+      pagination: {
+        total: countRes.rows[0]?.total || 0,
+        limit,
+        offset,
+      },
+    });
+  } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
   }
 });
