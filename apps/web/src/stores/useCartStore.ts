@@ -21,6 +21,7 @@ interface CartState {
   discountAmount: number;
   usePoints: boolean;
   pointsDiscount: number;
+  redeemPointsAmount: number;
 
   setIsCartOpen: (isOpen: boolean) => void;
   addItem: (product: ExtendedProduct, quantity?: number, notes?: string) => void;
@@ -31,8 +32,10 @@ interface CartState {
   setSelectedCourier: (courier: any | null) => void;
   setCustomShippingFee: (fee: number | null) => void;
   applyVoucher: (code: string) => { success: boolean; message: string };
+  setVoucherDiscount: (code: string, amount: number) => void;
   removeVoucher: () => void;
   togglePoints: (userBalance: number) => void;
+  setRedeemPointsAmount: (points: number, userBalance: number) => void;
   clearCart: () => void;
 
   getSubtotal: () => number;
@@ -54,6 +57,7 @@ export const useCartStore = create<CartState>()(
       discountAmount: 0,
       usePoints: false,
       pointsDiscount: 0,
+      redeemPointsAmount: 0,
 
       setIsCartOpen: (isOpen) => set({ isCartOpen: isOpen }),
 
@@ -106,29 +110,100 @@ export const useCartStore = create<CartState>()(
         }),
       setCustomShippingFee: (fee) => set({ customShippingFee: fee }),
 
+      // Dynamic voucher discount setter from backend validation
+      setVoucherDiscount: (code, amount) => {
+        set({
+          voucherCode: code.toUpperCase().trim(),
+          discountAmount: Math.max(0, amount),
+          // 🔒 Exclusive rule: Kupon aktif → matikan Flower Points
+          usePoints: false,
+          pointsDiscount: 0,
+          redeemPointsAmount: 0,
+        });
+      },
+
       applyVoucher: (code) => {
         const clean = code.trim().toUpperCase();
-        if (clean === 'WISUDA10K') {
-          set({ voucherCode: clean, discountAmount: 10000 });
-          return { success: true, message: 'Voucher Potongan Rp 10.000 berhasil digunakan!' };
+        if (clean === 'WISUDAHEMAT') {
+          set({
+            voucherCode: clean,
+            discountAmount: 25000,
+            usePoints: false,
+            pointsDiscount: 0,
+            redeemPointsAmount: 0,
+          });
+          return { success: true, message: 'Kupon WISUDAHEMAT berhasil digunakan! Hemat Rp 25.000.' };
         }
-        if (clean === 'KOREANPASTEL') {
-          set({ voucherCode: clean, discountAmount: 15000 });
-          return { success: true, message: 'Voucher Diskon Rp 15.000 berhasil diaktifkan!' };
+        if (clean === 'LOVECHENILLE') {
+          set({
+            voucherCode: clean,
+            discountAmount: 15000,
+            usePoints: false,
+            pointsDiscount: 0,
+            redeemPointsAmount: 0,
+          });
+          return { success: true, message: 'Kupon LOVECHENILLE diskon berhasil diaktifkan!' };
         }
-        return { success: false, message: 'Kode voucher tidak valid atau sudah kedaluwarsa.' };
+        if (clean === 'ONGKIRFREE') {
+          set({
+            voucherCode: clean,
+            discountAmount: 15000,
+            usePoints: false,
+            pointsDiscount: 0,
+            redeemPointsAmount: 0,
+          });
+          return { success: true, message: 'Kupon ONGKIRFREE gratis ongkir Rp 15.000 aktif!' };
+        }
+        return { success: false, message: 'Kode kupon tidak valid atau sudah kadaluarsa.' };
       },
 
       removeVoucher: () => set({ voucherCode: '', discountAmount: 0 }),
 
+      // Toggle Flower Points redemption (Kurs: 10 poin = Rp 5.000 / Rp 500 per poin)
       togglePoints: (userBalance) => {
         set((state) => {
           if (!state.usePoints) {
-            // 1 point = Rp 100, max discount 50 points = Rp 5.000 or up to available
-            const pointsToUse = Math.min(userBalance, 100);
-            return { usePoints: true, pointsDiscount: pointsToUse * 100 };
+            const subtotal = get().getSubtotal();
+            // Maximum points that make sense based on subtotal (Rp 500 per point)
+            const maxPointsForSubtotal = Math.floor(subtotal / 500);
+            // Must be multiple of 10, min 10
+            const availableMultiple = Math.floor(Math.min(userBalance, maxPointsForSubtotal) / 10) * 10;
+            const pointsToUse = Math.max(10, Math.min(availableMultiple, 50)); // default 10-50 poin
+
+            if (userBalance < 10) {
+              return { usePoints: false, pointsDiscount: 0, redeemPointsAmount: 0 };
+            }
+
+            const discount = (pointsToUse / 10) * 5000;
+            return {
+              usePoints: true,
+              pointsDiscount: discount,
+              redeemPointsAmount: pointsToUse,
+              // 🔒 Exclusive rule: Points aktif → hapus kupon
+              voucherCode: '',
+              discountAmount: 0,
+            };
           }
-          return { usePoints: false, pointsDiscount: 0 };
+          return { usePoints: false, pointsDiscount: 0, redeemPointsAmount: 0 };
+        });
+      },
+
+      // Set specific redeem points amount (kelipatan 10)
+      setRedeemPointsAmount: (points, userBalance) => {
+        set(() => {
+          if (points <= 0) {
+            return { usePoints: false, pointsDiscount: 0, redeemPointsAmount: 0 };
+          }
+          const validPoints = Math.min(Math.floor(points / 10) * 10, userBalance);
+          const discount = (validPoints / 10) * 5000;
+          return {
+            usePoints: validPoints >= 10,
+            redeemPointsAmount: validPoints,
+            pointsDiscount: validPoints >= 10 ? discount : 0,
+            // 🔒 Exclusive rule: Points aktif → hapus kupon
+            voucherCode: '',
+            discountAmount: 0,
+          };
         });
       },
 
@@ -141,6 +216,7 @@ export const useCartStore = create<CartState>()(
           discountAmount: 0,
           usePoints: false,
           pointsDiscount: 0,
+          redeemPointsAmount: 0,
         }),
 
       getSubtotal: () => {

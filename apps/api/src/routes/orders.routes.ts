@@ -54,6 +54,8 @@ router.get('/', async (req, res) => {
         o.cod_notes,
         o.total_amount::float as total_amount,
         o.discount_amount::float as discount_amount,
+        COALESCE(o.points_redeemed, 0) as points_redeemed,
+        COALESCE(o.points_earned, 0) as points_earned,
         o.total_hpp_cost::float as total_hpp_cost,
         (o.total_amount - o.total_hpp_cost)::float as net_profit,
         o.payment_method,
@@ -235,6 +237,8 @@ router.post('/', async (req, res) => {
       cod_meetup_id = null,
       cod_notes = '',
       coupon_code = null,
+      redeem_points = 0,
+      user_id = null,
       payment_method = 'MIDTRANS_SNAP_QRIS',
       theme_used = 'TEMA_A_KOREAN_PASTEL',
       items = [],
@@ -244,6 +248,24 @@ router.post('/', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Data pesanan tidak lengkap (nama, nomor telepon, dan item belanja wajib).',
+      });
+    }
+
+    const cleanCouponCode = coupon_code ? String(coupon_code).trim().toUpperCase() : null;
+    const pointsToRedeem = Math.max(0, parseInt(redeem_points || '0', 10));
+
+    // 🔒 Enforce Exclusive Rule: PRD 7.17 (Hanya 1 Kupon ATAU 1 Redeem Poin per order)
+    if (cleanCouponCode && pointsToRedeem > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Kupon diskon dan Flower Points tidak dapat digunakan bersamaan dalam satu pesanan. Pilih salah satu.',
+      });
+    }
+
+    if (pointsToRedeem > 0 && (pointsToRedeem < 10 || pointsToRedeem % 10 !== 0)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Penukaran Flower Points harus minimal 10 poin dan kelipatan 10 (10 poin = Rp 5.000).',
       });
     }
 
@@ -315,25 +337,40 @@ router.post('/', async (req, res) => {
     let discountAmount = 0;
     let appliedCouponId: string | null = null;
 
-    if (coupon_code) {
+    if (cleanCouponCode) {
       const coupRes = await client.query(
-        `SELECT * FROM coupons WHERE code = $1 AND is_active = true FOR UPDATE;`,
-        [coupon_code.toUpperCase().trim()]
+        `SELECT * FROM coupons WHERE UPPER(code) = $1 AND is_active = true FOR UPDATE;`,
+        [cleanCouponCode]
       );
       if (coupRes.rows.length > 0) {
         const coup = coupRes.rows[0];
-        if (coup.used_count < coup.quota && calculatedSubtotal >= Number(coup.min_order_amount)) {
-          appliedCouponId = coup.id;
-          if (coup.discount_type === 'PERCENTAGE') {
-            discountAmount = Math.round((calculatedSubtotal * Number(coup.discount_value)) / 100);
-          } else if (coup.discount_type === 'FIXED_AMOUNT') {
-            discountAmount = Math.min(calculatedSubtotal, Number(coup.discount_value));
-          } else if (coup.discount_type === 'FREE_SHIPPING') {
-            discountAmount = 15000;
-          }
-          await client.query(`UPDATE coupons SET used_count = used_count + 1 WHERE id = $1;`, [coup.id]);
+        if (coup.expires_at && new Date(coup.expires_at).getTime() < Date.now()) {
+          throw new Error(`Kupon "${coup.code}" telah kadaluarsa.`);
         }
+        if (coup.used_count >= coup.quota) {
+          throw new Error(`Kuota kupon "${coup.code}" telah habis.`);
+        }
+        if (calculatedSubtotal < Number(coup.min_order_amount)) {
+          throw new Error(
+            `Minimal belanja untuk menggunakan kupon "${coup.code}" adalah Rp ${Number(coup.min_order_amount).toLocaleString('id-ID')}.`
+          );
+        }
+        appliedCouponId = coup.id;
+        if (coup.discount_type === 'PERCENTAGE') {
+          discountAmount = Math.round((calculatedSubtotal * Number(coup.discount_value)) / 100);
+        } else if (coup.discount_type === 'FIXED_AMOUNT') {
+          discountAmount = Math.min(calculatedSubtotal, Number(coup.discount_value));
+        } else if (coup.discount_type === 'FREE_SHIPPING') {
+          discountAmount = Number(coup.discount_value) > 0 ? Number(coup.discount_value) : 15000;
+        }
+        await client.query(`UPDATE coupons SET used_count = used_count + 1 WHERE id = $1;`, [coup.id]);
+      } else {
+        throw new Error(`Kupon "${cleanCouponCode}" tidak ditemukan atau sudah tidak aktif.`);
       }
+    } else if (pointsToRedeem > 0) {
+      // 10 poin = Rp 5.000 (Rp 500 / poin)
+      const calculatedPointsDiscount = (pointsToRedeem / 10) * 5000;
+      discountAmount = Math.min(calculatedSubtotal, calculatedPointsDiscount);
     }
 
     const totalAmount = Math.max(0, calculatedSubtotal - discountAmount);
@@ -354,15 +391,15 @@ router.post('/', async (req, res) => {
       INSERT INTO orders (
         id, customer_name, customer_phone, customer_email, recipient_name,
         fulfillment_type, shipping_address, courier_name, cod_meetup_id, cod_notes,
-        total_amount, discount_amount, coupon_id, total_hpp_cost,
+        total_amount, discount_amount, coupon_id, points_redeemed, total_hpp_cost,
         payment_method, payment_status, order_status, current_step,
         theme_used, created_at, updated_at
       ) VALUES (
         $1, $2, $3, $4, $5,
         $6, $7, $8, $9, $10,
-        $11, $12, $13, $14,
-        $15, 'UNPAID', 'PAYMENT_CONFIRMED', 1,
-        $16, NOW(), NOW()
+        $11, $12, $13, $14, $15,
+        $16, 'UNPAID', 'PAYMENT_CONFIRMED', 1,
+        $17, NOW(), NOW()
       )
       RETURNING *;
     `;
@@ -381,12 +418,48 @@ router.post('/', async (req, res) => {
       totalAmount,
       discountAmount,
       appliedCouponId,
+      pointsToRedeem,
       calculatedHpp,
       validPaymentMethod,
       theme_used,
     ]);
 
     const newOrder = orderRes.rows[0];
+
+    // Deduct points & record redeem transaction if points were used
+    if (pointsToRedeem > 0) {
+      let matchedUserId = user_id;
+      if (!matchedUserId && customer_phone) {
+        const cleanPhone = customer_phone.replace(/[^0-9]/g, '');
+        const uRes = await client.query(
+          `SELECT id FROM users WHERE phone LIKE $1 OR phone = $2 LIMIT 1;`,
+          [`%${cleanPhone}%`, customer_phone]
+        );
+        if (uRes.rows.length > 0) {
+          matchedUserId = uRes.rows[0].id;
+        }
+      }
+
+      if (matchedUserId) {
+        await client.query(
+          `UPDATE profiles SET flower_points = GREATEST(0, flower_points - $1) WHERE id = $2;`,
+          [pointsToRedeem, matchedUserId]
+        );
+      }
+
+      const fptId = `fpt-rdm-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+      await client.query(
+        `INSERT INTO flower_point_transactions (id, user_id, order_id, type, points, description, created_at)
+         VALUES ($1, $2, $3, 'REDEEM', $4, $5, NOW());`,
+        [
+          fptId,
+          matchedUserId || customer_phone,
+          newOrder.id,
+          -pointsToRedeem,
+          `Penukaran ${pointsToRedeem} Flower Points untuk diskon Rp ${discountAmount.toLocaleString('id-ID')} pada invoice ${newOrder.id}`,
+        ]
+      );
+    }
 
     for (const oi of orderItemsToInsert) {
       await client.query(
@@ -520,8 +593,7 @@ router.patch('/:id', async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
-    const { step, order_status, tracking_number, courier_name, note } = req.body;
-
+    const { step, current_step, order_status, tracking_number, courier_name, note } = req.body;
     const stepMap: Record<number, { status: string; title: string; desc: string }> = {
       1: {
         status: 'PAYMENT_CONFIRMED',
@@ -545,7 +617,8 @@ router.patch('/:id', async (req, res) => {
       },
     };
 
-    const targetStep = step ? parseInt(step, 10) : null;
+    const rawStep = step ?? current_step;
+    const targetStep = rawStep ? parseInt(rawStep, 10) : null;
     const targetInfo = targetStep && stepMap[targetStep] ? stepMap[targetStep] : null;
 
     await client.query('BEGIN');
@@ -614,6 +687,56 @@ router.patch('/:id', async (req, res) => {
       }
     }
 
+    // 🌸 Award Flower Points when Order reaches step 4 (COMPLETED)
+    let pointsAwarded = 0;
+    if (targetStep === 4) {
+      // 1 point per Rp 10.000 (minimum 1 point)
+      const earned = Math.max(1, Math.floor(Number(updateRes.rows[0].total_amount) / 10000));
+      pointsAwarded = earned;
+
+      // Ensure not double-awarded
+      const checkAwarded = await client.query(
+        `SELECT id FROM flower_point_transactions WHERE order_id = $1 AND type = 'EARN' LIMIT 1;`,
+        [id]
+      );
+
+      if (checkAwarded.rows.length === 0) {
+        await client.query(`UPDATE orders SET points_earned = $1 WHERE id = $2;`, [earned, id]);
+
+        let targetUserId = updateRes.rows[0].user_id;
+        if (!targetUserId && updateRes.rows[0].customer_phone) {
+          const cleanPhone = updateRes.rows[0].customer_phone.replace(/[^0-9]/g, '');
+          const uRes = await client.query(
+            `SELECT id FROM users WHERE phone LIKE $1 OR phone = $2 LIMIT 1;`,
+            [`%${cleanPhone}%`, updateRes.rows[0].customer_phone]
+          );
+          if (uRes.rows.length > 0) {
+            targetUserId = uRes.rows[0].id;
+          }
+        }
+
+        if (targetUserId) {
+          await client.query(
+            `UPDATE profiles SET flower_points = flower_points + $1 WHERE id = $2;`,
+            [earned, targetUserId]
+          );
+        }
+
+        const earnTxId = `fpt-earn-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+        await client.query(
+          `INSERT INTO flower_point_transactions (id, user_id, order_id, type, points, description, created_at)
+           VALUES ($1, $2, $3, 'EARN', $4, $5, NOW());`,
+          [
+            earnTxId,
+            targetUserId || updateRes.rows[0].customer_phone || 'guest',
+            id,
+            earned,
+            `Reward +${earned} Flower Points atas pesanan selesai (${id})`,
+          ]
+        );
+      }
+    }
+
     await client.query('COMMIT');
 
     // 🔔 Fire-and-forget WhatsApp notifications (PRD 7.19: Status Update Events)
@@ -641,7 +764,7 @@ router.patch('/:id', async (req, res) => {
           phone: customerPhone,
           invoice: invoiceId,
           orderId: invoiceId,
-          points: 10,
+          points: pointsAwarded || 10,
         }).catch(() => {});
       }
 

@@ -52,6 +52,8 @@ import {
   Upload,
   Truck,
   MessageSquare,
+  Pencil,
+  Power,
 } from 'lucide-react';
 import { MOCK_PRODUCTS, type ExtendedProduct as Product } from '@chenille/shared';
 import { useThemeStore, type ThemeId } from '@/stores/useThemeStore';
@@ -1005,62 +1007,85 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
 
 // ============================================================================
 // 5. CREATE COUPON MODAL
+// ==============================================// ============================================================================
+// 5. CREATE & EDIT COUPON MODALS (POSTGRESQL SYNC)
 // ============================================================================
 export const CreateCouponModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  onAddCoupon: (newCoupon: {
-    code: string;
-    discount: string;
-    minSpend: string;
-    used: number;
-    quota: number;
-    active: boolean;
-    expiry: string;
-  }) => void;
-}> = ({ isOpen, onClose, onAddCoupon }) => {
+  onSuccess?: () => void;
+  onAddCoupon?: (newCoupon: any) => void;
+}> = ({ isOpen, onClose, onSuccess, onAddCoupon }) => {
   const [code, setCode] = useState('');
-  const [discountType, setDiscountType] = useState<'NOMINAL' | 'PERCENT' | 'ONGKIR'>('NOMINAL');
+  const [discountType, setDiscountType] = useState<'FIXED_AMOUNT' | 'PERCENTAGE' | 'FREE_SHIPPING'>('FIXED_AMOUNT');
   const [discountVal, setDiscountVal] = useState('25000');
   const [minSpend, setMinSpend] = useState('150000');
   const [noMinSpend, setNoMinSpend] = useState(false);
   const [quota, setQuota] = useState('50');
-  const [expiry, setExpiry] = useState('31 Okt 2026');
+  const [description, setDescription] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code.trim()) {
       showMagicToast('Kode Wajib Diisi ⚠️', 'Harap masukkan kode kupon promo.', '❌');
       return;
     }
 
-    let discountStr = '';
-    if (discountType === 'PERCENT') {
-      discountStr = `Diskon ${discountVal}%`;
-    } else if (discountType === 'ONGKIR') {
-      discountStr = `Gratis Ongkir Rp ${parseInt(discountVal || '0').toLocaleString('id-ID')}`;
-    } else {
-      discountStr = `Diskon Rp ${parseInt(discountVal || '0').toLocaleString('id-ID')}`;
+    setIsSubmitting(true);
+    const cleanCode = code.trim().toUpperCase();
+    const finalMinSpend = noMinSpend ? 0 : Number(minSpend) || 0;
+    const finalDiscountVal = Number(discountVal) || 0;
+
+    try {
+      const res = await fetch(getApiUrl('/api/v1/coupons'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: cleanCode,
+          discount_type: discountType,
+          discount_value: finalDiscountVal,
+          min_order_amount: finalMinSpend,
+          quota: parseInt(quota, 10) || 50,
+          description: description.trim() || undefined,
+          expires_at: expiryDate ? new Date(expiryDate).toISOString() : null,
+          is_active: true,
+        }),
+      });
+      const data = await res.json();
+      setIsSubmitting(false);
+
+      if (data.success) {
+        showMagicToast('Kupon Baru Diterbitkan! 🏷️', `Kupon ${cleanCode} aktif dan tersimpan di database.`, '🎉');
+        if (onSuccess) onSuccess();
+        if (onAddCoupon) {
+          onAddCoupon({
+            code: cleanCode,
+            discount:
+              discountType === 'PERCENTAGE'
+                ? `Diskon ${finalDiscountVal}%`
+                : discountType === 'FREE_SHIPPING'
+                ? `Gratis Ongkir Rp ${finalDiscountVal.toLocaleString('id-ID')}`
+                : `Diskon Rp ${finalDiscountVal.toLocaleString('id-ID')}`,
+            minSpend: noMinSpend ? 'Tanpa Minimum' : `Min. Belanja Rp ${finalMinSpend.toLocaleString('id-ID')}`,
+            used: 0,
+            quota: parseInt(quota, 10) || 50,
+            active: true,
+            expiry: expiryDate ? new Date(expiryDate).toLocaleDateString('id-ID') : 'Tanpa Batas',
+          });
+        }
+        onClose();
+      } else {
+        showMagicToast('Gagal Membuat Kupon ⚠️', data.error || 'Terjadi kesalahan sistem.', '⚠️');
+      }
+    } catch (err) {
+      setIsSubmitting(false);
+      console.error('Error creating coupon:', err);
+      showMagicToast('Gagal Membuat Kupon ⚠️', 'Koneksi ke server terputus.', '⚠️');
     }
-
-    const minSpendStr = noMinSpend
-      ? 'Tanpa Minimum'
-      : `Min. Belanja Rp ${parseInt(minSpend || '0').toLocaleString('id-ID')}`;
-
-    onAddCoupon({
-      code: code.trim().toUpperCase(),
-      discount: discountStr,
-      minSpend: minSpendStr,
-      used: 0,
-      quota: parseInt(quota) || 50,
-      active: true,
-      expiry,
-    });
-
-    onClose();
-    showMagicToast('Kupon Baru Diterbitkan! 🏷️', `Kupon ${code.toUpperCase()} aktif dan siap digunakan pembeli.`, '✨');
   };
 
   return (
@@ -1071,7 +1096,7 @@ export const CreateCouponModal: React.FC<{
             <Tag className="w-5 h-5 text-rose-600" />
             <div>
               <h3 className="font-extrabold text-stone-800 text-sm">Buat Kupon Diskon Baru</h3>
-              <span className="text-[11px] text-stone-500">Kupon akan langsung aktif di etalase checkout toko.</span>
+              <span className="text-[11px] text-stone-500">Tersimpan ke database Supabase &amp; aktif di checkout.</span>
             </div>
           </div>
           <button onClick={onClose} className="p-1 rounded-full text-stone-400 hover:text-stone-600 cursor-pointer">
@@ -1102,22 +1127,22 @@ export const CreateCouponModal: React.FC<{
                 onChange={(e) => setDiscountType(e.target.value as any)}
                 className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white font-bold"
               >
-                <option value="NOMINAL">Potongan Nominal (Rp)</option>
-                <option value="PERCENT">Persentase Diskon (%)</option>
-                <option value="ONGKIR">Potongan Ongkir (Rp)</option>
+                <option value="FIXED_AMOUNT">Potongan Nominal (Rp)</option>
+                <option value="PERCENTAGE">Persentase Diskon (%)</option>
+                <option value="FREE_SHIPPING">Potongan Ongkir (Rp)</option>
               </select>
             </div>
 
             <div>
               <label className="block font-bold text-stone-700 mb-1">
-                {discountType === 'PERCENT' ? 'Persentase (%)' : 'Nilai Potongan (Rp)'}
+                {discountType === 'PERCENTAGE' ? 'Persentase (%)' : 'Nilai Potongan (Rp)'}
               </label>
               <input
                 type="number"
                 required
                 value={discountVal}
                 onChange={(e) => setDiscountVal(e.target.value)}
-                placeholder={discountType === 'PERCENT' ? '15' : '25000'}
+                placeholder={discountType === 'PERCENTAGE' ? '15' : '25000'}
                 className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 font-mono font-bold text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
               />
             </div>
@@ -1158,13 +1183,22 @@ export const CreateCouponModal: React.FC<{
           </div>
 
           <div>
-            <label className="block font-bold text-stone-700 mb-1">Masa Berlaku / Kadaluarsa</label>
+            <label className="block font-bold text-stone-700 mb-1">Deskripsi / Catatan Promo</label>
             <input
               type="text"
-              required
-              value={expiry}
-              onChange={(e) => setExpiry(e.target.value)}
-              placeholder="Contoh: 31 Okt 2026"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Contoh: Diskon khusus wisuda batch September"
+              className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-stone-700 mb-1">Tanggal Kadaluarsa (Opsional)</label>
+            <input
+              type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
               className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
             />
           </div>
@@ -1179,9 +1213,215 @@ export const CreateCouponModal: React.FC<{
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer"
+              disabled={isSubmitting}
+              className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
             >
-              Terbitkan Kupon
+              {isSubmitting ? (
+                <>
+                  <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Menerbitkan...</span>
+                </>
+              ) : (
+                <span>Terbitkan Kupon</span>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export const EditCouponModal: React.FC<{
+  isOpen: boolean;
+  coupon: any | null;
+  onClose: () => void;
+  onSuccess: () => void;
+}> = ({ isOpen, coupon, onClose, onSuccess }) => {
+  const [discountType, setDiscountType] = useState<'FIXED_AMOUNT' | 'PERCENTAGE' | 'FREE_SHIPPING'>('FIXED_AMOUNT');
+  const [discountVal, setDiscountVal] = useState('');
+  const [minSpend, setMinSpend] = useState('');
+  const [quota, setQuota] = useState('');
+  const [description, setDescription] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [isActive, setIsActive] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  React.useEffect(() => {
+    if (coupon) {
+      setDiscountType(coupon.discount_type || (coupon.discountType === 'PERCENT' ? 'PERCENTAGE' : coupon.discountType === 'ONGKIR' ? 'FREE_SHIPPING' : 'FIXED_AMOUNT'));
+      setDiscountVal(String(coupon.discount_value ?? coupon.discountVal ?? '25000'));
+      setMinSpend(String(coupon.min_order_amount ?? coupon.minSpendVal ?? '100000'));
+      setQuota(String(coupon.quota ?? 50));
+      setDescription(coupon.description || '');
+      const exp = coupon.expires_at || coupon.expiry;
+      if (exp && exp.includes('-')) {
+        setExpiryDate(exp.slice(0, 10));
+      } else {
+        setExpiryDate('');
+      }
+      setIsActive(coupon.is_active ?? coupon.active ?? true);
+    }
+  }, [coupon]);
+
+  if (!isOpen || !coupon) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch(getApiUrl(`/api/v1/coupons/${coupon.id || coupon.code}`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          discount_type: discountType,
+          discount_value: Number(discountVal),
+          min_order_amount: Number(minSpend) || 0,
+          quota: parseInt(quota, 10) || 50,
+          description: description.trim() || null,
+          expires_at: expiryDate ? new Date(expiryDate).toISOString() : null,
+          is_active: isActive,
+        }),
+      });
+      const data = await res.json();
+      setIsSubmitting(false);
+
+      if (data.success) {
+        showMagicToast('Kupon Diperbarui! 🏷️', `Perubahan kupon ${coupon.code} berhasil disimpan ke database.`, '✨');
+        onSuccess();
+        onClose();
+      } else {
+        showMagicToast('Gagal Memperbarui Kupon ⚠️', data.error || 'Terjadi kesalahan sistem.', '⚠️');
+      }
+    } catch (err) {
+      setIsSubmitting(false);
+      console.error('Error updating coupon:', err);
+      showMagicToast('Gagal Memperbarui Kupon ⚠️', 'Koneksi ke backend terputus.', '⚠️');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+      <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-rose-100 space-y-4 my-8">
+        <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+          <div className="flex items-center gap-2">
+            <Pencil className="w-5 h-5 text-rose-600" />
+            <div>
+              <h3 className="font-extrabold text-stone-800 text-sm">Edit Kupon: {coupon.code}</h3>
+              <span className="text-[11px] text-stone-500">Perbarui kuota, diskon, dan masa berlaku kupon.</span>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-full text-stone-400 hover:text-stone-600 cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-stone-700 mb-1">Jenis Potongan</label>
+              <select
+                value={discountType}
+                onChange={(e) => setDiscountType(e.target.value as any)}
+                className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white font-bold"
+              >
+                <option value="FIXED_AMOUNT">Potongan Nominal (Rp)</option>
+                <option value="PERCENTAGE">Persentase Diskon (%)</option>
+                <option value="FREE_SHIPPING">Potongan Ongkir (Rp)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-bold text-stone-700 mb-1">
+                {discountType === 'PERCENTAGE' ? 'Persentase (%)' : 'Nilai Potongan (Rp)'}
+              </label>
+              <input
+                type="number"
+                required
+                value={discountVal}
+                onChange={(e) => setDiscountVal(e.target.value)}
+                className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 font-mono font-bold text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-stone-700 mb-1">Minimal Belanja (Rp)</label>
+              <input
+                type="number"
+                value={minSpend}
+                onChange={(e) => setMinSpend(e.target.value)}
+                className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 font-mono font-bold text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-stone-700 mb-1">Kuota Pemakaian</label>
+              <input
+                type="number"
+                required
+                value={quota}
+                onChange={(e) => setQuota(e.target.value)}
+                className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 font-mono font-bold text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-bold text-stone-700 mb-1">Deskripsi Promo</label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-stone-700 mb-1">Tanggal Kadaluarsa</label>
+            <input
+              type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              className="w-full px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
+            />
+          </div>
+
+          <div className="pt-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="rounded text-rose-600 focus:ring-rose-500"
+              />
+              <span className="font-bold text-stone-700">Kupon Aktif (Dapat digunakan pelanggan)</span>
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-stone-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl border border-stone-200 text-xs font-bold text-stone-600 hover:bg-stone-50 cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {isSubmitting ? (
+                <>
+                  <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Menyimpan...</span>
+                </>
+              ) : (
+                <span>Simpan Perubahan</span>
+              )}
             </button>
           </div>
         </form>
@@ -1191,15 +1431,78 @@ export const CreateCouponModal: React.FC<{
 };
 
 // ============================================================================
-// 6. PROMOS & COUPONS VIEW (WITH ACTIVE/INACTIVE TOGGLES & CREATE FORM)
+// 6. PROMOS & COUPONS VIEW (POSTGRESQL LIVE CRUD & ACTIVE TOGGLE)
 // ============================================================================
 export const PromosView: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const { coupons, toggleCouponActive, addCoupon } = useSettingsStore();
+  const [editingCoupon, setEditingCoupon] = useState<any | null>(null);
+  const { coupons: localCoupons, toggleCouponActive } = useSettingsStore();
+
+  const [dbCoupons, setDbCoupons] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   type CouponSortField = 'code' | 'discount' | 'minSpend' | 'used' | 'expiry' | 'active';
   const [sortField, setSortField] = useState<CouponSortField | null>('used');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  const fetchCouponsFromApi = async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await fetch(getApiUrl('/api/v1/coupons?all=true'));
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        // Map database coupons into standard display format
+        const mapped = json.data.map((c: any) => {
+          let discountStr = '';
+          if (c.discount_type === 'PERCENTAGE') {
+            discountStr = `Diskon ${c.discount_value}%`;
+          } else if (c.discount_type === 'FREE_SHIPPING') {
+            discountStr = `Gratis Ongkir Rp ${Number(c.discount_value || 15000).toLocaleString('id-ID')}`;
+          } else {
+            discountStr = `Diskon Rp ${Number(c.discount_value).toLocaleString('id-ID')}`;
+          }
+
+          const minSpendStr =
+            Number(c.min_order_amount) > 0
+              ? `Min. Belanja Rp ${Number(c.min_order_amount).toLocaleString('id-ID')}`
+              : 'Tanpa Minimum';
+
+          const expiryStr = c.expires_at
+            ? new Date(c.expires_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+            : 'Tanpa Batas';
+
+          return {
+            id: c.id,
+            code: c.code,
+            discount: discountStr,
+            discountType: c.discount_type,
+            discountVal: Number(c.discount_value),
+            minSpend: minSpendStr,
+            minSpendVal: Number(c.min_order_amount || 0),
+            used: c.used_count || 0,
+            quota: c.quota || 100,
+            active: c.is_active,
+            expiry: expiryStr,
+            expires_at: c.expires_at,
+            description: c.description,
+          };
+        });
+        setDbCoupons(mapped);
+      }
+    } catch (err) {
+      console.warn('Could not fetch coupons from API, falling back to local:', err);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchCouponsFromApi();
+  }, []);
+
+  const activeCouponsList = dbCoupons.length > 0 ? dbCoupons : localCoupons;
 
   const handleSort = (field: CouponSortField) => {
     if (sortField === field) {
@@ -1215,8 +1518,8 @@ export const PromosView: React.FC = () => {
   };
 
   const sortedCoupons = useMemo(() => {
-    if (!sortField || !sortDirection) return coupons;
-    return [...coupons].sort((a, b) => {
+    if (!sortField || !sortDirection) return activeCouponsList;
+    return [...activeCouponsList].sort((a, b) => {
       let valA: any = a[sortField as keyof typeof a];
       let valB: any = b[sortField as keyof typeof b];
 
@@ -1240,28 +1543,60 @@ export const PromosView: React.FC = () => {
       }
       return 0;
     });
-  }, [coupons, sortField, sortDirection]);
+  }, [activeCouponsList, sortField, sortDirection]);
 
-  const handleAddCoupon = (newCoupon: any) => {
-    addCoupon({
-      code: newCoupon.code,
-      discount: newCoupon.discount,
-      discountType:
-        newCoupon.discountType === 'PERCENT'
-          ? 'PERCENTAGE'
-          : newCoupon.discountType === 'ONGKIR'
-          ? 'FREE_SHIPPING'
-          : 'NOMINAL',
-      discountVal: newCoupon.discountVal,
-      minSpend: newCoupon.minSpend,
-      minSpendVal: newCoupon.minSpendVal,
-      used: 0,
-      quota: newCoupon.quota,
-      active: true,
-      expiry: newCoupon.expiry,
-      description: newCoupon.description,
-    });
-    showMagicToast('Kupon Berhasil Dibuat 🏷️', `Kupon ${newCoupon.code} telah diterbitkan dan aktif.`, '🎉');
+  const handleToggleActive = async (c: any) => {
+    const nextState = !c.active;
+    // Optimistic update
+    setDbCoupons((prev) =>
+      prev.map((item) => (item.code === c.code ? { ...item, active: nextState } : item))
+    );
+    toggleCouponActive(c.code);
+
+    try {
+      const res = await fetch(getApiUrl(`/api/v1/coupons/${c.id || c.code}`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: nextState }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showMagicToast(
+          nextState ? 'Kupon Diaktifkan 🏷️' : 'Kupon Dinonaktifkan ⏸️',
+          `Kupon ${c.code} sekarang ${nextState ? 'aktif & siap digunakan pembeli.' : 'dinonaktifkan sementara.'}`,
+          nextState ? '✅' : '⏸️'
+        );
+      } else {
+        fetchCouponsFromApi(); // rollback
+      }
+    } catch {
+      // Offline fallback
+      showMagicToast(
+        nextState ? 'Kupon Diaktifkan (Lokal) 🏷️' : 'Kupon Dinonaktifkan (Lokal) ⏸️',
+        `Kupon ${c.code} sekarang ${nextState ? 'aktif.' : 'nonaktif.'}`,
+        nextState ? '✅' : '⏸️'
+      );
+    }
+  };
+
+  const handleDeleteCoupon = async (c: any) => {
+    if (!confirm(`Apakah Anda yakin ingin menonaktifkan/menghapus kupon "${c.code}"?`)) return;
+
+    try {
+      const res = await fetch(getApiUrl(`/api/v1/coupons/${c.id || c.code}`), {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        showMagicToast('Kupon Dinonaktifkan 🏷️', data.message || `Kupon ${c.code} dinonaktifkan.`, '🗑️');
+        fetchCouponsFromApi();
+      } else {
+        showMagicToast('Gagal Menghapus Kupon ⚠️', data.error || 'Gagal menghapus kupon.', '⚠️');
+      }
+    } catch (err) {
+      console.error(err);
+      showMagicToast('Gagal Menghapus Kupon ⚠️', 'Koneksi ke backend terputus.', '⚠️');
+    }
   };
 
   return (
@@ -1269,102 +1604,148 @@ export const PromosView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-rose-100">
         <div>
           <h2 className="text-base sm:text-lg font-extrabold text-stone-800 tracking-tight flex items-center gap-2">
-            <span>Pemasaran & Manajemen Kupon Diskon</span>
+            <span>Pemasaran &amp; Manajemen Kupon Diskon</span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700">
-              Voucher Studio
+              PostgreSQL Live Sync
             </span>
           </h2>
           <p className="text-xs text-stone-500">
-            Kelola kupon diskon nominal, persentase, dan gratis ongkir. Lengkap dengan sakelar toggle aktif/nonaktif sewaktu-waktu.
+            Kelola kupon diskon nominal, persentase, dan gratis ongkir langsung di database Supabase. Terintegrasi penuh dengan alur checkout.
           </p>
         </div>
 
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Buat Kupon Baru</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={fetchCouponsFromApi}
+            disabled={isRefreshing}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-50 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+            title="Sinkronkan data kupon dari PostgreSQL"
+          >
+            <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-rose-600' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+
+          <button
+            onClick={() => setIsCreateOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Buat Kupon Baru</span>
+          </button>
+        </div>
       </div>
 
-      {/* Coupon Cards Grid with Active/Inactive Toggle */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {isLoading && (
+        <div className="py-8 text-center text-xs text-stone-400 flex items-center justify-center gap-2">
+          <RotateCw className="w-4 h-4 animate-spin text-rose-500" />
+          <span>Memuat data kupon dari database...</span>
+        </div>
+      )}
+
+      {/* Coupon Cards Grid with Active/Inactive Toggle and Edit/Delete Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sortedCoupons.map((coupon) => (
           <div
             key={coupon.code}
-            className={`p-5 rounded-2xl border transition-all ${
+            className={`p-5 rounded-2xl border transition-all flex flex-col justify-between ${
               coupon.active
-                ? 'bg-white border-rose-200 shadow-sm'
-                : 'bg-stone-50/60 border-stone-200 opacity-75'
+                ? 'bg-white border-rose-200 shadow-sm hover:shadow-md'
+                : 'bg-stone-50/70 border-stone-200 opacity-75'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Tag className="w-4 h-4 text-rose-600" />
-                <span className="font-mono font-black text-sm tracking-wider text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-lg border border-rose-200">
-                  {coupon.code}
-                </span>
-              </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-rose-600" />
+                  <span className="font-mono font-black text-sm tracking-wider text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-lg border border-rose-200">
+                    {coupon.code}
+                  </span>
+                </div>
 
-              {/* Status Badge + Interactive Toggle Switch */}
-              <div className="flex items-center gap-2.5">
-                <span
-                  className={`text-xs font-bold px-2.5 py-1 rounded-full border inline-flex items-center gap-1.5 ${
-                    coupon.active
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-stone-100 text-stone-600 border-stone-300'
-                  }`}
-                >
+                {/* Status Badge + Interactive Toggle Switch */}
+                <div className="flex items-center gap-2">
                   <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      coupon.active ? 'bg-emerald-500' : 'bg-stone-400'
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${
+                      coupon.active
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-stone-100 text-stone-500 border-stone-300'
                     }`}
-                  />
-                  <span>{coupon.active ? 'Kupon Aktif' : 'Nonaktif'}</span>
-                </span>
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        coupon.active ? 'bg-emerald-500' : 'bg-stone-400'
+                      }`}
+                    />
+                    <span>{coupon.active ? 'Aktif' : 'Nonaktif'}</span>
+                  </span>
 
-                <label
-                  className="relative inline-flex items-center cursor-pointer select-none"
-                  title={coupon.active ? 'Klik untuk menonaktifkan kupon' : 'Klik untuk mengaktifkan kupon'}
-                >
-                  <input
-                    type="checkbox"
-                    checked={coupon.active}
-                    onChange={() => {
-                      toggleCouponActive(coupon.code);
-                      showMagicToast(
-                        !coupon.active ? 'Kupon Diaktifkan 🏷️' : 'Kupon Dinonaktifkan ⏸️',
-                        `Kupon ${coupon.code} sekarang ${!coupon.active ? 'aktif & bisa dipakai di checkout.' : 'dinonaktifkan sementara.'}`,
-                        !coupon.active ? '✅' : '⏸️'
-                      );
+                  <label
+                    className="relative inline-flex items-center cursor-pointer select-none"
+                    title={coupon.active ? 'Klik untuk menonaktifkan kupon' : 'Klik untuk mengaktifkan kupon'}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={coupon.active}
+                      onChange={() => handleToggleActive(coupon)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4.5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-rose-600"></div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-3 space-y-1 text-xs">
+                <div className="font-black text-stone-800 text-sm">{coupon.discount}</div>
+                <div className="text-stone-500 text-[11px] font-medium">{coupon.minSpend}</div>
+                {coupon.description && (
+                  <p className="text-stone-600 text-[11px] line-clamp-2 pt-0.5 italic">
+                    &quot;{coupon.description}&quot;
+                  </p>
+                )}
+                <div className="text-stone-400 text-[10px] pt-1 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>Kadaluarsa: {coupon.expiry}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress bar and card actions */}
+            <div className="mt-4 pt-3 border-t border-stone-100 space-y-2.5">
+              <div>
+                <div className="flex justify-between text-[11px] font-bold text-stone-500 mb-1">
+                  <span>Penggunaan Kupon</span>
+                  <span>
+                    {coupon.used} / {coupon.quota} ({Math.round(((coupon.used || 0) / (coupon.quota || 1)) * 100)}%)
+                  </span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-stone-100 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(((coupon.used || 0) / (coupon.quota || 1)) * 100, 100)}%`,
                     }}
-                    className="sr-only peer"
                   />
-                  <div className="w-8 h-4.5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-rose-600"></div>
-                </label>
+                </div>
               </div>
-            </div>
 
-            <div className="mt-3 space-y-1 text-xs">
-              <div className="font-black text-stone-800 text-sm">{coupon.discount}</div>
-              <div className="text-stone-500 text-[11px]">{coupon.minSpend}</div>
-              <div className="text-stone-400 text-[10px]">Kadaluarsa: {coupon.expiry}</div>
-            </div>
-
-            {/* Progress bar */}
-            <div className="mt-3 pt-3 border-t border-stone-100">
-              <div className="flex justify-between text-[11px] font-bold text-stone-500 mb-1">
-                <span>Penggunaan Kupon</span>
-                <span>
-                  {coupon.used} / {coupon.quota} ({Math.round((coupon.used / coupon.quota) * 100)}%)
-                </span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-stone-100 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full"
-                  style={{ width: `${Math.min((coupon.used / coupon.quota) * 100, 100)}%` }}
-                />
+              <div className="flex items-center justify-end gap-1.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setEditingCoupon(coupon)}
+                  className="px-2.5 py-1 rounded-lg border border-stone-200 hover:border-rose-300 text-stone-600 hover:text-rose-700 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <Pencil className="w-3 h-3" />
+                  <span>Edit</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteCoupon(coupon)}
+                  className="px-2.5 py-1 rounded-lg border border-stone-200 hover:border-rose-300 text-stone-400 hover:text-rose-600 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Nonaktifkan kupon"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>Nonaktifkan</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1375,9 +1756,9 @@ export const PromosView: React.FC = () => {
       <div className="pt-4 border-t border-stone-100 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-black text-stone-800 uppercase tracking-wider">
-            Tabel Seluruh Voucher &amp; Kupon ({coupons.length})
+            Tabel Seluruh Kupon ({activeCouponsList.length})
           </span>
-          <span className="text-[11px] text-stone-400">Gunakan toogle untuk aktivasi instan kupon sewaktu-waktu</span>
+          <span className="text-[11px] text-stone-400">Tersinkronisasi otomatis dengan PostgreSQL Supabase</span>
         </div>
 
         <div className="overflow-x-auto border border-stone-200 rounded-2xl">
@@ -1389,7 +1770,8 @@ export const PromosView: React.FC = () => {
                 <TableSortHeader label="Min. Belanja" field="minSpend" currentField={sortField} direction={sortDirection} onSort={handleSort} />
                 <TableSortHeader label="Penggunaan Kupon" field="used" currentField={sortField} direction={sortDirection} onSort={handleSort} />
                 <TableSortHeader label="Masa Berlaku" field="expiry" currentField={sortField} direction={sortDirection} onSort={handleSort} />
-                <TableSortHeader label="Status &amp; Toogle Kupon" field="active" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+                <TableSortHeader label="Status &amp; Toggle" field="active" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+                <th className="py-3 px-4 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
@@ -1399,7 +1781,7 @@ export const PromosView: React.FC = () => {
                   <td className="py-3 px-4 font-bold text-stone-800">{c.discount}</td>
                   <td className="py-3 px-4 text-stone-500 font-medium">{c.minSpend}</td>
                   <td className="py-3 px-4 font-bold">
-                    {c.used} / {c.quota} ({Math.round((c.used / c.quota) * 100)}%)
+                    {c.used} / {c.quota} ({Math.round(((c.used || 0) / (c.quota || 1)) * 100)}%)
                   </td>
                   <td className="py-3 px-4 text-stone-600">{c.expiry}</td>
                   <td className="py-3 px-4">
@@ -1417,18 +1799,31 @@ export const PromosView: React.FC = () => {
                         <input
                           type="checkbox"
                           checked={c.active}
-                          onChange={() => {
-                            toggleCouponActive(c.code);
-                            showMagicToast(
-                              !c.active ? 'Kupon Diaktifkan 🏷️' : 'Kupon Dinonaktifkan ⏸️',
-                              `Kupon ${c.code} sekarang ${!c.active ? 'aktif.' : 'nonaktif.'}`,
-                              !c.active ? '✅' : '⏸️'
-                            );
-                          }}
+                          onChange={() => handleToggleActive(c)}
                           className="sr-only peer"
                         />
                         <div className="w-7 h-4 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-rose-600"></div>
                       </label>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setEditingCoupon(c)}
+                        className="p-1.5 rounded-lg border border-stone-200 hover:border-rose-300 text-stone-600 hover:text-rose-600 transition-colors cursor-pointer"
+                        title="Edit Kupon"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCoupon(c)}
+                        className="p-1.5 rounded-lg border border-stone-200 hover:border-rose-300 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer"
+                        title="Nonaktifkan Kupon"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -1442,7 +1837,15 @@ export const PromosView: React.FC = () => {
       <CreateCouponModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        onAddCoupon={handleAddCoupon}
+        onSuccess={fetchCouponsFromApi}
+      />
+
+      {/* Edit Coupon Modal Form */}
+      <EditCouponModal
+        isOpen={Boolean(editingCoupon)}
+        coupon={editingCoupon}
+        onClose={() => setEditingCoupon(null)}
+        onSuccess={fetchCouponsFromApi}
       />
     </div>
   );

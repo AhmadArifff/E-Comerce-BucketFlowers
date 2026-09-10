@@ -38,4 +38,5 @@ coverage/
 agent/
 skills-lock.json
 
-
+# Scratch scripts
+scratch/

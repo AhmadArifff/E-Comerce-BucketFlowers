@@ -301,8 +301,19 @@ CREATE TABLE IF NOT EXISTS coupons (
   min_order_amount DECIMAL(12, 2) DEFAULT 0,
   quota INT DEFAULT 100,
   used_count INT DEFAULT 0,
+  description TEXT,
   is_active BOOLEAN DEFAULT true,
   expires_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS flower_point_transactions (
+  id VARCHAR(100) PRIMARY KEY,
+  user_id VARCHAR(100) NOT NULL,
+  order_id VARCHAR(100),
+  type VARCHAR(20) NOT NULL, -- 'EARN' | 'REDEEM' | 'WELCOME_BONUS' | 'ADJUSTMENT'
+  points INT NOT NULL,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS orders (
@@ -319,6 +330,8 @@ CREATE TABLE IF NOT EXISTS orders (
   total_amount DECIMAL(14, 2) NOT NULL,
   discount_amount DECIMAL(12, 2) DEFAULT 0,
   coupon_id VARCHAR(50) REFERENCES coupons(id) ON DELETE SET NULL,
+  points_redeemed INT DEFAULT 0,
+  points_earned INT DEFAULT 0,
   total_hpp_cost DECIMAL(14, 2) NOT NULL,
   payment_method payment_gateway_type NOT NULL,
   payment_status payment_status DEFAULT 'UNPAID',

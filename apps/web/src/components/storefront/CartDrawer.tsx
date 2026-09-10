@@ -53,9 +53,12 @@ export const CartDrawer: React.FC = () => {
     voucherCode,
     discountAmount,
     applyVoucher,
+    setVoucherDiscount,
     removeVoucher,
     usePoints,
     pointsDiscount,
+    redeemPointsAmount,
+    setRedeemPointsAmount,
     togglePoints,
     getSubtotal,
     getShippingFee,
@@ -195,14 +198,14 @@ export const CartDrawer: React.FC = () => {
       });
       const data = await res.json();
 
-      if (data.success) {
+      if (data.success && data.data) {
         setVoucherMsg({ type: 'success', text: data.message });
-        applyVoucher(inputVoucher.trim());
+        setVoucherDiscount(data.data.code, data.data.discountAmount);
         setInputVoucher('');
         showMagicToast('Kupon Berhasil! 🎉', data.message, '🏷️');
       } else {
-        setVoucherMsg({ type: 'error', text: data.error });
-        showMagicToast('Kupon Tidak Valid ⚠️', data.error, '⚠️');
+        setVoucherMsg({ type: 'error', text: data.error || 'Kupon tidak valid.' });
+        showMagicToast('Kupon Tidak Valid ⚠️', data.error || 'Kupon tidak valid.', '⚠️');
       }
     } catch {
       const res = applyVoucher(inputVoucher);
@@ -271,6 +274,8 @@ export const CartDrawer: React.FC = () => {
       cod_meetup_id: fulfillmentType === 'COD_MEETUP_POINT' ? selectedMeetup?.id || null : null,
       cod_notes: codMeetupNotes || null,
       coupon_code: voucherCode || null,
+      redeem_points: usePoints ? redeemPointsAmount : 0,
+      user_id: user?.id || null,
       payment_method:
         selectedPayment === 'bcaManual'
           ? 'MANUAL_BANK_BCA'
@@ -341,9 +346,9 @@ export const CartDrawer: React.FC = () => {
         })),
         subtotalAmount: subtotal,
         shippingFee,
-        discountAmount,
+        discountAmount: discountAmount + pointsDiscount,
         adminFee: selectedAdminFee,
-        flowerPointsEarned: Math.round(subtotal * 0.001),
+        flowerPointsEarned: Math.max(1, Math.floor(subtotal / 10000)),
         totalAmount: finalGrandTotal,
         createdAt: new Date().toISOString(),
         estimatedDelivery: 'Besok, 10:00 WIB',
@@ -704,72 +709,161 @@ export const CartDrawer: React.FC = () => {
                     </div>
 
                     {/* Voucher Code Form */}
-                    <form onSubmit={handleApplyVoucher} className="space-y-1.5">
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <input
-                            type="text"
-                            placeholder="Kode kupon (contoh: WISUDA10K)"
-                            value={inputVoucher}
-                            onChange={(e) => setInputVoucher(e.target.value)}
-                            className="w-full pl-8 pr-3 py-2 text-xs uppercase bg-white border border-rose-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
-                          />
-                          <Ticket className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2.5" />
-                        </div>
-                        <button
-                          type="submit"
-                          className="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-bold cursor-pointer"
-                        >
-                          Gunakan
-                        </button>
-                      </div>
-                      {voucherMsg && (
-                        <div
-                          className={`text-[11px] font-semibold px-2 py-1 rounded-lg ${
-                            voucherMsg.type === 'success'
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : 'bg-rose-50 text-rose-700'
-                          }`}
-                        >
-                          {voucherMsg.text}
-                        </div>
-                      )}
-                      {voucherCode && (
-                        <div className="flex items-center justify-between text-xs bg-emerald-50 text-emerald-800 p-2 rounded-xl">
-                          <span>
-                            Kupon Aktif: <strong>{voucherCode}</strong> (-Rp {discountAmount.toLocaleString('id-ID')})
-                          </span>
+                    <div className="space-y-2">
+                      <form onSubmit={handleApplyVoucher} className="space-y-1.5">
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <input
+                              type="text"
+                              placeholder={usePoints ? "Hapus poin untuk pakai kupon" : "Kode kupon (contoh: WISUDAHEMAT)"}
+                              value={inputVoucher}
+                              onChange={(e) => setInputVoucher(e.target.value)}
+                              disabled={usePoints}
+                              className={`w-full pl-8 pr-3 py-2 text-xs uppercase border rounded-xl focus:outline-none transition-all ${
+                                usePoints
+                                  ? 'bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed'
+                                  : 'bg-white border-rose-200 focus:ring-2 focus:ring-rose-500'
+                              }`}
+                            />
+                            <Ticket className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2.5" />
+                          </div>
                           <button
-                            type="button"
-                            onClick={removeVoucher}
-                            className="text-stone-400 hover:text-stone-600 cursor-pointer"
+                            type="submit"
+                            disabled={usePoints || !inputVoucher.trim()}
+                            className="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <X className="w-3 h-3" />
+                            Gunakan
                           </button>
                         </div>
-                      )}
-                    </form>
+                        {usePoints && (
+                          <div className="text-[10px] text-amber-800 bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-200 flex items-center gap-1.5">
+                            <Sparkles className="w-3 h-3 flex-shrink-0 text-amber-600" />
+                            <span>Flower Points aktif. Sesuai aturan, 1 order hanya bisa memakai kupon ATAU poin.</span>
+                          </div>
+                        )}
+                        {voucherMsg && (
+                          <div
+                            className={`text-[11px] font-semibold px-2 py-1 rounded-lg ${
+                              voucherMsg.type === 'success'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
+                            }`}
+                          >
+                            {voucherMsg.text}
+                          </div>
+                        )}
+                        {voucherCode && (
+                          <div className="flex items-center justify-between text-xs bg-emerald-50 border border-emerald-200 text-emerald-800 p-2.5 rounded-xl">
+                            <div className="flex items-center gap-2">
+                              <Ticket className="w-4 h-4 text-emerald-600" />
+                              <span>
+                                Kupon Aktif: <strong>{voucherCode}</strong> (-Rp {discountAmount.toLocaleString('id-ID')})
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={removeVoucher}
+                              className="p-1 rounded-md text-stone-400 hover:text-stone-700 hover:bg-emerald-100 transition-colors cursor-pointer"
+                              title="Hapus kupon"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </form>
 
-                    {/* Flower Points Redemption */}
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-amber-600" />
-                        <div>
-                          <span className="font-bold text-amber-900">Flower Points: {userPoints}</span>
-                          <div className="text-[10px] text-amber-700">Tukar 50 Poin = Diskon Rp 5.000</div>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => togglePoints(userPoints)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          usePoints
-                            ? 'bg-amber-600 text-white'
-                            : 'bg-white text-amber-800 border border-amber-300 hover:bg-amber-100'
+                      {/* Flower Points Redemption Card */}
+                      <div
+                        className={`p-3 rounded-2xl border transition-all ${
+                          voucherCode
+                            ? 'bg-stone-50 border-stone-200 opacity-80'
+                            : usePoints
+                            ? 'bg-amber-50/90 border-amber-300 ring-1 ring-amber-300 shadow-xs'
+                            : 'bg-amber-50/40 border-amber-200 hover:border-amber-300'
                         }`}
                       >
-                        {usePoints ? 'Digunakan' : 'Gunakan'}
-                      </button>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <Sparkles className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-extrabold text-amber-950 text-xs">Chenille Flower Points</span>
+                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-200/80 text-amber-900">
+                                  Saldo: {userPoints} Poin
+                                </span>
+                              </div>
+                              <div className="text-[10px] text-amber-800/80 mt-0.5 font-medium">
+                                Kurs Loyalty: 10 Poin = Diskon Rp 5.000 (Min. 10 Poin)
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={Boolean(voucherCode) || userPoints < 10}
+                            onClick={() => togglePoints(userPoints)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                              usePoints
+                                ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs'
+                                : voucherCode || userPoints < 10
+                                ? 'bg-stone-200 text-stone-400 cursor-not-allowed border border-stone-300'
+                                : 'bg-white text-amber-800 border border-amber-300 hover:bg-amber-100 shadow-xs'
+                            }`}
+                          >
+                            {usePoints ? 'Aktif ✓' : 'Tukar Poin'}
+                          </button>
+                        </div>
+
+                        {/* If voucher is active, inform user about exclusive rule */}
+                        {voucherCode && (
+                          <div className="mt-2 text-[10px] text-stone-600 bg-stone-100 px-2.5 py-1.5 rounded-lg border border-stone-200 flex items-center justify-between">
+                            <span>Kupon <strong>{voucherCode}</strong> aktif. Hapus kupon untuk menukar poin.</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                removeVoucher();
+                                togglePoints(userPoints);
+                              }}
+                              className="text-theme-primary font-bold hover:underline ml-2 flex-shrink-0"
+                            >
+                              Ganti ke Poin
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Points Selector / Steppers when Points is active */}
+                        {usePoints && (
+                          <div className="mt-3 pt-2.5 border-t border-amber-200 space-y-2">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-semibold text-amber-900">Poin Ditukar:</span>
+                              <span className="font-black text-amber-900 bg-white px-2 py-0.5 rounded-md border border-amber-300 shadow-2xs">
+                                {redeemPointsAmount} Poin = -Rp {pointsDiscount.toLocaleString('id-ID')}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                              {[10, 20, 30, 40, 50, 100]
+                                .filter((pts) => pts <= userPoints && pts * 500 <= subtotal)
+                                .map((pts) => (
+                                  <button
+                                    key={pts}
+                                    type="button"
+                                    onClick={() => setRedeemPointsAmount(pts, userPoints)}
+                                    className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                                      redeemPointsAmount === pts
+                                        ? 'bg-amber-700 text-white shadow-xs'
+                                        : 'bg-white border border-amber-300 text-amber-900 hover:bg-amber-100'
+                                    }`}
+                                  >
+                                    {pts} Poin (-Rp {(pts * 500).toLocaleString('id-ID')})
+                                  </button>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -778,6 +872,17 @@ export const CartDrawer: React.FC = () => {
               {/* Footer & Checkout Button */}
               {items.length > 0 && (
                 <div className="p-4 sm:p-5 border-t border-rose-100 bg-white space-y-3 shadow-lg">
+                  {/* Loyalty Points Earned Preview Banner */}
+                  <div className="flex items-center justify-between text-xs text-amber-800 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
+                    <span className="flex items-center gap-1.5 font-bold">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      Bonus Loyalty Order Ini:
+                    </span>
+                    <span className="font-black text-amber-900">
+                      +{Math.max(1, Math.floor(subtotal / 10000))} Flower Points 🌸
+                    </span>
+                  </div>
+
                   <div className="space-y-1.5 text-xs text-stone-600">
                     <div className="flex justify-between">
                       <span>Subtotal Buket</span>
@@ -791,13 +896,13 @@ export const CartDrawer: React.FC = () => {
                     </div>
                     {discountAmount > 0 && (
                       <div className="flex justify-between text-emerald-600 font-semibold">
-                        <span>Diskon Voucher</span>
+                        <span>Diskon Kupon ({voucherCode})</span>
                         <span>-Rp {discountAmount.toLocaleString('id-ID')}</span>
                       </div>
                     )}
                     {pointsDiscount > 0 && (
                       <div className="flex justify-between text-amber-600 font-semibold">
-                        <span>Diskon Flower Points</span>
+                        <span>Diskon Flower Points ({redeemPointsAmount} Poin)</span>
                         <span>-Rp {pointsDiscount.toLocaleString('id-ID')}</span>
                       </div>
                     )}

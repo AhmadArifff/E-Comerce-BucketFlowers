@@ -101,4 +101,76 @@ router.get('/me', async (req, res) => {
   }
 });
 
+// GET /api/v1/auth/points
+router.get('/points', async (req, res) => {
+  try {
+    const { userId, phone } = req.query;
+    let targetUserId = (userId as string) || null;
+
+    if (!targetUserId && phone) {
+      const cleanPhone = String(phone).replace(/[^0-9]/g, '');
+      const uRes = await pool.query(
+        `SELECT id FROM users WHERE phone LIKE $1 OR phone = $2 LIMIT 1;`,
+        [`%${cleanPhone}%`, String(phone)]
+      );
+      if (uRes.rows.length > 0) {
+        targetUserId = uRes.rows[0].id;
+      }
+    }
+
+    let balance = 120; // Default loyalty points
+    let transactions: any[] = [];
+
+    if (targetUserId) {
+      const profRes = await pool.query(`SELECT flower_points FROM profiles WHERE id = $1;`, [targetUserId]);
+      if (profRes.rows.length > 0 && profRes.rows[0].flower_points !== null) {
+        balance = profRes.rows[0].flower_points;
+      } else {
+        const sumRes = await pool.query(
+          `SELECT COALESCE(SUM(points), 0)::int as net FROM flower_point_transactions WHERE user_id = $1 OR user_id = $2;`,
+          [targetUserId, phone ? String(phone) : '']
+        );
+        balance = Math.max(0, 120 + (sumRes.rows[0]?.net || 0));
+      }
+
+      const txRes = await pool.query(
+        `SELECT id, order_id, type, points, description, created_at
+         FROM flower_point_transactions
+         WHERE user_id = $1 OR user_id = $2
+         ORDER BY created_at DESC
+         LIMIT 20;`,
+        [targetUserId, phone ? String(phone) : '']
+      );
+      transactions = txRes.rows;
+    } else if (phone) {
+      const txRes = await pool.query(
+        `SELECT id, order_id, type, points, description, created_at
+         FROM flower_point_transactions
+         WHERE user_id = $1
+         ORDER BY created_at DESC
+         LIMIT 20;`,
+        [String(phone)]
+      );
+      transactions = txRes.rows;
+
+      const sumRes = await pool.query(
+        `SELECT COALESCE(SUM(points), 0)::int as net FROM flower_point_transactions WHERE user_id = $1;`,
+        [String(phone)]
+      );
+      balance = Math.max(0, 120 + (sumRes.rows[0]?.net || 0));
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        userId: targetUserId || null,
+        points: balance,
+        transactions,
+      },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;
