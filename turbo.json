@@ -44,6 +44,10 @@
     "db:push": {
       "cache": false
     },
+    "test": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
     "clean": {
       "cache": false
     }

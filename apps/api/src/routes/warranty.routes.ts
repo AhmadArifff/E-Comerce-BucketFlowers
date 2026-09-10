@@ -123,7 +123,7 @@ router.post('/', async (req, res) => {
 
     // Update order warranty_status flag if order exists
     try {
-      await pool.query(`UPDATE orders SET warranty_status = 'CLAIM_SUBMITTED' WHERE id = $1;`, [order_id]);
+      await pool.query(`UPDATE orders SET warranty_status = 'SUBMITTED' WHERE id = $1;`, [order_id]);
     } catch (ordErr) {
       console.warn('Could not update order warranty_status:', ordErr);
     }
