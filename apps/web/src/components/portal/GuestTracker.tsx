@@ -16,14 +16,14 @@ import {
   Sparkles,
   Send,
 } from 'lucide-react';
-import { useOrderStore } from '@/stores/useOrderStore';
+import { useOrderStore, deduplicateOrders } from '@/stores/useOrderStore';
 import type { MockOrder } from '@chenille/shared';
 import { OrderStepper } from './OrderStepper';
 import { getApiUrl } from '@/lib/api-client';
 import { showMagicToast } from '@/lib/magic-motion';
 
 export const GuestTracker: React.FC = () => {
-  const { findOrderByQuery, updateOrderStep, addNewOrder } = useOrderStore();
+  const { findOrderByQuery, updateOrderStep, addNewOrder, syncDbOrders } = useOrderStore();
   const [query, setQuery] = useState('');
   const [searchedOrders, setSearchedOrders] = useState<MockOrder[]>([]);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(0);
@@ -160,8 +160,8 @@ export const GuestTracker: React.FC = () => {
         const orderData = await orderRes.json();
 
         if (orderData.success && orderData.data && orderData.data.length > 0) {
-          const mapped = orderData.data.map(mapDbOrderToMock);
-          mapped.forEach((mo: MockOrder) => addNewOrder(mo));
+          const mapped = deduplicateOrders(orderData.data.map(mapDbOrderToMock));
+          syncDbOrders(mapped);
           setSearchedOrders(mapped);
           setSelectedOrderIndex(0);
           setHasSearched(true);
@@ -219,7 +219,7 @@ export const GuestTracker: React.FC = () => {
       const resJson = await res.json();
       if (resJson.success && resJson.data) {
         const mapped = mapDbOrderToMock(resJson.data);
-        addNewOrder(mapped);
+        syncDbOrders([mapped]);
         setSearchedOrders([mapped]);
         setSelectedOrderIndex(0);
         setHasSearched(true);
@@ -356,9 +356,9 @@ export const GuestTracker: React.FC = () => {
               {searchedOrders.length > 1 && (
                 <div className="flex items-center gap-2 overflow-x-auto pb-2">
                   <span className="text-xs font-bold text-stone-500 whitespace-nowrap">Pilih Pesanan:</span>
-                  {searchedOrders.map((ord, idx) => (
+                  {deduplicateOrders(searchedOrders).map((ord, idx) => (
                     <button
-                      key={ord.id}
+                      key={ord.id || ord.invoiceNumber || `guest-sel-${idx}`}
                       onClick={() => setSelectedOrderIndex(idx)}
                       className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         selectedOrderIndex === idx

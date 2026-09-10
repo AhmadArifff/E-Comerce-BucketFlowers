@@ -7,6 +7,27 @@ import { MOCK_ORDERS, MOCK_WARRANTY_CLAIMS } from '@chenille/shared';
 
 export type { MockOrder, MockOrder as Order, WarrantyClaim, WarrantyStatus } from '@chenille/shared';
 
+/**
+ * Ensures strict uniqueness of order list by ID / invoiceNumber.
+ * Prevents React duplicate key errors across component updates.
+ */
+export function deduplicateOrders(orders: MockOrder[]): MockOrder[] {
+  if (!Array.isArray(orders)) return [];
+  const map = new Map<string, MockOrder>();
+  for (const o of orders) {
+    if (!o) continue;
+    const key = (o.id || o.invoiceNumber || '').trim();
+    if (!key) continue;
+    if (map.has(key)) {
+      const prev = map.get(key)!;
+      map.set(key, { ...prev, ...o });
+    } else {
+      map.set(key, o);
+    }
+  }
+  return Array.from(map.values());
+}
+
 interface OrderState {
   orders: MockOrder[];
   activeOrderId: string;
@@ -15,6 +36,7 @@ interface OrderState {
   updateOrderStep: (orderId: string, step: number) => void;
   findOrderByQuery: (query: string) => MockOrder | null;
   addNewOrder: (order: MockOrder) => void;
+  syncDbOrders: (incomingOrders: MockOrder[]) => void;
   addWarrantyClaim: (claim: Omit<WarrantyClaim, 'id' | 'createdAt' | 'status'>) => WarrantyClaim;
   updateWarrantyClaimStatus: (claimId: string, status: WarrantyStatus, adminNote?: string) => void;
   resetOrdersToDefault: () => void;
@@ -23,7 +45,7 @@ interface OrderState {
 export const useOrderStore = create<OrderState>()(
   persist(
     (set, get) => ({
-      orders: MOCK_ORDERS,
+      orders: deduplicateOrders(MOCK_ORDERS),
       activeOrderId: 'ord-101',
       warrantyClaims: MOCK_WARRANTY_CLAIMS,
 
@@ -77,18 +99,49 @@ export const useOrderStore = create<OrderState>()(
         return (
           get().orders.find(
             (o) =>
-              o.invoiceNumber.toLowerCase() === clean ||
-              o.customerPhone.includes(clean) ||
-              o.id.toLowerCase() === clean
+              (o.invoiceNumber && o.invoiceNumber.toLowerCase() === clean) ||
+              (o.customerPhone && o.customerPhone.includes(clean)) ||
+              (o.id && o.id.toLowerCase() === clean)
           ) || null
         );
       },
 
       addNewOrder: (order) => {
-        set((state) => ({
-          orders: [order, ...state.orders],
-          activeOrderId: order.id,
-        }));
+        set((state) => {
+          const orderKey = (order.id || order.invoiceNumber || '').trim();
+          const existingIndex = state.orders.findIndex(
+            (o) => (o.id && o.id === orderKey) || (o.invoiceNumber && o.invoiceNumber === orderKey)
+          );
+          if (existingIndex !== -1) {
+            const updated = [...state.orders];
+            updated[existingIndex] = { ...updated[existingIndex], ...order };
+            return { orders: deduplicateOrders(updated), activeOrderId: order.id };
+          }
+          return {
+            orders: deduplicateOrders([order, ...state.orders]),
+            activeOrderId: order.id,
+          };
+        });
+      },
+
+      syncDbOrders: (incomingOrders) => {
+        set((state) => {
+          const map = new Map<string, MockOrder>();
+          // Seed with existing state orders
+          for (const o of state.orders) {
+            const key = (o.id || o.invoiceNumber || '').trim();
+            if (key) map.set(key, o);
+          }
+          // Merge with fresh orders from Supabase DB
+          for (const inc of incomingOrders) {
+            const key = (inc.id || inc.invoiceNumber || '').trim();
+            if (key) {
+              const prev = map.get(key);
+              map.set(key, prev ? { ...prev, ...inc } : inc);
+            }
+          }
+          return { orders: Array.from(map.values()) };
+        });
       },
 
       addWarrantyClaim: (claimData) => {
@@ -121,7 +174,7 @@ export const useOrderStore = create<OrderState>()(
 
       resetOrdersToDefault: () => {
         set({
-          orders: MOCK_ORDERS,
+          orders: deduplicateOrders(MOCK_ORDERS),
           activeOrderId: 'ord-101',
           warrantyClaims: MOCK_WARRANTY_CLAIMS,
         });
@@ -129,6 +182,22 @@ export const useOrderStore = create<OrderState>()(
     }),
     {
       name: 'chenille_order_storage',
+      merge: (persistedState: any, currentState: OrderState) => {
+        const raw = persistedState?.orders;
+        const deduped = deduplicateOrders(
+          Array.isArray(raw) && raw.length > 0 ? raw : currentState.orders
+        );
+        return {
+          ...currentState,
+          ...persistedState,
+          orders: deduped,
+        };
+      },
+      onRehydrateStorage: () => (state) => {
+        if (state && Array.isArray(state.orders)) {
+          state.orders = deduplicateOrders(state.orders);
+        }
+      },
     }
   )
 );

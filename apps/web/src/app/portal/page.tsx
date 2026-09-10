@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { AnnouncementBar } from '@/components/storefront/AnnouncementBar';
 import { Navbar } from '@/components/storefront/Navbar';
@@ -12,7 +12,7 @@ import { OrderStepper } from '@/components/portal/OrderStepper';
 import { GuestTracker } from '@/components/portal/GuestTracker';
 import { PointsAndVouchers } from '@/components/portal/PointsAndVouchers';
 import { WarrantyClaimModal } from '@/components/portal/WarrantyClaimModal';
-import { useOrderStore } from '@/stores/useOrderStore';
+import { useOrderStore, deduplicateOrders } from '@/stores/useOrderStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { showMagicToast } from '@/lib/magic-motion';
@@ -41,7 +41,7 @@ export default function CustomerPortalPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
 
-  const { orders, activeOrderId, setActiveOrderId, updateOrderStep, addNewOrder, warrantyClaims } = useOrderStore();
+  const { orders, activeOrderId, setActiveOrderId, updateOrderStep, syncDbOrders, warrantyClaims } = useOrderStore();
   const { user } = useAuthStore();
 
   // Sync data-theme attribute on client mount
@@ -49,7 +49,8 @@ export default function CustomerPortalPage() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  const activeOrder = orders.find((o) => o.id === activeOrderId) || orders[0];
+  const dedupedOrders = useMemo(() => deduplicateOrders(orders), [orders]);
+  const activeOrder = dedupedOrders.find((o) => o.id === activeOrderId || o.invoiceNumber === activeOrderId) || dedupedOrders[0];
 
   // Fetch live orders from Supabase backend via apps/api
   useEffect(() => {
@@ -107,11 +108,7 @@ export default function CustomerPortalPage() {
             estimatedDelivery: 'Besok, 10:00 WIB',
           }));
 
-          mappedOrders.forEach((mo) => {
-            if (!orders.some((ex) => ex.id === mo.id)) {
-              addNewOrder(mo);
-            }
-          });
+          syncDbOrders(mappedOrders);
         }
       })
       .catch((e) => console.warn('Could not sync orders from backend:', e));
@@ -166,14 +163,16 @@ export default function CustomerPortalPage() {
 
 
   // Filtered orders for order history
-  const filteredOrders = orders.filter((ord) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    const matchInvoice = ord.invoiceNumber.toLowerCase().includes(q);
-    const matchCustomer = ord.customerName.toLowerCase().includes(q);
-    const matchItem = ord.items.some((i) => i.productName.toLowerCase().includes(q));
-    return matchInvoice || matchCustomer || matchItem;
-  });
+  const filteredOrders = useMemo(() => {
+    return dedupedOrders.filter((ord) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      const matchInvoice = (ord.invoiceNumber || '').toLowerCase().includes(q);
+      const matchCustomer = (ord.customerName || '').toLowerCase().includes(q);
+      const matchItem = (ord.items || []).some((i) => (i.productName || '').toLowerCase().includes(q));
+      return matchInvoice || matchCustomer || matchItem;
+    });
+  }, [dedupedOrders, searchQuery]);
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-stone-50/50">
@@ -244,11 +243,11 @@ export default function CustomerPortalPage() {
               </div>
 
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {orders.map((ord) => {
-                  const isSelected = activeOrderId === ord.id;
+                {dedupedOrders.map((ord, idx) => {
+                  const isSelected = activeOrderId === ord.id || (!activeOrderId && idx === 0);
                   return (
                     <button
-                      key={ord.id}
+                      key={ord.id || ord.invoiceNumber || `ord-pill-${idx}`}
                       onClick={() => setActiveOrderId(ord.id)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                         isSelected
@@ -508,9 +507,9 @@ export default function CustomerPortalPage() {
                     Tidak ada pesanan yang sesuai dengan pencarian.
                   </div>
                 ) : (
-                  filteredOrders.map((ord) => (
+                  filteredOrders.map((ord, idx) => (
                     <div
-                      key={ord.id}
+                      key={ord.id || ord.invoiceNumber || `hist-ord-${idx}`}
                       onClick={() => {
                         setActiveOrderId(ord.id);
                         const el = document.getElementById('portal-order-tracker');

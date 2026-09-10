@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { ShoppingBag, CheckCircle2, Scissors, Truck, MapPin, Check, ExternalLink, Printer, Download, Search, X } from 'lucide-react';
-import { useOrderStore, type Order } from '@/stores/useOrderStore';
+import { useOrderStore, deduplicateOrders, type Order } from '@/stores/useOrderStore';
 import { showMagicToast } from '@/lib/magic-motion';
 import { getApiUrl } from '@/lib/api-client';
 import { TableSortHeader, type SortDirection } from './TableSortHeader';
@@ -16,7 +16,7 @@ interface OrdersTableProps {
 type OrderSortField = 'invoiceNumber' | 'customerName' | 'items' | 'fulfillment' | 'totalAmount' | 'currentStep' | 'createdAt';
 
 export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPrintResi }) => {
-  const { orders, updateOrderStep, addNewOrder } = useOrderStore();
+  const { orders, updateOrderStep, syncDbOrders } = useOrderStore();
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'CRAFTING' | 'SHIPPED' | 'COMPLETED'>('ALL');
   const [internalSearch, setInternalSearch] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -32,57 +32,54 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
     fetch(getApiUrl('/api/v1/orders'))
       .then((r) => r.json())
       .then((res) => {
-        if (res.success && res.data?.length > 0) {
-          res.data.forEach((o: any) => {
-            if (!orders.some((ex) => ex.id === o.id)) {
-              addNewOrder({
-                id: o.id,
-                invoiceNumber: o.id,
-                customerName: o.customer_name,
-                customerPhone: o.customer_phone,
-                customerEmail: o.customer_email,
-                customerAvatarEmoji: '🌸',
-                currentStep: o.current_step || 1,
-                stepStatus: o.order_status,
-                statusLabel:
-                  o.current_step === 4
-                    ? 'Pesanan Selesai'
-                    : o.current_step === 3
-                    ? 'Lolos Quality Check'
-                    : o.current_step === 2
-                    ? 'Sedang Dirangkai'
-                    : 'Pembayaran Terkonfirmasi',
-                statusDescription: 'Tersinkron dengan Supabase atelier.',
-                fulfillmentType: o.fulfillment_type,
-                meetupPointName: o.cod_meetup_name,
-                courierName: o.courier_name,
-                trackingNumber: o.tracking_number,
-                deliveryAddress: o.shipping_address,
-                paymentMethod: o.payment_method,
-                paymentStatus: o.payment_status,
-                items: (o.items || []).map((it: any) => ({
-                  productId: it.product_id,
-                  productName: it.product_name,
-                  productImage: '/images/products/buket-mawar-merah-velvet.jpg',
-                  quantity: it.quantity,
-                  unitPrice: it.price,
-                  subtotal: it.subtotal,
-                })),
-                subtotalAmount: o.total_amount,
-                shippingFee: 0,
-                discountAmount: o.discount_amount || 0,
-                adminFee: 0,
-                flowerPointsEarned: Math.round(o.total_amount * 0.001),
-                totalAmount: o.total_amount,
-                createdAt: o.created_at,
-                estimatedDelivery: 'Besok, 10:00 WIB',
-              });
-            }
-          });
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const mapped: Order[] = res.data.map((o: any) => ({
+            id: o.id,
+            invoiceNumber: o.id,
+            customerName: o.customer_name || 'Pelanggan Chenille',
+            customerPhone: o.customer_phone || '-',
+            customerEmail: o.customer_email || '',
+            customerAvatarEmoji: '🌸',
+            currentStep: o.current_step || 1,
+            stepStatus: o.order_status,
+            statusLabel:
+              o.current_step === 4
+                ? 'Pesanan Selesai'
+                : o.current_step === 3
+                ? 'Lolos Quality Check'
+                : o.current_step === 2
+                ? 'Sedang Dirangkai'
+                : 'Pembayaran Terkonfirmasi',
+            statusDescription: 'Tersinkron dengan Supabase atelier.',
+            fulfillmentType: o.fulfillment_type,
+            meetupPointName: o.cod_meetup_name,
+            courierName: o.courier_name,
+            trackingNumber: o.tracking_number,
+            deliveryAddress: o.shipping_address,
+            paymentMethod: o.payment_method,
+            paymentStatus: o.payment_status,
+            items: (o.items || []).map((it: any) => ({
+              productId: it.product_id,
+              productName: it.product_name || 'Buket Chenille',
+              productImage: '/images/products/buket-mawar-merah-velvet.jpg',
+              quantity: it.quantity,
+              unitPrice: it.price,
+              subtotal: it.subtotal,
+            })),
+            subtotalAmount: o.total_amount,
+            shippingFee: 0,
+            discountAmount: o.discount_amount || 0,
+            adminFee: 0,
+            flowerPointsEarned: Math.round(o.total_amount * 0.001),
+            totalAmount: o.total_amount,
+            createdAt: o.created_at || new Date().toISOString(),
+            estimatedDelivery: 'Besok, 10:00 WIB',
+          }));
+          syncDbOrders(mapped);
         }
       })
       .catch(() => {});
-  }, []);
+  }, [syncDbOrders]);
 
   const handleUpdateStep = (orderId: string, newStep: number) => {
     updateOrderStep(orderId, newStep);
@@ -120,7 +117,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
   ];
 
   const filteredOrders = useMemo(() => {
-    const list = orders.filter((order) => {
+    const list = deduplicateOrders(orders).filter((order) => {
       // Status filter
       if (statusFilter === 'PENDING' && order.currentStep !== 1) return false;
       if (statusFilter === 'CRAFTING' && order.currentStep !== 2) return false;
