@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Search, User, Sparkles, Menu, X } from 'lucide-react';
+import { ShoppingBag, Search, User, Sparkles, Menu, X, ArrowRight, Zap, Loader2 } from 'lucide-react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useCartStore } from '@/stores/useCartStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { getApiUrl } from '@/lib/api-client';
 
 interface NavbarProps {
   activeSection?: string;
@@ -27,6 +28,56 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [cartBump, setCartBump] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Auto-suggest state (PRD 7.18)
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isSuggestLoading, setIsSuggestLoading] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+
+  // Debounced auto-suggest fetch (300ms)
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setSuggestions([]);
+      setIsSuggestLoading(false);
+      setSelectedIndex(-1);
+      return;
+    }
+
+    setIsSuggestLoading(true);
+    const handler = setTimeout(async () => {
+      try {
+        const res = await fetch(getApiUrl(`/api/v1/products/suggest?q=${encodeURIComponent(searchQuery.trim())}`));
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setSuggestions(data.data);
+        } else {
+          setSuggestions([]);
+        }
+      } catch (err) {
+        console.warn('Could not fetch suggestions:', err);
+        setSuggestions([]);
+      } finally {
+        setIsSuggestLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  const handleSelectSuggestion = (item: any) => {
+    setSearchQuery(item.name);
+    setIsSearchOpen(false);
+    setSuggestions([]);
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname !== '/') {
+        window.location.href = `/?search=${encodeURIComponent(item.name)}`;
+      } else {
+        const el = document.getElementById('katalog');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+        window.dispatchEvent(new CustomEvent('select-product-by-id', { detail: { productId: item.id, slug: item.slug } }));
+      }
+    }
+  };
 
   // Floating sliding pill state
   const [pillStyle, setPillStyle] = useState<{
@@ -293,46 +344,164 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Sleek Search Dropdown (Works on all screen sizes) */}
         {isSearchOpen && (
           <div className="py-2.5 border-t border-theme-border bg-white/98 backdrop-blur-md animate-in slide-in-from-top-2 duration-200">
-            <div className="max-w-2xl mx-auto relative flex items-center">
-              <Search className="w-4 h-4 text-theme-primary absolute left-3.5 pointer-events-none" />
-              <input
-                autoFocus
-                type="text"
-                placeholder="Cari buket wisuda, mawar velvet, tulip, sidang, mini pot..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchQuery.trim()) {
-                    setIsSearchOpen(false);
-                    if (typeof window !== 'undefined') {
-                      if (window.location.pathname !== '/') {
-                        window.location.href = `/?search=${encodeURIComponent(searchQuery.trim())}`;
-                      } else {
-                        const el = document.getElementById('katalog');
-                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+            <div className="max-w-2xl mx-auto relative">
+              <div className="relative flex items-center">
+                <Search className="w-4 h-4 text-theme-primary absolute left-3.5 pointer-events-none" />
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Cari buket wisuda, mawar velvet, tulip, sidang, mini pot..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSelectedIndex(-1);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setSelectedIndex((prev) => (suggestions.length > 0 ? (prev + 1) % suggestions.length : -1));
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setSelectedIndex((prev) => (suggestions.length > 0 ? (prev <= 0 ? suggestions.length - 1 : prev - 1) : -1));
+                    } else if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (selectedIndex >= 0 && suggestions[selectedIndex]) {
+                        handleSelectSuggestion(suggestions[selectedIndex]);
+                      } else if (searchQuery.trim()) {
+                        setIsSearchOpen(false);
+                        if (typeof window !== 'undefined') {
+                          if (window.location.pathname !== '/') {
+                            window.location.href = `/?search=${encodeURIComponent(searchQuery.trim())}`;
+                          } else {
+                            const el = document.getElementById('katalog');
+                            if (el) el.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }
                       }
+                    } else if (e.key === 'Escape') {
+                      setIsSearchOpen(false);
                     }
-                  }
-                }}
-                className="w-full pl-10 pr-20 py-2 text-xs sm:text-sm bg-theme-surface-subtle border border-theme-border rounded-full focus:outline-none focus:ring-2 focus:ring-theme-primary focus:bg-white transition-all placeholder:text-stone-400"
-              />
-              <div className="absolute right-2.5 flex items-center gap-1">
-                {searchQuery && (
+                  }}
+                  className="w-full pl-10 pr-24 py-2.5 text-xs sm:text-sm bg-theme-surface-subtle border border-theme-border rounded-full focus:outline-none focus:ring-2 focus:ring-theme-primary focus:bg-white transition-all placeholder:text-stone-400"
+                />
+                <div className="absolute right-2.5 flex items-center gap-1.5">
+                  {isSuggestLoading && (
+                    <Loader2 className="w-3.5 h-3.5 text-theme-primary animate-spin" />
+                  )}
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="p-1 text-stone-400 hover:text-stone-600 rounded-full text-xs font-semibold cursor-pointer"
+                      title="Hapus pencarian"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   <button
-                    onClick={() => setSearchQuery('')}
-                    className="p-1 text-stone-400 hover:text-stone-600 rounded-full text-xs font-semibold"
-                    title="Hapus pencarian"
+                    onClick={() => setIsSearchOpen(false)}
+                    className="px-2.5 py-1 text-[11px] font-bold text-stone-500 hover:text-theme-primary hover:bg-theme-surface-subtle rounded-full transition-colors cursor-pointer"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    Tutup
                   </button>
-                )}
-                <button
-                  onClick={() => setIsSearchOpen(false)}
-                  className="px-2 py-0.5 text-[11px] font-bold text-stone-500 hover:text-theme-primary hover:bg-theme-surface-subtle rounded-full transition-colors"
-                >
-                  Tutup
-                </button>
+                </div>
               </div>
+
+              {/* Auto-Suggest Dropdown Popover */}
+              {searchQuery.trim().length >= 2 && (suggestions.length > 0 || isSuggestLoading) && (
+                <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-stone-200/80 overflow-hidden z-50 divide-y divide-stone-100 animate-in fade-in-50 zoom-in-95 duration-150">
+                  <div className="px-3.5 py-1.5 bg-stone-50/80 flex items-center justify-between text-[11px] font-bold text-stone-400 uppercase tracking-wider">
+                    <span>Saran Rekomendasi Buket</span>
+                    <span className="text-[10px] lowercase font-normal">Gunakan ↑ ↓ lalu Enter</span>
+                  </div>
+
+                  {suggestions.map((item, idx) => {
+                    const isSelected = selectedIndex === idx;
+                    const price = item.price;
+                    const discountPrice = item.discount_price;
+                    const hasDiscount = discountPrice && discountPrice < price;
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleSelectSuggestion(item)}
+                        className={`w-full text-left px-3.5 py-2.5 flex items-center gap-3 transition-colors cursor-pointer ${
+                          isSelected ? 'bg-rose-50/80' : 'hover:bg-stone-50'
+                        }`}
+                      >
+                        {/* Thumbnail */}
+                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-rose-50 flex-shrink-0 border border-stone-200/50 relative flex items-center justify-center text-base">
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span>🌸</span>
+                          )}
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-extrabold text-stone-800 truncate">
+                              {item.name}
+                            </span>
+                            {item.is_ready_stock && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-50 text-emerald-600 border border-emerald-200/60 flex-shrink-0">
+                                <Zap className="w-2.5 h-2.5 fill-current" /> Ready
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] text-stone-400 font-medium">{item.category}</span>
+                            <span className="text-stone-300">•</span>
+                            <div className="flex items-center gap-1.5">
+                              {hasDiscount ? (
+                                <>
+                                  <span className="text-xs font-black text-rose-600">
+                                    Rp {Number(discountPrice).toLocaleString('id-ID')}
+                                  </span>
+                                  <span className="text-[10px] text-stone-400 line-through">
+                                    Rp {Number(price).toLocaleString('id-ID')}
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-xs font-black text-stone-800">
+                                  Rp {Number(price).toLocaleString('id-ID')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <ArrowRight className="w-3.5 h-3.5 text-stone-300 flex-shrink-0" />
+                      </button>
+                    );
+                  })}
+
+                  {/* Footer Action */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSearchOpen(false);
+                      if (typeof window !== 'undefined') {
+                        if (window.location.pathname !== '/') {
+                          window.location.href = `/?search=${encodeURIComponent(searchQuery.trim())}`;
+                        } else {
+                          const el = document.getElementById('katalog');
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }
+                    }}
+                    className="w-full text-left px-3.5 py-2.5 bg-rose-50/40 hover:bg-rose-50 flex items-center justify-between text-xs font-bold text-theme-primary transition-colors cursor-pointer"
+                  >
+                    <span>Lihat semua hasil untuk &ldquo;{searchQuery}&rdquo;</span>
+                    <span className="text-[10px] bg-white px-2 py-0.5 rounded-md border border-rose-200 text-stone-500 font-mono">↵ Enter</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

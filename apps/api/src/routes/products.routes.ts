@@ -26,6 +26,11 @@ router.get('/', async (req, res) => {
     const limit = Math.max(1, Math.min(50, parseInt((req.query.limit as string) || '20', 10)));
     const offset = (page - 1) * limit;
 
+    const minPrice = req.query.min_price ? parseFloat(req.query.min_price as string) : undefined;
+    const maxPrice = req.query.max_price ? parseFloat(req.query.max_price as string) : undefined;
+    const readyStock = req.query.ready_stock === 'true';
+    const discountOnly = req.query.discount_only === 'true';
+
     const conditions: string[] = ['p.is_active = true'];
     const params: any[] = [];
     let paramIndex = 1;
@@ -37,9 +42,29 @@ router.get('/', async (req, res) => {
     }
 
     if (search) {
-      conditions.push(`(p.name ILIKE $${paramIndex} OR p.description ILIKE $${paramIndex})`);
+      conditions.push(`(p.name ILIKE $${paramIndex} OR p.description ILIKE $${paramIndex} OR c.name ILIKE $${paramIndex})`);
       params.push(`%${search}%`);
       paramIndex++;
+    }
+
+    if (minPrice !== undefined && !isNaN(minPrice)) {
+      conditions.push(`COALESCE(p.discount_price, p.price) >= $${paramIndex}`);
+      params.push(minPrice);
+      paramIndex++;
+    }
+
+    if (maxPrice !== undefined && !isNaN(maxPrice)) {
+      conditions.push(`COALESCE(p.discount_price, p.price) <= $${paramIndex}`);
+      params.push(maxPrice);
+      paramIndex++;
+    }
+
+    if (readyStock) {
+      conditions.push(`p.is_ready_stock = true`);
+    }
+
+    if (discountOnly) {
+      conditions.push(`p.discount_price IS NOT NULL AND p.discount_price < p.price`);
     }
 
     let orderBy = 'p.click_count DESC, p.created_at DESC';
@@ -49,6 +74,8 @@ router.get('/', async (req, res) => {
       orderBy = 'COALESCE(p.discount_price, p.price) DESC';
     } else if (sort === 'newest') {
       orderBy = 'p.created_at DESC';
+    } else if (sort === 'popular') {
+      orderBy = 'p.click_count DESC, p.created_at DESC';
     } else if (sort === 'rating') {
       orderBy = 'p.rating DESC';
     }
@@ -112,6 +139,50 @@ router.get('/', async (req, res) => {
   } catch (error: any) {
     console.error('Error fetching products:', error);
     return res.status(500).json({ success: false, error: 'Gagal mengambil data produk dari database.' });
+  }
+});
+
+// GET /api/v1/products/suggest
+router.get('/suggest', async (req, res) => {
+  try {
+    const q = (req.query.q as string | undefined)?.trim();
+    if (!q || q.length < 2) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const sql = `
+      SELECT 
+        p.id,
+        p.name,
+        p.slug,
+        c.name as category,
+        c.slug as category_slug,
+        p.price::float as price,
+        p.discount_price::float as discount_price,
+        p.image_url,
+        p.is_ready_stock,
+        p.rating::float as rating,
+        p.badge
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.is_active = true
+        AND (
+          p.name ILIKE $1 
+          OR p.description ILIKE $1 
+          OR c.name ILIKE $1 
+          OR c.slug ILIKE $1
+        )
+      ORDER BY 
+        CASE WHEN p.name ILIKE $1 THEN 0 ELSE 1 END,
+        p.click_count DESC, 
+        p.created_at DESC
+      LIMIT 5;
+    `;
+    const result = await pool.query(sql, [`%${q}%`]);
+    return res.json({ success: true, data: result.rows });
+  } catch (error: any) {
+    console.error('Error fetching product suggestions:', error);
+    return res.status(500).json({ success: false, error: 'Gagal mencari saran produk.' });
   }
 });
 
