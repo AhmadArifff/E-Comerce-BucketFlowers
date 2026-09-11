@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { TableSortHeader, type SortDirection } from './TableSortHeader';
 import { DateRangeFilter, type DateRange } from './DateRangeFilter';
@@ -54,6 +54,8 @@ import {
   MessageSquare,
   Pencil,
   Power,
+  Navigation,
+  Crosshair,
 } from 'lucide-react';
 import { MOCK_PRODUCTS, type ExtendedProduct as Product } from '@chenille/shared';
 import { useThemeStore, type ThemeId } from '@/stores/useThemeStore';
@@ -2291,6 +2293,10 @@ export const StoreSettingsView: React.FC = () => {
     waNumber,
     studioAddress,
     dailyQuota,
+    latitude,
+    longitude,
+    mapsLink,
+    maxCodRadiusKm,
     paymentGateways,
     logisticsConfig,
     notificationConfig,
@@ -2308,7 +2314,150 @@ export const StoreSettingsView: React.FC = () => {
     waNumber,
     studioAddress,
     dailyQuota: String(dailyQuota),
+    latitude: latitude || '-6.3728',
+    longitude: longitude || '106.8315',
+    mapsLink: mapsLink || 'https://maps.google.com/?q=-6.3728,106.8315',
+    maxCodRadiusKm: String(maxCodRadiusKm || 5.0),
   });
+
+  const [mapSearchQuery, setMapSearchQuery] = useState('');
+  const [mapSearching, setMapSearching] = useState(false);
+  const [mapSearchResult, setMapSearchResult] = useState<{
+    display_name: string;
+    lat: string;
+    lon: string;
+  } | null>(null);
+
+  // Synchronize store settings from backend database on mount
+  useEffect(() => {
+    fetch(getApiUrl('/api/v1/admin/settings/all'))
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data?.store_settings) {
+          const s = data.data.store_settings;
+          setFormProfile((prev) => ({
+            ...prev,
+            storeName: s.store_name || prev.storeName,
+            tagline: s.tagline || prev.tagline,
+            waNumber: s.wa_number || prev.waNumber,
+            studioAddress: s.studio_address || prev.studioAddress,
+            dailyQuota: String(s.daily_quota || prev.dailyQuota),
+            latitude: s.latitude || prev.latitude,
+            longitude: s.longitude || prev.longitude,
+            mapsLink: s.maps_link || prev.mapsLink,
+            maxCodRadiusKm: String(s.max_cod_radius_km || prev.maxCodRadiusKm),
+          }));
+          updateStoreProfile({
+            storeName: s.store_name,
+            tagline: s.tagline,
+            waNumber: s.wa_number,
+            studioAddress: s.studio_address,
+            dailyQuota: s.daily_quota,
+            latitude: s.latitude,
+            longitude: s.longitude,
+            mapsLink: s.maps_link,
+            maxCodRadiusKm: s.max_cod_radius_km ? parseFloat(s.max_cod_radius_km) : undefined,
+          });
+        }
+      })
+      .catch((err) => console.warn('Sync store settings fetch error:', err));
+  }, []);
+
+  const handleSearchLocation = async () => {
+    if (!mapSearchQuery.trim()) return;
+    setMapSearching(true);
+    setMapSearchResult(null);
+
+    // Check if user entered lat, lon directly (e.g. "-6.3728, 106.8315")
+    const coordMatch = mapSearchQuery.match(/^(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)$/);
+    if (coordMatch) {
+      const lat = coordMatch[1];
+      const lon = coordMatch[2];
+      setFormProfile((prev) => ({
+        ...prev,
+        latitude: lat,
+        longitude: lon,
+        mapsLink: `https://maps.google.com/?q=${lat},${lon}`,
+      }));
+      setMapSearchResult({
+        display_name: `Koordinat Manual: ${lat}, ${lon}`,
+        lat,
+        lon,
+      });
+      setMapSearching(false);
+      showMagicToast('Titik Ditemukan! 📍', `Koordinat diatur ke ${lat}, ${lon}`, '✅');
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          mapSearchQuery
+        )}&limit=1&addressdetails=1`
+      );
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const item = data[0];
+        setMapSearchResult({
+          display_name: item.display_name,
+          lat: item.lat,
+          lon: item.lon,
+        });
+        setFormProfile((prev) => ({
+          ...prev,
+          latitude: parseFloat(item.lat).toFixed(6),
+          longitude: parseFloat(item.lon).toFixed(6),
+          mapsLink: `https://maps.google.com/?q=${item.lat},${item.lon}`,
+        }));
+        showMagicToast('Lokasi Ditemukan! 📍', item.display_name.slice(0, 50) + '...', '✅');
+      } else {
+        showMagicToast('Lokasi Tidak Ditemukan ⚠️', 'Coba kata kunci lain atau masukkan koordinat langsung.', '❌');
+      }
+    } catch (err) {
+      console.warn('Geocoding error:', err);
+      showMagicToast('Pencarian Gagal ⚠️', 'Periksa koneksi internet Anda.', '❌');
+    } finally {
+      setMapSearching(false);
+    }
+  };
+
+  const handleCopySearchToAddress = () => {
+    if (mapSearchResult?.display_name) {
+      setFormProfile((prev) => ({
+        ...prev,
+        studioAddress: mapSearchResult.display_name,
+      }));
+      showMagicToast('Alamat Tersalin! 📋', 'Alamat hasil pencarian peta disalin ke kolom alamat fisik workshop.', '✨');
+    }
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      showMagicToast('GPS Tidak Didukung ⚠️', 'Browser Anda tidak mendukung geolokasi.', '❌');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lon = pos.coords.longitude.toFixed(6);
+        setFormProfile((prev) => ({
+          ...prev,
+          latitude: lat,
+          longitude: lon,
+          mapsLink: `https://maps.google.com/?q=${lat},${lon}`,
+        }));
+        setMapSearchResult({
+          display_name: `Lokasi GPS Perangkat Saya (${lat}, ${lon})`,
+          lat,
+          lon,
+        });
+        showMagicToast('GPS Terdeteksi! 🎯', `Koordinat saat ini: ${lat}, ${lon}`, '📍');
+      },
+      (err) => {
+        showMagicToast('Gagal Mendeteksi GPS ⚠️', err.message || 'Izin lokasi ditolak.', '❌');
+      }
+    );
+  };
 
   const [midtransConfig, setMidtransConfig] = useState({ ...paymentGateways.midtrans });
   const [bcaConfig, setBcaConfig] = useState({ ...paymentGateways.bcaManual });
@@ -2404,13 +2553,34 @@ export const StoreSettingsView: React.FC = () => {
       waNumber: formProfile.waNumber,
       studioAddress: formProfile.studioAddress,
       dailyQuota: parseInt(formProfile.dailyQuota) || 25,
+      latitude: formProfile.latitude,
+      longitude: formProfile.longitude,
+      mapsLink: formProfile.mapsLink,
+      maxCodRadiusKm: parseFloat(formProfile.maxCodRadiusKm) || 5.0,
     });
     updatePaymentGatewayConfig('midtrans', midtransConfig);
     updatePaymentGatewayConfig('bcaManual', bcaConfig);
     updatePaymentGatewayConfig('codCash', codConfig);
     updateLogisticsConfig(logisticsForm);
 
-    // Sync to backend DB
+    // Sync store profile to backend DB
+    fetch(getApiUrl('/api/v1/admin/settings'), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        store_name: formProfile.storeName,
+        tagline: formProfile.tagline,
+        wa_number: formProfile.waNumber,
+        studio_address: formProfile.studioAddress,
+        daily_quota: parseInt(formProfile.dailyQuota) || 25,
+        latitude: formProfile.latitude,
+        longitude: formProfile.longitude,
+        maps_link: formProfile.mapsLink,
+        max_cod_radius_km: parseFloat(formProfile.maxCodRadiusKm) || 5.0,
+      }),
+    }).catch((err) => console.warn('Sync store settings error:', err));
+
+    // Sync logistics settings to backend DB
     fetch(getApiUrl('/api/v1/admin/settings/logistics'), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -2442,7 +2612,7 @@ export const StoreSettingsView: React.FC = () => {
       }),
     }).catch((err) => console.warn('Sync notification settings error:', err));
 
-    showMagicToast('Pengaturan Tersimpan! ⚙️', 'Konfigurasi profil atelier, payment gateway, logistik kurir & notifikasi WA berhasil disinkronkan.', '💾');
+    showMagicToast('Pengaturan Tersimpan! ⚙️', 'Konfigurasi profil atelier, titik maps, payment gateway, logistik kurir & notifikasi WA berhasil disinkronkan.', '💾');
   };
 
   return (
@@ -2453,7 +2623,7 @@ export const StoreSettingsView: React.FC = () => {
             Pengaturan Atelier & Konfigurasi Payment Gateway
           </h2>
           <p className="text-xs text-stone-500">
-            Kelola profil studio, aktivasi metode pembayaran checkout (Midtrans, BCA, COD), dan kredensial API.
+            Kelola profil studio, titik lokasi maps, aktivasi metode pembayaran checkout (Midtrans, BCA, COD), dan kredensial API.
           </p>
         </div>
 
@@ -2527,6 +2697,230 @@ export const StoreSettingsView: React.FC = () => {
                 onChange={(e) => setFormProfile({ ...formProfile, dailyQuota: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
               />
+            </div>
+          </div>
+
+          {/* MAPS & TITIK ACUAN COD ENGINE (Adopsi adminShuttleV3) */}
+          <div className="mt-4 p-4 sm:p-5 rounded-2xl border border-rose-200/80 bg-rose-50/30 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-rose-100">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-rose-600" />
+                <div>
+                  <h4 className="text-xs font-black uppercase text-stone-800 tracking-wider">
+                    Titik Lokasi Workshop di Google Maps & Geofencing Origin COD
+                  </h4>
+                  <p className="text-[11px] text-stone-500">
+                    Titik koordinat acuan (origin) kalkulasi jarak radius Bebas Biaya Antar COD pelanggan (Adopsi Pola adminShuttleV3).
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleUseCurrentLocation}
+                  className="px-3 py-1.5 rounded-lg bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                >
+                  <Crosshair className="w-3.5 h-3.5" />
+                  Gunakan GPS Saya
+                </button>
+              </div>
+            </div>
+
+            {/* SEARCH MAP INPUT & COPY TO ADDRESS */}
+            <div className="space-y-2">
+              <label className="block font-bold text-stone-700 text-xs">
+                Cari Lokasi / Alamat di Maps:
+              </label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Ketik nama jalan, gedung, atau koordinat (cth: Margonda Raya, Beji Depok)..."
+                    value={mapSearchQuery}
+                    onChange={(e) => setMapSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSearchLocation();
+                      }
+                    }}
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSearchLocation}
+                  disabled={mapSearching}
+                  className="px-4 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0 disabled:opacity-50"
+                >
+                  {mapSearching ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+                  {mapSearching ? 'Mencari...' : 'Cari di Maps'}
+                </button>
+                {mapSearchResult && (
+                  <button
+                    type="button"
+                    onClick={handleCopySearchToAddress}
+                    className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0"
+                    title="Salin hasil pencarian ke kolom Alamat Fisik Workshop"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    Jadikan Alamat Studio
+                  </button>
+                )}
+              </div>
+
+              {/* SEARCH RESULT BANNER */}
+              {mapSearchResult && (
+                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start justify-between gap-2 text-xs">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-emerald-900">Lokasi Terpilih:</span>
+                      <p className="text-emerald-800 text-[11px] line-clamp-2">{mapSearchResult.display_name}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopySearchToAddress}
+                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shrink-0 cursor-pointer"
+                  >
+                    Salin ke Alamat
+                  </button>
+                </div>
+              )}
+
+              {/* QUICK PRESET PILLS */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[11px] text-stone-500 font-semibold">Preset Cepat:</span>
+                {[
+                  { label: 'Margonda Raya 120 (Depok)', lat: '-6.3728', lon: '106.8315', addr: 'Jl. Margonda Raya No. 120, Beji, Kota Depok, Jawa Barat 16424' },
+                  { label: 'Pondok Cina (Beji)', lat: '-6.3688', lon: '106.8336', addr: 'Pondok Cina, Kec. Beji, Kota Depok, Jawa Barat 16424' },
+                  { label: 'UI Depok Gerbatama', lat: '-6.3628', lon: '106.8315', addr: 'Jl. Margonda Raya No. 100, Pondok Cina, Kec. Beji, Kota Depok, Jawa Barat 16424' },
+                  { label: 'Margo City Mall', lat: '-6.3732', lon: '106.8345', addr: 'Jl. Margonda Raya No. 358, Kemiri Muka, Beji, Depok' },
+                ].map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => {
+                      setFormProfile((prev) => ({
+                        ...prev,
+                        latitude: preset.lat,
+                        longitude: preset.lon,
+                        studioAddress: preset.addr,
+                        mapsLink: `https://maps.google.com/?q=${preset.lat},${preset.lon}`,
+                      }));
+                      setMapSearchResult({
+                        display_name: preset.addr,
+                        lat: preset.lat,
+                        lon: preset.lon,
+                      });
+                      showMagicToast('Preset Diterapkan! 📍', preset.label, '✨');
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-white hover:bg-rose-100 text-stone-700 hover:text-rose-700 text-[11px] font-medium border border-stone-200 transition-all cursor-pointer"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* LIVE GOOGLE MAPS EMBED VIEW */}
+            <div className="relative rounded-2xl overflow-hidden border border-stone-200 bg-stone-100 h-64 shadow-inner">
+              <iframe
+                title="Atelier Workshop Location"
+                src={`https://maps.google.com/maps?q=${formProfile.latitude || -6.3728},${formProfile.longitude || 106.8315}&t=&z=16&ie=UTF8&iwloc=&output=embed`}
+                className="w-full h-full border-0"
+                loading="lazy"
+              />
+              <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-stone-200/80 shadow-xs flex items-center gap-2">
+                <MapPin className="w-3.5 h-3.5 text-rose-600 animate-bounce" />
+                <span className="text-[11px] font-bold text-stone-800">
+                  Origin Atelier: {formProfile.latitude}, {formProfile.longitude}
+                </span>
+              </div>
+              <div className="absolute bottom-3 right-3">
+                <a
+                  href={formProfile.mapsLink || `https://maps.google.com/?q=${formProfile.latitude},${formProfile.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-white/90 backdrop-blur-md border border-stone-200/80 hover:bg-white text-rose-600 text-[11px] font-bold flex items-center gap-1.5 shadow-xs transition-all"
+                >
+                  Buka di Google Maps
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+
+            {/* LATITUDE, LONGITUDE, COD RADIUS & MAPS LINK INPUTS */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div>
+                <label className="block font-bold text-stone-700 mb-1">
+                  Latitude <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formProfile.latitude}
+                  onChange={(e) => {
+                    const lat = e.target.value;
+                    setFormProfile({
+                      ...formProfile,
+                      latitude: lat,
+                      mapsLink: `https://maps.google.com/?q=${lat},${formProfile.longitude}`,
+                    });
+                  }}
+                  placeholder="-6.3728"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-stone-700 mb-1">
+                  Longitude <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formProfile.longitude}
+                  onChange={(e) => {
+                    const lon = e.target.value;
+                    setFormProfile({
+                      ...formProfile,
+                      longitude: lon,
+                      mapsLink: `https://maps.google.com/?q=${formProfile.latitude},${lon}`,
+                    });
+                  }}
+                  placeholder="106.8315"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-stone-700 mb-1">
+                  Radius Bebas COD (KM)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formProfile.maxCodRadiusKm}
+                  onChange={(e) => setFormProfile({ ...formProfile, maxCodRadiusKm: e.target.value })}
+                  placeholder="5.0"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                />
+                <span className="text-[10px] text-stone-400">Bebas ongkir jika jarak ≤ {formProfile.maxCodRadiusKm || 5.0} KM</span>
+              </div>
+
+              <div>
+                <label className="block font-bold text-stone-700 mb-1">
+                  Link Google Maps Toko
+                </label>
+                <input
+                  type="text"
+                  value={formProfile.mapsLink}
+                  onChange={(e) => setFormProfile({ ...formProfile, mapsLink: e.target.value })}
+                  placeholder="https://maps.google.com/?q=..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                />
+              </div>
             </div>
           </div>
         </div>

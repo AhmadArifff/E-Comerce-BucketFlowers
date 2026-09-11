@@ -442,6 +442,10 @@ CREATE TABLE IF NOT EXISTS store_settings (
   is_maintenance_mode BOOLEAN DEFAULT false,
   maintenance_title TEXT DEFAULT 'Atelier Chenille Sedang Istirahat Produksi',
   maintenance_desc TEXT DEFAULT 'Kapasitas buket wisuda hari ini telah penuh.',
+  latitude VARCHAR(50) DEFAULT '-6.3728',
+  longitude VARCHAR(50) DEFAULT '106.8315',
+  maps_link VARCHAR(255) DEFAULT 'https://maps.google.com/?q=-6.3728,106.8315',
+  max_cod_radius_km DECIMAL(4, 1) DEFAULT 5.0,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

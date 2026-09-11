@@ -16,14 +16,25 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [address, setAddress] = useState(user?.address || '');
   const [selectedEmoji, setSelectedEmoji] = useState(user?.avatarEmoji || '🌸');
   const [isSaved, setIsSaved] = useState(false);
+
+  React.useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setPhone(user.phone || '');
+      setEmail(user.email || '');
+      setAddress(user.address || '');
+      setSelectedEmoji(user.avatarEmoji || '🌸');
+    }
+  }, [user, isOpen]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile({ name, phone, email });
+    updateProfile({ name, phone, email, address });
     updateAvatarEmoji(selectedEmoji);
     setIsSaved(true);
     setTimeout(() => {
@@ -115,6 +126,20 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full text-xs p-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white"
+            />
+          </div>
+
+          {/* Primary Shipping Address Field */}
+          <div>
+            <label className="text-xs font-semibold text-stone-600 block mb-1">
+              Alamat Pengiriman Utama (Default Checkout)
+            </label>
+            <textarea
+              rows={2}
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Jalan, Nomor Rumah, RT/RW, Kelurahan, Kecamatan, Kota, Kode Pos..."
+              className="w-full text-xs p-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white resize-none"
             />
           </div>
 

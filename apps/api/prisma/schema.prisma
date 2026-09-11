@@ -540,6 +540,10 @@ model StoreSetting {
   is_maintenance_mode Boolean  @default(false)
   maintenance_title   String   @default("Atelier Chenille Sedang Istirahat Produksi")
   maintenance_desc    String   @default("Kapasitas buket wisuda hari ini telah penuh.")
+  latitude            String?  @default("-6.3728")
+  longitude           String?  @default("106.8315")
+  maps_link           String?  @default("https://maps.google.com/?q=-6.3728,106.8315")
+  max_cod_radius_km   Decimal? @default(5.0) @db.Decimal(4, 1)
   updated_at          DateTime @updatedAt
 }
 

@@ -117,7 +117,20 @@ function percentToCoords(x: number, y: number): { lat: number; lng: number } {
 }
 
 export const CODMapModal: React.FC = () => {
-  const { codPoints, addCodPoint, deleteCodPoint } = useSettingsStore();
+  const {
+    codPoints,
+    addCodPoint,
+    deleteCodPoint,
+    latitude: storeLat,
+    longitude: storeLng,
+    maxCodRadiusKm,
+    studioAddress: storeAddress,
+    storeName,
+  } = useSettingsStore();
+
+  const atelierLat = parseFloat(storeLat) || ATELIER_CONFIG.latitude;
+  const atelierLng = parseFloat(storeLng) || ATELIER_CONFIG.longitude;
+  const maxRadius = maxCodRadiusKm || 5.0;
 
   const [selectedPointId, setSelectedPointId] = useState<string>(
     codPoints[0]?.id || 'cod-001'
@@ -125,15 +138,15 @@ export const CODMapModal: React.FC = () => {
 
   // Main Google Maps Embed view state
   const [activeEmbedQuery, setActiveEmbedQuery] = useState<string>(
-    codPoints[0]?.embedQuery || codPoints[0]?.name || 'Jl. Margonda Raya No. 108 Depok'
+    codPoints[0]?.embedQuery || codPoints[0]?.name || storeAddress || 'Jl. Margonda Raya No. 120 Depok'
   );
   const [activeFocusText, setActiveFocusText] = useState<string>(
     codPoints[0]
       ? `📍 Fokus Lokasi: ${codPoints[0].name} (${codPoints[0].distanceKm} KM)`
-      : '📍 Fokus Lokasi: Atelier Pusat Margonda Raya'
+      : `📍 Fokus Lokasi: Atelier Pusat (${storeName || 'Chenille Atelier'})`
   );
   const [activeExternalUrl, setActiveExternalUrl] = useState<string>(
-    codPoints[0]?.googleMapsUrl || 'https://maps.google.com/?q=Margonda+Raya+Depok'
+    codPoints[0]?.googleMapsUrl || `https://maps.google.com/?q=${atelierLat},${atelierLng}`
   );
 
   // Add Point Modal State
@@ -168,12 +181,12 @@ export const CODMapModal: React.FC = () => {
   // Handler to reset focus to Atelier Pusat
   const handleResetToAtelier = () => {
     setSelectedPointId('');
-    setActiveEmbedQuery('Jl. Margonda Raya No. 108 Depok');
-    setActiveFocusText('📍 Fokus Lokasi: Atelier Pusat Margonda Raya');
-    setActiveExternalUrl('https://maps.google.com/?q=Jl.+Margonda+Raya+No.+108+Depok');
+    setActiveEmbedQuery(storeAddress || 'Jl. Margonda Raya No. 120 Depok');
+    setActiveFocusText(`📍 Fokus Lokasi: Atelier Pusat (${storeName || 'Chenille Atelier'})`);
+    setActiveExternalUrl(`https://maps.google.com/?q=${atelierLat},${atelierLng}`);
     showMagicToast(
       'Atelier Pusat 🏛️',
-      'Peta kembali difokuskan pada studio produksi Margonda Raya.',
+      'Peta kembali difokuskan pada studio produksi atelier.',
       '📍'
     );
   };
@@ -221,8 +234,8 @@ export const CODMapModal: React.FC = () => {
     setNewMapsUrl('');
     setNewDist('2.0');
     setNewNotes('');
-    setModalPreviewQuery('Margonda Raya Depok');
-    setPinPos(coordsToPercent(ATELIER_LAT, ATELIER_LNG));
+    setModalPreviewQuery(storeAddress || 'Margonda Raya Depok');
+    setPinPos(coordsToPercent(atelierLat, atelierLng));
     setIsAddModalOpen(true);
   };
 
@@ -281,7 +294,7 @@ export const CODMapModal: React.FC = () => {
       if (coordMatch) {
         const lat = parseFloat(coordMatch[1]);
         const lng = parseFloat(coordMatch[2]);
-        const dist = calculateDistanceKm(ATELIER_LAT, ATELIER_LNG, lat, lng);
+        const dist = calculateDistanceKm(atelierLat, atelierLng, lat, lng);
         detectedDist = dist.toFixed(1);
         setPinPos(coordsToPercent(lat, lng));
       }
@@ -329,7 +342,7 @@ export const CODMapModal: React.FC = () => {
   // Update pin position from coordinates and recalculate distance & address
   const updateLocationFromCoords = useCallback(
     (lat: number, lng: number) => {
-      const dist = calculateDistanceKm(ATELIER_LAT, ATELIER_LNG, lat, lng);
+      const dist = calculateDistanceKm(atelierLat, atelierLng, lat, lng);
       setNewDist(dist.toFixed(1));
       const mapsUrl = `https://www.google.com/maps?q=${lat.toFixed(5)},${lng.toFixed(5)}`;
       setNewMapsUrl(mapsUrl);
@@ -373,7 +386,7 @@ export const CODMapModal: React.FC = () => {
         );
       }
     },
-    [newName, newNotes]
+    [newName, newNotes, atelierLat, atelierLng]
   );
 
   // Drag and drop & Click handling on the Interactive Map Canvas
@@ -479,7 +492,7 @@ export const CODMapModal: React.FC = () => {
     );
   };
 
-  const atelierPos = coordsToPercent(ATELIER_LAT, ATELIER_LNG);
+  const atelierPos = coordsToPercent(atelierLat, atelierLng);
 
   return (
     <div className="space-y-6">
@@ -499,7 +512,7 @@ export const CODMapModal: React.FC = () => {
               </h2>
             </div>
             <p className="text-xs text-stone-500 mt-1">
-              Kelola titik serah terima buket kawat bulu tanpa ongkir dengan link Google Maps resmi dan estimasi jarak radius 5.0 KM.
+              Kelola titik serah terima buket kawat bulu tanpa ongkir dengan link Google Maps resmi dan estimasi jarak radius {maxRadius} KM.
             </p>
           </div>
 
@@ -533,8 +546,8 @@ export const CODMapModal: React.FC = () => {
               <div className="text-[10.5px] text-stone-400 font-bold uppercase tracking-wider">
                 ATELIER PUSAT PRODUKSI
               </div>
-              <div className="text-xs font-extrabold text-stone-800">
-                Jl. Margonda Raya No. 108 Depok
+              <div className="text-xs font-extrabold text-stone-800 line-clamp-1">
+                {storeAddress || 'Jl. Margonda Raya No. 120 Depok'}
               </div>
             </div>
           </div>
@@ -548,7 +561,7 @@ export const CODMapModal: React.FC = () => {
                 RADIUS BEBAS ONGKIR
               </div>
               <div className="text-xs font-extrabold text-emerald-600">
-                Maksimal 5.0 KM (Rp 0 Ongkir)
+                Maksimal {maxRadius} KM (Rp 0 Ongkir)
               </div>
             </div>
           </div>
@@ -611,7 +624,7 @@ export const CODMapModal: React.FC = () => {
             <div className="flex flex-col gap-2.5 max-h-[460px] overflow-y-auto pr-1">
               {codPoints.map((pt) => {
                 const isSelected = selectedPointId === pt.id;
-                const isFree = pt.distanceKm <= ATELIER_CONFIG.maxFreeCodRadiusKm;
+                const isFree = pt.distanceKm <= maxRadius;
 
                 return (
                   <div

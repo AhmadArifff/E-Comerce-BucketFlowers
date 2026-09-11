@@ -124,6 +124,10 @@ router.get('/settings/all', async (req, res) => {
       studio_address: 'Jl. Margonda Raya No. 120, Beji, Kota Depok, Jawa Barat 16424',
       daily_po_limit: 25,
       active_theme: 'TEMA_A_KOREAN_PASTEL',
+      latitude: '-6.3728',
+      longitude: '106.8315',
+      maps_link: 'https://maps.google.com/?q=-6.3728,106.8315',
+      max_cod_radius_km: 5.0,
     };
 
     // Logistics config
@@ -227,6 +231,7 @@ router.get('/settings/all', async (req, res) => {
       success: true,
       data: {
         profile: store,
+        store_settings: store,
         payment: paymentData,
         logistics: logisticsData,
         notifications: notificationData,
@@ -393,7 +398,18 @@ router.post('/settings/logistics/test', async (req, res) => {
 // PATCH /api/v1/admin/settings
 router.patch('/settings', async (req, res) => {
   try {
-    const { store_name, tagline, official_whatsapp, studio_address, daily_po_limit, active_theme } = req.body;
+    const {
+      store_name,
+      tagline,
+      official_whatsapp,
+      studio_address,
+      daily_po_limit,
+      active_theme,
+      latitude,
+      longitude,
+      maps_link,
+      max_cod_radius_km,
+    } = req.body;
     const updateSql = `
       UPDATE store_settings
       SET store_name = COALESCE($1, store_name),
@@ -402,6 +418,10 @@ router.patch('/settings', async (req, res) => {
           studio_address = COALESCE($4, studio_address),
           daily_po_limit = COALESCE($5, daily_po_limit),
           active_theme = COALESCE($6, active_theme),
+          latitude = COALESCE($7, latitude),
+          longitude = COALESCE($8, longitude),
+          maps_link = COALESCE($9, maps_link),
+          max_cod_radius_km = COALESCE($10, max_cod_radius_km),
           updated_at = NOW()
       WHERE id = 'atelier_setting'
       RETURNING *;
@@ -413,6 +433,10 @@ router.patch('/settings', async (req, res) => {
       studio_address,
       daily_po_limit,
       active_theme,
+      latitude,
+      longitude,
+      maps_link,
+      max_cod_radius_km,
     ]);
     return res.json({ success: true, data: result.rows[0] });
   } catch (error: any) {

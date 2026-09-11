@@ -5,7 +5,7 @@
 **Standar Operasional:** Shopify-Grade Operations, Google Maps Geofencing, Multi-Theme Engine & Real-Time Logistics  
 **Role / Penulis:** Senior Product Manager, Lead Architect & Tech Critic Reviewer  
 **Tanggal Rilis:** 2026-09-09  
-**Versi:** v2.3 (Complete Specification — Admin Settings Panel for Payment Gateway & Shipping Logistics, Midtrans Snap Sandbox, Biteship Logistics Testing Mode, Checkout Flow, RBAC, API Contract, Supabase Storage, Loyalty Points, Search Engine, Notifications & Testing Strategy)  
+**Versi:** v2.4 (Complete Specification — Customer Account Management Suite, Member Profile Dropdown & Password Reset, Atelier Map Origin Geofencing with Latitude & Longitude Autocomplete, Admin Settings Panel for Payment Gateway & Shipping Logistics, Midtrans Snap Sandbox, Biteship Logistics Testing Mode, Checkout Flow, RBAC, API Contract, Supabase Storage, Loyalty Points, Search Engine, Notifications & Testing Strategy)  
 **Status:** Approved for Full Implementation & Git Release  
 **Tech Stack Baseline:** Turborepo 2.x, Next.js 15+ (App Router), Express.js (ESM Module on Vercel Serverless), Prisma ORM (Supabase PostgreSQL with PgBouncer Connection Pooling), Better Auth (RBAC & Session Rotation), Tailwind CSS + Design Tokens, Midtrans Snap SDK, Biteship Logistics API, Google Maps Embed & URL Schemes, Result Pattern (`@chenille/shared`), Pino Structured Logging.
 
@@ -33,7 +33,7 @@ E-COMMERCE CHENILLE FLOWERS SITEMAP
   ├── 🛒 STOREFRONT & CUSTOMER PORTAL (apps/web)
   │   ├── Halaman Etalase & Landing Page Terpadu (http://localhost:3000/)
   │   │   ├── Top Announcement Bar (Promo & Info Kuota Wisuda)
-  │   │   ├── Sticky Navbar (Brand Logo, 6 Menu Utama Tanpa Wrapping, Pencarian, Masuk/Akun, Cart Drawer Bump)
+  │   │   ├── Sticky Navbar (Brand Logo, 6 Menu Utama, Pencarian, Customer Profile Pill & Dropdown [Nama/Email/Ganti Sandi/Logout], Cart Drawer Bump)
   │   │   ├── 1. Modul Beranda (#home)
   │   │   │   ├── Hero Banner Realistik (Preview foto buket asli, badge 100% Handcrafted Chenille Velvet)
   │   │   │   ├── CTA Ganda: "Jelajahi Katalog 🌸" (#katalog) & "Rangkai Custom ✨" (#custom)
@@ -68,6 +68,8 @@ E-COMMERCE CHENILLE FLOWERS SITEMAP
   │   │   ├── Skenario 1: Guest Tracking (Input No. WhatsApp / Invoice -> Lacak Live)
   │   │   └── Skenario 2: Registered Member Dashboard ("Admin Pelanggan")
   │   │       ├── Header Profile Avatar (Inisial 'SA' / Emoji Kustom)
+  │   │       ├── Customer Profile & Account Management Modal (Nama Lengkap, No. WA, Email, Alamat Utama)
+  │   │       ├── Customer Change Password Modal (Kata Sandi Saat Ini, Sandi Baru, Konfirmasi)
   │   │       ├── Kartu Active Order Tracking (4-Step Progress Stepper Langsung)
   │   │       ├── Modal Kustomisasi Profil & Pilihan Emoji Avatar (🌸, 🌷, 🧸, 👑, 🎀)
   │   │       ├── Saldo Flower Points & Klaim Voucher Diskon
@@ -90,7 +92,7 @@ E-COMMERCE CHENILLE FLOWERS SITEMAP
     ├── 7. Pemasaran & Kupon Diskon (Kupon Persen/Nominal, Kuota Pemakaian)
     ├── 8. Pelayanan Komplain & Rating (Verifikasi Garansi Ganti Baru 100%)
     ├── 9. CS WhatsApp & Web Chat Hub (Integrasi Chat Web Pelanggan + Eskalasi WA)
-    ├── 10. Titik Temu COD Google Maps (Geofencing 5 KM, Deteksi Link Maps Otomatis)
+    ├── 10. Titik Temu COD Google Maps (Geofencing Dinamis Mengacu Lokasi Base Toko/Atelier)
     ├── 11. Mode Pemeliharaan & Sinkronisasi Tema (Theme Switcher Cards + Live Preview Iframe)
     ├── 12. Pusat 10 Sakelar Fitur Bisnis (Operational Feature Toggles)
     ├── 13. Pengaturan Toko & Kredensial API (Midtrans, Biteship, WhatsApp)
@@ -2412,4 +2414,123 @@ Fitur unggulan visual pelacakan pengiriman:
 | **Drawer Slide** | `@keyframes slideLeft`, `.drawer-slide-in` | `CartDrawer.tsx` | Verified Active |
 | **Chat Popup** | `@keyframes chatPopup`, `.chat-popup-anim` | `LiveChatWidget.tsx` | Verified Active |
 | **Admin View Fade**| `@keyframes fadeInView`, `.admin-view-fade` | `apps/web/src/app/admin/page.tsx` | Verified Active |
+
+---
+
+## 16. Customer Profile & Account Management Suite (Member Hub & Navbar Dropdown)
+
+### 16.1 Latar Belakang & Visi Fitur
+Sebagai platform e-commerce buket bunga kawat bulu kelas premium, pelanggan terdaftar (*registered members*) memerlukan kontrol penuh atas akun pribadi mereka langsung dari etalase (*storefront*) maupun dashboard pelanggan (*portal*), serupa dengan kapabilitas yang telah dimiliki oleh Admin Panel.
+
+Sebelumnya, tombol akun pada Navbar etalase hanya berupa tautan statis ke `/login`. Pada v2.4, ketika pelanggan telah login, tombol akun bertransformasi menjadi **Interactive Profile Pill & Dropdown** yang kaya informasi dan akses cepat.
+
+### 16.2 Spesifikasi Komponen & Tampilan Antarmuka
+
+#### 1. Storefront Header Profile Pill & Dropdown (`apps/web/src/components/storefront/Navbar.tsx`)
+* **Kondisi Tamu (Unauthenticated):**
+  - Menampilkan tombol pill `[👤 Masuk]` yang mengarahkan pengunjung ke halaman `/login`.
+* **Kondisi Terautentikasi (Authenticated Member / Admin):**
+  - Menampilkan tombol pill `[🌸 Ahmad]` dengan inisial/emoji avatar, nama depan pengguna, dan ikon panah bawah (`ChevronDown`).
+  - **Klik Membuka Dropdown Interaktif (`fadeInDropdown`):**
+    1. **Header Card:**
+       - Avatar inisial / emoji lingkaran terpusat (`aspect-ratio: 1/1`).
+       - Nama Lengkap (contoh: *Ahmad Arif / Siti Anggraini*).
+       - Alamat Email (contoh: *ahmad@gmail.com*).
+       - Badge Status Peran: `PELANGGAN AKTIF` / `MEMBER ATELIER` / `SUPER ADMIN`.
+    2. **Menu Item 1: Profil Pelanggan & Akun (`User` Icon):**
+       - Membuka `CustomerProfileModal`.
+    3. **Menu Item 2: Portal Pesanan & Tracking (`Package` Icon):**
+       - Navigasi cepat ke `/portal` untuk memantau status buket live.
+    4. **Menu Item 3: Ganti Kata Sandi (`KeyRound` Icon):**
+       - Membuka `CustomerChangePasswordModal`.
+    5. **Menu Khusus Staf / Admin (`ShieldCheck` Icon):**
+       - Ditampilkan bersyarat jika pengguna memiliki role `SUPER_ADMIN` atau `FLORIST_STAFF`: "Panel Florist (Admin)" mengarah ke `/admin`.
+    6. **Menu Item Logout (`LogOut` Icon):**
+       - Menghapus sesi autentikasi, me-reset state, menutup dropdown, dan menampilkan toast konfirmasi: *"Logout Berhasil 🔒 - Sesi akun telah keluar dengan aman."*
+
+#### 2. Modal Profil Pelanggan & Akun (`CustomerProfileModal.tsx`)
+* **Field Formulir:**
+  1. *Nama Lengkap:* Input teks dengan validasi required.
+  2. *Nomor WhatsApp / HP:* Format angka Indonesia (`+62` / `08...`), wajib diisi untuk notifikasi otomatis resi.
+  3. *Alamat Email:* Input email untuk konfirmasi invoice digital.
+  4. *Alamat Pengiriman Utama:* Textarea alamat lengkap (jalan, nomor rumah, patokan, RT/RW, kecamatan, kota, kode pos) yang otomatis menjadi default saat checkout ekspedisi.
+* **Aksi Modal:**
+  - Tombol Batal (`onClose`).
+  - Tombol Simpan Perubahan (trigger `updateProfile()` di `useAuthStore` dan sinkronisasi ke API `/api/v1/auth/profile`).
+
+#### 3. Modal Ganti Kata Sandi Pelanggan (`CustomerChangePasswordModal.tsx`)
+* **Field Formulir:**
+  1. *Kata Sandi Saat Ini:* Input tipe password untuk verifikasi kepemilikan akun.
+  2. *Kata Sandi Baru:* Minimal 8 karakter.
+  3. *Konfirmasi Kata Sandi Baru:* Validasi kesamaan input secara realtime.
+* **Validasi Keamanan:**
+  - Jika kata sandi baru dan konfirmasi tidak cocok, muncul peringatan instan *"Kata Sandi Tidak Cocok ⚠️"*.
+  - Jika berhasil, data dikirim ke backend, modal tertutup, dan memunculkan toast sukses *"Kata Sandi Diperbarui! 🔑"*.
+
+---
+
+## 17. Konfigurasi Titik Lokasi Toko & Geofencing Origin Engine (Adopsi Pola adminShuttleV3)
+
+### 17.1 Analisis & Adopsi Pola Desain Outlet Reference (`adminShuttleV3`)
+Berdasarkan investigasi terhadap arsitektur tabel `outlets` pada database `transport_system` di project referensi `C:\Users\ASUS\Documents\Web Dev\sunjaya\Roleback\adminShuttleV3`, ditemukan praktik terbaik untuk pengelolaan lokasi outlet fisik:
+1. **Penyimpanan Koordinat Eksplisit:** Kolom `latitude` dan `longitude` bertipe `VARCHAR(50)` untuk fleksibilitas desimal presisi tinggi hingga 8 digit desimal (~1.1 milimeter).
+2. **Pencarian Lokasi Cerdas (Places Autocomplete):** Kolom input pencarian peta (`#search-map-input`) yang terhubung dengan Google Places API untuk mempermudah menemukan nama gedung, jalan, atau landmark.
+3. **Penyalinan Alamat Otomatis (`copyData()`):** Tombol *"Jadikan Alamat Outlet / Studio"* yang menyalin nama tempat dan alamat lengkap dari Google Places langsung ke textarea alamat fisik toko.
+4. **Interactive Pin Dragging:** Marker peta dapat digeser (*draggable*) langsung oleh pengguna, dan event `dragend` secara otomatis mengisi kolom input latitude & longitude secara presisi.
+5. **Bidirectional Coordinate Sync:** Mengubah angka di kolom latitude/longitude secara manual otomatis memindahkan pin marker dan me-recenter tampilan peta.
+
+### 17.2 Skema Database & Migrasi Supabase PostgreSQL (`store_settings`)
+
+Tabel `store_settings` di Supabase PostgreSQL diperluas dengan 4 kolom baru yang mengadopsi standar `transport_system.outlets`:
+
+```sql
+-- Penyesuaian Tabel store_settings v2.4
+ALTER TABLE store_settings
+  ADD COLUMN IF NOT EXISTS latitude VARCHAR(50) DEFAULT '-6.3728',
+  ADD COLUMN IF NOT EXISTS longitude VARCHAR(50) DEFAULT '106.8315',
+  ADD COLUMN IF NOT EXISTS maps_link VARCHAR(255) DEFAULT 'https://maps.google.com/?q=-6.3728,106.8315',
+  ADD COLUMN IF NOT EXISTS max_cod_radius_km DECIMAL(4, 1) DEFAULT 5.0;
+```
+
+#### Pemetaan Model Prisma (`apps/api/prisma/schema.prisma`):
+```prisma
+model StoreSetting {
+  id                  String   @id @default("atelier_setting")
+  store_name          String   @default("Chenille Atelier Depok")
+  tagline             String   @default("Buket Bunga Kawat Bulu Chenille Premium & Graduation Florist")
+  official_whatsapp   String   @default("+62 812-9831-7721")
+  studio_address      String   @default("Jl. Margonda Raya No. 120, Beji, Kota Depok, Jawa Barat 16424")
+  daily_po_limit      Int      @default(25)
+  active_theme        ThemeKey @default(TEMA_A_KOREAN_PASTEL)
+  is_maintenance_mode Boolean  @default(false)
+  maintenance_title   String   @default("Atelier Chenille Sedang Istirahat Produksi")
+  maintenance_desc    String   @default("Kapasitas buket wisuda hari ini telah penuh.")
+  latitude            String?  @default("-6.3728")
+  longitude           String?  @default("106.8315")
+  maps_link           String?  @default("https://maps.google.com/?q=-6.3728,106.8315")
+  max_cod_radius_km   Decimal? @default(5.0) @db.Decimal(4, 1)
+  updated_at          DateTime @updatedAt
+}
+```
+
+### 17.3 Komponen Antarmuka Pengaturan Toko (`SettingsView` di `AdminViews.tsx`)
+Pada formulir Pengaturan Atelier (Seksi 1), struktur tata letak diperkaya menjadi:
+1. **Baris 1: Identitas Studio:** Nama Studio Atelier & Nomor WhatsApp CS Resmi.
+2. **Baris 2: Tagline Toko & Kapasitas Slot PO Harian.**
+3. **Baris 3: Titik Lokasi Peta & Alamat Studio (Pola Outlet Form):**
+   - **Input Search Maps & Autocomplete:** Tempat admin mengetik nama jalan/toko/landmark (contoh: *"Atelier Chenille Margonda Raya 120"*).
+   - **Tombol "Jadikan Alamat Studio":** Menyalin hasil pencarian ke kolom textarea alamat.
+   - **Interactive Leaflet / Google Map Container:** Peta interaktif dengan pin marker berlogo atelier yang dapat digeser bebas (*draggable marker*).
+   - **Input Kolom Latitude & Longitude:** Menampilkan angka koordinat GPS hasil geseran pin atau ketikan manual.
+   - **Input Radius Maksimum COD Bebas Ongkir (KM):** Default `5.0` KM.
+   - **Textarea Alamat Fisik Lengkap Studio.**
+
+### 17.4 Integrasi Dinamis Geofencing & Jarak Bebas Ongkir
+1. **Eliminasi Koordinat Hardcoded:**
+   - Variabel konstanta statis `ATELIER_LAT` dan `ATELIER_LNG` di `apps/web/src/components/admin/CODMapModal.tsx` dan `apps/api/src/routes/cod.routes.ts` digantikan dengan pembacaan dinamis dari `useSettingsStore` (frontend) dan tabel `store_settings` (backend).
+2. **Kalkulasi Jarak Haversine Dinamis:**
+   - Endpoint `POST /api/v1/cod-points/calculate-distance` menghitung jarak relatif dari `store_settings.latitude` & `store_settings.longitude` terhadap tujuan COD.
+   - Radius bebas ongkir ditentukan berdasarkan nilai `store_settings.max_cod_radius_km`.
+3. **Visualisasi Lingkaran Geofencing di Admin COD Maps:**
+   - Lingkaran radius 5 KM pada peta admin otomatis berpindah pusat mengikuti koordinat studio toko yang disimpan.
 

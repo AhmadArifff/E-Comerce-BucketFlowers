@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Search, User, Sparkles, Menu, X, ArrowRight, Zap, Loader2 } from 'lucide-react';
+import { ShoppingBag, Search, User, Sparkles, Menu, X, ArrowRight, Zap, Loader2, ChevronDown, KeyRound, LogOut, Package, ShieldCheck } from 'lucide-react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useCartStore } from '@/stores/useCartStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { getApiUrl } from '@/lib/api-client';
+import { showMagicToast } from '@/lib/magic-motion';
+import { CustomerProfileModal } from './CustomerProfileModal';
+import { CustomerChangePasswordModal } from './CustomerChangePasswordModal';
 
 interface NavbarProps {
   activeSection?: string;
@@ -23,11 +26,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { theme } = useThemeStore();
   const { getTotalItems, setIsCartOpen } = useCartStore();
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [cartBump, setCartBump] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const handleLogout = () => {
+    setIsProfileDropdownOpen(false);
+    logout();
+    showMagicToast('Logout Berhasil 🔒', 'Sesi akun Anda telah keluar dengan aman.', '👋');
+  };
 
   // Auto-suggest state (PRD 7.18)
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -296,17 +308,109 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </button>
 
-            {/* Masuk / Akun Pelanggan Link */}
-            <Link
-              href="/login"
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 h-9 rounded-full border border-theme-border bg-white hover:bg-theme-surface-subtle text-theme-text-main text-xs font-bold transition-all shadow-2xs flex-shrink-0"
-              title="Masuk / Akun Pelanggan"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline" suppressHydrationWarning>
-                {mounted && user ? user.name.split(' ')[0] : 'Masuk'}
-              </span>
-            </Link>
+            {/* Masuk / Akun Pelanggan Pill Button & Dropdown */}
+            {mounted && user ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 h-9 rounded-full border border-theme-border bg-white hover:bg-theme-surface-subtle text-theme-text-main text-xs font-bold transition-all shadow-2xs flex-shrink-0 cursor-pointer group"
+                  title="Akun Pelanggan"
+                >
+                  <span className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center text-[11px] font-black flex-shrink-0">
+                    {user.avatarEmoji || user.name[0] || '🌸'}
+                  </span>
+                  <span className="hidden sm:inline font-bold" suppressHydrationWarning>
+                    {user.name.split(' ')[0]}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isProfileDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                    />
+                    <div className="fade-in-dropdown absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-theme-border p-2 z-50 text-xs space-y-1">
+                      <div className="px-3 py-2.5 border-b border-theme-border bg-theme-surface-subtle/50 rounded-xl mb-1">
+                        <div className="font-extrabold text-stone-800 truncate text-sm">{user.name}</div>
+                        <div className="text-[11px] text-stone-400 truncate font-mono">{user.email}</div>
+                        <span className="inline-block mt-1 text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                          {user.role === 'SUPER_ADMIN' ? '👑 Super Admin' : '🌸 Member Atelier Aktif'}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProfileDropdownOpen(false);
+                          setIsProfileModalOpen(true);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-theme-surface-subtle hover:text-theme-primary font-semibold transition-colors text-left cursor-pointer"
+                      >
+                        <User className="w-3.5 h-3.5 text-stone-400" />
+                        <span>Profil Pelanggan & Akun</span>
+                      </button>
+
+                      <Link
+                        href="/portal"
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-theme-surface-subtle hover:text-theme-primary font-semibold transition-colors text-left"
+                      >
+                        <Package className="w-3.5 h-3.5 text-stone-400" />
+                        <span>Portal Pesanan & Tracking</span>
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProfileDropdownOpen(false);
+                          setIsPasswordModalOpen(true);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-theme-surface-subtle hover:text-theme-primary font-semibold transition-colors text-left cursor-pointer"
+                      >
+                        <KeyRound className="w-3.5 h-3.5 text-stone-400" />
+                        <span>Ganti Kata Sandi</span>
+                      </button>
+
+                      {(user.role === 'SUPER_ADMIN' || user.role === 'FLORIST_STAFF') && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-amber-800 hover:bg-amber-50 font-semibold transition-colors text-left"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Panel Florist (Admin)</span>
+                        </Link>
+                      )}
+
+                      <div className="border-t border-theme-border my-1" />
+
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 font-bold transition-colors text-left cursor-pointer"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Keluar / Logout</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 h-9 rounded-full border border-theme-border bg-white hover:bg-theme-surface-subtle text-theme-text-main text-xs font-bold transition-all shadow-2xs flex-shrink-0"
+                title="Masuk / Akun Pelanggan"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline" suppressHydrationWarning>
+                  Masuk
+                </span>
+              </Link>
+            )}
 
             {/* Cart Drawer Trigger with Magic UI Cart Bump Animation */}
             <button
@@ -568,6 +672,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       )}
+
+      {/* Customer Profile & Password Modals */}
+      <CustomerProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
+      <CustomerChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
     </header>
   );
 };

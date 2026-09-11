@@ -133,6 +133,10 @@ interface SettingsState {
   waNumber: string;
   studioAddress: string;
   dailyQuota: number;
+  latitude: string;
+  longitude: string;
+  mapsLink: string;
+  maxCodRadiusKm: number;
   paymentGateways: PaymentGatewaysConfig;
   logisticsConfig: LogisticsConfig;
   notificationConfig: NotificationConfig;
@@ -148,6 +152,10 @@ interface SettingsState {
     waNumber?: string;
     studioAddress?: string;
     dailyQuota?: number;
+    latitude?: string;
+    longitude?: string;
+    mapsLink?: string;
+    maxCodRadiusKm?: number;
   }) => void;
   togglePaymentGateway: (gateway: keyof PaymentGatewaysConfig, isEnabled: boolean) => void;
   updatePaymentGatewayConfig: <K extends keyof PaymentGatewaysConfig>(
@@ -434,6 +442,10 @@ export const useSettingsStore = create<SettingsState>()(
       waNumber: '+62 812-9928-1192',
       studioAddress: 'Jl. Margonda Raya No. 120, Beji, Kota Depok, Jawa Barat 16424',
       dailyQuota: 25,
+      latitude: '-6.3728',
+      longitude: '106.8315',
+      mapsLink: 'https://maps.google.com/?q=-6.3728,106.8315',
+      maxCodRadiusKm: 5.0,
       paymentGateways: {
         midtrans: {
           isEnabled: true,
@@ -749,6 +761,10 @@ export const useSettingsStore = create<SettingsState>()(
           waNumber: '+62 812-9928-1192',
           studioAddress: 'Jl. Margonda Raya No. 120, Beji, Kota Depok, Jawa Barat 16424',
           dailyQuota: 25,
+          latitude: '-6.3728',
+          longitude: '106.8315',
+          mapsLink: 'https://maps.google.com/?q=-6.3728,106.8315',
+          maxCodRadiusKm: 5.0,
           wasteMaterials: DEFAULT_WASTE_MATERIALS,
           rawMaterials: DEFAULT_RAW_MATERIALS,
           procurementOrders: DEFAULT_PROCUREMENT_ORDERS,

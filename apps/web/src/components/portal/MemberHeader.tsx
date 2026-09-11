@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { User, Sparkles, Edit3, Shield, Award } from 'lucide-react';
+import { User, Sparkles, Edit3, Shield, Award, KeyRound } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { ProfileModal } from './ProfileModal';
+import { CustomerChangePasswordModal } from '@/components/storefront/CustomerChangePasswordModal';
 
 export const MemberHeader: React.FC = () => {
   const { user, switchRole } = useAuthStore();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   if (!user) return null;
 
@@ -64,13 +66,22 @@ export const MemberHeader: React.FC = () => {
               <span className="text-[10px] text-rose-100 block">Setara diskon Rp {(user.flowerPoints * 100).toLocaleString('id-ID')}</span>
             </div>
 
-            <button
-              onClick={() => setIsProfileModalOpen(true)}
-              className="px-4 py-3 rounded-2xl bg-white text-rose-600 hover:bg-rose-50 font-bold text-xs shadow-md transition-all flex items-center gap-1.5 w-full sm:w-auto justify-center"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>Edit Profil</span>
-            </button>
+            <div className="flex flex-col gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => setIsProfileModalOpen(true)}
+                className="px-4 py-2.5 rounded-2xl bg-white text-rose-600 hover:bg-rose-50 font-bold text-xs shadow-md transition-all flex items-center gap-1.5 justify-center cursor-pointer"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit Profil & Alamat</span>
+              </button>
+              <button
+                onClick={() => setIsPasswordModalOpen(true)}
+                className="px-4 py-2 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs border border-white/30 transition-all flex items-center gap-1.5 justify-center cursor-pointer"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Ganti Sandi</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -78,6 +89,10 @@ export const MemberHeader: React.FC = () => {
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
+      />
+      <CustomerChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
       />
     </>
   );
