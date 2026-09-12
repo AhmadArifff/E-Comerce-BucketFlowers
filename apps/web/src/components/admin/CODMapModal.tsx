@@ -14,6 +14,8 @@ import {
   X,
   Navigation,
   ShieldCheck,
+  RotateCw,
+  Info,
 } from 'lucide-react';
 import { ATELIER_CONFIG, type CodPoint } from '@chenille/shared';
 import { useSettingsStore } from '@/stores/useSettingsStore';
@@ -154,15 +156,219 @@ export const CODMapModal: React.FC = () => {
   const [inputSearchOrLink, setInputSearchOrLink] = useState('');
   const [newName, setNewName] = useState('');
   const [newAddress, setNewAddress] = useState('');
+  const [newLat, setNewLat] = useState<string>(atelierLat.toString());
+  const [newLng, setNewLng] = useState<string>(atelierLng.toString());
   const [newMapsUrl, setNewMapsUrl] = useState('');
   const [newDist, setNewDist] = useState('2.0');
   const [newNotes, setNewNotes] = useState('');
   const [modalPreviewQuery, setModalPreviewQuery] = useState('Margonda Raya Depok');
 
+  // Smart Live Autocomplete State (Pola admin-sunjaya)
+  const [searchSuggestions, setSearchSuggestions] = useState<
+    Array<{ name: string; full_name: string; lat: string; lon: string; city?: string }>
+  >([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [googlePlacesActive, setGooglePlacesActive] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const modalSearchInputRef = useRef<HTMLInputElement>(null);
+
+  // Google Places Autocomplete Integration for COD Modal (Pola admin-sunjaya jika API Key tersedia)
+  useEffect(() => {
+    const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!googleApiKey || typeof window === 'undefined' || !isAddModalOpen) return;
+
+    // Handle Google Maps auth or activation failure gracefully
+    const originalAuthFailure = (window as any).gm_authFailure;
+    (window as any).gm_authFailure = () => {
+      console.warn('[Google Maps COD] Auth/Activation failure. Places API might need activation in Google Cloud Console. Falling back to local geocoder.');
+      setGooglePlacesActive(false);
+      if (typeof originalAuthFailure === 'function') originalAuthFailure();
+    };
+
+    const initAutocomplete = () => {
+      try {
+        if (!(window as any).google?.maps?.places || !modalSearchInputRef.current) return;
+        const autocomplete = new (window as any).google.maps.places.Autocomplete(modalSearchInputRef.current, {
+          componentRestrictions: { country: 'id' },
+          fields: ['formatted_address', 'geometry', 'name'],
+        });
+
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          if (!place.geometry || !place.geometry.location) return;
+
+          const lat = place.geometry.location.lat();
+          const lng = place.geometry.location.lng();
+          const dist = calculateDistanceKm(atelierLat, atelierLng, lat, lng);
+          const formattedLat = lat.toFixed(6);
+          const formattedLng = lng.toFixed(6);
+          const name = place.name || 'Titik Temu Google Maps';
+          const address = place.formatted_address || name;
+
+          setInputSearchOrLink(name);
+          setNewName(name);
+          setNewAddress(address);
+          setNewLat(formattedLat);
+          setNewLng(formattedLng);
+          setNewDist(dist.toFixed(1));
+          setNewMapsUrl(`https://maps.google.com/?q=${formattedLat},${formattedLng}`);
+          setModalPreviewQuery(`${formattedLat},${formattedLng}`);
+          setPinPos(coordsToPercent(lat, lng));
+          setShowSuggestions(false);
+
+          showMagicToast('Google Places Terdeteksi! 📍', `${name} (${dist.toFixed(1)} KM)`, '✨');
+        });
+
+        setGooglePlacesActive(true);
+      } catch (err) {
+        console.warn('[Google Places COD] Init error:', err);
+        setGooglePlacesActive(false);
+      }
+    };
+
+    if ((window as any).google?.maps?.places) {
+      initAutocomplete();
+    } else {
+      const scriptId = 'google-maps-places-script';
+      if (!document.getElementById(scriptId)) {
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${googleApiKey}&libraries=places&language=id`;
+        script.async = true;
+        script.defer = true;
+        script.onload = initAutocomplete;
+        script.onerror = () => {
+          console.warn('[Google Maps COD] Script load error. Falling back to local engine.');
+          setGooglePlacesActive(false);
+        };
+        document.head.appendChild(script);
+      }
+    }
+  }, [isAddModalOpen, atelierLat, atelierLng]);
+
   // Interactive Pin Picker State (Drag and Drop / Click to set location)
   const [pinPos, setPinPos] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
   const [isDraggingPin, setIsDraggingPin] = useState(false);
   const mapCanvasRef = useRef<HTMLDivElement>(null);
+
+  // Debounced Live Autocomplete Search Effect (300ms) - Strictly Indonesia Bounding Box
+  useEffect(() => {
+    // If Google Places API is actively working, let Google Places handle the dropdown exclusively!
+    if (googlePlacesActive) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const query = inputSearchOrLink.trim();
+    if (!query || query.startsWith('http') || query.length < 2) {
+      setSearchSuggestions([]);
+      return;
+    }
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        // Locked to Indonesia bounding box (Sabang to Merauke) + atelier proximity bias
+        const res = await fetch(
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(
+            query
+          )}&bbox=95.0,-11.0,141.0,6.0&lat=${atelierLat}&lon=${atelierLng}&limit=5`
+        );
+        const data = await res.json();
+        if (data && data.features && data.features.length > 0) {
+          const mapped = data.features.map((f: any) => {
+            const props = f.properties || {};
+            const coords = f.geometry?.coordinates || [atelierLng, atelierLat];
+            const name = props.name || props.street || 'Lokasi Terpilih';
+            const parts = [
+              name,
+              props.district,
+              props.city || props.county,
+              props.state,
+            ].filter(Boolean);
+            return {
+              name,
+              full_name: parts.join(', '),
+              lat: String(coords[1]),
+              lon: String(coords[0]),
+              city: props.city || props.county || props.state || '',
+            };
+          });
+          setSearchSuggestions(mapped);
+          setShowSuggestions(true);
+        } else {
+          // Fallback to Nominatim strictly restricted to Indonesia
+          const nomRes = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+              query
+            )}&countrycodes=id&limit=5&addressdetails=1`
+          );
+          const nomData = await nomRes.json();
+          if (Array.isArray(nomData) && nomData.length > 0) {
+            const mapped = nomData.map((item: any) => ({
+              name: item.name || item.display_name.split(',')[0],
+              full_name: item.display_name,
+              lat: item.lat,
+              lon: item.lon,
+              city: item.address?.city || item.address?.town || item.address?.county || item.address?.state || '',
+            }));
+            setSearchSuggestions(mapped);
+            setShowSuggestions(true);
+          } else {
+            setSearchSuggestions([]);
+          }
+        }
+      } catch (err) {
+        setSearchSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [inputSearchOrLink, atelierLat, atelierLng]);
+
+  // Handler when selecting a suggestion from dropdown
+  const handleSelectSuggestion = (sug: {
+    name: string;
+    full_name: string;
+    lat: string;
+    lon: string;
+    city?: string;
+  }) => {
+    const lat = parseFloat(sug.lat);
+    const lng = parseFloat(sug.lon);
+    const dist = calculateDistanceKm(atelierLat, atelierLng, lat, lng);
+    const formattedLat = lat.toFixed(6);
+    const formattedLng = lng.toFixed(6);
+
+    setInputSearchOrLink(sug.name);
+    setNewName(sug.name);
+    setNewAddress(sug.full_name);
+    setNewLat(formattedLat);
+    setNewLng(formattedLng);
+    setNewDist(dist.toFixed(1));
+    setNewMapsUrl(`https://maps.google.com/?q=${formattedLat},${formattedLng}`);
+    setModalPreviewQuery(`${formattedLat},${formattedLng}`);
+    setPinPos(coordsToPercent(lat, lng));
+    setShowSuggestions(false);
+
+    showMagicToast(
+      'Lokasi Dipilih 📍',
+      `${sug.name} (${dist.toFixed(1)} KM dari Atelier)`,
+      '✅'
+    );
+  };
 
   // Handler to focus a point in the main embed
   const handleFocusPoint = useCallback((point: CodPoint) => {
@@ -231,9 +437,13 @@ export const CODMapModal: React.FC = () => {
     setInputSearchOrLink('');
     setNewName('');
     setNewAddress('');
+    setNewLat(atelierLat.toFixed(6));
+    setNewLng(atelierLng.toFixed(6));
     setNewMapsUrl('');
     setNewDist('2.0');
     setNewNotes('');
+    setSearchSuggestions([]);
+    setShowSuggestions(false);
     setModalPreviewQuery(storeAddress || 'Margonda Raya Depok');
     setPinPos(coordsToPercent(atelierLat, atelierLng));
     setIsAddModalOpen(true);
@@ -247,9 +457,12 @@ export const CODMapModal: React.FC = () => {
     setInputSearchOrLink(preset.name);
     setNewName(preset.name);
     setNewAddress(preset.address);
+    setNewLat(preset.coords.lat.toString());
+    setNewLng(preset.coords.lng.toString());
     setNewMapsUrl(preset.mapsUrl);
     setNewDist(preset.distance.toString());
     setNewNotes(preset.notes);
+    setShowSuggestions(false);
     setModalPreviewQuery(`${preset.name} Depok`);
     setPinPos(coordsToPercent(preset.coords.lat, preset.coords.lng));
 
@@ -261,7 +474,8 @@ export const CODMapModal: React.FC = () => {
   };
 
   // Detect Google Maps URL or query text
-  const detectGoogleMapsInput = () => {
+  // Detect Google Maps URL or query text with Deep URL Parsing & Reverse Geocoding
+  const detectGoogleMapsInput = async () => {
     const input = inputSearchOrLink.trim();
     if (!input) {
       showMagicToast(
@@ -272,34 +486,154 @@ export const CODMapModal: React.FC = () => {
       return;
     }
 
-    let detectedName = input;
-    let detectedAddress = `Sekitar ${input}, Kota Depok, Jawa Barat 16424`;
-    let detectedUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      input + ' Depok'
-    )}`;
-    let detectedDist = (1.5 + Math.random() * 2.5).toFixed(1);
-    let detectedNotes = `Janji serah terima buket di pintu masuk / lobi utama ${input}`;
+    setIsSearching(true);
 
-    // Check if pasted link contains coordinates or shortened URL
-    if (input.includes('maps.app.goo.gl') || input.includes('google.com/maps')) {
-      detectedName = `Titik Temu Google Maps ${codPoints.length + 1}`;
-      detectedAddress =
-        'Alamat spesifik terverifikasi sesuai pin tautan Google Maps yang dibagikan';
-      detectedUrl = input;
+    try {
+      const isGoogleMapsUrl =
+        input.includes('maps.app.goo.gl') ||
+        input.includes('google.com/maps') ||
+        input.includes('maps.google.com');
 
-      // Try extracting coordinates if available
-      const coordMatch =
-        input.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) ||
-        input.match(/q=(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (coordMatch) {
-        const lat = parseFloat(coordMatch[1]);
-        const lng = parseFloat(coordMatch[2]);
-        const dist = calculateDistanceKm(atelierLat, atelierLng, lat, lng);
-        detectedDist = dist.toFixed(1);
-        setPinPos(coordsToPercent(lat, lng));
+      if (isGoogleMapsUrl) {
+        // 1. Extract Place Name from /place/<NAME>/
+        let extractedPlaceName = '';
+        const placeMatch = input.match(/\/place\/([^\/@?#]+)/);
+        if (placeMatch) {
+          extractedPlaceName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+        }
+
+        // 2. Extract Precise Coordinates
+        // Priority A: Exact target pin coordinate !3d<lat>!4d<lng>
+        const pinLatMatch = input.match(/!3d(-?\d+\.\d+)/);
+        const pinLngMatch = input.match(/!4d(-?\d+\.\d+)/);
+        // Priority B: Query param coordinate ?q=lat,lng or ll=lat,lng
+        const queryCoordMatch = input.match(/[?&](?:q|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+        // Priority C: Viewport center @lat,lng
+        const centerMatch = input.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+
+        let parsedLat: number | null = null;
+        let parsedLng: number | null = null;
+
+        if (pinLatMatch && pinLngMatch) {
+          parsedLat = parseFloat(pinLatMatch[1]);
+          parsedLng = parseFloat(pinLngMatch[1]);
+        } else if (queryCoordMatch) {
+          parsedLat = parseFloat(queryCoordMatch[1]);
+          parsedLng = parseFloat(queryCoordMatch[2]);
+        } else if (centerMatch) {
+          parsedLat = parseFloat(centerMatch[1]);
+          parsedLng = parseFloat(centerMatch[2]);
+        }
+
+        if (parsedLat !== null && parsedLng !== null) {
+          const latStr = parsedLat.toFixed(6);
+          const lngStr = parsedLng.toFixed(6);
+          const dist = calculateDistanceKm(atelierLat, atelierLng, parsedLat, parsedLng);
+
+          // 3. Automated Reverse Geocoding on coordinates to get clean physical address
+          let resolvedAddress = '';
+          try {
+            const revRes = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${parsedLat}&lon=${parsedLng}&addressdetails=1`,
+              { headers: { 'Accept-Language': 'id', 'User-Agent': 'Chenille/1.0' } }
+            );
+            const revData = await revRes.json();
+            if (revData && revData.address) {
+              const addr = revData.address;
+              const road = addr.road || addr.pedestrian || addr.suburb || '';
+              const village = addr.village || addr.neighbourhood || addr.suburb || '';
+              const district = addr.city_district || addr.subdistrict || addr.district || '';
+              const city = addr.city || addr.town || addr.county || '';
+              const state = addr.state || '';
+              const postcode = addr.postcode || '40531';
+
+              if (extractedPlaceName && /JL\s|JALAN\s|NO\.\s*\d+/i.test(extractedPlaceName)) {
+                const parts = [
+                  extractedPlaceName,
+                  village && !extractedPlaceName.toLowerCase().includes(village.toLowerCase()) ? village : '',
+                  district ? `Kec. ${district}` : '',
+                  city ? (city.startsWith('Kota') || city.startsWith('Kab') ? city : `Kota ${city}`) : '',
+                  state,
+                  postcode,
+                ].filter(Boolean);
+                resolvedAddress = parts.join(', ');
+              } else {
+                const parts = [
+                  road,
+                  village && village !== road ? village : '',
+                  district ? `Kec. ${district}` : '',
+                  city ? (city.startsWith('Kota') || city.startsWith('Kab') ? city : `Kota ${city}`) : '',
+                  state,
+                  postcode,
+                ].filter(Boolean);
+                resolvedAddress = parts.join(', ') || revData.display_name;
+              }
+            } else {
+              resolvedAddress = revData.display_name || `${latStr}, ${lngStr}`;
+            }
+          } catch (err) {
+            resolvedAddress = extractedPlaceName || `${latStr}, ${lngStr}`;
+          }
+
+          const finalName = extractedPlaceName || `Titik Temu Google Maps ${codPoints.length + 1}`;
+          setNewName(finalName);
+          setNewAddress(resolvedAddress || `Lokasi sekitar ${finalName}`);
+          setNewLat(latStr);
+          setNewLng(lngStr);
+          setNewMapsUrl(input);
+          setNewDist(dist.toFixed(1));
+          setNewNotes(
+            `Janji serah terima buket di lobi depan / pintu masuk ${finalName.split(' JL ')[0].trim()}`
+          );
+          setModalPreviewQuery(`${latStr},${lngStr}`);
+          setPinPos(coordsToPercent(parsedLat, parsedLng));
+
+          showMagicToast(
+            'Link Google Maps Terdeteksi! 📍',
+            `${finalName} (~${dist.toFixed(1)} KM dari Atelier)`,
+            '✅'
+          );
+          return;
+        }
       }
-    } else {
-      // Look up preset if matches
+
+      // Check if user entered lat, lon directly (e.g. "-6.897109, 107.560783")
+      const directCoordMatch = input.match(/^(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)$/);
+      if (directCoordMatch) {
+        const lat = parseFloat(directCoordMatch[1]);
+        const lng = parseFloat(directCoordMatch[2]);
+        const latStr = lat.toFixed(6);
+        const lngStr = lng.toFixed(6);
+        const dist = calculateDistanceKm(atelierLat, atelierLng, lat, lng);
+
+        let resolvedAddress = `${latStr}, ${lngStr}`;
+        try {
+          const revRes = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+            { headers: { 'Accept-Language': 'id' } }
+          );
+          const revData = await revRes.json();
+          if (revData && revData.display_name) {
+            resolvedAddress = revData.display_name;
+          }
+        } catch (e) {}
+
+        const finalName = `Titik Koordinat (${latStr}, ${lngStr})`;
+        setNewName(finalName);
+        setNewAddress(resolvedAddress);
+        setNewLat(latStr);
+        setNewLng(lngStr);
+        setNewMapsUrl(`https://maps.google.com/?q=${latStr},${lngStr}`);
+        setNewDist(dist.toFixed(1));
+        setNewNotes(`Serah terima buket di titik koordinat ${latStr}, ${lngStr}`);
+        setModalPreviewQuery(`${latStr},${lngStr}`);
+        setPinPos(coordsToPercent(lat, lng));
+
+        showMagicToast('Koordinat Terdeteksi! 📍', resolvedAddress.slice(0, 50) + '...', '✅');
+        return;
+      }
+
+      // Check Preset Chips
       const matchedKey = Object.keys(COD_PRESETS).find(
         (k) =>
           COD_PRESETS[k].name.toLowerCase().includes(input.toLowerCase()) ||
@@ -309,20 +643,51 @@ export const CODMapModal: React.FC = () => {
         applyPreset(matchedKey);
         return;
       }
+
+      // Normal Text Search (Nominatim Indonesia)
+      const nomRes = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          input
+        )}&countrycodes=id&limit=1&addressdetails=1`
+      );
+      const nomData = await nomRes.json();
+      if (Array.isArray(nomData) && nomData.length > 0) {
+        const item = nomData[0];
+        const lat = parseFloat(item.lat);
+        const lng = parseFloat(item.lon);
+        const latStr = lat.toFixed(6);
+        const lngStr = lng.toFixed(6);
+        const dist = calculateDistanceKm(atelierLat, atelierLng, lat, lng);
+        const placeName = item.name || item.display_name.split(',')[0];
+
+        setNewName(placeName);
+        setNewAddress(item.display_name);
+        setNewLat(latStr);
+        setNewLng(lngStr);
+        setNewMapsUrl(`https://maps.google.com/?q=${latStr},${lngStr}`);
+        setNewDist(dist.toFixed(1));
+        setNewNotes(`Janji serah terima buket di lobi depan / pintu masuk ${placeName}`);
+        setModalPreviewQuery(`${latStr},${lngStr}`);
+        setPinPos(coordsToPercent(lat, lng));
+
+        showMagicToast('Lokasi Terdeteksi! 📍', placeName + ` (~${dist.toFixed(1)} KM)`, '✅');
+        return;
+      }
+
+      // Fallback
+      setNewName(input);
+      setNewAddress(`Area sekitar ${input}, Jawa Barat`);
+      setNewMapsUrl(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(input)}`);
+      setNewDist('2.5');
+      setNewNotes(`Janji serah terima buket di pintu masuk / lobi utama ${input}`);
+      setModalPreviewQuery(input);
+      showMagicToast('Pencarian Selesai 📍', `Informasi ${input} disiapkan.`, 'ℹ️');
+    } catch (err) {
+      console.warn('Error detecting maps input:', err);
+      showMagicToast('Galat Deteksi ⚠️', 'Gagal memproses input lokasi.', '❌');
+    } finally {
+      setIsSearching(false);
     }
-
-    setNewName(detectedName);
-    setNewAddress(detectedAddress);
-    setNewMapsUrl(detectedUrl);
-    setNewDist(detectedDist);
-    setNewNotes(detectedNotes);
-    setModalPreviewQuery(`${input} Depok`);
-
-    showMagicToast(
-      'Lokasi Terdeteksi 📍',
-      'Alamat, estimasi jarak, dan link Google Maps berhasil disiapkan!',
-      '✅'
-    );
   };
 
   // Test opening the Google Maps link
@@ -344,6 +709,8 @@ export const CODMapModal: React.FC = () => {
     (lat: number, lng: number) => {
       const dist = calculateDistanceKm(atelierLat, atelierLng, lat, lng);
       setNewDist(dist.toFixed(1));
+      setNewLat(lat.toFixed(6));
+      setNewLng(lng.toFixed(6));
       const mapsUrl = `https://www.google.com/maps?q=${lat.toFixed(5)},${lng.toFixed(5)}`;
       setNewMapsUrl(mapsUrl);
       setModalPreviewQuery(`${lat.toFixed(5)},${lng.toFixed(5)}`);
@@ -363,18 +730,14 @@ export const CODMapModal: React.FC = () => {
           setNewName(`Dekat ${landmarkName}`);
         }
         setNewAddress(
-          `Area sekitar ${landmarkName}, Jl. Margonda Raya, Beji, Kota Depok, Jawa Barat 16424 (Koordinat: ${lat.toFixed(
-            4
-          )}, ${lng.toFixed(4)})`
+          `Area sekitar ${landmarkName}, Jl. Margonda Raya, Beji, Kota Depok, Jawa Barat 16424`
         );
       } else {
         if (!newName) {
           setNewName(`Titik Temu COD (${dist.toFixed(1)} KM)`);
         }
         setNewAddress(
-          `Jl. Margonda Raya & Sekitarnya, Beji, Kota Depok, Jawa Barat 16424 (Koordinat: ${lat.toFixed(
-            4
-          )}, ${lng.toFixed(4)})`
+          `Jl. Margonda Raya & Sekitarnya, Beji, Kota Depok, Jawa Barat 16424`
         );
       }
 
@@ -756,30 +1119,78 @@ export const CODMapModal: React.FC = () => {
             <div className="p-5 sm:p-6 space-y-4 max-h-[80vh] overflow-y-auto">
               {/* SEARCH & DETECT BOX */}
               <div className="bg-stone-50 border border-stone-200 rounded-2xl p-3.5 space-y-2.5">
-                <label className="text-xs font-extrabold text-stone-800 block">
-                  🔍 Cari Lokasi atau Tempel Link Google Maps:
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={inputSearchOrLink}
-                    onChange={(e) => setInputSearchOrLink(e.target.value)}
-                    placeholder="Tempel link https://maps.app.goo.gl/... atau ketik nama gedung/mall..."
-                    className="flex-1 px-3 py-2 border border-stone-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        detectGoogleMapsInput();
-                      }
-                    }}
-                  />
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold text-stone-800 block">
+                    🔍 Cari Lokasi atau Tempel Link Google Maps:
+                  </label>
+                  <span className="text-[10px] text-stone-500 bg-white px-2 py-0.5 rounded-md border border-stone-200 font-medium flex items-center gap-1">
+                    <Info className="w-3 h-3 text-stone-400" /> Smart Autocomplete (Pola admin-sunjaya)
+                  </span>
+                </div>
+                <div className="flex gap-2 relative">
+                  <div className="relative flex-1">
+                    <input
+                      ref={modalSearchInputRef}
+                      type="text"
+                      value={inputSearchOrLink}
+                      onChange={(e) => {
+                        setInputSearchOrLink(e.target.value);
+                        setShowSuggestions(true);
+                      }}
+                      onFocus={() => {
+                        if (searchSuggestions.length > 0) setShowSuggestions(true);
+                      }}
+                      placeholder="Ketik nama tempat/gedung (cth: Margo City, Stasiun Pocin) atau tempel link..."
+                      className="w-full px-3 py-2 border border-stone-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          setShowSuggestions(false);
+                          detectGoogleMapsInput();
+                        }
+                      }}
+                    />
+
+                    {/* FLOATING SUGGESTIONS DROPDOWN (Pola admin-sunjaya UX) */}
+                    {showSuggestions && searchSuggestions.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl border border-stone-200 shadow-xl z-50 overflow-hidden divide-y divide-stone-100 max-h-56 overflow-y-auto">
+                        <div className="px-3 py-1.5 bg-stone-50 text-[10px] font-bold text-stone-400 flex items-center justify-between">
+                          <span>PILIH TITIK SARAN LOKASI:</span>
+                          <span className="text-rose-500 font-mono">{searchSuggestions.length} Ditemukan</span>
+                        </div>
+                        {searchSuggestions.map((sug, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleSelectSuggestion(sug)}
+                            className="w-full px-3 py-2 text-left hover:bg-rose-50/70 flex items-start gap-2.5 transition-colors cursor-pointer group"
+                          >
+                            <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-bold text-stone-800 truncate">{sug.name}</div>
+                              <div className="text-[10.5px] text-stone-500 line-clamp-1">{sug.full_name}</div>
+                            </div>
+                            {sug.city && (
+                              <span className="shrink-0 px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 text-[9.5px] font-semibold self-center">
+                                {sug.city}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <button
                     type="button"
-                    onClick={detectGoogleMapsInput}
-                    className="px-3.5 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
+                    onClick={() => {
+                      setShowSuggestions(false);
+                      detectGoogleMapsInput();
+                    }}
+                    className="px-3.5 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
                   >
-                    <Search className="w-3.5 h-3.5" />
-                    <span>Deteksi Maps</span>
+                    {isSearching ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+                    <span>{isSearching ? 'Mencari...' : 'Deteksi Maps'}</span>
                   </button>
                 </div>
 
@@ -965,6 +1376,51 @@ export const CODMapModal: React.FC = () => {
                     placeholder="Alamat lengkap terdeteksi dari Google Maps..."
                     className="w-full px-3 py-2 border border-stone-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
                   />
+                </div>
+
+                {/* DEDICATED COORDINATE ELEMENTS (Pemisahan Nilai Alamat vs Lat/Lng) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-stone-700 block mb-1">
+                      Latitude Koordinat:
+                    </label>
+                    <input
+                      type="text"
+                      value={newLat}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNewLat(val);
+                        const lat = parseFloat(val);
+                        const lng = parseFloat(newLng);
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                          updateLocationFromCoords(lat, lng);
+                        }
+                      }}
+                      placeholder="-6.3728"
+                      className="w-full px-3 py-2 border border-stone-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-stone-700 block mb-1">
+                      Longitude Koordinat:
+                    </label>
+                    <input
+                      type="text"
+                      value={newLng}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNewLng(val);
+                        const lat = parseFloat(newLat);
+                        const lng = parseFloat(val);
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                          updateLocationFromCoords(lat, lng);
+                        }
+                      }}
+                      placeholder="106.8315"
+                      className="w-full px-3 py-2 border border-stone-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

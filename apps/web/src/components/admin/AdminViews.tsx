@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { TableSortHeader, type SortDirection } from './TableSortHeader';
 import { DateRangeFilter, type DateRange } from './DateRangeFilter';
@@ -2327,6 +2327,179 @@ export const StoreSettingsView: React.FC = () => {
     lat: string;
     lon: string;
   } | null>(null);
+  const [searchSuggestions, setSearchSuggestions] = useState<
+    Array<{ name: string; full_name: string; lat: string; lon: string; city?: string }>
+  >([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [googlePlacesActive, setGooglePlacesActive] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Debounced live autocomplete search (Instant Dropdown matching admin-sunjaya UX)
+  useEffect(() => {
+    // If Google Places API is actively working, let Google Places handle the dropdown exclusively!
+    if (googlePlacesActive) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    if (!mapSearchQuery.trim() || mapSearchQuery.length < 2) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        // Restricted to Indonesia bounding box (Sabang to Merauke) + bias to current coordinates
+        const latBias = formProfile.latitude || '-6.9';
+        const lonBias = formProfile.longitude || '107.6';
+        const res = await fetch(
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(
+            mapSearchQuery
+          )}&bbox=95.0,-11.0,141.0,6.0&lat=${latBias}&lon=${lonBias}&limit=5`
+        );
+        const data = await res.json();
+        if (data.features && data.features.length > 0) {
+          const suggestions = data.features.map((f: any) => {
+            const props = f.properties;
+            const parts = [props.name, props.street, props.district, props.city, props.state].filter(Boolean);
+            return {
+              name: props.name || props.street || 'Lokasi',
+              full_name: parts.join(', '),
+              lat: String(f.geometry.coordinates[1]),
+              lon: String(f.geometry.coordinates[0]),
+              city: props.city || props.state || '',
+            };
+          });
+          setSearchSuggestions(suggestions);
+          setShowSuggestions(true);
+        } else {
+          // Fallback to Nominatim strictly restricted to Indonesia
+          const nomRes = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+              mapSearchQuery
+            )}&countrycodes=id&limit=5&addressdetails=1`
+          );
+          const nomData = await nomRes.json();
+          if (Array.isArray(nomData) && nomData.length > 0) {
+            const suggestions = nomData.map((item: any) => ({
+              name: item.name || item.display_name.split(',')[0],
+              full_name: item.display_name,
+              lat: item.lat,
+              lon: item.lon,
+              city: item.address?.city || item.address?.town || item.address?.county || item.address?.state || '',
+            }));
+            setSearchSuggestions(suggestions);
+            setShowSuggestions(true);
+          } else {
+            setSearchSuggestions([]);
+          }
+        }
+      } catch (e) {
+        setSearchSuggestions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [mapSearchQuery, googlePlacesActive, formProfile.latitude, formProfile.longitude]);
+
+  // Google Places Autocomplete Integration (Pola admin-sunjaya jika API Key tersedia)
+  useEffect(() => {
+    const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!googleApiKey || typeof window === 'undefined') return;
+
+    // Handle Google Maps auth or activation failure gracefully
+    const originalAuthFailure = (window as any).gm_authFailure;
+    (window as any).gm_authFailure = () => {
+      console.warn('[Google Maps] Auth/Activation failure. Places API might need activation in Google Cloud Console. Falling back to local geocoder.');
+      setGooglePlacesActive(false);
+      if (typeof originalAuthFailure === 'function') originalAuthFailure();
+    };
+
+    const initAutocomplete = () => {
+      try {
+        if (!(window as any).google?.maps?.places || !searchInputRef.current) return;
+        const autocomplete = new (window as any).google.maps.places.Autocomplete(searchInputRef.current, {
+          componentRestrictions: { country: 'id' },
+          fields: ['formatted_address', 'geometry', 'name'],
+        });
+
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          if (!place.geometry || !place.geometry.location) return;
+
+          const lat = place.geometry.location.lat().toFixed(6);
+          const lon = place.geometry.location.lng().toFixed(6);
+          const address = place.formatted_address || place.name || '';
+
+          setFormProfile((prev) => ({
+            ...prev,
+            latitude: lat,
+            longitude: lon,
+            studioAddress: address,
+            mapsLink: `https://maps.google.com/?q=${lat},${lon}`,
+          }));
+          setMapSearchResult({
+            display_name: address,
+            lat,
+            lon,
+          });
+          showMagicToast('Google Places Terdeteksi! 📍', address.slice(0, 50) + '...', '✨');
+        });
+
+        setGooglePlacesActive(true);
+      } catch (err) {
+        console.warn('[Google Places] Initialization error:', err);
+        setGooglePlacesActive(false);
+      }
+    };
+
+    if ((window as any).google?.maps?.places) {
+      initAutocomplete();
+    } else {
+      const scriptId = 'google-maps-places-script';
+      if (!document.getElementById(scriptId)) {
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${googleApiKey}&libraries=places&language=id`;
+        script.async = true;
+        script.defer = true;
+        script.onload = initAutocomplete;
+        script.onerror = () => {
+          console.warn('[Google Maps] Failed to load script. Falling back to local engine.');
+          setGooglePlacesActive(false);
+        };
+        document.head.appendChild(script);
+      }
+    }
+  }, []);
+
+  const handleSelectSuggestion = (suggestion: {
+    name: string;
+    full_name: string;
+    lat: string;
+    lon: string;
+  }) => {
+    const lat = parseFloat(suggestion.lat).toFixed(6);
+    const lon = parseFloat(suggestion.lon).toFixed(6);
+    setFormProfile((prev) => ({
+      ...prev,
+      latitude: lat,
+      longitude: lon,
+      studioAddress: suggestion.full_name,
+      mapsLink: `https://maps.google.com/?q=${lat},${lon}`,
+    }));
+    setMapSearchResult({
+      display_name: suggestion.full_name,
+      lat,
+      lon,
+    });
+    setMapSearchQuery(suggestion.name);
+    setShowSuggestions(false);
+    showMagicToast('Lokasi Terpilih! 📍', suggestion.full_name.slice(0, 50) + '...', '✅');
+  };
 
   // Synchronize store settings from backend database on mount
   useEffect(() => {
@@ -2367,6 +2540,104 @@ export const StoreSettingsView: React.FC = () => {
     if (!mapSearchQuery.trim()) return;
     setMapSearching(true);
     setMapSearchResult(null);
+    setShowSuggestions(false);
+
+    // Check if user pasted a Google Maps URL
+    const isGoogleMapsUrl =
+      mapSearchQuery.includes('maps.app.goo.gl') ||
+      mapSearchQuery.includes('google.com/maps') ||
+      mapSearchQuery.includes('maps.google.com');
+
+    if (isGoogleMapsUrl) {
+      let extractedPlaceName = '';
+      const placeMatch = mapSearchQuery.match(/\/place\/([^\/@?#]+)/);
+      if (placeMatch) {
+        extractedPlaceName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+      }
+
+      const pinLatMatch = mapSearchQuery.match(/!3d(-?\d+\.\d+)/);
+      const pinLngMatch = mapSearchQuery.match(/!4d(-?\d+\.\d+)/);
+      const queryCoordMatch = mapSearchQuery.match(/[?&](?:q|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      const centerMatch = mapSearchQuery.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+
+      let parsedLat: number | null = null;
+      let parsedLng: number | null = null;
+
+      if (pinLatMatch && pinLngMatch) {
+        parsedLat = parseFloat(pinLatMatch[1]);
+        parsedLng = parseFloat(pinLngMatch[1]);
+      } else if (queryCoordMatch) {
+        parsedLat = parseFloat(queryCoordMatch[1]);
+        parsedLng = parseFloat(queryCoordMatch[2]);
+      } else if (centerMatch) {
+        parsedLat = parseFloat(centerMatch[1]);
+        parsedLng = parseFloat(centerMatch[2]);
+      }
+
+      if (parsedLat !== null && parsedLng !== null) {
+        const latStr = parsedLat.toFixed(6);
+        const lngStr = parsedLng.toFixed(6);
+
+        let resolvedAddress = '';
+        try {
+          const revRes = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${parsedLat}&lon=${parsedLng}&addressdetails=1`,
+            { headers: { 'Accept-Language': 'id', 'User-Agent': 'Chenille/1.0' } }
+          );
+          const revData = await revRes.json();
+          if (revData && revData.address) {
+            const addr = revData.address;
+            const road = addr.road || addr.pedestrian || addr.suburb || '';
+            const village = addr.village || addr.neighbourhood || addr.suburb || '';
+            const district = addr.city_district || addr.subdistrict || addr.district || '';
+            const city = addr.city || addr.town || addr.county || '';
+            const state = addr.state || '';
+            const postcode = addr.postcode || '40531';
+
+            if (extractedPlaceName && /JL\s|JALAN\s|NO\.\s*\d+/i.test(extractedPlaceName)) {
+              const parts = [
+                extractedPlaceName,
+                village && !extractedPlaceName.toLowerCase().includes(village.toLowerCase()) ? village : '',
+                district ? `Kec. ${district}` : '',
+                city ? (city.startsWith('Kota') || city.startsWith('Kab') ? city : `Kota ${city}`) : '',
+                state,
+                postcode,
+              ].filter(Boolean);
+              resolvedAddress = parts.join(', ');
+            } else {
+              const parts = [
+                extractedPlaceName || road,
+                village && village !== road ? village : '',
+                district ? `Kec. ${district}` : '',
+                city ? (city.startsWith('Kota') || city.startsWith('Kab') ? city : `Kota ${city}`) : '',
+                state,
+                postcode,
+              ].filter(Boolean);
+              resolvedAddress = parts.join(', ') || revData.display_name;
+            }
+          }
+        } catch (e) {
+          resolvedAddress = extractedPlaceName || `${latStr}, ${lngStr}`;
+        }
+
+        const finalAddress = resolvedAddress || extractedPlaceName || `${latStr}, ${lngStr}`;
+        setFormProfile((prev) => ({
+          ...prev,
+          latitude: latStr,
+          longitude: lngStr,
+          studioAddress: finalAddress,
+          mapsLink: mapSearchQuery,
+        }));
+        setMapSearchResult({
+          display_name: finalAddress,
+          lat: latStr,
+          lon: lngStr,
+        });
+        setMapSearching(false);
+        showMagicToast('Link Google Maps Terdeteksi! 📍', (extractedPlaceName || finalAddress).slice(0, 50) + '...', '✅');
+        return;
+      }
+    }
 
     // Check if user entered lat, lon directly (e.g. "-6.3728, 106.8315")
     const coordMatch = mapSearchQuery.match(/^(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)$/);
@@ -2393,7 +2664,7 @@ export const StoreSettingsView: React.FC = () => {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           mapSearchQuery
-        )}&limit=1&addressdetails=1`
+        )}&countrycodes=id&limit=1&addressdetails=1`
       );
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
@@ -2407,6 +2678,7 @@ export const StoreSettingsView: React.FC = () => {
           ...prev,
           latitude: parseFloat(item.lat).toFixed(6),
           longitude: parseFloat(item.lon).toFixed(6),
+          studioAddress: item.display_name,
           mapsLink: `https://maps.google.com/?q=${item.lat},${item.lon}`,
         }));
         showMagicToast('Lokasi Ditemukan! 📍', item.display_name.slice(0, 50) + '...', '✅');
@@ -2431,31 +2703,86 @@ export const StoreSettingsView: React.FC = () => {
     }
   };
 
+  // Reverse Geocoding on GPS: converts hardware coordinates to real human-readable street address
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
       showMagicToast('GPS Tidak Didukung ⚠️', 'Browser Anda tidak mendukung geolokasi.', '❌');
       return;
     }
+
+    setGpsLoading(true);
+    showMagicToast('Mendeteksi GPS... 🛰️', 'Menghubungi satelit GPS & mencari nama jalan...', '⏳');
+
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         const lat = pos.coords.latitude.toFixed(6);
         const lon = pos.coords.longitude.toFixed(6);
+
+        // Reverse geocoding to resolve real human-readable street address
+        let resolvedAddress = `Area Lokasi (${lat}, ${lon})`;
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`,
+            { headers: { 'User-Agent': 'ChenilleAtelier/1.0' } }
+          );
+          const data = await res.json();
+          if (data && data.address) {
+            const addr = data.address;
+            const parts: string[] = [];
+            // Nama jalan / area / kelurahan
+            const streetOrArea = addr.road || addr.building || addr.amenity || addr.suburb || addr.village || addr.neighbourhood;
+            if (streetOrArea) parts.push(streetOrArea);
+            // Kelurahan jika belum masuk
+            if (addr.suburb && addr.road && addr.suburb !== streetOrArea) {
+              parts.push(addr.suburb);
+            }
+            // Kecamatan
+            const kec = addr.city_district || addr.county;
+            if (kec) {
+              parts.push(kec.toLowerCase().startsWith('kec') ? kec : `Kec. ${kec}`);
+            }
+            // Kota / Kabupaten
+            const kota = addr.city || addr.town || addr.municipality;
+            if (kota) {
+              parts.push(kota.toLowerCase().startsWith('kota') || kota.toLowerCase().startsWith('kab') ? kota : `Kota ${kota}`);
+            }
+            // Provinsi
+            if (addr.state) parts.push(addr.state);
+            // Kode Pos
+            if (addr.postcode) parts.push(addr.postcode);
+
+            if (parts.length >= 2) {
+              resolvedAddress = parts.join(', ');
+            } else if (data.display_name) {
+              resolvedAddress = data.display_name;
+            }
+          } else if (data && data.display_name) {
+            resolvedAddress = data.display_name;
+          }
+        } catch (err) {
+          console.warn('Reverse geocoding error:', err);
+        }
+
         setFormProfile((prev) => ({
           ...prev,
           latitude: lat,
           longitude: lon,
+          studioAddress: resolvedAddress, // Real human street address!
           mapsLink: `https://maps.google.com/?q=${lat},${lon}`,
         }));
         setMapSearchResult({
-          display_name: `Lokasi GPS Perangkat Saya (${lat}, ${lon})`,
+          display_name: resolvedAddress,
           lat,
           lon,
         });
-        showMagicToast('GPS Terdeteksi! 🎯', `Koordinat saat ini: ${lat}, ${lon}`, '📍');
+        setGpsLoading(false);
+        showMagicToast('GPS & Alamat Terdeteksi! 🎯', resolvedAddress.slice(0, 50) + '...', '📍');
       },
       (err) => {
+        setGpsLoading(false);
         showMagicToast('Gagal Mendeteksi GPS ⚠️', err.message || 'Izin lokasi ditolak.', '❌');
-      }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
@@ -2718,36 +3045,95 @@ export const StoreSettingsView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleUseCurrentLocation}
-                  className="px-3 py-1.5 rounded-lg bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  disabled={gpsLoading}
+                  className="px-3 py-1.5 rounded-lg bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-60"
+                  title="Deteksi koordinat GPS dan otomatis ubah menjadi nama jalan riil (Reverse Geocoding)"
                 >
-                  <Crosshair className="w-3.5 h-3.5" />
-                  Gunakan GPS Saya
+                  {gpsLoading ? (
+                    <RotateCw className="w-3.5 h-3.5 animate-spin text-rose-600" />
+                  ) : (
+                    <Crosshair className="w-3.5 h-3.5" />
+                  )}
+                  <span>{gpsLoading ? 'Mencari Alamat GPS...' : 'Gunakan GPS Saya'}</span>
                 </button>
               </div>
             </div>
 
-            {/* SEARCH MAP INPUT & COPY TO ADDRESS */}
+            {/* SEARCH MAP INPUT WITH LIVE DROPDOWN SUGGESTIONS & COPY TO ADDRESS */}
             <div className="space-y-2">
-              <label className="block font-bold text-stone-700 text-xs">
-                Cari Lokasi / Alamat di Maps:
-              </label>
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex items-center justify-between">
+                <label className="block font-bold text-stone-700 text-xs">
+                  Cari Lokasi / Alamat di Maps:
+                </label>
+                <div className="flex items-center gap-1.5 text-[10px]">
+                  {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
+                    <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 font-semibold flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Google Places Autocomplete Aktif
+                    </span>
+                  ) : (
+                    <span className="text-stone-500 bg-stone-100 px-2 py-0.5 rounded-md border border-stone-200 font-medium flex items-center gap-1">
+                      <Info className="w-3 h-3 text-stone-400" /> Smart Live Autocomplete (Pola admin-sunjaya)
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 relative">
                 <div className="relative flex-1">
-                  <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
                   <input
+                    ref={searchInputRef}
+                    id="search-map-input"
                     type="text"
                     placeholder="Ketik nama jalan, gedung, atau koordinat (cth: Margonda Raya, Beji Depok)..."
                     value={mapSearchQuery}
-                    onChange={(e) => setMapSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setMapSearchQuery(e.target.value);
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => {
+                      if (searchSuggestions.length > 0) setShowSuggestions(true);
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
+                        setShowSuggestions(false);
                         handleSearchLocation();
                       }
                     }}
                     className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                   />
+
+                  {/* FLOATING SUGGESTIONS DROPDOWN (Pola admin-sunjaya UX) */}
+                  {showSuggestions && searchSuggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl border border-stone-200 shadow-xl z-50 overflow-hidden divide-y divide-stone-100 max-h-60 overflow-y-auto">
+                      <div className="px-3 py-1.5 bg-stone-50 text-[10px] font-bold text-stone-400 flex items-center justify-between">
+                        <span>PILIH LOKASI DARI SARAN:</span>
+                        <span className="text-rose-500 font-mono">{searchSuggestions.length} Hasil Ditemukan</span>
+                      </div>
+                      {searchSuggestions.map((sug, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleSelectSuggestion(sug)}
+                          className="w-full px-3.5 py-2.5 text-left hover:bg-rose-50/70 flex items-start gap-2.5 transition-colors cursor-pointer group"
+                        >
+                          <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-bold text-stone-800 truncate">{sug.name}</div>
+                            <div className="text-[11px] text-stone-500 line-clamp-1">{sug.full_name}</div>
+                          </div>
+                          {sug.city && (
+                            <span className="shrink-0 px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 text-[10px] font-semibold self-center">
+                              {sug.city}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
                 <button
                   type="button"
                   onClick={handleSearchLocation}

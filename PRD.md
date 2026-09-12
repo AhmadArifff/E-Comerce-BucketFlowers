@@ -2534,3 +2534,266 @@ Pada formulir Pengaturan Atelier (Seksi 1), struktur tata letak diperkaya menjad
 3. **Visualisasi Lingkaran Geofencing di Admin COD Maps:**
    - Lingkaran radius 5 KM pada peta admin otomatis berpindah pusat mengikuti koordinat studio toko yang disimpan.
 
+### 17.5 Arsitektur Kredensial & Integrasi Google Maps API (Pola admin-sunjaya & Reverse Geocoding)
+
+#### 17.5.1 Analisis & Review Kasus GPS vs Alamat Fisik
+- **Pertanyaan / Isu Pengguna:**  
+  *Kenapa saat menggunakan GPS ("Gunakan GPS Saya") dia hanya menyimpan latitude dan longitude saja (misalnya teks yang muncul `Lokasi GPS Perangkat Saya (-6.899755, 107.558353)`) dan bukan alamat jalan yang sesungguhnya?*
+- **Akar Masalah Teknis:**  
+  API bawaan browser (`navigator.geolocation.getCurrentPosition`) adalah antarmuka perangkat keras (GPS chip / Wi-Fi triangulation) yang **hanya mengembalikan angka koordinat mentah** (`latitude` dan `longitude`). Browser tidak memiliki basis data peta internal untuk mengetahui apakah `-6.899755, 107.558353` berada di Jl. Sudirman, Cibeureum, atau Margonda Raya.
+- **Solusi Arsitektur (Reverse Geocoding Pipeline):**  
+  Sistem mengimplementasikan alur **Reverse Geocoding otomatis**:
+  1. Ketika tombol *"Gunakan GPS Saya"* diklik, browser mengambil koordinat hardware.
+  2. Sistem segera melakukan panggilan asinkron ke endpoint Reverse Geocoding (OpenStreetMap Nominatim / Google Geocoding API):
+     ```text
+     GET https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}&addressdetails=1
+     ```
+  3. Respons berupa objek terstruktur berisi nama jalan (*road*), kelurahan (*suburb*), kecamatan (*city_district*), kota (*city*), provinsi (*state*), dan kode pos (*postcode*).
+  4. Form `Alamat Fisik Workshop / Studio` (`studioAddress`) otomatis terisi dengan alamat lengkap yang ramah dibaca manusia (contoh: *"Cibeureum, Kec. Cimahi Selatan, Kota Cimahi, Jawa Barat 40535"*), bukan lagi teks angka koordinat mentah.
+
+---
+
+#### 17.5.2 Analisis Kasus Search Bar Google Maps (Perbandingan dengan `admin-sunjaya`)
+- **Pertanyaan / Isu Pengguna:**  
+  *Kenapa saat search lokasi di maps dia tidak muncul dropdown autocomplete tempat seperti di project rujukan `admin-sunjaya` (`adminShuttleV3`)? Apakah kita harus membuat package, API, atau kredensial untuk Google Maps-nya? Dan bagaimana caranya?*
+- **Hasil Review Teknis terhadap `admin-sunjaya` (`adminShuttleV3`):**  
+  Pada proyek `adminShuttleV3` (file `public/js/apps/master-data/outlet-form.js`), form menggunakan pustaka eksternal resmi dari Google:
+  ```html
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_KEY&libraries=places"></script>
+  ```
+  Dan diinisialisasi menggunakan widget bawaan Google:
+  ```javascript
+  autocomplete = new google.maps.places.Autocomplete(document.getElementById('search-map-input'), {
+    componentRestrictions: { country: 'id' }
+  });
+  ```
+  Dropdown melayang yang muncul saat mengetik di `admin-sunjaya` adalah **Google Places Autocomplete Widget** yang di-render langsung oleh script Google dari server Google Cloud.
+- **Mengapa di Chenille Tidak Muncul Dropdown Tersebut Sebelumnya?**  
+  1. Script Google Places Autocomplete **wajib memiliki `API KEY` Google Cloud**. Tanpa kunci API, Google memblokir script dengan galat `MissingKeyMapError` atau `ApiNotActivatedMapError` dan dropdown tidak akan pernah dirender.
+  2. Di repositori `E-Comerce-BucketFlowers`, file `.env` belum memiliki environment variable `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
+
+---
+
+#### 17.5.3 Apakah Wajib Membuat Kredensial Google Maps?
+- **Jawaban:**  
+  - **Opsional tapi Sangat Direkomendasikan jika ingin hasil pencarian 100% identik dengan Google Maps & `admin-sunjaya`.**
+  - Jika Anda memiliki Google Maps API Key, sistem Chenille Flowers akan otomatis mengaktifkan widget Google Places Autocomplete resmi (lengkap dengan database nama kafe, gedung kampus, ruko, perumahan di Indonesia).
+  - Jika Anda **belum/tidak ingin membuat API Key Google**, sistem Chenille Flowers kini menyediakan **Smart Search Autocomplete Dropdown bawaan (Zero-Config Fallback)** yang tetap memunculkan dropdown saran nama tempat saat mengetik tanpa biaya dan tanpa perlu kartu kredit.
+- **Biaya & Kuota Google Maps Platform:**  
+  - Google memberikan **Kredit Gratis $200 USD (sekitar Rp 3.100.000,-) setiap bulan** untuk setiap akun Google Cloud.
+  - Kuota gratis ini setara dengan:
+    - **~28.000 kali pencarian autocomplete per bulan** (Places Autocomplete per request).
+    - **~40.000 kali geocoding per bulan**.
+  - Untuk kebutuhan operasional satu toko atelier bunga, penggunaan harian berkisar 10–50 pencarian/bulan, sehingga tagihannya **Rp 0 / 100% Bebas Biaya**.
+
+---
+
+#### 17.5.4 Panduan Step-by-Step Pembuatan Kredensial Google Maps API di Google Cloud Console
+
+Berikut adalah panduan pembuatan API Key resmi untuk disematkan ke aplikasi:
+
+```text
+LANGKAH PEMBUATAN GOOGLE MAPS API KEY:
+
+1. Buka Google Cloud Console:
+   👉 https://console.cloud.google.com/
+   Login menggunakan akun Google Anda.
+
+2. Buat Project Baru:
+   - Klik dropdown project di navigasi atas -> Klik "New Project".
+   - Masukkan nama project, contoh: "Chenille-Atelier-Maps" -> Klik "Create".
+
+3. Aktifkan Billing (Syarat Wajib Google Cloud):
+   - Buka menu Billing -> Hubungkan metode pembayaran (Kartu Debit Visa/Mastercard atau Jenius/Jago/BCA Virtual).
+   - Tenang, saldo tidak akan terpotong selama penggunaan masih di bawah kuota gratis $200/bulan.
+
+4. Aktifkan 3 Library API yang Dibutuhkan:
+   - Masuk ke menu "APIs & Services" -> "Library".
+   - Cari dan klik "Enable" untuk 3 library berikut:
+     a. Maps JavaScript API (untuk merender peta & marker interaktif).
+     b. Places API (New) atau Places API (untuk dropdown autocomplete pencarian tempat).
+     c. Geocoding API (untuk konversi nama jalan ke koordinat dan reverse geocoding).
+
+5. Buat API Key:
+   - Masuk ke menu "APIs & Services" -> "Credentials".
+   - Klik "+ CREATE CREDENTIALS" -> Pilih "API key".
+   - Kunci API akan dibuat, contoh: AIzaSyD9x8K2L0m1N-abcdef123456789.
+
+6. Amankan API Key (Key Restrictions):
+   - Klik nama API Key yang baru dibuat untuk masuk ke halaman edit.
+   - Pada "Application restrictions", pilih "Websites" (HTTP referrers):
+     Tambahkan URL aplikasi:
+     - http://localhost:3000/*
+     - https://*.vercel.app/*
+     - https://domain-toko-anda.com/*
+   - Pada "API restrictions", pilih "Restrict key":
+     Centang hanya:
+     - Maps JavaScript API
+     - Places API
+     - Geocoding API
+   - Klik "Save".
+
+7. Pasang API Key di Proyek Chenille Flowers:
+   - Buka file .env dan .env.local di root proyek:
+     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="AIzaSyD9x8K2L0m1N-abcdef123456789"
+```
+
+---
+
+#### 17.5.5 Arsitektur Dual-Engine / Hybrid Geocoding di Antarmuka Admin (`StoreSettingsView`)
+
+Untuk memberikan pengalaman terbaik tanpa memblokir admin yang belum mendaftarkan API key, sistem mengadopsi pola arsitektur **Dual-Engine**:
+
+```mermaid
+graph TD
+    A[Admin Mengetik di Search Box / Klik GPS] --> B{Apakah NEXT_PUBLIC_GOOGLE_MAPS_API_KEY Ada?}
+    B -- Ya --> C[Engine 1: Google Places Autocomplete]
+    C --> D[Render Dropdown Resmi Google Places]
+    D --> E[Pilih Tempat -> Ambil geometry.location & formatted_address]
+    
+    B -- Tidak / Kunci Belum Ada --> F[Engine 2: Smart Search & Reverse Geocoding]
+    F --> G[Debounce 300ms -> Panggil Photon / OpenStreetMap API]
+    G --> H[Render Dropdown 5 Saran Lokasi Interaktif]
+    H --> I[Pilih Tempat -> Update Koordinat & Nama Jalan]
+    
+    A2[Admin Klik 'Gunakan GPS Saya'] --> J[Browser Hardware GPS: lat, lon]
+    J --> K[Reverse Geocoding Pipeline]
+    K --> L[Konversi Koordinat ke Alamat Lengkap Fisik]
+    L --> M[Isi Otomatis Field Alamat Fisik Workshop & Studio]
+```
+
+1. **Engine 1 (Google Places Autocomplete — Primary):**  
+   Jika `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` terdefinisi, aplikasi secara dinamis memuat library `google.maps.places.Autocomplete` dan menempelkannya ke input `#search-map-input`. Event listener `place_changed` otomatis mengisi latitude, longitude, dan alamat lengkap format Google.
+2. **Engine 2 (Smart Search Autocomplete Dropdown — Zero-Config Fallback):**  
+   Jika API Key belum dipasang, sistem mengaktifkan komponen dropdown saran pencarian interaktif yang menembus server geocoding super cepat (Photon/OSM) dengan debounce 300ms. Admin mendapatkan tampilan popup daftar pilihan alamat dan landmark persis seperti widget Google.
+3. **GPS Reverse Geocoding Handler:**  
+   Tombol *"Gunakan GPS Saya"* sekarang memiliki status pemuatan (*loading indicator* 🛰️) dan otomatis memanggil reverse geocoder sehingga alamat workshop langsung tersimpan dalam format teks nama jalan yang representatif.
+
+---
+
+#### 17.5.6 Standar Baku Pemisahan Data: Alamat Fisik vs Koordinat Lat/Long (Konfirmasi & Kesepakatan Final)
+
+Sesuai persetujuan arsitektur, seluruh penanganan geolokasi pada sistem Chenille Flowers wajib mematuhi pemisahan data (*data separation principle*):
+
+1. **Kolom Alamat Fisik Workshop / Studio (`studio_address`):**
+   - **Hanya menampung string teks alamat jalan riil yang bersih** yang dapat dibaca manusia (contoh: `Padasuka, Kec. Cimahi Tengah, Kota Cimahi, Jawa Barat 40552` atau `Jl. Margonda Raya No. 120, Beji, Depok`).
+   - **DILARANG KERAS** menyisipkan atau mencampurkan angka koordinat mentah seperti `(-6.899755, 107.558353)` ke dalam teks alamat fisik.
+2. **Kolom Khusus Koordinat Numerik (`latitude` & `longitude`):**
+   - Ditempatkan pada elemen input kolom tersendiri (*dedicated inputs*) yang terpisah secara fisik dari kolom alamat.
+   - Kolom `Latitude`: Nilai lintang desimal (contoh: `-6.899755`).
+   - Kolom `Longitude`: Nilai bujur desimal (contoh: `107.558353`).
+   - Digunakan murni untuk kalkulasi matematis geofencing, radius COD, dan pemosisian pin peta embed.
+3. **Penanganan String Google Maps & Plus Code (`4GGF+V3M`):**
+   - Saat mendeteksi teks alamat dari Google Maps atau Reverse Geocoding yang memuat Plus Code (seperti `4GGF+V3M, Padasuka...`), parser sistem mengekstrak entitas hierarki alamat wilayah Indonesia resmi:
+     $$\text{[Nama Jalan / Area]}, \text{[Kelurahan]}, \text{Kec. [Kecamatan]}, \text{Kota [Kota]}, \text{[Provinsi]} \text{ [Kode Pos]}$$
+   - Format ini menjamin keseragaman dan kerapian saat dicetak pada faktur invoice, label paket buket, dan kartu ucapan.
+
+---
+
+### 17.6 Standardisasi Ekosistem Maps: Form "Daftarkan Titik COD Baru via Google Maps" (`CODMapModal.tsx`)
+
+Prinsip Smart Autocomplete tanpa kartu kredit (`admin-sunjaya`) dan pemisahan alamat vs koordinat diperluas secara menyeluruh ke formulir pendaftaran titik temu COD (`CODMapModal.tsx`).
+
+#### 17.6.1 Latar Belakang & Kebutuhan Fitur
+Sebelumnya, formulir modal *"Daftarkan Titik COD Baru via Google Maps"* hanya mendukung deteksi pasif via paste URL tautan Google Maps (`https://maps.app.goo.gl/...`) atau pemilihan chip preset. Jika admin ingin mendaftarkan titik baru di luar preset, admin harus membuka aplikasi Google Maps secara terpisah, mencari tempat, menyalin link, lalu menempelkannya kembali.
+
+Dengan pembaruan ini, antarmuka pendaftaran titik COD dilengkapi fitur **Smart Live Autocomplete Search** yang mandiri langsung di dalam modal.
+
+#### 17.6.2 Spesifikasi Komponen & Alur Interaksi (`CODMapModal.tsx`)
+
+```mermaid
+flowchart TD
+    A["Admin Mengetik di Input Pencarian Titik COD"] --> B{"Apakah Teks Berupa Link atau Nama Tempat?"}
+    
+    B -- "Tautan Google Maps (maps.app.goo.gl)" --> C["Ekstrak Koordinat dari URL / Redirection"]
+    C --> G["Isi Data Titik COD"]
+    
+    B -- "Nama Tempat / Jalan (cth: 'Margo City', 'Stasiun Cimahi')" --> D["Debounce 300ms -> Panggil Komoot Photon / OSM Engine"]
+    D --> E["Munculkan Floating Dropdown Saran Tempat 📍"]
+    E --> F["Admin Klik Salah Satu Saran Tempat"]
+    
+    F --> G["1. Nama Titik: Terisi Nama Tempat (cth: 'Margo City')
+2. Alamat Lengkap: Terisi String Alamat Bersih (tanpa angka koordinat)
+3. Kolom Latitude & Longitude: Terisi Nilai Desimal di Input Terpisah
+4. Pin Peta Kanvas: Snap Otomatis ke Titik Koordinat
+5. Jarak KM: Dihitung Otomatis dari Atelier (Formula Haversine)
+6. Link Maps: Terisi URL Navigasi Google Maps Resmi"]
+```
+
+1. **Smart Live Autocomplete Search Box:**
+   - Input pencarian dilengkapi debounce 300ms dan indikator status pencarian.
+   - Menampilkan dropdown melayang (*floating suggestions dropdown*) dengan:
+     - Ikon pin merah 📍
+     - Nama tempat tebal (*bold place name*)
+     - Subtitle alamat lengkap jalan
+     - Badge kota (*city tag*)
+   - Bekerja 100% tanpa kartu debit/kredit menggunakan engine geocoder Photon/OSM, dengan fallback otomatis ke Google Places jika kredensial Google API terpasang.
+2. **Pemisahan Kolom Elemen Baru (Latitude & Longitude):**
+   - Modal pendaftaran titik COD menyediakan elemen input kolom terpisah khusus untuk **Latitude** dan **Longitude**.
+   - Input **Alamat Lengkap Google Maps** murni hanya menampung nama jalan dan area, bebas dari teks `(Koordinat: -6.xxx, 106.xxx)`.
+3. **Peta Kanvas Interaktif & Reverse Geocoding:**
+   - Saat admin menggeser pin marker (*drag & drop pin*) pada peta kanvas interaktif, posisi pin mengkalkulasi koordinat baru.
+   - Reverse geocoder otomatis mengubah posisi pin menjadi nama jalan/area yang ramah dibaca manusia tanpa mengotori kolom alamat dengan angka koordinat mentah.
+4. **Sinkronisasi Multi-Input (Link, Search, Pin, & Preset):**
+   - Formulir mendukung 4 cara fleksibel penentuan lokasi:
+     1. Mengetik nama tempat pada search bar (Autocomplete).
+     2. Menempelkan link Google Maps (`https://maps.app.goo.gl/...` atau URL koordinat).
+     3. Menggeser atau mengklik langsung pada kanvas peta interaktif.
+     4. Memilih *Preset Populer* yang sudah disediakan (Gerbatama UI, Margo City, Stasiun Pocin, dll).
+
+---
+
+### 17.7 Analisis "Faktor X", Keterbatasan Basis Data OpenStreetMap vs Google Places, & Arsitektur Deep URL Parser
+
+#### 17.7.1 Analisis Tiga "Faktor X" Pencarian Lokasi
+1. **Faktor X #1: Kesenjangan Database OpenStreetMap vs Google Maps Business:**
+   - Mesin pencari gratis OpenStreetMap (OSM / Photon) berbasis kontribusi relawan dan kartografi terbuka. OSM fokus pada topografi, jalan raya, perumahan, kelurahan, stasiun, rumah sakit, dan pusat perbelanjaan besar.
+   - UMKM mikro Indonesia (seperti konter pulsa *ASK CELL CIMINDI*, warteg, bengkel las, kios fotokopi) **tidak terdaftar di OpenStreetMap**.
+   - Sebaliknya, Google Maps memiliki program *Google Bisnisku (Google My Business)* di mana pemilik konter HP mendaftarkan usahanya langsung ke server Google. Ketika mencari *"ask cell cimindi"*, Google Maps memilikinya, sedangkan OSM yang tidak menemukannya akan mencari kata kunci *"cell"* yang ada di database OSM Indonesia (seperti toko *DEKA CELL*, *LIU CELL* di Cilincing, Jakarta).
+2. **Faktor X #2: Rahasia Sistem `admin-sunjaya`:**
+   - Sistem `admin-sunjaya` menggunakan widget **Google Places Autocomplete** resmi (terbukti dari badge watermark *`powered by Google`* di pojok kanan bawah dropdown).
+   - Widget Google Places ini mewajibkan pemanggilan library JavaScript Google dengan API Key aktif. Pada proyek `admin-sunjaya` (`adminShuttleV3`), kunci ini sudah terkonfigurasi pada file `.env`.
+3. **Faktor X #3: Masalah Ekstraksi Link Google Maps Lama:**
+   - Sebelumnya, ketika admin menempelkan tautan Google Maps panjang (`https://www.google.com/maps/place/ASKCELL+CIMINDI2...`), sistem hanya mencocokkan string `if (input.includes('google.com/maps'))` dan langsung mengisi data statis generic (*"Titik Temu Google Maps 7"* dan *"Alamat spesifik terverifikasi..."*).
+   - Parser lama tidak membaca token `/place/<NAME>/`, tidak membaca koordinat target pin `!3d` & `!4d`, dan tidak memicu Reverse Geocoding.
+
+#### 17.7.2 Solusi Cerdas: Deep Google Maps URL Parser & Automated Reverse Geocoder
+
+Untuk memberikan akurasi 100% tanpa bergantung pada API Key berbayar, Chenille Flowers mengimplementasikan arsitektur **Deep Google Maps URL Parser**:
+
+```mermaid
+flowchart TD
+    A["Admin Tempel Link Google Maps Lengkap"] --> B["Deep URL Parser Engine"]
+    
+    B --> C["Ekstrak Nama Tempat dari Token /place/NAME/
+    -> decodeURIComponent & buang simbol +
+    Contoh: 'ASKCELL CIMINDI2 JL RAYA CIMINDI NO 193 BAWAH FLYOVER CIMINDI'"]
+    
+    B --> D["Ekstrak Koordinat Presisi Target Pin:
+    1. Prioritas Utama: Token !3d(lat) & !4d(lng) (Posisi Pin Bisnis Akurat)
+    2. Prioritas Kedua: Query Params ?q=lat,lng
+    3. Prioritas Ketiga: Viewport Center @lat,lng"]
+    
+    D --> E["Panggil Reverse Geocoder Nominatim (Accept-Language: id)"]
+    
+    E --> F["Ekstraksi Hierarki Alamat Wilayah Resmi:
+    - Jalan / Road
+    - Kelurahan / Desa (Village)
+    - Kecamatan (District)
+    - Kota / Kabupaten
+    - Provinsi
+    - Kode Pos"]
+    
+    C & F --> G["Auto-Populate Form Kolom:
+    - Nama Titik: 'ASKCELL CIMINDI2 JL RAYA CIMINDI NO 193 BAWAH FLYOVER CIMINDI'
+    - Alamat Lengkap: 'Jl. Raya Cimindi bawah No.193, Flyover Cimindi, Cibeureum, Kota Cimahi, Jawa Barat 40531'
+    - Latitude: -6.897109 (Kolom Terpisah)
+    - Longitude: 107.560783 (Kolom Terpisah)
+    - Link Maps: Tautan Asli Google Maps
+    - Catatan: 'Janji serah terima buket di lobi depan / pintu masuk ASKCELL CIMINDI2'
+    - Pratinjau Peta: Langsung memusatkan pin ke koordinat presisi"]
+```
+
+Arsitektur ini diimplementasikan serempak pada:
+- `apps/web/src/components/admin/CODMapModal.tsx` (`detectGoogleMapsInput`)
+- `apps/web/src/components/admin/AdminViews.tsx` (`handleSearchLocation`)
