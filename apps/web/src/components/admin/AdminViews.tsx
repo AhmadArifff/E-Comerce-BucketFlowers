@@ -63,6 +63,7 @@ import { useSettingsStore, type WasteMaterialItem } from '@/stores/useSettingsSt
 import { useOrderStore } from '@/stores/useOrderStore';
 import { showMagicToast } from '@/lib/magic-motion';
 import { getApiUrl } from '@/lib/api-client';
+import InteractiveMapPicker from './InteractiveMapPicker';
 
 // ============================================================================
 // 1. FINANCIAL MULTI-LINE SVG CHART CARD
@@ -2333,6 +2334,7 @@ export const StoreSettingsView: React.FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [googlePlacesActive, setGooglePlacesActive] = useState(false);
+  const [mapViewMode, setMapViewMode] = useState<'interactive' | 'google'>('interactive');
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Debounced live autocomplete search (Instant Dropdown matching admin-sunjaya UX)
@@ -3219,32 +3221,93 @@ export const StoreSettingsView: React.FC = () => {
               </div>
             </div>
 
-            {/* LIVE GOOGLE MAPS EMBED VIEW */}
-            <div className="relative rounded-2xl overflow-hidden border border-stone-200 bg-stone-100 h-64 shadow-inner">
-              <iframe
-                title="Atelier Workshop Location"
-                src={`https://maps.google.com/maps?q=${formProfile.latitude || -6.3728},${formProfile.longitude || 106.8315}&t=&z=16&ie=UTF8&iwloc=&output=embed`}
-                className="w-full h-full border-0"
-                loading="lazy"
-              />
-              <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-stone-200/80 shadow-xs flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5 text-rose-600 animate-bounce" />
-                <span className="text-[11px] font-bold text-stone-800">
-                  Origin Atelier: {formProfile.latitude}, {formProfile.longitude}
-                </span>
+            {/* MAP VIEW SWITCHER & INTERACTIVE EXPLORE PICKER */}
+            <div className="space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <label className="block font-bold text-stone-700 text-xs">
+                  Pratinjau Pin Lokasi & Explore View Workshop:
+                </label>
+                <div className="inline-flex rounded-xl bg-stone-100 p-1 border border-stone-200 text-xs self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setMapViewMode('interactive')}
+                    className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                      mapViewMode === 'interactive'
+                        ? 'bg-white text-rose-600 shadow-2xs'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    📍 Peta Interaktif (Geser & Set Pin)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMapViewMode('google')}
+                    className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                      mapViewMode === 'google'
+                        ? 'bg-white text-rose-600 shadow-2xs'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    🗺️ Tampilan Google Maps Embed
+                  </button>
+                </div>
               </div>
-              <div className="absolute bottom-3 right-3">
-                <a
-                  href={formProfile.mapsLink || `https://maps.google.com/?q=${formProfile.latitude},${formProfile.longitude}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-xl bg-white/90 backdrop-blur-md border border-stone-200/80 hover:bg-white text-rose-600 text-[11px] font-bold flex items-center gap-1.5 shadow-xs transition-all"
-                >
-                  Buka di Google Maps
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
+
+              {mapViewMode === 'interactive' ? (
+                <InteractiveMapPicker
+                  latitude={formProfile.latitude}
+                  longitude={formProfile.longitude}
+                  radiusKm={parseFloat(formProfile.maxCodRadiusKm) || 5.0}
+                  showRadius={true}
+                  height="340px"
+                  label="Peta Interaktif Workshop Atelier (Geser Pin / Klik Lokasi)"
+                  onLocationChange={(lat, lng, address) => {
+                    setFormProfile((prev) => ({
+                      ...prev,
+                      latitude: lat,
+                      longitude: lng,
+                      studioAddress: address || prev.studioAddress,
+                      mapsLink: `https://maps.google.com/?q=${lat},${lng}`,
+                    }));
+                    if (address) {
+                      setMapSearchResult({
+                        display_name: address,
+                        lat,
+                        lon: lng,
+                      });
+                      showMagicToast('Pin Berpindah! 📍', address.slice(0, 50) + '...', '✨');
+                    }
+                  }}
+                />
+              ) : (
+                <div className="relative rounded-2xl overflow-hidden border border-stone-200 bg-stone-100 h-72 shadow-inner">
+                  <iframe
+                    title="Atelier Workshop Location"
+                    src={`https://maps.google.com/maps?q=${formProfile.latitude || -6.3728},${formProfile.longitude || 106.8315}&t=&z=16&ie=UTF8&iwloc=&output=embed`}
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                  />
+                  <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-stone-200/80 shadow-xs flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5 text-rose-600 animate-bounce" />
+                    <span className="text-[11px] font-bold text-stone-800">
+                      Origin Atelier: {formProfile.latitude}, {formProfile.longitude}
+                    </span>
+                  </div>
+                  <div className="absolute bottom-3 right-3">
+                    <a
+                      href={formProfile.mapsLink || `https://maps.google.com/?q=${formProfile.latitude},${formProfile.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-xl bg-white/90 backdrop-blur-md border border-stone-200/80 hover:bg-white text-rose-600 text-[11px] font-bold flex items-center gap-1.5 shadow-xs transition-all"
+                    >
+                      Buka di Google Maps
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
+
 
             {/* LATITUDE, LONGITUDE, COD RADIUS & MAPS LINK INPUTS */}
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">

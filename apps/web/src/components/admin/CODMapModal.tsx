@@ -21,6 +21,7 @@ import { ATELIER_CONFIG, type CodPoint } from '@chenille/shared';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { showMagicToast } from '@/lib/magic-motion';
 import { getApiUrl } from '@/lib/api-client';
+import InteractiveMapPicker from './InteractiveMapPicker';
 
 // Presets data matching the official prototype
 const COD_PRESETS: Record<
@@ -153,6 +154,7 @@ export const CODMapModal: React.FC = () => {
 
   // Add Point Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [mainMapMode, setMainMapMode] = useState<'interactive' | 'google'>('interactive');
   const [inputSearchOrLink, setInputSearchOrLink] = useState('');
   const [newName, setNewName] = useState('');
   const [newAddress, setNewAddress] = useState('');
@@ -946,31 +948,83 @@ export const CODMapModal: React.FC = () => {
 
         {/* 2-COLUMN MAIN COD LAYOUT */}
         <div className="cod-layout">
-          {/* LEFT: REAL GOOGLE MAPS EMBED */}
-          <div className="flex flex-col gap-3">
-            <div className="relative rounded-2xl overflow-hidden border-2 border-stone-200 h-[460px] shadow-sm bg-slate-100">
-              <iframe
-                title="Google Maps Live View"
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                  activeEmbedQuery
-                )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                className="w-full h-full border-none"
-                allowFullScreen
-                loading="lazy"
-              />
-              <div className="absolute bottom-3 left-3 right-3 bg-slate-900/90 backdrop-blur-md text-white px-3.5 py-2.5 rounded-xl text-xs flex justify-between items-center shadow-lg border border-slate-700/50">
-                <span className="font-semibold truncate mr-2">{activeFocusText}</span>
-                <a
-                  href={activeExternalUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-cyan-300 hover:text-cyan-200 font-bold flex items-center gap-1 flex-shrink-0 transition-colors"
+          {/* LEFT: INTERACTIVE LEAFLET MAP OR GOOGLE MAPS EMBED */}
+          <div className="flex flex-col gap-2.5">
+            {/* VIEW MODE TABS */}
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-stone-700">Tampilan Peta Titik Temu:</span>
+              <div className="inline-flex rounded-xl bg-stone-100 p-1 border border-stone-200 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setMainMapMode('interactive')}
+                  className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                    mainMapMode === 'interactive'
+                      ? 'bg-white text-rose-600 shadow-2xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
                 >
-                  <span>Buka Google Maps</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
+                  📍 Peta Interaktif (Leaflet)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMainMapMode('google')}
+                  className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                    mainMapMode === 'google'
+                      ? 'bg-white text-rose-600 shadow-2xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  🗺️ Google Maps Embed
+                </button>
               </div>
             </div>
+
+            {mainMapMode === 'interactive' ? (() => {
+              const selectedPt = codPoints.find((p) => p.id === selectedPointId);
+              const match =
+                selectedPt?.googleMapsUrl?.match(/q=(-?\d+\.\d+),(-?\d+\.\d+)/) ||
+                selectedPt?.embedQuery?.match(/(-?\d+\.\d+),(-?\d+\.\d+)/);
+              const ptLat = match ? parseFloat(match[1]) : atelierLat;
+              const ptLng = match ? parseFloat(match[2]) : atelierLng;
+
+              return (
+                <InteractiveMapPicker
+                  latitude={ptLat}
+                  longitude={ptLng}
+                  radiusKm={maxRadius}
+                  showRadius={true}
+                  height="440px"
+                  label={activeFocusText}
+                  onLocationChange={(lat, lng, address) => {
+                    showMagicToast('Titik Terpilih 📍', address ? address.slice(0, 40) + '...' : `${lat}, ${lng}`, '✨');
+                  }}
+                />
+              );
+            })() : (
+              <div className="relative rounded-2xl overflow-hidden border-2 border-stone-200 h-[440px] shadow-sm bg-slate-100">
+                <iframe
+                  title="Google Maps Live View"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                    activeEmbedQuery
+                  )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  className="w-full h-full border-none"
+                  allowFullScreen
+                  loading="lazy"
+                />
+                <div className="absolute bottom-3 left-3 right-3 bg-slate-900/90 backdrop-blur-md text-white px-3.5 py-2.5 rounded-xl text-xs flex justify-between items-center shadow-lg border border-slate-700/50">
+                  <span className="font-semibold truncate mr-2">{activeFocusText}</span>
+                  <a
+                    href={activeExternalUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-cyan-300 hover:text-cyan-200 font-bold flex items-center gap-1 flex-shrink-0 transition-colors"
+                  >
+                    <span>Buka Google Maps</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* RIGHT: COD POINTS LIST */}
@@ -1243,117 +1297,45 @@ export const CODMapModal: React.FC = () => {
                 </div>
               </div>
 
-              {/* INTERACTIVE DRAG & DROP PIN LOCATION PICKER */}
+              {/* INTERACTIVE LEAFLET MAP WITH DRAGGABLE PIN & AUTOMATED GEOCODING */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
                   <label className="text-xs font-extrabold text-stone-800 flex items-center gap-1.5">
                     <Navigation className="w-3.5 h-3.5 text-rose-500" />
-                    <span>Atur Pin Lokasi (Geser Pin / Klik Peta Interaktif):</span>
+                    <span>Peta Interaktif Titik Temu (Geser Pin / Klik Peta untuk Set Lokasi):</span>
                   </label>
-                  <span className="text-[10px] text-stone-400 font-medium">
-                    Radius Margonda Depok • Auto-calc KM & Maps URL
+                  <span className="text-[10px] text-stone-500 font-medium">
+                    Auto-calc Jarak KM & Deteksi Alamat
                   </span>
                 </div>
 
-                {/* Canvas Box */}
-                <div
-                  ref={mapCanvasRef}
-                  onClick={handleMapPointerAction}
-                  className="relative w-full h-44 rounded-2xl overflow-hidden border-2 border-dashed border-rose-200 bg-slate-900 cursor-crosshair select-none shadow-inner"
-                  style={{
-                    backgroundImage:
-                      'radial-gradient(#334155 1px, transparent 1px), linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                    backgroundSize: '16px 16px, cover',
+                <InteractiveMapPicker
+                  latitude={newLat || atelierLat}
+                  longitude={newLng || atelierLng}
+                  radiusKm={maxRadius}
+                  showRadius={true}
+                  height="280px"
+                  label="Peta Interaktif Titik Temu COD"
+                  onLocationChange={(lat, lng, address) => {
+                    const dist = calculateDistanceKm(atelierLat, atelierLng, parseFloat(lat), parseFloat(lng));
+                    const formattedLat = parseFloat(lat).toFixed(6);
+                    const formattedLng = parseFloat(lng).toFixed(6);
+                    setNewLat(formattedLat);
+                    setNewLng(formattedLng);
+                    setNewDist(dist.toFixed(1));
+                    setNewMapsUrl(`https://maps.google.com/?q=${formattedLat},${formattedLng}`);
+                    setModalPreviewQuery(`${formattedLat},${formattedLng}`);
+                    setPinPos(coordsToPercent(parseFloat(lat), parseFloat(lng)));
+                    if (address) {
+                      setNewAddress(address);
+                      if (!newName || newName.startsWith('Titik Pin') || newName.startsWith('Titik Temu COD') || newName.startsWith('Dekat ')) {
+                        const shortName = address.split(',')[0] || `Titik Temu COD (${dist.toFixed(1)} KM)`;
+                        setNewName(shortName);
+                      }
+                      showMagicToast('Pin Ditetapkan! 📍', address.slice(0, 45) + '...', '✨');
+                    }
                   }}
-                >
-                  {/* Decorative Geofence Radius Circle (5 KM) */}
-                  <div
-                    className="absolute rounded-full border border-emerald-400/40 pointer-events-none"
-                    style={{
-                      width: '280px',
-                      height: '280px',
-                      left: `${atelierPos.x}%`,
-                      top: `${atelierPos.y}%`,
-                      transform: 'translate(-50%, -50%)',
-                      background:
-                        'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)',
-                    }}
-                  />
-
-                  {/* Atelier Pusat Marker */}
-                  <div
-                    className="absolute pointer-events-none z-10 flex flex-col items-center"
-                    style={{
-                      left: `${atelierPos.x}%`,
-                      top: `${atelierPos.y}%`,
-                      transform: 'translate(-50%, -50%)',
-                    }}
-                  >
-                    <div className="w-6 h-6 rounded-full bg-emerald-500 border-2 border-white shadow-md flex items-center justify-center text-white text-[10px] font-bold">
-                      🏢
-                    </div>
-                    <span className="text-[9px] font-extrabold text-emerald-300 mt-0.5 bg-slate-900/80 px-1 rounded">
-                      Atelier Margonda
-                    </span>
-                  </div>
-
-                  {/* Landmark Presets Markers on Map */}
-                  {Object.entries(COD_PRESETS).map(([key, preset]) => {
-                    const pos = coordsToPercent(preset.coords.lat, preset.coords.lng);
-                    return (
-                      <div
-                        key={key}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          applyPreset(key);
-                        }}
-                        className="absolute z-10 cursor-pointer group flex flex-col items-center"
-                        style={{
-                          left: `${pos.x}%`,
-                          top: `${pos.y}%`,
-                          transform: 'translate(-50%, -50%)',
-                        }}
-                        title={`Klik untuk snap ke ${preset.name}`}
-                      >
-                        <div className="w-4 h-4 rounded-full bg-blue-500/80 border border-white group-hover:scale-125 transition-transform flex items-center justify-center text-[8px] text-white">
-                          📍
-                        </div>
-                        <span className="text-[8.5px] font-semibold text-slate-300 opacity-70 group-hover:opacity-100 bg-slate-900/90 px-1 rounded whitespace-nowrap mt-0.5 transition-opacity">
-                          {preset.name.split(' ')[0]}
-                        </span>
-                      </div>
-                    );
-                  })}
-
-                  {/* Draggable Current Pin Marker */}
-                  <div
-                    onMouseDown={(e) => {
-                      e.stopPropagation();
-                      setIsDraggingPin(true);
-                    }}
-                    onTouchStart={(e) => {
-                      e.stopPropagation();
-                      setIsDraggingPin(true);
-                    }}
-                    className="absolute z-20 cursor-grab active:cursor-grabbing flex flex-col items-center -translate-x-1/2 -translate-y-full transition-transform"
-                    style={{
-                      left: `${pinPos.x}%`,
-                      top: `${pinPos.y}%`,
-                    }}
-                  >
-                    <div className="bg-rose-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap mb-0.5 animate-pulse border border-rose-300">
-                      Geser Pin Ini 📍
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-rose-600 border-2 border-white shadow-xl flex items-center justify-center text-white animate-bounce">
-                      <MapPin className="w-4 h-4 fill-white" />
-                    </div>
-                  </div>
-
-                  {/* Info Badge at Top Right */}
-                  <div className="absolute top-2 right-2 bg-slate-900/85 backdrop-blur-xs text-white text-[10px] px-2.5 py-1 rounded-lg border border-slate-700/60 font-mono">
-                    Jarak: <strong className="text-emerald-400">{newDist} KM</strong> dari Atelier
-                  </div>
-                </div>
+                />
               </div>
 
               {/* DETAIL TITIK FORM INPUTS */}
