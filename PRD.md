@@ -2797,3 +2797,86 @@ flowchart TD
 Arsitektur ini diimplementasikan serempak pada:
 - `apps/web/src/components/admin/CODMapModal.tsx` (`detectGoogleMapsInput`)
 - `apps/web/src/components/admin/AdminViews.tsx` (`handleSearchLocation`)
+
+---
+
+### 17.8 Arsitektur Peta Interaktif (Interactive Explore Canvas, Draggable Pin & Auto-Geocoding) — v2.6
+
+#### 17.8.1 Latar Belakang Kebutuhan Bisnis
+Sebelumnya, pratinjau peta hanya berupa tag `<iframe>` embed Google Maps statis (`https://maps.google.com/maps?q=...&output=embed`). Pada Google Maps iframe embed:
+1. **Tidak Bisa Geser Pin (Non-Draggable):** Pengguna tidak dapat memindahkan pin merah ke gang, ruko, atau patokan spesifik.
+2. **Tidak Bisa Klik Peta untuk Set Lokasi:** Akibat proteksi keamanan browser *Cross-Origin / Same-Origin Policy*, website induk dilarang mendengarkan event mouse klik atau mengambil koordinat di dalam iframe domain Google.
+3. **Ketergantungan API Key Berbayar Google Maps:** Google Maps JavaScript SDK resmi memerlukan aktivasi Google Cloud Billing dengan kartu debit/kredit, yang sering terkendala error penolakan bank lokal (*OR_BACR2_59*) atau kuota API.
+
+#### 17.8.2 Solusi Teknis: Komponen `InteractiveMapPicker.tsx` (Leaflet + OpenStreetMap + Esri Satellite)
+Untuk menghadirkan pengalaman visual kelas dunia tanpa biaya dan tanpa API key, Chenille Flowers membangun komponen khusus `InteractiveMapPicker.tsx` dengan fitur:
+
+1. **Explore View Bebas Jelajah:**
+   - Rendering kanvas peta interaktif berbasis OpenStreetMap dan Esri World Imagery (Satelit).
+   - Pengguna bebas menggeser (*pan*), memperbesar/memperkecil (*zoom*) dengan roda scroll mouse atau tombol kontrol `[➕]` dan `[➖]`.
+   - Tombol pengalih layer **`[Satelit]`** vs **`[Jalan]`** untuk melihat foto citra satelit nyata bangunan fisik.
+   - Tombol **`[🧭 Pusatkan]`** untuk mengembalikan viewport ke pin aktif.
+   - Tombol **`[🎯 GPS Saya]`** untuk melompat langsung ke lokasi sensor perangkat admin via HTML5 Geolocation API.
+2. **Set Pin Fleksibel (Drag & Drop + Click to Drop):**
+   - Menggunakan pin kustom merah SVG teardrop persis estetika Google Maps dengan efek drop shadow dan visual bounce.
+   - Admin dapat **menarik dan melepas pin** langsung di atas peta (`marker.on('dragend')`).
+   - Admin dapat **mengklik di mana saja pada peta** (`map.on('click')`), dan pin merah langsung melompat ke titik yang diklik.
+3. **Automated Reverse Geocoding & Field Sync:**
+   - Setiap kali pin berpindah, sistem secara otomatis mengeksekusi reverse geocoding via Nominatim OpenStreetMap (`https://nominatim.openstreetmap.org/reverse`) dengan bahasa Indonesia.
+   - Hierarki alamat resmi diekstrak bersih: Nama Jalan, Kelurahan/Desa, Kecamatan, Kota/Kabupaten, Provinsi, Kode Pos.
+   - Mengisi otomatis kolom formulir secara terpisah tanpa tercampur:
+     - Field `Alamat Fisik Workshop / Studio`: Hanya teks alamat jalan resmi yang bersih.
+     - Field `Latitude`: Khusus angka koordinat lintang desimal.
+     - Field `Longitude`: Khusus angka koordinat bujur desimal.
+     - Field `mapsLink`: Tautan navigasi instan Google Maps (`https://maps.google.com/?q=lat,lng`).
+4. **Visualisasi Radius Geofencing COD 5 KM Real-Time:**
+   - Menggambar lingkaran radius transparan merah (`L.circle`) di sekeliling pin workshop untuk memastikan titik temu pelanggan berada dalam zona gratis COD (maksimal 5.0 KM).
+5. **Penerapan Dual-Engine & Dual-View:**
+   - Tersedia tombol tab beralih: `[ 📍 Peta Interaktif (Geser & Set Pin) ]` (default aktif) dan `[ 🗺️ Tampilan Google Maps Embed ]`.
+   - Diterapkan secara serempak pada:
+     - **Menu Pengaturan Toko** (`apps/web/src/components/admin/AdminViews.tsx`)
+     - **Menu Titik Temu COD Maps** (`apps/web/src/components/admin/CODMapModal.tsx`)
+
+---
+
+### 17.9 Arsitektur Persistensi Navigasi Menu Admin (Anti-Reset on Refresh)
+
+#### 17.9.1 Masalah Pengguna
+Sebelumnya, ketika admin sedang bekerja di menu tertentu (misalnya menu **Pengaturan Toko**, **Titik Temu COD**, **Pesanan**, **Katalog Produk**, atau **BOM Kalkulator**), setiap kali admin menekan tombol refresh browser (`F5` atau `Ctrl+R`), halaman selalu me-reset active tab kembali ke tampilan awal `DASHBOARD`. Hal ini mengurangi efisiensi kerja admin karena harus mengklik ulang menu dari sidebar.
+
+#### 17.9.2 Solusi Dual-Sync Navigation (URL Query + LocalStorage + PopState)
+Chenille Flowers mengimplementasikan arsitektur navigasi persisten multi-layer pada `apps/web/src/app/admin/page.tsx`:
+
+```mermaid
+flowchart TD
+    A["Admin Klik Menu di Sidebar / Header
+    (Misal: Pengaturan Toko)"] --> B["Fungsi setActiveTab('SETTINGS')"]
+    
+    B --> C["1. Update React State (activeTabState)"]
+    B --> D["2. Simpan ke LocalStorage:
+    localStorage.setItem('chenille_admin_active_tab', 'SETTINGS')"]
+    B --> E["3. Sinkronisasi URL Address Bar:
+    window.history.replaceState(null, '', '/admin?tab=SETTINGS')"]
+    
+    F["Admin Menekan Tombol Refresh (F5 / Ctrl+R)"] --> G["Komponen AdminPage Mount (useEffect)"]
+    
+    G --> H{"Evaluasi Prioritas Tab Terpilih:"}
+    H -->|Prioritas 1: URL Query Param| I["Baca ?tab=SETTINGS dari window.location.search"]
+    H -->|Prioritas 2: URL Hash| J["Baca #SETTINGS dari window.location.hash"]
+    H -->|Prioritas 3: LocalStorage| K["Baca localStorage.getItem('chenille_admin_active_tab')"]
+    H -->|Fallback Default| L["Tab DASHBOARD"]
+    
+    I & J & K --> M["Validasi terhadap Daftar Menu Resmi (VALID_TABS)"]
+    M --> N["Pulihkan Menu Aktif Instan Tanpa Flicker
+    (Admin Langsung Berada di Menu Pengaturan Toko)"]
+    
+    O["Admin Menggunakan Tombol Back / Forward Browser"] --> P["Event Listener 'popstate'
+    Mendeteksi Perubahan Query ?tab=... & Mengupdate Tab Otomatis"]
+```
+
+#### 17.9.3 Keunggulan Arsitektur Persistensi Ini:
+1. **Anti-Reset:** Refresh halaman tidak akan pernah melempar admin kembali ke Dashboard jika sedang membuka menu lain.
+2. **Shareable & Bookmarkable URL:** Admin dapat mem-bookmark atau membagikan tautan langsung ke tab tertentu (misal: `http://localhost:3000/admin?tab=SETTINGS` atau `http://localhost:3000/admin?tab=COD_MAPS`).
+3. **Browser History Support:** Tombol Back `[⬅️]` dan Forward `[➡️]` pada browser berfungsi mulus berpindah antar-tab admin tanpa perlu full page reload.
+4. **Hydration-Safe:** Tidak memicu hydration mismatch atau flickering berkat pengecekan `typeof window !== 'undefined'` dan verifikasi `VALID_TABS`.
+

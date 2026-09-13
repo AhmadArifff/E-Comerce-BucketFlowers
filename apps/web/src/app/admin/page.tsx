@@ -25,11 +25,73 @@ import {
 } from '@/components/admin/AdminViews';
 import { ProductCtrAnalyticsCard } from '@/components/admin/ProductCtrAnalyticsCard';
 
+const VALID_TABS: AdminTab[] = [
+  'DASHBOARD',
+  'ORDERS',
+  'REPORTS',
+  'PRODUCTS',
+  'BOM',
+  'PROMOS',
+  'COMPLAINTS',
+  'WHATSAPP',
+  'COD_MAPS',
+  'MAINTENANCE',
+  'SETTINGS',
+];
+
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<AdminTab>('DASHBOARD');
+  const [activeTab, setActiveTabState] = useState<AdminTab>('DASHBOARD');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Persist & Restore active admin menu on page reload/refresh
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // 1. Check URL query param (?tab=SETTINGS) or hash (#SETTINGS)
+    const params = new URLSearchParams(window.location.search);
+    const queryTab = params.get('tab')?.toUpperCase() as AdminTab | undefined;
+    const hashTab = window.location.hash.replace('#', '').toUpperCase() as AdminTab | undefined;
+
+    // 2. Check localStorage
+    const storedTab = localStorage.getItem('chenille_admin_active_tab')?.toUpperCase() as AdminTab | undefined;
+
+    const candidate = queryTab || hashTab || storedTab;
+    if (candidate && VALID_TABS.includes(candidate)) {
+      setActiveTabState(candidate);
+      const newUrl = new URL(window.location.href);
+      if (newUrl.searchParams.get('tab') !== candidate) {
+        newUrl.searchParams.set('tab', candidate);
+        window.history.replaceState(null, '', newUrl.toString());
+      }
+    }
+
+    // Handle browser Back/Forward navigation between tabs
+    const handlePopState = () => {
+      const currentParams = new URLSearchParams(window.location.search);
+      const popTab = currentParams.get('tab')?.toUpperCase() as AdminTab | undefined;
+      if (popTab && VALID_TABS.includes(popTab)) {
+        setActiveTabState(popTab);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const setActiveTab = (tab: AdminTab) => {
+    setActiveTabState(tab);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('chenille_admin_active_tab', tab);
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('tab', tab);
+        window.history.replaceState(null, '', newUrl.toString());
+      } catch (e) {
+        console.warn('Failed to persist admin tab:', e);
+      }
+    }
+  };
 
   // Modals state
   const { orders } = useOrderStore();

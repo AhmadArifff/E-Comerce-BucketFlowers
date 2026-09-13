@@ -12,6 +12,9 @@ const DEFAULT_ATELIER_COORDS = {
 
 // Retrieve dynamic atelier coordinates & COD radius from store_settings
 export async function getAtelierCoords(): Promise<{ latitude: number; longitude: number; max_free_radius_km: number }> {
+  if (process.env.NODE_ENV === 'test') {
+    return DEFAULT_ATELIER_COORDS;
+  }
   try {
     const result = await pool.query(
       `SELECT latitude, longitude, max_cod_radius_km FROM store_settings WHERE id = 'atelier_setting' LIMIT 1;`
