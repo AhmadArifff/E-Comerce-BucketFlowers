@@ -1140,7 +1140,7 @@ export const CODMapModal: React.FC = () => {
                       onFocus={() => {
                         if (searchSuggestions.length > 0) setShowSuggestions(true);
                       }}
-                      placeholder="Ketik nama tempat/gedung (cth: Margo City, Stasiun Pocin) atau tempel link..."
+                      placeholder="Tempel link Google Maps (cth: https://maps.app.goo.gl/...) atau ketik nama area..."
                       className="w-full px-3 py-2 border border-stone-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -1151,11 +1151,11 @@ export const CODMapModal: React.FC = () => {
                       }}
                     />
 
-                    {/* FLOATING SUGGESTIONS DROPDOWN (Pola admin-sunjaya UX) */}
+                    {/* FLOATING DROPDOWN SUGGESTIONS (CARDLESS SMART SEARCH) */}
                     {showSuggestions && searchSuggestions.length > 0 && (
                       <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl border border-stone-200 shadow-xl z-50 overflow-hidden divide-y divide-stone-100 max-h-56 overflow-y-auto">
                         <div className="px-3 py-1.5 bg-stone-50 text-[10px] font-bold text-stone-400 flex items-center justify-between">
-                          <span>PILIH TITIK SARAN LOKASI:</span>
+                          <span>SARAN LOKASI SEKITAR:</span>
                           <span className="text-rose-500 font-mono">{searchSuggestions.length} Ditemukan</span>
                         </div>
                         {searchSuggestions.map((sug, idx) => (
@@ -1163,15 +1163,15 @@ export const CODMapModal: React.FC = () => {
                             key={idx}
                             type="button"
                             onClick={() => handleSelectSuggestion(sug)}
-                            className="w-full px-3 py-2 text-left hover:bg-rose-50/70 flex items-start gap-2.5 transition-colors cursor-pointer group"
+                            className="w-full px-3.5 py-2.5 text-left hover:bg-rose-50/70 flex items-start gap-2.5 transition-colors cursor-pointer group"
                           >
                             <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                             <div className="min-w-0 flex-1">
                               <div className="text-xs font-bold text-stone-800 truncate">{sug.name}</div>
-                              <div className="text-[10.5px] text-stone-500 line-clamp-1">{sug.full_name}</div>
+                              <div className="text-[11px] text-stone-500 line-clamp-1">{sug.full_name}</div>
                             </div>
                             {sug.city && (
-                              <span className="shrink-0 px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 text-[9.5px] font-semibold self-center">
+                              <span className="shrink-0 px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 text-[10px] font-semibold self-center">
                                 {sug.city}
                               </span>
                             )}
@@ -1183,15 +1183,21 @@ export const CODMapModal: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowSuggestions(false);
-                      detectGoogleMapsInput();
-                    }}
-                    className="px-3.5 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
+                    onClick={detectGoogleMapsInput}
+                    disabled={isSearching}
+                    className="px-4 py-2 bg-[#EA4335] hover:bg-[#D93025] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0 disabled:opacity-50"
                   >
                     {isSearching ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-                    <span>{isSearching ? 'Mencari...' : 'Deteksi Maps'}</span>
+                    <span>{isSearching ? 'Mendeteksi...' : 'Deteksi Maps'}</span>
                   </button>
+                </div>
+
+                {/* HELPER TIPS BANNER UNTUK DETEKSI LINK GOOGLE MAPS */}
+                <div className="flex items-start sm:items-center gap-2 text-[11px] text-stone-600 bg-rose-50/70 border border-rose-100/80 rounded-xl px-3 py-2">
+                  <span className="text-rose-600 font-bold shrink-0">💡 Tips Deteksi Akurat:</span>
+                  <span className="leading-snug">
+                    Buka Google Maps di browser/HP, cari toko/gedung yang diinginkan, klik <b>Bagikan / Salin Link</b>, lalu tempel di kolom ini dan klik <b>Deteksi Maps</b>. Nama tempat, alamat fisik, dan koordinat otomatis terisi 100% akurat tanpa perlu API key!
+                  </span>
                 </div>
 
                 {/* PRESET CHIPS */}

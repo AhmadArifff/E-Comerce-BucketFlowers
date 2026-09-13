@@ -3085,7 +3085,7 @@ export const StoreSettingsView: React.FC = () => {
                     ref={searchInputRef}
                     id="search-map-input"
                     type="text"
-                    placeholder="Ketik nama jalan, gedung, atau koordinat (cth: Margonda Raya, Beji Depok)..."
+                    placeholder="Tempel link Google Maps (cth: https://maps.app.goo.gl/...) atau ketik nama area..."
                     value={mapSearchQuery}
                     onChange={(e) => {
                       setMapSearchQuery(e.target.value);
@@ -3104,7 +3104,7 @@ export const StoreSettingsView: React.FC = () => {
                     className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                   />
 
-                  {/* FLOATING SUGGESTIONS DROPDOWN (Pola admin-sunjaya UX) */}
+                  {/* FLOATING SUGGESTIONS DROPDOWN (CARDLESS SMART SEARCH) */}
                   {showSuggestions && searchSuggestions.length > 0 && (
                     <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl border border-stone-200 shadow-xl z-50 overflow-hidden divide-y divide-stone-100 max-h-60 overflow-y-auto">
                       <div className="px-3 py-1.5 bg-stone-50 text-[10px] font-bold text-stone-400 flex items-center justify-between">
@@ -3141,7 +3141,7 @@ export const StoreSettingsView: React.FC = () => {
                   className="px-4 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0 disabled:opacity-50"
                 >
                   {mapSearching ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-                  {mapSearching ? 'Mencari...' : 'Cari di Maps'}
+                  {mapSearching ? 'Mendeteksi...' : 'Cari di Maps'}
                 </button>
                 {mapSearchResult && (
                   <button
@@ -3154,6 +3154,14 @@ export const StoreSettingsView: React.FC = () => {
                     Jadikan Alamat Studio
                   </button>
                 )}
+              </div>
+
+              {/* HELPER TIPS BANNER UNTUK DETEKSI LINK GOOGLE MAPS */}
+              <div className="flex items-start sm:items-center gap-2 text-[11px] text-stone-600 bg-rose-50/70 border border-rose-100/80 rounded-xl px-3.5 py-2">
+                <span className="text-rose-600 font-bold shrink-0">💡 Tips Deteksi Akurat:</span>
+                <span className="leading-snug">
+                  Buka Google Maps di browser/HP, cari alamat workshop/studio Anda, klik <b>Bagikan / Salin Link</b>, lalu tempel di kolom ini dan klik <b>Cari di Maps</b>. Nama jalan, koordinat, dan peta otomatis terisi akurat tanpa perlu API key Google!
+                </span>
               </div>
 
               {/* SEARCH RESULT BANNER */}
