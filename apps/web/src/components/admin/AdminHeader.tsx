@@ -67,7 +67,7 @@ const TAB_TITLES: Record<AdminTab, { title: string; subtitle: string }> = {
     subtitle: 'Kelola titik serah terima bebas ongkir radius 5 KM di area kampus UI, Margonda & Margo City.',
   },
   USERS: {
-    title: 'Pengguna & Log Sesi (Pola admin-sunjaya)',
+    title: 'Pengawasan Pengguna & Log Sesi',
     subtitle: 'Pantau pengguna online secara real-time, riwayat login/logout, dan pengamanan sesi otomatis 15 menit.',
   },
   MAINTENANCE: {

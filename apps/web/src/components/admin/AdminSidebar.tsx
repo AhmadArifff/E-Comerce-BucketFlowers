@@ -87,7 +87,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     {
       title: 'Sistem & Toko',
       items: [
-        { id: 'USERS', label: 'Pengguna & Log Sesi', icon: Users, badge: 'Pola Sunjaya', badgeColor: 'bg-indigo-600 text-white' },
+        { id: 'USERS', label: 'Pengguna & Log Sesi', icon: Users, badge: 'Live', badgeColor: 'bg-emerald-600 text-white' },
         { id: 'MAINTENANCE', label: 'Mode Pemeliharaan & Tema', icon: Palette },
         { id: 'SETTINGS', label: 'Pengaturan Toko', icon: Settings },
       ],

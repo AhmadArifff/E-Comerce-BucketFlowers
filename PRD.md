@@ -2534,7 +2534,7 @@ Pada formulir Pengaturan Atelier (Seksi 1), struktur tata letak diperkaya menjad
 3. **Visualisasi Lingkaran Geofencing di Admin COD Maps:**
    - Lingkaran radius 5 KM pada peta admin otomatis berpindah pusat mengikuti koordinat studio toko yang disimpan.
 
-### 17.5 Arsitektur Kredensial & Integrasi Google Maps API (Pola admin-sunjaya & Reverse Geocoding)
+### 17.5 Arsitektur Kredensial & Integrasi Google Maps API (Reverse Geocoding & Cardless Smart Autocomplete)
 
 #### 17.5.1 Analisis & Review Kasus GPS vs Alamat Fisik
 - **Pertanyaan / Isu Pengguna:**  
@@ -2882,7 +2882,7 @@ flowchart TD
 
 ---
 
-### 17.10 Arsitektur Manajemen Pengguna, Sesi 15-Menit Inactivity Timeout & Audit Log (Pola admin-sunjaya) — v2.7
+### 17.10 Arsitektur Manajemen Pengguna, Sesi 15-Menit Inactivity Timeout & Audit Log — v2.7
 
 #### 17.10.1 Root Cause Kasus Auto-Login "Ahmad" di Landing Page
 Berdasarkan investigasi menyeluruh pada arsitektur state management frontend:
@@ -2939,8 +2939,8 @@ flowchart TD
 
 ---
 
-#### 17.10.3 Menu Pengawasan Pengguna & Audit Log (Pola admin-sunjaya)
-Mengadopsi pola pengawasan terpusat seperti pada menu **Pengguna** di sistem rujukan `admin-sunjaya` (`adminShuttleV3`):
+#### 17.10.3 Menu Pengawasan Pengguna & Audit Log (Active Sessions & Audit Trail)
+Menerapkan sistem pengawasan terpusat pada menu **Pengguna & Log Sesi** (`/admin?tab=USERS`):
 
 1. **4 Kartu Metrik KPI Pengguna:**
    - **Total Akun Terdaftar:** Menghitung seluruh akun Super Admin, Staff Florist, dan Member Pelanggan.
@@ -2967,5 +2967,81 @@ Mengadopsi pola pengawasan terpusat seperti pada menu **Pengguna** di sistem ruj
      - `⚠️ LOGIN_FAILED`: Percobaan autentikasi gagal.
    - Fitur Filter Log: Berdasarkan tipe event dan pencarian nama/IP.
    - Fitur **Ekspor CSV**: Mengunduh seluruh rekap riwayat log audit untuk kebutuhan pelaporan keamanan berkala.
+
+---
+
+### 17.11 Aturan Baku Rekayasa & Adopsi Sistem Referensi (Reference Adaptation, Core Logic & Brand Decoupling Rules) — v2.8
+
+#### 17.11.1 Latar Belakang & Filosofi Aturan
+Dalam pengembangan perangkat lunak tingkat lanjut (enterprise), tim pengembang sering kali mempelajari arsitektur dari project rujukan/benchmark eksternal (seperti sistem otomasi transportasi, sistem logistik, atau dashboard POS). Hal ini sangat bernilai untuk meneliti praktik terbaik (*best practices*) seperti algoritma geocoding, mekanisme penguncian sesi, dan alur audit trail.
+
+Namun, **terdapat batasan tegas antara adopsi arsitektur dengan identitas produk**:
+> [!IMPORTANT]
+> **ATURAN WAJIB PENGEMBANGAN (MANDATORY RULE):**
+> Ketika mengadopsi fitur dari project referensi, **HANYA core logic, business logic, arsitektur data, dan application flow yang diadopsi**.
+> **DILARANG KERAS** memunculkan nama, label, watermark, badge, atau istilah project referensi ke dalam antarmuka visual (UI) pengguna/admin. Antarmuka harus 100% orisinil, profesional, dan berakar murni pada identitas brand **Chenille Flowers Atelier**.
+
+---
+
+#### 17.11.2 4 Pilar Pedoman Adopsi Referensi
+
+```mermaid
+flowchart LR
+    subgraph Referensi["Project Referensi (Contoh: admin-sunjaya / adminShuttleV3)"]
+        R1["Core Logic & Algoritma (Haversine, Geocoding)"]
+        R2["Application Flow (Autocomplete Dropdown, 15M Inactivity)"]
+        R3["Data Struktur Referensi (Outlets, Bus, Armada)"]
+        R4["Label / Brand Referensi ('Sunjaya', 'admin-sunjaya')"]
+    end
+
+    subgraph Filter["Proses Rekayasa & Decoupling Antigravity"]
+        F1["Ambil & Terapkan Logic"]
+        F2["Ambil & Terapkan User Flow"]
+        F3["Adaptasi & Transformasi Data Model 100%"]
+        F4["BLOCK & ELIMINATE DARI UI (Strict Zero Reference Label)"]
+    end
+
+    subgraph Hasil["Sistem Chenille Flowers Atelier (Hasil Akhir)"]
+        H1["Smart Live Geocoding & Dynamic Radius 5 KM"]
+        H2["Inactivity Session Watcher 15 Menit & Audit Trail"]
+        H3["Model Data Spesifik: Buket Bunga Kawat Bulu, BOM, Kuota PO"]
+        H4["UI Bersih, Elegan, Orisinil (100% Chenille Atelier Branding)"]
+    end
+
+    R1 --> F1 --> H1
+    R2 --> F2 --> H2
+    R3 --> F3 --> H3
+    R4 --> F4 --> H4
+```
+
+1. **Pilar 1: Yang Diadopsi (The "What"):**
+   - **Core Logic:** Logika matematika & komputasi (contoh: kalkulasi radius Haversine jarak bebas ongkir, reverse geocoding dari koordinat GPS ke teks jalan).
+   - **Business Flow:** Alur kerja sistem (contoh: dropdown saran tempat melayang saat mengetik, pemisahan nilai alamat string vs latitude/longitude, auto-logout 15 menit jika tanpa interaksi).
+   - **Security Pattern:** Pola keamanan enterprise (contoh: audit trail pencatatan aktivitas keluar-masuk, force logout / kick session oleh admin).
+
+2. **Pilar 2: Yang Disesuaikan 100% (The Data Adaptation):**
+   - Seluruh data model, skema database, dan terminologi disesuaikan sepenuhnya dengan proses bisnis **Buket Bunga Kawat Bulu**:
+     - *Bukan* outlet tiket shuttle/bus, melainkan **Studio Atelier & Titik Temu COD Kampus UI/Margonda**.
+     - *Bukan* kapasitas kursi penumpang, melainkan **Batas Kuota Pemesanan Harian PO Buket Kawat Bulu (Max 15 Bucket/Hari)**.
+     - *Bukan* manifes armada, melainkan **Resep Bahan Baku Bill of Materials (BOM kawat bulu, kain wrapping, pita satin)**.
+     - *Bukan* supir/agen, melainkan **Super Admin (Owner Atelier), Staff Florist (Pengrajin), dan Member Pelanggan**.
+
+3. **Pilar 3: Strict Zero Reference Labeling pada UI (The Brand Decoupling):**
+   - Setiap teks, badge, judul menu, subtitle, dan modal pada antarmuka frontend **wajib bersih dari nama sistem referensi**.
+   - **Contoh Penyesuaian Terminologi UI:**
+     | ❌ Teks yang Dilarang (Tercemar Referensi) | ✅ Teks Resmi Chenille Flowers Atelier (Bersih & Elegan) |
+     | :--- | :--- |
+     | `Pola admin-sunjaya` / `Pola Sunjaya` | `Audit Trail Keamanan` / `Live Session Guard` |
+     | `Smart Autocomplete (Pola admin-sunjaya)` | `Smart Live Autocomplete` |
+     | `Live Stream Pola admin-sunjaya` | `Live Stream Audit Log` |
+     | `Pengguna & Log Sesi (Pola admin-sunjaya)` | `Pengawasan Pengguna & Log Sesi` |
+
+4. **Pilar 4: Checklist Kepatuhan Pengembang (Compliance Checklist):**
+   Sebelum kode dirilis atau di-commit ke repositori:
+   - [x] **Checklist 1:** Apakah logic dan flow aplikasi bekerja dengan sempurna?
+   - [x] **Checklist 2:** Apakah seluruh data model mencerminkan bisnis buket bunga kawat bulu?
+   - [x] **Checklist 3:** Apakah seluruh teks pada file UI (`apps/web/src/components/...`) sudah diverifikasi menggunakan pencarian string ripgrep (`grep_search`) dan dipastikan **0% kemunculan nama referensi**?
+   - [x] **Checklist 4:** Apakah antarmuka pengguna tampak orisinil, mewah, dan berstandar internasional?
+
 
 

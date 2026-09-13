@@ -269,7 +269,7 @@ export const useUserAuditStore = create<UserAuditState>()(
             eventType: 'FORCE_LOGOUT_ADMIN',
             device: target?.currentDevice || 'Unknown Device',
             ipAddress: target?.ipAddress || '127.0.0.1',
-            notes: 'Sesi di-revoke secara paksa oleh Super Admin dari panel Pengguna (Pola admin-sunjaya).',
+            notes: 'Sesi di-revoke secara paksa oleh Super Admin dari panel Pengguna.',
           };
 
           return {

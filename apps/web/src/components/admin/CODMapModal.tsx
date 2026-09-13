@@ -165,7 +165,7 @@ export const CODMapModal: React.FC = () => {
   const [newNotes, setNewNotes] = useState('');
   const [modalPreviewQuery, setModalPreviewQuery] = useState('Margonda Raya Depok');
 
-  // Smart Live Autocomplete State (Pola admin-sunjaya)
+  // Smart Live Autocomplete State
   const [searchSuggestions, setSearchSuggestions] = useState<
     Array<{ name: string; full_name: string; lat: string; lon: string; city?: string }>
   >([]);
@@ -175,7 +175,7 @@ export const CODMapModal: React.FC = () => {
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const modalSearchInputRef = useRef<HTMLInputElement>(null);
 
-  // Google Places Autocomplete Integration for COD Modal (Pola admin-sunjaya jika API Key tersedia)
+  // Google Places Autocomplete Integration for COD Modal (jika API Key tersedia)
   useEffect(() => {
     const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!googleApiKey || typeof window === 'undefined' || !isAddModalOpen) return;
@@ -1178,7 +1178,7 @@ export const CODMapModal: React.FC = () => {
                     🔍 Cari Lokasi atau Tempel Link Google Maps:
                   </label>
                   <span className="text-[10px] text-stone-500 bg-white px-2 py-0.5 rounded-md border border-stone-200 font-medium flex items-center gap-1">
-                    <Info className="w-3 h-3 text-stone-400" /> Smart Autocomplete (Pola admin-sunjaya)
+                    <Info className="w-3 h-3 text-stone-400" /> Smart Live Autocomplete
                   </span>
                 </div>
                 <div className="flex gap-2 relative">

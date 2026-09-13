@@ -125,7 +125,7 @@ export const useAuthStore = create<AuthState>()(
           } catch (e) {}
         }
 
-        // Record to User Session Audit Log Stream (Pola admin-sunjaya)
+        // Record to User Session Audit Log Stream
         useUserAuditStore.getState().updateUserOnlineStatus(targetUser.id, true);
         useUserAuditStore.getState().recordAuditLog({
           userId: targetUser.id,

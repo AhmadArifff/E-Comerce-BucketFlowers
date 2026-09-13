@@ -204,7 +204,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* 10. USERS & SESSION AUDIT TAB (POLA ADMIN-SUNJAYA) */}
+          {/* 10. USERS & SESSION AUDIT TAB */}
           {activeTab === 'USERS' && (
             <div className="admin-view-fade">
               <UsersManagementView />

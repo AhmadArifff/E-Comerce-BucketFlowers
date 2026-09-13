@@ -165,7 +165,7 @@ export const UsersManagementView: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-black uppercase tracking-wider">
-              Pola admin-sunjaya
+              Audit Trail Keamanan
             </span>
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
@@ -469,7 +469,7 @@ export const UsersManagementView: React.FC = () => {
       {activeSubTab === 'LOGS' && (
         <div className="bg-white rounded-3xl border border-stone-200 shadow-xs overflow-hidden">
           <div className="p-4 bg-stone-50/50 border-b border-stone-200 flex items-center justify-between text-xs font-bold text-stone-600">
-            <span>Riwayat Keluar-Masuk & Auto-Timeout 15 Menit (Live Stream Pola admin-sunjaya)</span>
+            <span>Riwayat Keluar-Masuk & Auto-Timeout 15 Menit (Live Stream Audit Log)</span>
             <span className="text-[11px] text-stone-400 font-mono">100 Log Terbaru</span>
           </div>
 

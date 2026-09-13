@@ -2337,7 +2337,7 @@ export const StoreSettingsView: React.FC = () => {
   const [mapViewMode, setMapViewMode] = useState<'interactive' | 'google'>('interactive');
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Debounced live autocomplete search (Instant Dropdown matching admin-sunjaya UX)
+  // Debounced live autocomplete search (Instant Dropdown)
   useEffect(() => {
     // If Google Places API is actively working, let Google Places handle the dropdown exclusively!
     if (googlePlacesActive) {
@@ -2407,7 +2407,7 @@ export const StoreSettingsView: React.FC = () => {
     return () => clearTimeout(timer);
   }, [mapSearchQuery, googlePlacesActive, formProfile.latitude, formProfile.longitude]);
 
-  // Google Places Autocomplete Integration (Pola admin-sunjaya jika API Key tersedia)
+  // Google Places Autocomplete Integration (jika API Key tersedia)
   useEffect(() => {
     const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!googleApiKey || typeof window === 'undefined') return;
@@ -3074,7 +3074,7 @@ export const StoreSettingsView: React.FC = () => {
                     </span>
                   ) : (
                     <span className="text-stone-500 bg-stone-100 px-2 py-0.5 rounded-md border border-stone-200 font-medium flex items-center gap-1">
-                      <Info className="w-3 h-3 text-stone-400" /> Smart Live Autocomplete (Pola admin-sunjaya)
+                      <Info className="w-3 h-3 text-stone-400" /> Smart Live Autocomplete
                     </span>
                   )}
                 </div>
