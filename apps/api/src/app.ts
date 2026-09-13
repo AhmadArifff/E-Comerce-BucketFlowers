@@ -1,7 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import { Result } from './lib/result.js';
+import { sanitizeInputMiddleware } from './lib/sanitizer.js';
+import { globalLimiter } from './middleware/rate-limiter.js';
 import apiV1Router from './routes/index.js';
 import adminRouter from './routes/admin.routes.js';
 
@@ -11,13 +14,31 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
   ? [process.env.FRONTEND_URL || 'https://chenille-flowers.vercel.app']
   : [/^https:\/\/.*\.vercel\.app$/, 'http://localhost:3000', 'http://127.0.0.1:3000'];
 
-app.use(cors({
+const corsOptions = {
   origin: allowedOrigins,
   credentials: true,
-}));
+};
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+// 1. HTTP Security Headers (OWASP Baseline)
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false, // API murni JSON, CSP diterapkan di level Next.js Web App
+  })
+);
+
+// 2. Payload Buffer Limit (1MB Capping to prevent Large Payload Buffer Overflow DoS)
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// 3. Input Sanitization Middleware (Anti-XSS & Anti-Prototype Pollution)
+app.use(sanitizeInputMiddleware);
+
+// 4. Global Tiered Rate Limiter
+app.use('/api', globalLimiter);
 
 // Root endpoint to prevent "Cannot GET /" confusion
 app.get('/', (req, res) => {

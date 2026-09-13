@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { AdminSidebar, type AdminTab } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { KpiCards } from '@/components/admin/KpiCards';
@@ -42,6 +44,21 @@ const VALID_TABS: AdminTab[] = [
 ];
 
 export default function AdminPage() {
+  const router = useRouter();
+  const { user, isAuthenticated } = useAuthStore();
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    // Check authentication and authorize SUPER_ADMIN or FLORIST_STAFF
+    const timer = setTimeout(() => {
+      setAuthChecked(true);
+      if (!isAuthenticated || !user || (user.role !== 'SUPER_ADMIN' && user.role !== 'FLORIST_STAFF')) {
+        router.push('/login?redirect=/admin');
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, user, router]);
+
   const [activeTab, setActiveTabState] = useState<AdminTab>('DASHBOARD');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -107,6 +124,20 @@ export default function AdminPage() {
     setSelectedOrderForLabel(order);
     setIsShippingLabelOpen(true);
   };
+
+  if (!authChecked || !isAuthenticated || !user || (user.role !== 'SUPER_ADMIN' && user.role !== 'FLORIST_STAFF')) {
+    return (
+      <div className="min-h-screen bg-stone-900 text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-rose-600/20 border border-rose-500/30 flex items-center justify-center text-2xl mb-4 animate-pulse">
+          🔒
+        </div>
+        <h2 className="text-base font-extrabold tracking-tight">Memverifikasi Sesi Akses Atelier...</h2>
+        <p className="text-xs text-stone-400 mt-1 max-w-sm">
+          Mengamankan panel operasional buket kawat bulu. Mengarahkan Anda ke halaman login...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-stone-50/60 flex text-stone-800">

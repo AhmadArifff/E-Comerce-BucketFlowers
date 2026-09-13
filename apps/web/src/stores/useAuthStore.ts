@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Role, UserProfile } from '@chenille/shared';
+import { getApiUrl } from '@/lib/api-client';
 import { useUserAuditStore } from './useUserAuditStore';
 
 export type LogoutReason = 'MANUAL' | 'TIMEOUT_15MIN' | 'FORCE_LOGOUT_ADMIN';
@@ -21,33 +22,33 @@ interface AuthState {
 }
 
 export const DEFAULT_MEMBER: UserProfile = {
-  id: 'usr-member-01',
-  name: 'Sarah Amalia',
-  email: 'sarah.amalia@gmail.com',
-  phone: '081298317721',
+  id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15',
+  name: 'Annisa Larasati (Member Mahasiswi UI)',
+  email: 'nisa.mahasiswi@gmail.com',
+  phone: '081938851834',
   role: 'CUSTOMER_MEMBER',
   avatarEmoji: '🌸',
-  flowerPoints: 340,
+  flowerPoints: 350,
 };
 
 export const DEFAULT_ADMIN: UserProfile = {
-  id: 'usr-admin-01',
+  id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
   name: 'Ahmad Arif (Owner Atelier)',
-  email: 'admin@chenilleatelier.com',
+  email: 'ahmad@chenilleatelier.com',
   phone: '081234567890',
   role: 'SUPER_ADMIN',
   avatarEmoji: '👑',
-  flowerPoints: 9999,
+  flowerPoints: 1500,
 };
 
 export const DEFAULT_FLORIST: UserProfile = {
-  id: 'usr-florist-01',
-  name: 'Nadia Florist Staff',
-  email: 'staff@chenilleatelier.com',
-  phone: '085712345678',
+  id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13',
+  name: 'Dewi Sartika (Head Florist)',
+  email: 'florist.dewi@chenilleatelier.com',
+  phone: '081345678901',
   role: 'FLORIST_STAFF',
   avatarEmoji: '🌷',
-  flowerPoints: 500,
+  flowerPoints: 400,
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -136,6 +137,19 @@ export const useAuthStore = create<AuthState>()(
           ipAddress: '180.252.164.21 (Depok)',
           notes: `Login berhasil sebagai ${targetUser.role}. Sesi 15 menit aktif dimulai.`,
         });
+
+        // Sync online status to Supabase PostgreSQL & Broadcast cross-tab sync
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('chenille_user_session_sync', now.toString());
+          } catch (e) {}
+
+          fetch(getApiUrl('/api/v1/auth/login-activity'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: targetUser.id }),
+          }).catch(() => {});
+        }
       },
 
       logout: (reason = 'MANUAL') => {
@@ -159,6 +173,15 @@ export const useAuthStore = create<AuthState>()(
                 : 'Pengguna melakukan logout manual secara aman.',
             sessionDurationMinutes: get().lastActivity ? Math.round((now - (get().lastActivity || now)) / 60000) : 0,
           });
+
+          // Notify Supabase backend that user is offline
+          if (typeof window !== 'undefined') {
+            fetch(getApiUrl('/api/v1/auth/logout-activity'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: currentUser.id }),
+            }).catch(() => {});
+          }
         }
 
         set({
@@ -170,6 +193,7 @@ export const useAuthStore = create<AuthState>()(
 
         if (typeof window !== 'undefined') {
           try {
+            localStorage.setItem('chenille_user_session_sync', now.toString());
             localStorage.removeItem('chenille_last_activity');
           } catch (e) {}
         }

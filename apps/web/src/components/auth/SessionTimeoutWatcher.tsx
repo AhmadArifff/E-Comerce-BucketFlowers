@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { showMagicToast } from '@/lib/magic-motion';
+import { getApiUrl } from '@/lib/api-client';
 import { Clock, ShieldAlert, LogIn, X } from 'lucide-react';
 
 const TIMEOUT_MS = 15 * 60 * 1000; // 15 Menit (PRD Standard)
@@ -51,6 +52,56 @@ export const SessionTimeoutWatcher: React.FC = () => {
       });
     };
   }, [isAuthenticated, handleUserActivity]);
+
+  // Realtime Force-Logout Watcher (Cross-Tab via Storage Event & Heartbeat via Backend Supabase)
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+
+    // 1. Cross-Tab Storage Event Listener
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'chenille_force_logout_event' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed.userId === user.id) {
+            logout('FORCE_LOGOUT_ADMIN');
+            showMagicToast(
+              'Sesi Diputus Admin 🛑',
+              'Sesi akun Anda telah di-revoke oleh Administrator. Silakan login kembali.',
+              '🔒'
+            );
+            router.push('/login?reason=force_logout');
+          }
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    // 2. Periodic Heartbeat to Backend Supabase (Checks is_online & status every 4 seconds)
+    let isSubscribed = true;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(getApiUrl(`/api/v1/auth/session-status?userId=${user.id}`));
+        const json = await res.json();
+        if (!isSubscribed) return;
+
+        if (json.success && json.data && !json.data.isValid) {
+          logout('FORCE_LOGOUT_ADMIN');
+          showMagicToast(
+            'Sesi Diputus Admin 🛑',
+            json.data.message || 'Sesi login Anda telah diputus oleh Admin. Silakan login kembali.',
+            '🔒'
+          );
+          router.push('/login?reason=force_logout');
+        }
+      } catch (e) {}
+    }, 4000);
+
+    return () => {
+      isSubscribed = false;
+      window.removeEventListener('storage', handleStorage);
+      clearInterval(interval);
+    };
+  }, [isAuthenticated, user?.id, logout, router]);
 
   // Periodic Inactivity Checker (Runs every 2.5 seconds)
   useEffect(() => {

@@ -663,4 +663,251 @@ router.get('/notifications/logs', async (req, res) => {
   }
 });
 
+// ============================================================================
+// USER MANAGEMENT & SESSION AUDIT LOGS (SUPABASE POSTGRESQL BACKEND)
+// ============================================================================
+
+// GET /api/v1/admin/users
+router.get('/users', async (_req, res) => {
+  try {
+    const usersRes = await pool.query(`
+      SELECT 
+        u.id,
+        COALESCE(u.name, p.full_name, 'Pengguna') as name,
+        u.email,
+        COALESCE(u.phone, '-') as phone,
+        u.role,
+        COALESCE(u.avatar_emoji, '🌸') as "avatarEmoji",
+        COALESCE(u.avatar_url, p.avatar_url) as "avatarUrl",
+        COALESCE(u.status, 'ACTIVE') as status,
+        COALESCE(u.is_online, false) as "isOnline",
+        COALESCE(u.last_active_at, u.updated_at, u.created_at) as "lastActiveAt",
+        COALESCE(u.current_device, 'Browser') as "currentDevice",
+        COALESCE(u.ip_address, '127.0.0.1') as "ipAddress",
+        COALESCE(u.flower_points, p.flower_points, 0) as "flowerPoints",
+        (SELECT COUNT(*)::int FROM orders o WHERE o.user_id = u.id) as "totalOrders"
+      FROM users u
+      LEFT JOIN profiles p ON p.id = u.id
+      ORDER BY u.created_at ASC;
+    `);
+
+    // Format lastActiveText
+    const now = Date.now();
+    const formattedUsers = usersRes.rows.map((row: any) => {
+      const lastActiveTs = new Date(row.lastActiveAt).getTime();
+      const elapsedMins = Math.floor((now - lastActiveTs) / (60 * 1000));
+      let lastActiveText = 'Online Sekarang';
+      if (!row.isOnline) {
+        if (elapsedMins < 60) {
+          lastActiveText = `${Math.max(1, elapsedMins)} menit lalu`;
+        } else if (elapsedMins < 1440) {
+          lastActiveText = `${Math.floor(elapsedMins / 60)} jam lalu`;
+        } else {
+          lastActiveText = `${Math.floor(elapsedMins / 1440)} hari lalu`;
+        }
+      }
+
+      return {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        phone: row.phone,
+        role: row.role,
+        avatarEmoji: row.avatarEmoji,
+        avatarUrl: row.avatarUrl,
+        status: row.status,
+        isOnline: row.isOnline,
+        lastActiveText,
+        lastActiveTimestamp: lastActiveTs,
+        currentDevice: row.currentDevice,
+        ipAddress: row.ipAddress,
+        totalOrders: row.totalOrders || 0,
+        flowerPoints: row.flowerPoints || 0,
+      };
+    });
+
+    return res.json({
+      success: true,
+      data: formattedUsers,
+      total: formattedUsers.length,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/v1/admin/users
+router.post('/users', async (req, res) => {
+  try {
+    const { name, email, phone, role } = req.body;
+    if (!name || !email) {
+      return res.status(400).json({ success: false, error: 'Nama dan email wajib diisi.' });
+    }
+
+    const id = `a0eebc99-9c0b-4ef8-bb6d-${Date.now().toString().slice(-12).padStart(12, '0')}`;
+    const avatarEmoji = role === 'SUPER_ADMIN' ? '👑' : role === 'FLORIST_STAFF' ? '🌷' : '🌸';
+    await pool.query(
+      `INSERT INTO users (id, name, email, phone, password_hash, role, avatar_emoji, status, is_online, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, 'member123', $5, $6, 'ACTIVE', false, NOW(), NOW())
+       ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, role = EXCLUDED.role;`,
+      [id, name, email, phone || '-', role || 'CUSTOMER_MEMBER', avatarEmoji]
+    );
+
+    await pool.query(
+      `INSERT INTO profiles (id, full_name, preferred_theme, flower_points, created_at, updated_at)
+       VALUES ($1, $2, 'TEMA_A_KOREAN_PASTEL', 25, NOW(), NOW())
+       ON CONFLICT (id) DO UPDATE SET full_name = EXCLUDED.full_name;`,
+      [id, name]
+    );
+
+    return res.json({
+      success: true,
+      message: 'Pengguna berhasil didaftarkan ke database Supabase.',
+      data: { id, name, email, role },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// PUT /api/v1/admin/users/:id/status
+router.put('/users/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    if (!['ACTIVE', 'LOCKED', 'SUSPENDED'].includes(status)) {
+      return res.status(400).json({ success: false, error: 'Status tidak valid.' });
+    }
+
+    const updateRes = await pool.query(
+      `UPDATE users 
+       SET status = $1::text, 
+           is_online = CASE WHEN $1::text = 'LOCKED' THEN false ELSE is_online END, 
+           updated_at = NOW() 
+       WHERE id = $2 
+       RETURNING id, name, status, is_online;`,
+      [status, id]
+    );
+
+    if (updateRes.rowCount === 0) {
+      return res.status(404).json({ success: false, error: 'Pengguna tidak ditemukan.' });
+    }
+
+    return res.json({
+      success: true,
+      message: `Status pengguna berhasil diperbarui menjadi ${status}.`,
+      data: updateRes.rows[0],
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/v1/admin/users/:id/force-logout
+router.post('/users/:id/force-logout', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userRes = await pool.query(`SELECT name, role, current_device, ip_address FROM users WHERE id = $1;`, [id]);
+    if (userRes.rowCount === 0) {
+      return res.status(404).json({ success: false, error: 'Pengguna tidak ditemukan.' });
+    }
+
+    const user = userRes.rows[0];
+
+    // Set user offline
+    await pool.query(
+      `UPDATE users SET is_online = false, last_active_at = NOW(), updated_at = NOW() WHERE id = $1;`,
+      [id]
+    );
+
+    // Record audit log
+    const logId = `log-force-${Date.now()}`;
+    await pool.query(
+      `INSERT INTO session_audit_logs (id, timestamp, user_id, user_name, user_role, event_type, device, ip_address, notes, session_duration_minutes)
+       VALUES ($1, NOW(), $2, $3, $4, 'FORCE_LOGOUT_ADMIN', $5, $6, $7, 0);`,
+      [
+        logId,
+        id,
+        user.name,
+        user.role,
+        user.current_device || 'Unknown Device',
+        user.ip_address || '127.0.0.1',
+        'Sesi di-revoke secara paksa oleh Super Admin dari panel Pengguna.',
+      ]
+    );
+
+    return res.json({
+      success: true,
+      message: `Sesi ${user.name} berhasil diputus paksa.`,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/admin/users/audit-logs
+router.get('/users/audit-logs', async (_req, res) => {
+  try {
+    const logsRes = await pool.query(`
+      SELECT 
+        id,
+        timestamp,
+        COALESCE(user_id::text, '') as "userId",
+        user_name as "userName",
+        user_role as "userRole",
+        event_type as "eventType",
+        device,
+        ip_address as "ipAddress",
+        notes,
+        session_duration_minutes as "sessionDurationMinutes"
+      FROM session_audit_logs
+      ORDER BY timestamp DESC
+      LIMIT 100;
+    `);
+
+    return res.json({
+      success: true,
+      data: logsRes.rows,
+      total: logsRes.rows.length,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/v1/admin/users/audit-logs
+router.post('/users/audit-logs', async (req, res) => {
+  try {
+    const { userId, userName, userRole, eventType, device, ipAddress, notes, sessionDurationMinutes } = req.body;
+    if (!userName || !userRole || !eventType) {
+      return res.status(400).json({ success: false, error: 'Data log tidak lengkap.' });
+    }
+
+    const logId = `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    await pool.query(
+      `INSERT INTO session_audit_logs (id, timestamp, user_id, user_name, user_role, event_type, device, ip_address, notes, session_duration_minutes)
+       VALUES ($1, NOW(), $2, $3, $4, $5, $6, $7, $8, $9);`,
+      [
+        logId,
+        userId || null,
+        userName,
+        userRole,
+        eventType,
+        device || 'Unknown Device',
+        ipAddress || '127.0.0.1',
+        notes || '',
+        sessionDurationMinutes || 0,
+      ]
+    );
+
+    return res.json({
+      success: true,
+      message: 'Log audit berhasil dicatat ke Supabase.',
+      id: logId,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;

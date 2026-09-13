@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Menu,
   Search,
@@ -89,14 +90,17 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   onOpenChangePassword,
   onSelectTab,
 }) => {
+  const router = useRouter();
   const { user, logout } = useAuthStore();
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const current = TAB_TITLES[activeTab] || TAB_TITLES.DASHBOARD;
 
   const handleLogout = () => {
     setIsProfileDropdownOpen(false);
+    const userName = user?.name || 'Admin Atelier';
     logout();
-    showMagicToast('Logout Berhasil 🔒', 'Sesi admin Rania Azzahra telah keluar dengan aman.', '👋');
+    showMagicToast('Logout Berhasil 🔒', `Sesi ${userName} telah keluar dengan aman.`, '👋');
+    router.push('/login?logout=success');
   };
 
   return (
@@ -164,14 +168,14 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             className="flex items-center gap-2 pl-2 sm:pl-3 border-l border-stone-200 cursor-pointer group"
           >
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-400 text-white flex items-center justify-center font-black text-xs shadow-sm shadow-rose-500/20">
-              RA
+              {user?.avatarEmoji || (user?.name ? user.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() : '👑')}
             </div>
             <div className="hidden sm:block text-left">
               <span className="text-xs font-bold text-stone-800 block leading-tight group-hover:text-rose-600 transition-colors">
-                Rania Azzahra
+                {user?.name || 'Admin Atelier'}
               </span>
               <span className="text-[10px] text-stone-400 font-semibold uppercase tracking-wider block">
-                Super Admin Florist
+                {user?.role === 'SUPER_ADMIN' ? 'Super Admin Florist' : user?.role === 'FLORIST_STAFF' ? 'Staff Florist' : 'Admin Atelier'}
               </span>
             </div>
             <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
@@ -185,10 +189,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
               />
               <div className="fade-in-dropdown absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-rose-100 p-2 z-50 text-xs space-y-1">
                 <div className="px-3 py-2 border-b border-stone-100">
-                  <div className="font-extrabold text-stone-800">Rania Azzahra</div>
-                  <div className="text-[11px] text-stone-400">rania.florist@atelier.com</div>
+                  <div className="font-extrabold text-stone-800">{user?.name || 'Admin Atelier'}</div>
+                  <div className="text-[11px] text-stone-400">{user?.email || 'admin@chenilleatelier.com'}</div>
                   <span className="inline-block mt-1.5 text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                    Super Admin Utama
+                    {user?.role === 'SUPER_ADMIN' ? 'Super Admin Utama' : user?.role === 'FLORIST_STAFF' ? 'Staff Florist' : 'Admin'}
                   </span>
                 </div>
 

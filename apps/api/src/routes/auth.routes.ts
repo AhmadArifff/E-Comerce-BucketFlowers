@@ -12,7 +12,7 @@ router.post('/login', async (req, res) => {
     }
 
     const userRes = await pool.query(
-      `SELECT id, name, email, phone, role, avatar_url, flower_points
+      `SELECT id, name, email, phone, role, avatar_url, flower_points, status
        FROM users
        WHERE LOWER(email) = LOWER($1) AND password_hash = $2
        LIMIT 1;`,
@@ -24,6 +24,14 @@ router.post('/login', async (req, res) => {
     }
 
     const user = userRes.rows[0];
+
+    if (user.status === 'LOCKED') {
+      return res.status(403).json({
+        success: false,
+        error: 'Akun Anda telah dinonaktifkan/diblokir oleh Admin Atelier.',
+      });
+    }
+
     const token = `token-${user.id}-${Date.now()}`;
 
     return res.json({
@@ -168,6 +176,108 @@ router.get('/points', async (req, res) => {
         transactions,
       },
     });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/auth/session-status?userId=...
+router.get('/session-status', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'User ID wajib disertakan.' });
+    }
+
+    const userRes = await pool.query(
+      `SELECT id, name, role, is_online, status FROM users WHERE id = $1 LIMIT 1;`,
+      [String(userId)]
+    );
+
+    if (userRes.rows.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          isValid: false,
+          reason: 'USER_NOT_FOUND',
+          message: 'Akun tidak ditemukan di sistem database.',
+        },
+      });
+    }
+
+    const user = userRes.rows[0];
+
+    if (user.status === 'LOCKED') {
+      return res.json({
+        success: true,
+        data: {
+          isValid: false,
+          reason: 'ACCOUNT_LOCKED',
+          message: 'Akun Anda telah dinonaktifkan/diblokir oleh Admin.',
+        },
+      });
+    }
+
+    if (!user.is_online) {
+      return res.json({
+        success: true,
+        data: {
+          isValid: false,
+          reason: 'FORCE_LOGOUT',
+          message: 'Sesi login Anda telah diputus oleh Admin. Silakan login kembali.',
+        },
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        isValid: true,
+        user: {
+          id: user.id,
+          name: user.name,
+          role: user.role,
+        },
+      },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/v1/auth/login-activity
+router.post('/login-activity', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'User ID wajib disertakan.' });
+    }
+
+    await pool.query(
+      `UPDATE users SET is_online = true, last_active_at = NOW(), updated_at = NOW() WHERE id = $1;`,
+      [String(userId)]
+    );
+
+    return res.json({ success: true, message: 'Status online berhasil diperbarui.' });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/v1/auth/logout-activity
+router.post('/logout-activity', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'User ID wajib disertakan.' });
+    }
+
+    await pool.query(
+      `UPDATE users SET is_online = false, last_active_at = NOW(), updated_at = NOW() WHERE id = $1;`,
+      [String(userId)]
+    );
+
+    return res.json({ success: true, message: 'Status offline berhasil diperbarui.' });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
   }

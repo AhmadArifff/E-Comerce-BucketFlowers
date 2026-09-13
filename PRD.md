@@ -3043,5 +3043,257 @@ flowchart LR
    - [x] **Checklist 3:** Apakah seluruh teks pada file UI (`apps/web/src/components/...`) sudah diverifikasi menggunakan pencarian string ripgrep (`grep_search`) dan dipastikan **0% kemunculan nama referensi**?
    - [x] **Checklist 4:** Apakah antarmuka pengguna tampak orisinil, mewah, dan berstandar internasional?
 
+---
+
+### 17.12 Prinsip Mutlak Single Source of Truth — 100% Database Supabase PostgreSQL (Strict Zero-Dummy Policy) — v2.9
+
+#### 1. Latar Belakang & Pernyataan Kebijakan (Zero-Dummy Policy)
+Dalam arsitektur enterprise Chenille Flowers Atelier, **seluruh data sistem yang ditampilkan dan dimanipulasi pada aplikasi wajib bersumber secara riil dan persisten dari Database Supabase PostgreSQL**.
+
+> [!IMPORTANT]
+> **ATURAN BAKU PENGEMBANGAN (STRICT DATA INTEGRITY RULE):**
+> 1. **DILARANG KERAS** menggunakan array dummy / mock statis (`INITIAL_USERS`, `MOCK_PRODUCTS`, `MOCK_ORDERS`, data hardcoded lokal) sebagai sumber data utama bagi antarmuka pengguna.
+> 2. Seluruh entitas bisnis (Pengguna & Akun, Log Sesi & Audit Trail, Produk & Katalog, Pesanan & Status Stepper, Titik Temu COD, Pengaturan Atelier, Resep BOM, Kupon, Logistik, dan Klaim Garansi) **WAJIB terhubung ke tabel Supabase PostgreSQL melalui backend REST API**.
+> 3. Setiap aksi mutasi (tambah akun, ubah status, buat pesanan, pembaruan koordinat, pencatatan log sesi) **harus mengeksekusi query database nyata** dan tersimpan secara permanen di Supabase.
+
+---
+
+#### 2. Arsitektur Aliran Data (Single Source of Truth Flow)
+```mermaid
+flowchart TD
+    subgraph Client["Frontend Client (Next.js 14 Web)"]
+        UI["Antarmuka Pengguna & Admin Panel"]
+        Store["Zustand Stores (useUserAuditStore, useOrderStore, useSettingsStore)"]
+        APIClient["API Client Helper (getApiUrl)"]
+    end
+
+    subgraph Backend["Backend API Service (Express.js / Node.js)"]
+        Routes["REST API Endpoints (/api/v1/admin/users, /api/v1/products, /api/v1/orders)"]
+        Pool["PostgreSQL Connection Pool (pg.Pool)"]
+    end
+
+    subgraph Database["Supabase PostgreSQL Cloud (SSOT)"]
+        T_Users[("public.users & public.profiles")]
+        T_Logs[("public.session_audit_logs")]
+        T_Products[("public.products & public.categories")]
+        T_Orders[("public.orders & public.order_items")]
+        T_Settings[("public.store_settings")]
+        T_COD[("public.cod_meetup_points")]
+    end
+
+    UI --> Store
+    Store --> APIClient
+    APIClient -->|HTTP GET / POST / PUT / PATCH| Routes
+    Routes --> Pool
+    Pool -->|Parameterized SQL Queries| Database
+    Database -->|Real-Time Relational Data| Pool
+    Pool --> Routes
+    Routes -->|JSON Response (success: true, data)| Store
+    Store -->|Reactive State Update| UI
+```
+
+---
+
+#### 3. Inventarisasi Tabel Supabase PostgreSQL & Status Sinkronisasi
+| No | Nama Tabel Supabase | Entitas Data | Status Sinkronisasi | Endpoint REST API Terkait |
+| :--- | :--- | :--- | :--- | :--- |
+| **1** | `public.users` | Akun Pengguna (Super Admin, Staff Florist, Customer Member) | **100% Real Supabase** (6 akun terdaftar) | `GET /api/v1/admin/users`<br>`POST /api/v1/admin/users`<br>`PUT /api/v1/admin/users/:id/status`<br>`POST /api/v1/admin/users/:id/force-logout` |
+| **2** | `public.profiles` | Profil Pengguna (Nama lengkap, avatar URL, preferensi tema, flower points) | **100% Real Supabase** | Terhubung via Foreign Key `users(id)` |
+| **3** | `public.session_audit_logs` | Catatan Audit Trail (Login sukses, logout manual, timeout 15 menit, force logout) | **100% Real Supabase** (Indeks timestamp) | `GET /api/v1/admin/users/audit-logs`<br>`POST /api/v1/admin/users/audit-logs` |
+| **4** | `public.products` | Katalog Buket Bunga Kawat Bulu (Nama, harga, HPP, stok, status ready, foto) | **100% Real Supabase** (9 produk aktif) | `GET /api/v1/products`<br>`POST /api/v1/products`<br>`PUT /api/v1/products/:id` |
+| **5** | `public.orders` | Transaksi Pesanan & Stepper Produksi | **100% Real Supabase** (49 pesanan aktif) | `GET /api/v1/orders`<br>`POST /api/v1/orders`<br>`PATCH /api/v1/orders/:id` |
+| **6** | `public.cod_meetup_points` | Titik Temu COD Kampus UI & Margonda Depok | **100% Real Supabase** (7 titik terverifikasi) | `GET /api/v1/cod-points`<br>`POST /api/v1/cod-points`<br>`DELETE /api/v1/cod-points/:id` |
+| **7** | `public.store_settings` | Pengaturan Atelier (Alamat workshop, koordinat GPS, kuota PO harian) | **100% Real Supabase** | `GET /api/v1/admin/settings/all`<br>`PUT /api/v1/admin/settings` |
+| **8** | `public.coupons` | Voucher Diskon & Kupon Promosi | **100% Real Supabase** | `GET /api/v1/coupons`<br>`POST /api/v1/coupons` |
+| **9** | `public.warranty_claims` | Klaim Garansi Kerusakan Buket | **100% Real Supabase** | `GET /api/v1/warranty`<br>`POST /api/v1/warranty` |
+| **10** | `public.logistics_configs` | Kredensial & Pengaturan Ekspedisi Biteship | **100% Real Supabase** | `GET /api/v1/admin/settings/logistics` |
+
+---
+
+#### 4. Detail Akun Riil Terdaftar di Database Supabase (`public.users`)
+Seluruh akun berikut tersimpan langsung di tabel `public.users` dan `public.profiles` dengan kredensial hash yang valid:
+1. **Ahmad Arif (Owner Atelier)**
+   - ID: `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11`
+   - Email: `ahmad@chenilleatelier.com`
+   - Role: `SUPER_ADMIN`
+   - Status: `ACTIVE` | Perangkat: `Windows 11 • Chrome 128` | IP: `180.252.164.21 (Depok)`
+2. **Rania Azzahra (Super Admin)**
+   - ID: `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12`
+   - Email: `admin@chenilleatelier.com`
+   - Role: `SUPER_ADMIN`
+   - Status: `ACTIVE` | Online: `true` | Perangkat: `macOS Sonoma • Safari 17` | IP: `182.2.140.88 (Jakarta)`
+3. **Dewi Sartika (Head Florist)**
+   - ID: `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13`
+   - Email: `florist.dewi@chenilleatelier.com`
+   - Role: `FLORIST_STAFF`
+   - Status: `ACTIVE` | Online: `true` | Perangkat: `Android 14 • Chrome Mobile` | IP: `114.124.201.15 (Bogor)`
+4. **Budi Setiawan (Artisan Chenille)**
+   - ID: `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14`
+   - Email: `florist.budi@chenilleatelier.com`
+   - Role: `FLORIST_STAFF`
+   - Status: `ACTIVE` | Perangkat: `Windows 10 • Edge 127` | IP: `110.137.88.94 (Depok)`
+5. **Annisa Larasati (Member Mahasiswi UI)**
+   - ID: `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15`
+   - Email: `nisa.mahasiswi@gmail.com`
+   - Role: `CUSTOMER_MEMBER`
+   - Status: `ACTIVE` | Perangkat: `iPhone 15 • Safari Mobile` | IP: `36.85.12.77 (Margonda Depok)`
+6. **Fajar Nugraha (Alumni FTUI)**
+   - ID: `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16`
+   - Email: `fajar.alumni@yahoo.com`
+   - Role: `CUSTOMER_MEMBER`
+   - Status: `ACTIVE` | Perangkat: `Android 13 • Samsung Browser` | IP: `103.28.14.99 (Kukusan Depok)`
+
+---
+
+#### 5. Protokol Verifikasi Integritas Data (Pre-Deployment Checklist)
+Sebelum rilis produksi, tim engineering wajib memastikan:
+- [x] Endpoint `GET /api/v1/admin/users` mengembalikan array pengguna dari `public.users` dengan status kode `200 OK`.
+- [x] Endpoint `GET /api/v1/admin/users/audit-logs` mengembalikan catatan log dari `public.session_audit_logs`.
+- [x] Antarmuka `UsersManagementView` memanggil `fetchUsers()` dan `fetchAuditLogs()` pada siklus hidup `useEffect`.
+- [x] Antarmuka `ProductsClicksView` memanggil `fetch(getApiUrl('/api/v1/products'))` dan menampilkan katalog produk riil Supabase.
+- [x] Tombol **"Refresh" (🔄)** pada antarmuka admin berfungsi untuk menyinkronkan data terbaru secara langsung dari Supabase.
+- [x] Tidak ada komponen produksi yang menggunakan dummy array hardcoded tanpa sinkronisasi database.
+
+---
+
+### 17.13 Arsitektur & Siklus Hidup Proses Bisnis "Tendang Sesi" (Force Logout / Session Revocation) — v2.9
+
+#### 1. Definisi & Filosofi Keamanan (The Business Purpose)
+Fitur **"Tendang Sesi" (*Force Logout / Session Revocation*)** dirancang sebagai mekanisme pengamanan tingkat tinggi (*High-Security Intervention*) bagi Super Admin untuk mencabut hak akses aktif suatu akun secara seketika (*real-time*).
+
+> [!IMPORTANT]
+> **ATURAN PROSES BISNIS TENDANG SESI:**
+> 1. "Tendang Sesi" **BUKAN** sekadar mengubah teks status pengguna menjadi offline di layar admin.
+> 2. Akun yang ditendang **WAJIB seketika kehilangan hak akses pada browser/perangkatnya**, dibersihkan kredensial lokalnya (`token` & `user session`), dan langsung dialihkan paksa ke halaman `/login?reason=force_logout`.
+> 3. Pengguna yang telah ditendang **DILARANG** dapat melanjutkan aktivitas, membuka halaman portal pesanan, atau panel admin tanpa melakukan proses autentikasi ulang (login kembali dengan kata sandi yang sah).
+
+---
+
+#### 2. Diagram Alir Siklus Hidup Tendang Sesi (End-to-End Lifecycle Flow)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Super Admin (Owner)
+    participant AdminUI as Panel Admin (UsersManagementView)
+    participant API as Backend Engine (apps/api)
+    participant DB as Supabase PostgreSQL
+    actor Victim as Pengguna / Staf (Target)
+    participant ClientWatcher as Watcher Sesi Klien (SessionTimeoutWatcher)
+    participant LoginUI as Halaman Login (/login)
+
+    Admin->>AdminUI: Klik [🛑 Tendang Sesi] pada akun target
+    AdminUI->>API: POST /api/v1/admin/users/:id/force-logout
+    API->>DB: UPDATE users SET is_online = false, last_active_at = NOW()
+    API->>DB: INSERT INTO session_audit_logs (FORCE_LOGOUT_ADMIN)
+    API-->>AdminUI: 200 OK (Sesi berhasil di-revoke)
+    AdminUI->>AdminUI: Update status tabel menjadi Offline (⚪)
+
+    par Sinkronisasi Seketika Klien
+        AdminUI->>ClientWatcher: Broadcast Storage Event (chenille_force_logout_event)
+    and Heartbeat Berkala (Tiap 4 Detik)
+        ClientWatcher->>API: GET /api/v1/auth/session-status?userId=...
+        API->>DB: SELECT is_online, status FROM users WHERE id = $1
+        DB-->>API: is_online = false
+        API-->>ClientWatcher: { isValid: false, reason: "FORCE_LOGOUT" }
+    end
+
+    ClientWatcher->>Victim: Tampilkan Toast: "Sesi Diputus oleh Admin 🛑"
+    ClientWatcher->>ClientWatcher: Bersihkan chenille_auth_storage & state sesi
+    ClientWatcher->>LoginUI: Redirect paksa ke /login?reason=force_logout
+    LoginUI->>Victim: Tampilkan form login & banner peringatan keamanan
+```
+
+---
+
+#### 3. Tiga Lapis Proteksi Pemutusan Sesi (3-Tier Invalidation Layers)
+1. **Lapis 1: Local Session Purge (Jika Akun Aktif di Browser yang Sama):**
+   - Saat admin menendang akun yang kebetulan sedang aktif di browser yang sama (misal saat simulasi/testing akun admin atau staf), `useUserAuditStore.forceLogoutUser` mendeteksi kecocokan ID pengguna, langsung menghapus `chenille_auth_storage`, dan seketika melakukan `window.location.href = '/login?reason=force_logout'`.
+2. **Lapis 2: Cross-Tab Invalidation via Storage Events:**
+   - Ketika tombol ditekan, event `chenille_force_logout_event` dipancarkan melalui `localStorage`. Seluruh tab lain pada peramban yang membuka sesi pengguna yang sama akan langsung mendeteksi event ini dan serentak logout dalam hitungan milidetik.
+3. **Lapis 3: Cross-Device Periodic Heartbeat (Backend Supabase Guard):**
+   - Komponen `SessionTimeoutWatcher` yang aktif di seluruh aplikasi melakukan pemeriksaan berkala setiap 4 detik ke endpoint `GET /api/v1/auth/session-status?userId=...`.
+   - Jika di database Supabase kolom `is_online` bernilai `false` atau `status` bernilai `'LOCKED'`, sesi pengguna di perangkat mana pun langsung dimatikan dan diarahkan ke `/login`.
+
+---
+
+#### 4. Pemulihan Sesi Melalui Login Ulang (Re-Authentication Flow)
+Setelah sesi diputus:
+1. Pengguna diarahkan ke `/login?reason=force_logout` dan disuguhi notifikasi ramah: *"Sesi akun Anda telah di-revoke demi keamanan data. Silakan login kembali untuk memperbarui sesi."*
+2. Pengguna mengisi kredensial dan menekan tombol **"Masuk Sekarang"**.
+3. Sistem memanggil endpoint `POST /api/v1/auth/login-activity` yang memperbarui status di database Supabase kembali menjadi `is_online = true`.
+4. Sesi aktif baru terbentuk dengan masa berlaku 15 menit *inactivity guard*. Pengguna kembali diizinkan mengakses menu sesuai perannya.
+
+---
+
+### 17.14 Arsitektur Keamanan & Pertahanan Berlapis E-Commerce (Defense-in-Depth Security Framework) — v3.0
+
+#### 1. Filosofi & Matriks Vektor Ancaman (Threat Matrix & Business Impact)
+Platform e-commerce buket bunga kawat bulu Chenille Atelier menerapkan strategi **Defense-in-Depth (Pertahanan Berlapis)** guna melindungi transaksi pelanggan, aset database Supabase, dan ketersediaan layanan (*uptime*) dari berbagai ancaman siber:
+
+| Vektor Ancaman | Sasaran Titik Lemah | Dampak Bisnis / Finansial | Mitigasi Teknis di Chenille Atelier |
+| :--- | :--- | :--- | :--- |
+| **SQL Injection (SQLi)** | Form pencarian, URL filter, query string database. | Database bocor, manipulasi harga, perusakan data pesanan. | **Parameterized Queries (`$1, $2`)** di seluruh query node-postgres & ORM. |
+| **Stored & Reflected XSS** | Form catatan kartu ucapan buket, nama profil, review. | Pencurian token sesi pengguna, cookie hijacking, defacement. | **Input Sanitizer Middleware (`apps/api/src/lib/sanitizer.ts`)** yang memenggal tag `<script>`, `<iframe>`, dan event handler inline. |
+| **WhatsApp OTP Flooding** | Endpoint `POST /api/v1/otp/send`. | Kuota kupon/saldo API Fonnte habis drastis; nomor WA diblokir Meta. | **Tiered OTP Rate Limiter (`apps/api/src/middleware/rate-limiter.ts`)**: Maksimal 5 req / 5 menit per IP. |
+| **Credential Stuffing / Brute Force** | Endpoint `POST /api/v1/auth/login`. | Pengambilalihan akun Admin atau Member berpoin tinggi (*Account Takeover*). | **Auth Rate Limiter**: Maksimal 10 percobaan / 15 menit per IP + Fitur Kunci Status Akun (`LOCKED`). |
+| **Flash-Sale / Bot Checkout Spammer** | Endpoint `POST /api/v1/orders`. | Kuota PO harian (25 buket) habis diborong bot dalam milidetik (*over-booking*). | **Checkout Rate Limiter**: Maksimal 20 checkout / 15 menit per IP + Atomic database capacity verification. |
+| **Buffer Overflow DoS (Large Payload)** | Body parser `express.json()`. | Server memory exhaustion, Node.js process out-of-memory crash. | **Payload Capping (1MB Limit)** pada seluruh parser body JSON & URL-encoded. |
+| **Clickjacking & MIME Sniffing** | HTTP Header respons web. | Halaman admin disusupi iframe berbahaya (*clickjacking*), spoofing file. | **Helmet.js** (`X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `HSTS`). |
+
+---
+
+#### 2. Rincian Konfigurasi Pertahanan Backend (`apps/api`)
+
+1. **HTTP Security Headers (Helmet.js):**
+   - Diimplementasikan pada `apps/api/src/app.ts`:
+     ```typescript
+     app.use(
+       helmet({
+         crossOriginResourcePolicy: { policy: 'cross-origin' },
+         contentSecurityPolicy: false, // API murni JSON, CSP diterapkan di level Next.js Web App
+       })
+     );
+     ```
+   - Otomatis menginjeksi header: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Strict-Transport-Security`, `X-DNS-Prefetch-Control: off`.
+
+2. **Tiered Rate Limiter Bertingkat (`express-rate-limit`):**
+   - **Global API Limiter:** Maksimal 120 request per 1 menit per IP (mencegah DoS / scraping bot).
+   - **Auth Limiter (`/api/v1/auth/*`):** Maksimal 10 request per 15 menit per IP (mencegah brute force).
+   - **OTP Limiter (`/api/v1/otp/*`):** Maksimal 5 request per 5 menit per IP (mencegah WhatsApp spam).
+   - **Checkout Limiter (`/api/v1/orders`):** Maksimal 20 request per 15 menit per IP (mencegah bot order).
+   - *Test Suite Isolation:* Seluruh limiter memiliki klausul `skip: () => isTest` sehingga pengujian otomatis Vitest (96 tes) berjalan lancar tanpa terhalang limit 429.
+
+3. **Input Sanitization & Anti-Prototype Pollution (`sanitizer.ts`):**
+   - Seluruh payload masuk (`req.body`, `req.query`, `req.params`) dibersihkan secara rekursif.
+   - Menghapus tag script, iframe, protokol `javascript:`, dan event handler inline (`onerror=`, `onload=`).
+   - Mencegah *Object Prototype Pollution* dengan menolak modifikasi atribut `__proto__`, `constructor`, dan `prototype`.
+
+4. **Pembatasan Ukuran Body Request (Payload Capping):**
+   - Dibatasi secara eksplisit menjadi `1MB`:
+     ```typescript
+     app.use(express.json({ limit: '1mb' }));
+     app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+     ```
+
+---
+
+### 17.15 Tata Kelola Kebersihan File Scratch & Debugging (Zero-Residual Scratch & Clean Storage Rule)
+
+#### 1. Latar Belakang & Urgensi
+Selama siklus pengembangan, pengujian fitur (misal: verifikasi migrasi Supabase, cek kolom tabel, simulasi rate limiting) sering kali membutuhkan skrip ad-hoc (*scratch scripts*). Penumpukan file scratch yang tidak terkelola dapat mengakibatkan:
+- Penumpukan kapasitas penyimpanan (*storage bloat*).
+- Kebingungan bagi developer lain terkait file mana yang merupakan kode produksi vs kode uji coba sementara.
+- Risiko keamanan jika skrip scratch memuat kredensial atau connection string sensitif yang lupa dibersihkan.
+
+#### 2. Aturan Wajib Tata Kelola (Mandatory Cleanliness Protocols)
+1. **Zero-Residual Principle (Prinsip Nol Sisa):**  
+   Setiap developer atau agen AI yang membuat file pengujian sementara (seperti `scratch_*.mjs`, `temp_*.js`, `test_*.cjs`, atau file dump JSON) **WAJIB menghapus file tersebut segera setelah pengujian selesai**.
+2. **Larangan Commit File Scratch ke Repositori:**  
+   File dengan awalan `scratch_` atau berada di dalam folder temporer dilarang di-stage (`git add`) maupun di-commit ke branch utama repositori.
+3. **Penyimpanan Resmi Script Migrasi Permanen:**  
+   Jika sebuah skrip memiliki nilai historis atau diperlukan untuk pemulihan skema database di masa mendatang, skrip tersebut tidak boleh disimpan sebagai file scratch bebas, melainkan wajib dimasukkan ke dalam folder resmi `supabase/migrations/` atau `prisma/migrations/` dengan penamaan terstruktur.
+4. **Pemeriksaan Berkala (*Pre-Commit Cleanliness Check*):**  
+   Sebelum melakukan git commit dan push, pastikan perintah `git status` tidak mencantumkan file scratch yang tercecer di root workspace.
+
 
 

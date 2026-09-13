@@ -123,6 +123,34 @@ export default function LoginPage() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
+  // Check URL params for redirect reason notifications (Force Logout, Timeout, Logout Success)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const reason = params.get('reason');
+    const logout = params.get('logout');
+
+    if (reason === 'force_logout') {
+      showToast(
+        'Sesi Diputus oleh Admin 🛑',
+        'Sesi akun Anda telah di-revoke demi keamanan data. Silakan login kembali untuk memperbarui sesi.',
+        'warning'
+      );
+    } else if (reason === 'timeout') {
+      showToast(
+        'Sesi Berakhir (15 Menit) ⏳',
+        'Anda otomatis keluar karena tidak ada aktivitas selama 15 menit.',
+        'info'
+      );
+    } else if (logout === 'success') {
+      showToast(
+        'Logout Berhasil 🔒',
+        'Sesi akun Anda telah keluar dengan aman.',
+        'success'
+      );
+    }
+  }, []);
+
   const showToast = (title: string, desc: string, type: 'info' | 'success' | 'warning' = 'info') => {
     setToast({ show: true, title, desc, type });
     setTimeout(() => {

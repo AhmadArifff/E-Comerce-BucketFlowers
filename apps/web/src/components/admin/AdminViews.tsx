@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { TableSortHeader, type SortDirection } from './TableSortHeader';
 import { DateRangeFilter, type DateRange } from './DateRangeFilter';
@@ -684,10 +684,44 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCat, setSelectedCat] = useState('ALL');
   const [selectedProdBom, setSelectedProdBom] = useState<Product | null>(null);
+  const [productsList, setProductsList] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
   type ProductSortField = 'name' | 'category' | 'recipe' | 'rawCostHpp' | 'price' | 'margin' | 'clicks' | 'status';
   const [sortField, setSortField] = useState<ProductSortField | null>('clicks');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  const fetchProducts = useCallback(() => {
+    setIsLoadingProducts(true);
+    fetch(getApiUrl('/api/v1/products?limit=100'))
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && Array.isArray(res.data?.products) && res.data.products.length > 0) {
+          const mapped: Product[] = res.data.products.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            category: p.category_name || p.category_id?.replace('cat-', '') || 'Bouquet',
+            price: Number(p.price),
+            discountPrice: p.discount_price ? Number(p.discount_price) : undefined,
+            rawCostHpp: p.raw_cost_hpp ? Number(p.raw_cost_hpp) : Math.round(Number(p.price) * 0.42),
+            image: p.image_url || '/images/products/buket-mawar-merah-velvet.jpg',
+            description: p.description || '',
+            isReadyStock: Boolean(p.is_ready_stock),
+            leadTimeDays: p.lead_time_days || 1,
+            clicks: p.click_count || 120,
+            views: p.view_count || 450,
+          }));
+          setProductsList(mapped);
+        }
+      })
+      .catch((err) => console.error('[ProductsClicksView] Gagal load produk dari Supabase:', err))
+      .finally(() => setIsLoadingProducts(false));
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const handleSort = (field: ProductSortField) => {
     if (sortField === field) {
@@ -714,9 +748,10 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
   };
 
   const sortedProducts = useMemo(() => {
-    const list = MOCK_PRODUCTS.filter((prod) => {
+    const sourceList = productsList.length > 0 ? productsList : MOCK_PRODUCTS;
+    const list = sourceList.filter((prod) => {
       const matchName = prod.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchCat = selectedCat === 'ALL' || prod.category === selectedCat;
+      const matchCat = selectedCat === 'ALL' || prod.category.toLowerCase() === selectedCat.toLowerCase();
       return matchName && matchCat;
     });
 
@@ -820,9 +855,19 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
               {cat === 'ALL' ? 'Semua Kategori' : cat}
             </button>
           ))}
-          <span className="text-[11px] font-bold text-stone-400 ml-auto hidden sm:inline">
-            Menampilkan {sortedProducts.length} produk
-          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-[11px] font-bold text-stone-400 hidden sm:inline">
+              Menampilkan {sortedProducts.length} produk
+            </span>
+            <button
+              onClick={fetchProducts}
+              disabled={isLoadingProducts}
+              className="p-1.5 rounded-lg border border-stone-200 hover:bg-rose-50 text-stone-600 hover:text-rose-600 transition-colors disabled:opacity-50 cursor-pointer"
+              title="Sinkronkan data produk dari Supabase"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoadingProducts ? 'animate-spin text-rose-600' : ''}`} />
+            </button>
+          </div>
         </div>
       </div>
 

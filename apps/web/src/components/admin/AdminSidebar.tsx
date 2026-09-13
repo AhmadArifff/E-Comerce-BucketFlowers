@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -20,7 +21,10 @@ import {
   ArrowLeft,
   X,
   Users,
+  LogOut,
 } from 'lucide-react';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { showMagicToast } from '@/lib/magic-motion';
 
 export type AdminTab =
   | 'DASHBOARD'
@@ -94,9 +98,20 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     },
   ];
 
+  const router = useRouter();
+  const { user, logout } = useAuthStore();
+
   const handleSelectTab = (id: AdminTab) => {
     setActiveTab(id);
     setIsMobileOpen(false);
+  };
+
+  const handleSidebarLogout = () => {
+    setIsMobileOpen(false);
+    const userName = user?.name || 'Admin Atelier';
+    logout();
+    showMagicToast('Logout Berhasil 🔒', `Sesi ${userName} telah keluar dengan aman.`, '👋');
+    router.push('/login?logout=success');
   };
 
   return (
@@ -223,6 +238,18 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             <ArrowLeft className="w-4 h-4 flex-shrink-0" />
             {!isCollapsed && <span>Kembali ke Toko</span>}
           </Link>
+
+          <button
+            type="button"
+            onClick={handleSidebarLogout}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer ${
+              isCollapsed ? 'justify-center' : ''
+            }`}
+            title="Keluar / Logout dari Panel Admin"
+          >
+            <LogOut className="w-4 h-4 flex-shrink-0 text-rose-600" />
+            {!isCollapsed && <span>Keluar / Logout</span>}
+          </button>
         </div>
       </aside>
     </>

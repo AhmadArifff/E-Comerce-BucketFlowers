@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Users,
   Shield,
@@ -24,17 +24,66 @@ import {
 } from 'lucide-react';
 import { useUserAuditStore, type UserSessionItem, type SessionAuditLog } from '@/stores/useUserAuditStore';
 import { showMagicToast } from '@/lib/magic-motion';
+import { getApiUrl } from '@/lib/api-client';
 import type { Role } from '@chenille/shared';
 
 export const UsersManagementView: React.FC = () => {
   const {
     users,
     auditLogs,
+    isLoading,
+    fetchUsers,
+    fetchAuditLogs,
     forceLogoutUser,
     toggleUserStatus,
     resetPasswordRequest,
     recordAuditLog,
   } = useUserAuditStore();
+
+  // 1. Initial Load & Real-Time Auto-Sync Polling (Every 3 seconds)
+  useEffect(() => {
+    fetchUsers();
+    fetchAuditLogs();
+
+    const interval = setInterval(() => {
+      fetchUsers();
+      fetchAuditLogs();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [fetchUsers, fetchAuditLogs]);
+
+  // 2. Instant Cross-Tab & Window Focus Synchronization
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'chenille_user_session_sync' || e.key === 'chenille_auth_storage') {
+        fetchUsers();
+        fetchAuditLogs();
+      }
+    };
+
+    const handleFocus = () => {
+      fetchUsers();
+      fetchAuditLogs();
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchUsers();
+        fetchAuditLogs();
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [fetchUsers, fetchAuditLogs]);
 
   const [activeSubTab, setActiveSubTab] = useState<'USERS' | 'LOGS'>('USERS');
   const [searchQuery, setSearchQuery] = useState('');
@@ -91,48 +140,42 @@ export const UsersManagementView: React.FC = () => {
     );
   };
 
-  const handleCreateUser = (e: React.FormEvent) => {
+  const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUserName.trim() || !newUserEmail.trim()) {
       showMagicToast('Form Belum Lengkap', 'Nama dan Email pengguna wajib diisi.', '⚠️');
       return;
     }
 
-    const createdId = `usr-${Date.now()}`;
-    const newUser: UserSessionItem = {
-      id: createdId,
-      name: newUserName.trim(),
-      email: newUserEmail.trim(),
-      phone: newUserPhone.trim() || '0812' + Math.floor(10000000 + Math.random() * 90000000),
-      role: newUserRole,
-      avatarEmoji: newUserRole === 'SUPER_ADMIN' ? '👑' : newUserRole === 'FLORIST_STAFF' ? '🌷' : '🌸',
-      status: 'ACTIVE',
-      isOnline: false,
-      lastActiveText: 'Belum pernah login',
-      lastActiveTimestamp: Date.now(),
-      currentDevice: 'Belum terdeteksi',
-      ipAddress: '-',
-    };
+    const phone = newUserPhone.trim() || '0812' + Math.floor(10000000 + Math.random() * 90000000);
 
-    useUserAuditStore.setState((prev) => ({
-      users: [newUser, ...prev.users],
-    }));
+    try {
+      const res = await fetch(getApiUrl('/api/v1/admin/users'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newUserName.trim(),
+          email: newUserEmail.trim(),
+          phone,
+          role: newUserRole,
+        }),
+      });
 
-    recordAuditLog({
-      userId: createdId,
-      userName: newUser.name,
-      userRole: newUser.role,
-      eventType: 'LOGIN_SUCCESS',
-      device: 'Admin Console Registration',
-      ipAddress: 'Internal System',
-      notes: `Akun baru didaftarkan secara manual oleh Super Admin dengan hak akses ${newUserRole}.`,
-    });
-
-    setIsAddUserModalOpen(false);
-    setNewUserName('');
-    setNewUserEmail('');
-    setNewUserPhone('');
-    showMagicToast('Pengguna Ditambahkan! ✨', `${newUser.name} berhasil didaftarkan ke sistem.`, '🎉');
+      const json = await res.json();
+      if (json.success) {
+        showMagicToast('Pengguna Ditambahkan! ✨', `${newUserName} berhasil disimpan ke database Supabase.`, '🎉');
+        setIsAddUserModalOpen(false);
+        setNewUserName('');
+        setNewUserEmail('');
+        setNewUserPhone('');
+        fetchUsers();
+        fetchAuditLogs();
+      } else {
+        showMagicToast('Gagal Menambah Akun', json.error || 'Terjadi kesalahan sistem.', '⚠️');
+      }
+    } catch (err: any) {
+      showMagicToast('Gagal Menambah Akun', err.message, '⚠️');
+    }
   };
 
   const exportAuditLogsToCsv = () => {
@@ -167,9 +210,9 @@ export const UsersManagementView: React.FC = () => {
             <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-black uppercase tracking-wider">
               Audit Trail Keamanan
             </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-              Live Session Guard
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Live Auto-Sync (3s)
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-stone-900 mt-1.5 flex items-center gap-2">
@@ -182,6 +225,20 @@ export const UsersManagementView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => {
+              fetchUsers();
+              fetchAuditLogs();
+              showMagicToast('Data Diperbarui 🔄', 'Daftar pengguna & log sesi berhasil disinkronkan dari Supabase.', '✨');
+            }}
+            disabled={isLoading}
+            className="px-3 py-2 bg-stone-50 hover:bg-stone-100 text-stone-700 border border-stone-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            title="Sinkronkan dengan Supabase"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-indigo-600 ${isLoading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+
           <button
             onClick={() => setIsAddUserModalOpen(true)}
             className="px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-rose-600 hover:from-indigo-700 hover:to-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
