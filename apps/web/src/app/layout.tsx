@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans, Cormorant_Garamond, Playfair_Display, Fredoka, Outfit, Quicksand } from 'next/font/google';
 import './globals.css';
 import { MagicToastContainer } from '@/components/storefront/MagicToastContainer';
+import { SessionTimeoutWatcher } from '@/components/auth/SessionTimeoutWatcher';
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -213,6 +214,7 @@ export default function RootLayout({
       <body className="font-sans antialiased bg-theme-bg text-theme-text-main min-h-screen flex flex-col">
         {children}
         <MagicToastContainer />
+        <SessionTimeoutWatcher />
       </body>
     </html>
   );

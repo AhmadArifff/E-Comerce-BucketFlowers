@@ -2880,3 +2880,92 @@ flowchart TD
 3. **Browser History Support:** Tombol Back `[⬅️]` dan Forward `[➡️]` pada browser berfungsi mulus berpindah antar-tab admin tanpa perlu full page reload.
 4. **Hydration-Safe:** Tidak memicu hydration mismatch atau flickering berkat pengecekan `typeof window !== 'undefined'` dan verifikasi `VALID_TABS`.
 
+---
+
+### 17.10 Arsitektur Manajemen Pengguna, Sesi 15-Menit Inactivity Timeout & Audit Log (Pola admin-sunjaya) — v2.7
+
+#### 17.10.1 Root Cause Kasus Auto-Login "Ahmad" di Landing Page
+Berdasarkan investigasi menyeluruh pada arsitektur state management frontend:
+1. **Penyebab Utama:**
+   - Pada file `apps/web/src/stores/useAuthStore.ts`, state default awal sebelumnya terdefinisi dengan `user: DEFAULT_MEMBER` dan `isAuthenticated: true`.
+   - Ketika pengguna pernah menguji login akun Super Admin (`DEFAULT_ADMIN` yang bernama *"Ahmad Arif (Owner Atelier)"*), Zustand middleware `persist` menyimpan objek tersebut ke dalam `localStorage['chenille_auth_storage']`.
+   - Ketika pengguna membuka Landing Page (`/`), komponen `Navbar.tsx` membaca `user` dari `useAuthStore` dan mendapati nama *"Ahmad Arif"*, sehingga langsung merender profil avatar Ahmad Arif dengan mahkota 👑 seolah-olah sudah login.
+2. **Solusi Definitif (Zero-State Guest Principle):**
+   - Mengubah initial state `useAuthStore` menjadi murni tamu: `user: null` dan `isAuthenticated: false`.
+   - Mengintegrasikan hook `onRehydrateStorage` pada Zustand: jika data yang tersimpan di `localStorage` tidak memiliki stempel aktivitas atau stempel aktivitasnya sudah lewat dari 15 menit, sistem secara otomatis membersihkan sesi menjadi `null` (*auto-expire*).
+   - Pengunjung publik yang membuka Landing Page kini 100% selalu berstatus **Tamu (Guest)** dengan tombol **"Masuk"**, tanpa pernah ada akun yang login secara otomatis.
+
+---
+
+#### 17.10.2 Mekanisme Proteksi Sesi: 15-Minute Inactivity Auto-Logout
+Untuk memenuhi standar kepatuhan keamanan e-commerce enterprise dan proteksi privasi pelanggan/admin pada perangkat publik (misal laptop kasir atau ponsel bersama):
+
+1. **Aturan Bisnis:**
+   - Sesi pengguna (baik Admin maupun Member Pelanggan) hanya bertahan selama pengguna **aktif berinteraksi**.
+   - Jika pengguna **tidak melakukan aktivitas apa pun selama 15 menit** berturut-turut, sistem wajib melakukan **Auto-Logout**.
+2. **Arsitektur Teknis (`SessionTimeoutWatcher.tsx`):**
+   - **Deteksi Interaksi User (DOM Events):** Memantau event `mousedown`, `keydown`, `scroll`, `touchstart`, dan `mousemove` (dibatasi/throttled setiap 4 detik untuk performa rendering ringan).
+   - **Cross-Tab Synchronization:** Setiap ada interaksi, stempel waktu `Date.now()` dicatat di memori React dan `localStorage['chenille_last_activity']`, sehingga aktivitas di satu tab browser akan otomatis memperpanjang sesi di tab browser lainnya.
+   - **Peringatan 60 Detik Terakhir (Countdown Banner):** Ketika waktu tidak aktif tersisa $\le 60$ detik (menit ke-14), muncul floating banner interaktif di pojok kanan bawah dengan countdown detik dan tombol `[Tetap Masuk (Perpanjang)]`.
+   - **Eksekusi Auto-Logout (Menit ke-15):**
+     - Sesi di-logout seketika via `logout('TIMEOUT_15MIN')`.
+     - Muncul modal notifikasi khusus *"Sesi Berakhir (15 Menit Tidak Aktif) ⏳"*.
+     - Jika pengguna berada di dalam panel admin (`/admin`), sistem langsung me-redirect ke `/login?reason=timeout`.
+     - Tercatat otomatis ke dalam log audit dengan tipe event `LOGOUT_TIMEOUT_15MIN`.
+
+```mermaid
+flowchart TD
+    A["User Berinteraksi (Klik, Ketik, Scroll, Sentuh)"] --> B["Throttled Activity Tracker (4s)"]
+    B --> C["Update lastActivity = Date.now()
+    & Sync localStorage['chenille_last_activity']"]
+    
+    D["Watcher Interval Checker (Setiap 2.5s)"] --> E{"Hitung Durasi Inaktif (elapsed):
+    now - lastActivity"}
+    
+    E -->|< 14 Menit| F["Sesi Normal & Aman"]
+    E -->|14 - 15 Menit| G["Tampilkan Warning Countdown Banner:
+    'Sesi berakhir dalam X detik'
+    Tombol: [Tetap Masuk]"]
+    
+    G -->|User Klik 'Tetap Masuk'| B
+    
+    E -->|>= 15 Menit (900.000 ms)| H["EKSEKUSI AUTO-LOGOUT 15 MENIT:
+    1. Panggil logout('TIMEOUT_15MIN')
+    2. Catat Audit Log: LOGOUT_TIMEOUT_15MIN
+    3. Hapus Kredensial di LocalStorage
+    4. Tampilkan Modal Notifikasi Keamanan
+    5. Jika di /admin -> Redirect ke /login?reason=timeout"]
+```
+
+---
+
+#### 17.10.3 Menu Pengawasan Pengguna & Audit Log (Pola admin-sunjaya)
+Mengadopsi pola pengawasan terpusat seperti pada menu **Pengguna** di sistem rujukan `admin-sunjaya` (`adminShuttleV3`):
+
+1. **4 Kartu Metrik KPI Pengguna:**
+   - **Total Akun Terdaftar:** Menghitung seluruh akun Super Admin, Staff Florist, dan Member Pelanggan.
+   - **Sedang Online (Live Sessions):** Indikator real-time dengan animasi titik hijau berkedip 🟢 untuk akun yang berinteraksi dalam 15 menit terakhir.
+   - **Login Hari Ini:** Jumlah total sesi login sukses sepanjang hari berjalan.
+   - **Auto-Timeout 15 Menit:** Jumlah sesi yang diamankan secara otomatis oleh sistem karena tidak aktif.
+2. **Tab 1: Manajemen Akun & Sesi Aktif:**
+   - Tabel direktori pengguna lengkap:
+     - Avatar emoji, Nama Pengguna, Alamat Email, Nomor WhatsApp.
+     - Badge Peran: `👑 SUPER ADMIN`, `🌷 STAFF FLORIST`, `🌸 MEMBER`.
+     - Status Sesi: `🟢 Online Sekarang` vs `⚪ Offline`.
+     - Informasi Perangkat & IP: e.g. *Windows 11 • Chrome 128 (180.252.164.21)* atau *iPhone 15 • Safari Mobile*.
+     - Waktu Terakhir Aktif.
+     - **Aksi Keamanan Admin:**
+       - `[Tendang Sesi 🛑]`: Fitur *Force Logout* untuk memutuskan sesi pengguna secara paksa jika terdeteksi aktivitas mencurigakan.
+       - `[Kirim Link Reset Kata Sandi 🔑]`: Mengirimkan token reset password langsung ke nomor WhatsApp akun.
+       - `[Kunci / Buka Akun 🔒]`: Membekukan akun pengguna seketika.
+3. **Tab 2: Log Audit Keluar-Masuk Real-Time (Live Stream):**
+   - Menampilkan kronologi seluruh aktivitas autentikasi:
+     - `🟢 LOGIN_SUCCESS`: Login berhasil (beserta nama, peran, IP, dan perangkat).
+     - `🟡 LOGOUT_TIMEOUT_15MIN`: Sesi ditutup otomatis setelah 15 menit tanpa interaksi.
+     - `⚪ LOGOUT_MANUAL`: Pengguna mengklik tombol Keluar secara mandiri.
+     - `🛑 FORCE_LOGOUT_ADMIN`: Sesi diputus paksa oleh administrator.
+     - `⚠️ LOGIN_FAILED`: Percobaan autentikasi gagal.
+   - Fitur Filter Log: Berdasarkan tipe event dan pencarian nama/IP.
+   - Fitur **Ekspor CSV**: Mengunduh seluruh rekap riwayat log audit untuk kebutuhan pelaporan keamanan berkala.
+
+

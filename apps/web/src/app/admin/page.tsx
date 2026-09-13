@@ -24,6 +24,7 @@ import {
   AddProductModal,
 } from '@/components/admin/AdminViews';
 import { ProductCtrAnalyticsCard } from '@/components/admin/ProductCtrAnalyticsCard';
+import { UsersManagementView } from '@/components/admin/UsersManagementView';
 
 const VALID_TABS: AdminTab[] = [
   'DASHBOARD',
@@ -35,6 +36,7 @@ const VALID_TABS: AdminTab[] = [
   'COMPLAINTS',
   'WHATSAPP',
   'COD_MAPS',
+  'USERS',
   'MAINTENANCE',
   'SETTINGS',
 ];
@@ -202,7 +204,14 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* 10. STORE MAINTENANCE & THEMES TAB */}
+          {/* 10. USERS & SESSION AUDIT TAB (POLA ADMIN-SUNJAYA) */}
+          {activeTab === 'USERS' && (
+            <div className="admin-view-fade">
+              <UsersManagementView />
+            </div>
+          )}
+
+          {/* 11. STORE MAINTENANCE & THEMES TAB */}
           {activeTab === 'MAINTENANCE' && (
             <div className="admin-view-fade">
               <MaintenanceThemeView />

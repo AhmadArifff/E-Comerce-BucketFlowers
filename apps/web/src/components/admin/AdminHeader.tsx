@@ -66,6 +66,10 @@ const TAB_TITLES: Record<AdminTab, { title: string; subtitle: string }> = {
     title: 'Titik Temu COD Maps (Geofencing Depok)',
     subtitle: 'Kelola titik serah terima bebas ongkir radius 5 KM di area kampus UI, Margonda & Margo City.',
   },
+  USERS: {
+    title: 'Pengguna & Log Sesi (Pola admin-sunjaya)',
+    subtitle: 'Pantau pengguna online secara real-time, riwayat login/logout, dan pengamanan sesi otomatis 15 menit.',
+  },
   MAINTENANCE: {
     title: 'Mode Pemeliharaan & Kontrol Tema',
     subtitle: 'Pilihan tema visual etalase toko (A, B, C), live preview perangkat, dan sakelar operasional.',

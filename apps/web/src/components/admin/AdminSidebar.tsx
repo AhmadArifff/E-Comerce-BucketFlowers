@@ -19,6 +19,7 @@ import {
   Sparkles,
   ArrowLeft,
   X,
+  Users,
 } from 'lucide-react';
 
 export type AdminTab =
@@ -31,6 +32,7 @@ export type AdminTab =
   | 'COMPLAINTS'
   | 'WHATSAPP'
   | 'COD_MAPS'
+  | 'USERS'
   | 'MAINTENANCE'
   | 'SETTINGS';
 
@@ -85,6 +87,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     {
       title: 'Sistem & Toko',
       items: [
+        { id: 'USERS', label: 'Pengguna & Log Sesi', icon: Users, badge: 'Pola Sunjaya', badgeColor: 'bg-indigo-600 text-white' },
         { id: 'MAINTENANCE', label: 'Mode Pemeliharaan & Tema', icon: Palette },
         { id: 'SETTINGS', label: 'Pengaturan Toko', icon: Settings },
       ],
