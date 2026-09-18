@@ -27,6 +27,7 @@ import {
 } from '@/components/admin/AdminViews';
 import { ProductCtrAnalyticsCard } from '@/components/admin/ProductCtrAnalyticsCard';
 import { UsersManagementView } from '@/components/admin/UsersManagementView';
+import { CampaignsView } from '@/components/admin/CampaignsView';
 
 const VALID_TABS: AdminTab[] = [
   'DASHBOARD',
@@ -35,6 +36,7 @@ const VALID_TABS: AdminTab[] = [
   'PRODUCTS',
   'BOM',
   'PROMOS',
+  'CAMPAIGNS',
   'COMPLAINTS',
   'WHATSAPP',
   'COD_MAPS',
@@ -211,6 +213,13 @@ export default function AdminPage() {
           {activeTab === 'PROMOS' && (
             <div className="admin-view-fade">
               <PromosView />
+            </div>
+          )}
+
+          {/* 6.5. CAMPAIGNS & GAMIFICATION TAB */}
+          {activeTab === 'CAMPAIGNS' && (
+            <div className="admin-view-fade">
+              <CampaignsView />
             </div>
           )}
 

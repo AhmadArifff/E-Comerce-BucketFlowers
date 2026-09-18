@@ -55,6 +55,10 @@ const TAB_TITLES: Record<AdminTab, { title: string; subtitle: string }> = {
     title: 'Pemasaran & Kupon Diskon',
     subtitle: 'Kelola kode kupon promo, kuota penukaran diskon, dan batas masa berlaku kampanye.',
   },
+  CAMPAIGNS: {
+    title: 'Kampanye & Loyalitas Interaktif',
+    subtitle: 'Kelola Daily Attendance, Kartu Stamp Digital, Promo COD Radius dinamis, dan Analitik Telemetri.',
+  },
   COMPLAINTS: {
     title: 'Komplain & Garansi Unboxing 100%',
     subtitle: 'Verifikasi video unboxing pelanggan, persetujuan klaim ganti baru, dan rating kepuasan.',

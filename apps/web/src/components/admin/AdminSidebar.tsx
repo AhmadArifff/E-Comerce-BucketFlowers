@@ -22,6 +22,7 @@ import {
   X,
   Users,
   LogOut,
+  Gift,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { showMagicToast } from '@/lib/magic-motion';
@@ -33,6 +34,7 @@ export type AdminTab =
   | 'PRODUCTS'
   | 'BOM'
   | 'PROMOS'
+  | 'CAMPAIGNS'
   | 'COMPLAINTS'
   | 'WHATSAPP'
   | 'COD_MAPS'
@@ -78,6 +80,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         { id: 'PRODUCTS', label: 'Produk & Klik Pelanggan', icon: Package },
         { id: 'BOM', label: 'Bahan Baku & Resep BOM', icon: Layers },
         { id: 'PROMOS', label: 'Pemasaran & Kupon', icon: Tag },
+        { id: 'CAMPAIGNS', label: 'Loyalitas & Kampanye', icon: Gift, badge: 'Live', badgeColor: 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' },
       ],
     },
     {
