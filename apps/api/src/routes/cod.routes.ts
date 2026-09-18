@@ -125,7 +125,9 @@ router.get('/', async (req: Request, res: Response) => {
 // Calculate distance from Atelier and determine dynamic Free Shipping geofence
 router.post('/calculate-distance', async (req: Request, res: Response) => {
   try {
-    let { latitude, longitude, google_maps_url } = req.body;
+    let latitude = req.body.latitude !== undefined ? req.body.latitude : req.body.target_lat;
+    let longitude = req.body.longitude !== undefined ? req.body.longitude : req.body.target_lng;
+    let google_maps_url = req.body.google_maps_url;
 
     if ((latitude === undefined || longitude === undefined) && google_maps_url) {
       const extracted = extractCoordsFromGoogleMapsUrl(google_maps_url);
@@ -178,7 +180,11 @@ router.post('/calculate-distance', async (req: Request, res: Response) => {
       console.warn('Failed to query campaign_settings for COD, using default:', cErr);
     }
 
-    const orderAmount = req.body.order_amount ? parseFloat(req.body.order_amount) : 0;
+    const orderAmount = req.body.order_amount !== undefined
+      ? parseFloat(req.body.order_amount)
+      : req.body.subtotal !== undefined
+      ? parseFloat(req.body.subtotal)
+      : 0;
     const maxRadius = codCampaign.cod_max_radius_km || 5.0;
     const isWithinRadius = distanceKm <= maxRadius;
     const meetsMinSpend = orderAmount >= codCampaign.cod_min_spend;
@@ -230,6 +236,11 @@ router.post('/calculate-distance', async (req: Request, res: Response) => {
         atelier_origin: atelierCoords,
         distance_km: distanceKm,
         is_free_shipping: isFreeShipping,
+        is_within_subsidy_radius: isWithinRadius,
+        is_within_radius: isWithinRadius,
+        meets_min_spend: meetsMinSpend,
+        subsidy_amount: Math.max(0, baseDeliveryFee - finalDeliveryFee),
+        nudge_spend_needed: Math.max(0, codCampaign.cod_min_spend - orderAmount),
         promo_applied: promoApplied,
         max_radius_km: maxRadius,
         delivery_fee: finalDeliveryFee,

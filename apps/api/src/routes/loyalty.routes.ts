@@ -7,16 +7,16 @@ const router = Router();
 // User daily attendance check-in
 router.post('/attendance/check-in', async (req: Request, res: Response) => {
   try {
-    const { user_phone } = req.body;
+    const rawPhone = req.body.user_phone || req.body.phone;
 
-    if (!user_phone || typeof user_phone !== 'string' || user_phone.trim().length < 9) {
+    if (!rawPhone || typeof rawPhone !== 'string' || rawPhone.trim().length < 9) {
       return res.status(400).json({
         success: false,
         error: 'Nomor WhatsApp/telepon yang valid wajib disertakan untuk absensi.',
       });
     }
 
-    const cleanPhone = user_phone.trim();
+    const cleanPhone = rawPhone.trim();
 
     // 1. Check if campaign settings allow attendance
     const campaignRes = await pool.query(`
@@ -109,6 +109,15 @@ router.post('/attendance/check-in', async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
+    if (error.code === '23505') {
+      return res.status(409).json({
+        success: false,
+        error: 'Anda sudah melakukan absensi hari ini! Silakan kembali lagi besok untuk merawat bunga.',
+        data: {
+          already_checked_in: true,
+        },
+      });
+    }
     console.error('[Attendance Check-In Error]', error);
     return res.status(500).json({
       success: false,
@@ -275,35 +284,61 @@ router.get('/stamps/my-card', async (req: Request, res: Response) => {
 // Claim reward when 5 stamps reached
 router.post('/stamps/claim-reward', async (req: Request, res: Response) => {
   try {
-    const { user_phone } = req.body;
+    const rawPhone = req.body.user_phone || req.body.phone;
+    const cardId = req.body.card_id;
 
-    if (!user_phone || typeof user_phone !== 'string') {
+    if (!cardId && (!rawPhone || typeof rawPhone !== 'string')) {
       return res.status(400).json({
         success: false,
-        error: 'Nomor telepon wajib disertakan untuk klaim hadiah.',
+        error: 'Nomor telepon atau card_id wajib disertakan untuk klaim hadiah.',
       });
     }
 
-    const cleanPhone = user_phone.trim();
+    const cleanPhone = rawPhone ? rawPhone.trim() : null;
 
     // Find card that is eligible
-    const cardRes = await pool.query(
-      `SELECT id, stamps_collected, target_stamps, card_status
-       FROM user_stamp_cards
-       WHERE user_phone = $1 AND card_status IN ('ACTIVE', 'COMPLETED') AND stamps_collected >= target_stamps
-       ORDER BY created_at DESC
-       LIMIT 1;`,
-      [cleanPhone]
-    );
+    let cardRes;
+    if (cardId) {
+      cardRes = await pool.query(
+        `SELECT id, stamps_collected, target_stamps, card_status, user_phone
+         FROM user_stamp_cards
+         WHERE id = $1
+         LIMIT 1;`,
+        [cardId]
+      );
+    } else {
+      cardRes = await pool.query(
+        `SELECT id, stamps_collected, target_stamps, card_status, user_phone
+         FROM user_stamp_cards
+         WHERE user_phone = $1 AND card_status IN ('ACTIVE', 'COMPLETED') AND stamps_collected >= target_stamps
+         ORDER BY created_at DESC
+         LIMIT 1;`,
+        [cleanPhone]
+      );
+    }
 
     if (cardRes.rows.length === 0) {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
-        error: 'Stempel Anda belum mencapai target (minimal 5 stempel) atau sudah diklaim.',
+        error: 'Kartu stempel tidak ditemukan.',
       });
     }
 
     const currentCard = cardRes.rows[0];
+
+    if (currentCard.card_status === 'REDEEMED') {
+      return res.status(400).json({
+        success: false,
+        error: 'Hadiah pada kartu stempel ini sudah pernah diklaim.',
+      });
+    }
+
+    if (currentCard.stamps_collected < currentCard.target_stamps) {
+      return res.status(400).json({
+        success: false,
+        error: `Stempel Anda (${currentCard.stamps_collected}/${currentCard.target_stamps}) belum mencapai target untuk klaim hadiah.`,
+      });
+    }
 
     // Mark as REDEEMED
     await pool.query(

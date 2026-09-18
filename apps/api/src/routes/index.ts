@@ -27,6 +27,7 @@ apiV1Router.use('/payment', paymentRoutes);
 apiV1Router.use('/otp', otpLimiter, otpRoutes);
 apiV1Router.use('/logistics', logisticsRoutes);
 apiV1Router.use('/cod-points', codRoutes);
+apiV1Router.use('/cod', codRoutes);
 apiV1Router.use('/raw-materials', materialsRoutes);
 apiV1Router.use('/admin', adminRoutes);
 apiV1Router.use('/coupons', couponsRoutes);
