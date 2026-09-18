@@ -152,7 +152,76 @@ router.post('/calculate-distance', async (req: Request, res: Response) => {
       lonNum
     );
 
-    const isFreeShipping = distanceKm <= atelierCoords.max_free_radius_km;
+    // Retrieve active campaign promo rules for COD
+    let codCampaign = {
+      cod_promo_enabled: true,
+      cod_max_radius_km: atelierCoords.max_free_radius_km || 5.0,
+      cod_subsidy_type: 'FREE_100',
+      cod_subsidy_value: 100.0,
+      cod_min_spend: 75000.0,
+      cod_promo_banner_text: '🎉 Promo Area: Gratis Ongkir COD Titik Temu hingga 5 KM!',
+    };
+
+    try {
+      const campRes = await pool.query(
+        `SELECT cod_promo_enabled, cod_max_radius_km::float as cod_max_radius_km, 
+                cod_subsidy_type, cod_subsidy_value::float as cod_subsidy_value,
+                cod_min_spend::float as cod_min_spend, cod_promo_banner_text
+         FROM campaign_settings
+         WHERE id = 'ATELIER_CAMPAIGN_DEFAULT'
+         LIMIT 1;`
+      );
+      if (campRes.rows.length > 0) {
+        codCampaign = { ...codCampaign, ...campRes.rows[0] };
+      }
+    } catch (cErr) {
+      console.warn('Failed to query campaign_settings for COD, using default:', cErr);
+    }
+
+    const orderAmount = req.body.order_amount ? parseFloat(req.body.order_amount) : 0;
+    const maxRadius = codCampaign.cod_max_radius_km || 5.0;
+    const isWithinRadius = distanceKm <= maxRadius;
+    const meetsMinSpend = orderAmount >= codCampaign.cod_min_spend;
+
+    const baseDeliveryFee = 10000;
+    let finalDeliveryFee = baseDeliveryFee;
+    let promoApplied = false;
+    let message = '';
+    let subsidyLabel = '';
+
+    if (codCampaign.cod_promo_enabled && isWithinRadius) {
+      if (meetsMinSpend || orderAmount === 0) {
+        // Apply full subsidy scheme
+        promoApplied = true;
+        if (codCampaign.cod_subsidy_type === 'FREE_100') {
+          finalDeliveryFee = 0;
+          subsidyLabel = 'Gratis Ongkir 100%';
+        } else if (codCampaign.cod_subsidy_type === 'DISCOUNT_50') {
+          finalDeliveryFee = Math.round(baseDeliveryFee * 0.5);
+          subsidyLabel = 'Subsidi 50%';
+        } else if (codCampaign.cod_subsidy_type === 'FLAT_AMOUNT') {
+          finalDeliveryFee = Math.max(0, baseDeliveryFee - codCampaign.cod_subsidy_value);
+          subsidyLabel = `Potongan Rp ${codCampaign.cod_subsidy_value.toLocaleString('id-ID')}`;
+        } else if (codCampaign.cod_subsidy_type === 'CUSTOM_PERCENT') {
+          finalDeliveryFee = Math.round(baseDeliveryFee * (1 - codCampaign.cod_subsidy_value / 100));
+          subsidyLabel = `Diskon ${codCampaign.cod_subsidy_value}%`;
+        }
+
+        message = finalDeliveryFee === 0
+          ? `🎉 Bebas Biaya Antar! Lokasi berjarak ${distanceKm} KM (dalam radius promo ${maxRadius} KM). Hemat Rp ${baseDeliveryFee.toLocaleString('id-ID')}.`
+          : `🎉 Promo Radius Aktif (${subsidyLabel})! Biaya COD menjadi Rp ${finalDeliveryFee.toLocaleString('id-ID')}.`;
+      } else {
+        // Within radius but below minimum spend
+        finalDeliveryFee = Math.round(baseDeliveryFee * 0.5); // Fallback half subsidy
+        const missing = codCampaign.cod_min_spend - orderAmount;
+        message = `💡 Lokasi dalam radius ${maxRadius} KM! Tambah belanja Rp ${missing.toLocaleString('id-ID')} lagi untuk mendapatkan Gratis Ongkir 100% (saat ini subsidi 50%: Rp ${finalDeliveryFee.toLocaleString('id-ID')}).`;
+      }
+    } else {
+      finalDeliveryFee = baseDeliveryFee;
+      message = `Di luar radius promo COD (${distanceKm} KM > ${maxRadius} KM). Biaya penyerahan: Rp ${baseDeliveryFee.toLocaleString('id-ID')}.`;
+    }
+
+    const isFreeShipping = finalDeliveryFee === 0;
 
     return res.json({
       success: true,
@@ -161,11 +230,17 @@ router.post('/calculate-distance', async (req: Request, res: Response) => {
         atelier_origin: atelierCoords,
         distance_km: distanceKm,
         is_free_shipping: isFreeShipping,
-        max_radius_km: atelierCoords.max_free_radius_km,
-        delivery_fee: isFreeShipping ? 0 : 10000,
-        message: isFreeShipping
-          ? `Bebas Biaya Antar! Lokasi berjarak ${distanceKm} KM dari atelier (di dalam radius ${atelierCoords.max_free_radius_km} KM).`
-          : `Di luar radius bebas ongkir (${distanceKm} KM > ${atelierCoords.max_free_radius_km} KM). Biaya penyerahan COD: Rp 10.000.`,
+        promo_applied: promoApplied,
+        max_radius_km: maxRadius,
+        delivery_fee: finalDeliveryFee,
+        original_fee: baseDeliveryFee,
+        subsidy_label: subsidyLabel,
+        campaign_info: {
+          banner_text: codCampaign.cod_promo_banner_text,
+          min_spend: codCampaign.cod_min_spend,
+          subsidy_type: codCampaign.cod_subsidy_type,
+        },
+        message,
       },
     });
   } catch (error: any) {
