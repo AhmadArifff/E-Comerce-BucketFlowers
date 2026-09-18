@@ -1,11 +1,49 @@
 'use client';
 
-import React from 'react';
-import { Sparkles, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Clock, Truck } from 'lucide-react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { getApiUrl } from '@/lib/api-client';
 
 export const AnnouncementBar: React.FC = () => {
   const { theme } = useThemeStore();
+  const [campaign, setCampaign] = useState<{
+    cod_promo_enabled?: boolean;
+    cod_promo_banner_text?: string;
+    cod_max_radius_km?: number;
+  } | null>(null);
+
+  const [quota, setQuota] = useState<{
+    orders_today?: number;
+    daily_limit?: number;
+    remaining_slots?: number;
+  }>({
+    orders_today: 12,
+    daily_limit: 20,
+    remaining_slots: 8,
+  });
+
+  useEffect(() => {
+    // 1. Fetch live campaign settings
+    fetch(getApiUrl('/api/v1/campaigns'))
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data) {
+          setCampaign(res.data);
+        }
+      })
+      .catch(() => {});
+
+    // 2. Fetch live daily quota throttling
+    fetch(getApiUrl('/api/v1/orders/quota-status'))
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data) {
+          setQuota(res.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const getBarStyle = () => {
     if (theme === 'tema-b') {
@@ -45,9 +83,15 @@ export const AnnouncementBar: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2 text-center sm:text-left">
         <div className="flex items-center gap-2 justify-center w-full sm:w-auto">
-          <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-          <span>
-            {theme === 'tema-b' ? (
+          {campaign?.cod_promo_enabled ? (
+            <Truck className="w-3.5 h-3.5 animate-pulse shrink-0" />
+          ) : (
+            <Sparkles className="w-3.5 h-3.5 animate-pulse shrink-0" />
+          )}
+          <span className="truncate max-w-xl">
+            {campaign?.cod_promo_enabled && campaign.cod_promo_banner_text ? (
+              <strong>{campaign.cod_promo_banner_text}</strong>
+            ) : theme === 'tema-b' ? (
               <>
                 ✦ <strong>Musim Wisuda 2026:</strong> Free Greeting Card Emas & Selempang Nama
               </>
@@ -65,11 +109,12 @@ export const AnnouncementBar: React.FC = () => {
         <div className="hidden sm:flex items-center gap-4 text-[11px] font-bold">
           <div className={bar.badgeClass}>
             <Clock className="w-3 h-3 inline mr-1" />
-            <span>Sisa Kuota Hari Ini: 8 / 20 Buket</span>
+            <span>Sisa Kuota Hari Ini: {quota.remaining_slots ?? 8} / {quota.daily_limit ?? 20} Buket</span>
           </div>
-          <span>Bebas Ongkir COD UI & Margo City</span>
+          <span>Bebas Ongkir COD Radius {campaign?.cod_max_radius_km ?? 5} KM UI</span>
         </div>
       </div>
     </div>
   );
 };
+

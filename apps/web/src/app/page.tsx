@@ -236,6 +236,24 @@ export default function StorefrontPage() {
     return result;
   }, [productsList, selectedCategory, searchQuery, filterState]);
 
+  // Telemetry: Track search queries and flag zero-hit searches (PRD Seksi 19)
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim().length < 2) return;
+
+    const timer = setTimeout(() => {
+      fetch(getApiUrl('/api/v1/telemetry/search-keyword'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keyword: searchQuery.trim(),
+          results_count: filteredProducts.length,
+        }),
+      }).catch(() => {});
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, filteredProducts.length]);
+
   // Paginated subset
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
   const paginatedProducts = useMemo(() => {

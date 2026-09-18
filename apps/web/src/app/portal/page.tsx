@@ -11,6 +11,9 @@ import { MemberHeader } from '@/components/portal/MemberHeader';
 import { OrderStepper } from '@/components/portal/OrderStepper';
 import { GuestTracker } from '@/components/portal/GuestTracker';
 import { PointsAndVouchers } from '@/components/portal/PointsAndVouchers';
+import { DailyCheckinWidget } from '@/components/portal/DailyCheckinWidget';
+import { DigitalStampCardWidget } from '@/components/portal/DigitalStampCardWidget';
+import { OccasionCalendarWidget } from '@/components/portal/OccasionCalendarWidget';
 import { WarrantyClaimModal } from '@/components/portal/WarrantyClaimModal';
 import { useOrderStore, deduplicateOrders } from '@/stores/useOrderStore';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -484,6 +487,15 @@ export default function CustomerPortalPage() {
 
             {/* Loyalty Points & Vouchers */}
             <PointsAndVouchers />
+
+            {/* Daily Attendance Check-in Gamification */}
+            <DailyCheckinWidget />
+
+            {/* Digital Stamp Card */}
+            <DigitalStampCardWidget />
+
+            {/* Customer Occasions Calendar */}
+            <OccasionCalendarWidget />
 
             {/* Order History Table */}
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-sm space-y-4">

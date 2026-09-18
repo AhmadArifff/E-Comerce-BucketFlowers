@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, MessageCircle, ShoppingBag, Check, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '@/stores/useCartStore';
 import { flyToCart, showMagicToast } from '@/lib/magic-motion';
+import { getApiUrl } from '@/lib/api-client';
 
 interface FlowerOpt {
   id: string;
@@ -112,6 +113,39 @@ export const CustomStudioSection: React.FC = () => {
   const [selectedAddons, setSelectedAddons] = useState<string[]>(['led']);
   const [isAdding, setIsAdding] = useState(false);
 
+  // Telemetry: Log Custom Studio 4-Step funnel event
+  const logStudioStep = (stepNumber: number) => {
+    if (typeof window === 'undefined') return;
+    try {
+      let sessId = sessionStorage.getItem('chenille_studio_session_id');
+      if (!sessId) {
+        sessId = `studio-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+        sessionStorage.setItem('chenille_studio_session_id', sessId);
+      }
+
+      fetch(getApiUrl('/api/v1/telemetry/event'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessId,
+          event_name: 'STUDIO_STEP_VIEWED',
+          step_number: stepNumber,
+          metadata: {
+            step: stepNumber,
+            flower: selectedFlower?.id,
+            color: selectedColor?.id,
+          },
+        }),
+      }).catch(() => {});
+    } catch {
+      // ignore telemetry network errors
+    }
+  };
+
+  useEffect(() => {
+    logStudioStep(1);
+  }, []);
+
   const toggleAddon = (id: string) => {
     setSelectedAddons((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -156,6 +190,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
   const handleAddToCart = (e?: React.MouseEvent<HTMLButtonElement>) => {
     if (isAdding) return;
     setIsAdding(true);
+    logStudioStep(4);
     if (e) {
       flyToCart(e.currentTarget, selectedFlower.emoji, () => {
         setIsAdding(false);
@@ -233,7 +268,10 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                     <button
                       key={f.id}
                       type="button"
-                      onClick={() => setSelectedFlower(f)}
+                      onClick={() => {
+                        setSelectedFlower(f);
+                        logStudioStep(1);
+                      }}
                       className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
                         isSelected
                           ? 'border-theme-primary bg-theme-surface-subtle shadow-2xs ring-2 ring-theme-primary/20'
@@ -264,7 +302,10 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                     <button
                       key={c.id}
                       type="button"
-                      onClick={() => setSelectedColor(c)}
+                      onClick={() => {
+                        setSelectedColor(c);
+                        logStudioStep(2);
+                      }}
                       className={`p-2.5 rounded-2xl border flex items-center gap-2 transition-all cursor-pointer ${
                         isSelected
                           ? 'border-theme-primary bg-theme-surface-subtle shadow-2xs ring-2 ring-theme-primary/20'
@@ -295,7 +336,10 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                     <button
                       key={w.id}
                       type="button"
-                      onClick={() => setSelectedWrapping(w)}
+                      onClick={() => {
+                        setSelectedWrapping(w);
+                        logStudioStep(3);
+                      }}
                       className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                         isSelected
                           ? 'border-theme-primary bg-theme-surface-subtle shadow-2xs ring-2 ring-theme-primary/20'
@@ -323,7 +367,10 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                     <button
                       key={r.id}
                       type="button"
-                      onClick={() => setSelectedRibbon(r)}
+                      onClick={() => {
+                        setSelectedRibbon(r);
+                        logStudioStep(3);
+                      }}
                       className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${
                         isSelected
                           ? 'border-theme-primary bg-theme-surface-subtle shadow-2xs ring-2 ring-theme-primary/20'

@@ -73,6 +73,13 @@ export const CartDrawer: React.FC = () => {
   const [courierOptions, setCourierOptions] = useState<any[]>([]);
   const [isLoadingCouriers, setIsLoadingCouriers] = useState(false);
 
+  const [campaignConfig, setCampaignConfig] = useState<{
+    cod_promo_enabled?: boolean;
+    cod_max_radius_km?: number;
+    cod_min_spend?: number;
+    cod_promo_banner_text?: string;
+  } | null>(null);
+
   // Fetch active COD points from Postgres API
   useEffect(() => {
     fetch(getApiUrl('/api/v1/cod-points'))
@@ -80,6 +87,16 @@ export const CartDrawer: React.FC = () => {
       .then((res) => {
         if (res.success && res.data?.length > 0) {
           setDbCodPoints(res.data);
+        }
+      })
+      .catch(() => {});
+
+    // Fetch active campaign rules (COD radius & threshold)
+    fetch(getApiUrl('/api/v1/campaigns'))
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data) {
+          setCampaignConfig(res.data);
         }
       })
       .catch(() => {});
@@ -456,6 +473,40 @@ export const CartDrawer: React.FC = () => {
           {/* ========================================================================= */}
           {step === 'CART' && (
             <>
+              {/* Dynamic COD Free Shipping Nudge Bar */}
+              {campaignConfig?.cod_promo_enabled && items.length > 0 && (() => {
+                const subtotal = getSubtotal();
+                const minSpend = Number(campaignConfig.cod_min_spend || 75000);
+                const radius = Number(campaignConfig.cod_max_radius_km || 5.0);
+                const isFree = subtotal >= minSpend;
+                const diff = Math.max(0, minSpend - subtotal);
+                const progressPct = Math.min(100, Math.round((subtotal / minSpend) * 100));
+
+                return (
+                  <div className="px-4 py-2.5 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-b border-emerald-100/80">
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <div className="flex items-center gap-1.5 font-extrabold text-emerald-800">
+                        <Truck className="w-3.5 h-3.5 text-emerald-600 animate-pulse shrink-0" />
+                        <span className="text-[11px] sm:text-xs">
+                          {isFree
+                            ? `🎉 Bebas Ongkir COD Radius ${radius} KM Kampus UI!`
+                            : `Beli Rp ${diff.toLocaleString('id-ID')} lagi untuk Bebas Ongkir COD (${radius} KM)`}
+                        </span>
+                      </div>
+                      <span className="text-[9px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded-full">
+                        {progressPct}%
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-emerald-200/50 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 rounded-full"
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Cart Items List */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
                 {items.length === 0 ? (
