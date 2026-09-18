@@ -5,9 +5,9 @@
 **Standar Operasional:** Shopify-Grade Operations, Google Maps Geofencing, Multi-Theme Engine & Real-Time Logistics  
 **Role / Penulis:** Senior Product Manager, Lead Architect & Tech Critic Reviewer  
 **Tanggal Rilis:** 2026-09-09  
-**Versi:** v2.4 (Complete Specification — Customer Account Management Suite, Member Profile Dropdown & Password Reset, Atelier Map Origin Geofencing with Latitude & Longitude Autocomplete, Admin Settings Panel for Payment Gateway & Shipping Logistics, Midtrans Snap Sandbox, Biteship Logistics Testing Mode, Checkout Flow, RBAC, API Contract, Supabase Storage, Loyalty Points, Search Engine, Notifications & Testing Strategy)  
+**Versi:** v2.7 (Comprehensive Behavioral Analytics & CRO Engine, Multi-Theme Copywriting Tone of Voice, and UI/UX Visual Art Direction Suite)  
 **Status:** Approved for Full Implementation & Git Release  
-**Tech Stack Baseline:** Turborepo 2.x, Next.js 15+ (App Router), Express.js (ESM Module on Vercel Serverless), Prisma ORM (Supabase PostgreSQL with PgBouncer Connection Pooling), Better Auth (RBAC & Session Rotation), Tailwind CSS + Design Tokens, Midtrans Snap SDK, Biteship Logistics API, Google Maps Embed & URL Schemes, Result Pattern (`@chenille/shared`), Pino Structured Logging.
+**Tech Stack Baseline:** Turborepo 2.x, Next.js 15+ (App Router), Express.js (ESM Module on Vercel Serverless), Prisma ORM (Supabase PostgreSQL with PgBouncer Connection Pooling), Better Auth (RBAC & Session Rotation), Tailwind CSS + Design Tokens, Midtrans Snap SDK, Biteship Logistics API, Google Maps Embed & URL Schemes, In-House Event Telemetry, Result Pattern (`@chenille/shared`), Pino Structured Logging.
 
 ---
 
@@ -2690,6 +2690,92 @@ Sesuai persetujuan arsitektur, seluruh penanganan geolokasi pada sistem Chenille
 
 ---
 
+#### 17.5.7 Matriks Notulensi Tanya-Jawab & Konsensus Pra-Development (Q&A Blueprint)
+
+Sub-seksi ini merangkum seluruh butir diskusi dan tanya-jawab krusial antara stakeholder/pengguna dan arsitek sistem sebelum tahap implementasi kode:
+
+| No | Butir Pertanyaan Stakeholder / Pengguna | Jawaban Pasti & Solusi Arsitektur | Status Desain |
+| :---: | :--- | :--- | :---: |
+| **Q1** | *Kenapa saat menggunakan GPS dia hanya menyimpan angka latitude & longitude saja di kolom alamat?* | **Penyebab:** Sensor GPS browser (`navigator.geolocation`) hanya menghasilkan angka koordinat satelit mentah, bukan nama jalan.<br>**Solusi:** Diintegrasikan pipeline **Reverse Geocoding** (OSM Nominatim) yang otomatis menerjemahkan angka koordinat menjadi teks alamat fisik manusiawi dalam hitungan milidetik. | ✅ **Resmi Disepakati** |
+| **Q2** | *Apakah kita wajib membuat package/API/kredensial Google Maps, dan bagaimana caranya jika tidak punya kartu debit/kredit?* | **Solusi Cardless 100% Bebas Biaya:** **TIDAK PERLU KARTU DEBIT/KREDIT.** Sistem menggunakan engine geocoding terbuka (OpenStreetMap & Komoot Photon) yang legal, gratis tanpa batas kuota, dan tanpa perlu mendaftar kartu bank. Namun jika suatu saat pengguna ingin beralih ke Google Maps resmi, sistem sudah siap pakai melalui arsitektur *Hybrid Dual-Engine* (Seksi 17.5.4). | ✅ **Resmi Disepakati** |
+| **Q3** | *Bagaimana agar saat pencarian muncul floating dropdown saran tempat persis seperti sistem rujukan `admin-sunjaya`?* | **Implementasi UI/UX:** Input pencarian dilengkapi *debounce* 300ms. Saat mengetik nama jalan/kota (cth: "Padasuka", "Cimahi", "Margonda"), **floating dropdown melayang dengan pin lokasi merah 📍** akan muncul di bawah input secara real-time, lengkap dengan nama tempat tebal, deskripsi alamat, dan tombol *[Jadikan Alamat Studio]* persis seperti `admin-sunjaya`. | ✅ **Resmi Disepakati** |
+| **Q4** | *Apakah alamat string seperti `4GGF+V3M, Padasuka, Kec. Cimahi Tengah, Kota Cimahi, Jawa Barat 40552` otomatis diambil jadi Alamat Fisik Workshop?* | **Jawaban: 100% BISA & PASTI.** Saat memilih dari dropdown saran pencarian atau setelah Reverse Geocoding GPS selesai, seluruh rangkaian teks alamat tersebut langsung disuntikkan ke kolom form **"Alamat Fisik Workshop / Studio"** (`studio_address`). | ✅ **Resmi Disepakati** |
+| **Q5** | *Apakah Latitude dan Longitude dimuat pada kolom elemen baru tersendiri agar tidak masuk/bercampur ke dalam teks alamat?* | **Jawaban: 100% BISA & PASTI.** Disediakan **dua kolom elemen input baru khusus** di bawah peta kanvas:<br>1. Kolom Input `Latitude` (khusus desimal lintang, cth: `-6.899755`)<br>2. Kolom Input `Longitude` (khusus desimal bujur, cth: `107.558353`)<br>Teks alamat fisik murni hanya berisi nama jalan tanpa angka koordinat mentah. | ✅ **Resmi Disepakati** |
+
+##### 1. Rancangan Visual Form Pengaturan Toko (`SettingsView`)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 📍 LOKASI WORKSHOP & ORIGIN GEOFENCING ATELIER                                                  │
+├─────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                 │
+│ 1. [ KOLOM ALAMAT FISIK UTAMA (TEXT STRING BERSIH) ]                                            │
+│    Alamat Fisik Workshop / Studio:                                                              │
+│    ┌───────────────────────────────────────────────────────────────────────────────────────┐    │
+│    │ 4GGF+V3M, Padasuka, Kec. Cimahi Tengah, Kota Cimahi, Jawa Barat 40552                 │    │
+│    └───────────────────────────────────────────────────────────────────────────────────────┘    │
+│    *Catatan: Murni berisi teks nama jalan/kelurahan/kota. Tanpa angka koordinat mentah!         │
+│                                                                                                 │
+│ 2. [ TOOLBAR PENCARIAN TEMPAT DENGAN FLOATING DROPDOWN ALA ADMIN-SUNJAYA ]                      │
+│    Cari Lokasi / Nama Tempat:                                                                   │
+│    ┌───────────────────────────────────────────────────────────────────┐ ┌────────────────┐     │
+│    │ 🔍 Padasuka Cimahi...                                             │ │ 🛰️ Gunakan GPS │     │
+│    └───────────────────────────────────────────────────────────────────┘ └────────────────┘     │
+│    │                                                                   │                        │
+│    ├───────────────────────────────────────────────────────────────────┤                        │
+│    │ 📍 Padasuka                                                       │                        │
+│    │    Kecamatan Cimahi Tengah, Kota Cimahi, Jawa Barat 40552         │                        │
+│    │    [Badge: Kota Cimahi]                              [📋 Pilih]   │                        │
+│    ├───────────────────────────────────────────────────────────────────┤                        │
+│    │ 📍 Jl. Padasuka Indah                                             │                        │
+│    │    Kelurahan Padasuka, Cimahi Tengah, Kota Cimahi                 │                        │
+│    │    [Badge: Jawa Barat]                               [📋 Pilih]   │                        │
+│    └───────────────────────────────────────────────────────────────────┘                        │
+│                                                                                                 │
+│ 3. [ KANVAS PETA INTERAKTIF / GOOGLE MAPS EMBED ]                                               │
+│    ┌───────────────────────────────────────────────────────────────────────────────────────┐    │
+│    │                                                                                       │    │
+│    │                           📍 [PIN DRAGGABLE WORKSHOP]                                 │    │
+│    │                             Padasuka, Cimahi Tengah                                   │    │
+│    │                                                                                       │    │
+│    │   [🔵 Lingkaran Geofencing Radius Bebas COD: 5.0 KM dari Titik Workshop]              │    │
+│    │                                                                                       │    │
+│    └───────────────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                                 │
+│ 4. [ DUA ELEMEN KOLOM BARU KHUSUS KOORDINAT (SEPARATED INPUTS) ]                                │
+│    ┌───────────────────────────────────┐     ┌───────────────────────────────────┐              │
+│    │ Latitude (Lintang Desimal):       │     │ Longitude (Bujur Desimal):        │              │
+│    │ ┌───────────────────────────────┐ │     │ ┌───────────────────────────────┐ │              │
+│    │ │ -6.899755                     │ │     │ │ 107.558353                    │ │              │
+│    │ └───────────────────────────────┘ │     │ └───────────────────────────────┘ │              │
+│    └───────────────────────────────────┘     └───────────────────────────────────┘              │
+│                                                                                                 │
+│ 5. [ BATAS RADIUS & LINK GOOGLE MAPS ]                                                          │
+│    ┌───────────────────────────────────┐     ┌───────────────────────────────────┐              │
+│    │ Radius Bebas Ongkir COD (KM):     │     │ Link Tautan Google Maps Studio:   │              │
+│    │ ┌───────────────────────────────┐ │     │ ┌───────────────────────────────┐ │              │
+│    │ │ 5.0                           │ │     │ │ https://maps.google.com/?q=...│ │              │
+│    │ └───────────────────────────────┘ │     │ └───────────────────────────────┘ │              │
+│    └───────────────────────────────────┘     └───────────────────────────────────┘              │
+│                                                                                                 │
+│ [ 💾 SIMPAN PERUBAHAN PENGATURAN TOKO ]                                                         │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+##### 2. Spesifikasi Alur Kerja Teknis Saat Tombol "Gunakan GPS" Diklik
+1. Event click memicu `handleUseCurrentLocation()`.
+2. Tombol beralih ke state `loading` dengan indikator berputar `🛰️ Mendeteksi Satelit...`.
+3. Browser membaca lintang desimal (`coords.latitude`) dan bujur desimal (`coords.longitude`).
+4. Nilai lintang langsung masuk ke kolom state `formProfile.latitude` (`-6.899755`).
+5. Nilai bujur langsung masuk ke kolom state `formProfile.longitude` (`107.558353`).
+6. Secara paralel, sistem memanggil URL endpoint:
+   `https://nominatim.openstreetmap.org/reverse?format=json&lat=-6.899755&lon=107.558353&addressdetails=1`
+7. Data respons diekstrak menjadi string alamat yang rapi (misal: `Padasuka, Kec. Cimahi Tengah, Kota Cimahi, Jawa Barat 40552`).
+8. String alamat tersebut langsung dimasukkan ke `formProfile.studioAddress`.
+9. Sistem memicu notifikasi toast Magic UI: `📍 Lokasi GPS Terdeteksi! Padasuka, Cimahi Tengah`.
+
+---
+
 ### 17.6 Standardisasi Ekosistem Maps: Form "Daftarkan Titik COD Baru via Google Maps" (`CODMapModal.tsx`)
 
 Prinsip Smart Autocomplete tanpa kartu kredit (`admin-sunjaya`) dan pemisahan alamat vs koordinat diperluas secara menyeluruh ke formulir pendaftaran titik temu COD (`CODMapModal.tsx`).
@@ -3295,5 +3381,603 @@ Selama siklus pengembangan, pengujian fitur (misal: verifikasi migrasi Supabase,
 4. **Pemeriksaan Berkala (*Pre-Commit Cleanliness Check*):**  
    Sebelum melakukan git commit dan push, pastikan perintah `git status` tidak mencantumkan file scratch yang tercecer di root workspace.
 
+---
+
+## 18. Arsitektur Modul Kampanye Promosi, Loyalitas & Subsidi COD Radius (Campaign & Customer Loyalty Engine)
+
+> **Status:** `PERANCANGAN RESMI (PRD v2.6)`  
+> **Ruang Lingkup:** Menu Admin `Campaigns & Loyalty`, Storefront Checkout Drawer, dan Customer Portal (`/portal`)  
+> **Prinsip Utama:** Sentralisasi kontrol strategi pemasaran di satu panel dinamis tanpa hardcode logika di kode aplikasi.
+
+---
+
+### 18.1 Latar Belakang & Filosofi Bisnis
+
+Untuk mempercepat pertumbuhan omzet dan memperpanjang umur retensi pelanggan (*Customer Lifetime Value - LTV*), Chenille Flowers Atelier menerapkan **Tiga Pilar Pertumbuhan Pemasaran** yang saling melengkapi:
+
+1. **Habit Formation & Top-of-Mind Awareness (Daily Attendance):**
+   - Mengajak pelanggan membuka website setiap hari untuk "absen" demi mengumpulkan koin kelopak bunga (*petal points*).
+   - Memastikan brand Chenille selalu diingat ketika pelanggan atau relasinya sewaktu-waktu membutuhkan buket bunga.
+2. **Repeat Purchase & Collective Buying (Digital Stamp Card):**
+   - Mengadopsi psikologi kartu stempel digital ("Beli 5 Buket Gratis 1 Buket Mini").
+   - Menghilangkan godaan pelanggan untuk membeli di toko bunga kompetitor dan mendorong inisiatif menjadi koordinator pesanan untuk acara wisuda/kelulusan.
+3. **Local Market Dominance & Basket Size Lift (Dynamic COD Radius Subsidy):**
+   - Mengubah fitur teknis Geofencing COD menjadi senjata promosi pemasaran yang fleksibel.
+   - Mengatur subsidi ongkir titik temu (100% gratis atau 50% diskon) berdasarkan radius jarak (KM) dan syarat minimum belanja (*minimum spend*).
+
+---
+
+### 18.2 Sentralisasi Pengelolaan di Menu "Campaign" Admin Panel
+
+Seluruh konfigurasi strategi promosi dipindahkan dari menu teknis `Settings` ke menu khusus **Pemasaran & Kampanye (`Campaigns & Loyalty`)**. Admin toko dapat mengubah parameter, mengaktifkan/menonaktifkan promo musiman, dan memantau analitik secara *real-time*:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│  🌸 PANEL ADMIN — PUSAT KONTROL KAMPANYE, LOYALITAS & PROMO RADIUS COD                     │
+├─────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                             │
+│  [ TAB 1: ABSENSI HARIAN ]    [ TAB 2: KARTU STEMPEL BELANJA ]   [ TAB 3: PROMO RADIUS COD ]│
+│                                                                                             │
+│  ─────────────────────────────────────────────────────────────────────────────────────────  │
+│  📌 SUB-MODUL 1: DAILY ATTENDANCE & STREAK GAMIFICATION                                     │
+│  • Status Fitur            : [🟢 AKTIF  /  ⚪ NON-AKTIF] (Toggle Switch)                    │
+│  • Poin per Absen Harian   : [ 10 ] Poin / hari                                             │
+│  • Target Streak Konsisten : [ 7 ] Hari Berturut-turut                                      │
+│  • Hadiah Jackpot Hari ke-7: [ Voucher Diskon 15% / 100 Poin Extra ] (Dropdown)             │
+│  • Reset jika Bolos 1 Hari : [ Centang: Ya / Tidak ]                                        │
+│  • Metrik Real-Time        : 48 Member Absen Hari Ini | 12 Streak Aktif                     │
+│                                                                                             │
+│  ─────────────────────────────────────────────────────────────────────────────────────────  │
+│  📌 SUB-MODUL 2: DIGITAL STAMP CARD (BELI N GRATIS 1 BUKET)                                 │
+│  • Status Fitur            : [🟢 AKTIF  /  ⚪ NON-AKTIF] (Toggle Switch)                    │
+│  • Target Jumlah Stempel   : [ 5 ] Stempel untuk 1 Hadiah                                   │
+│  • Syarat 1 Stempel        : [ Min. Belanja Rp 50.000 / 1 Buket ] (Input Angka)             │
+│  • Tipe Hadiah Akhir       : (•) Produk Fisik Gratis   ( ) Kupon Flat   ( ) Bebas Ongkir    │
+│  • Pilihan Produk Hadiah   : [ Buket Mini Velvet Kawat Bulu ] (Dropdown Daftar Produk)      │
+│  • Masa Berlaku Stempel    : [ 180 ] Hari sejak stempel pertama dicap                       │
+│  • Metrik Real-Time        : 23 Kartu Aktif Berjalan | 8 Hadiah Telah Diklaim               │
+│                                                                                             │
+│  ─────────────────────────────────────────────────────────────────────────────────────────  │
+│  📌 SUB-MODUL 3: PROMO SUBSIDI ONGKIR COD TITIK TEMU BERDASARKAN RADIUS                     │
+│  • Status Fitur            : [🟢 AKTIF  /  ⚪ NON-AKTIF] (Toggle Switch)                    │
+│  • Jarak Maksimal Promo    : [ 5.0 ] KM dari Workshop Atelier (Input Text Desimal Fleksibel)│
+│  • Skema Subsidi Biaya COD : (•) 100% Gratis Ongkir Titik Temu                              │
+│                              ( ) 50% Subsidi (Potongan Setengah Tarif Antar)                │
+│                              ( ) Kustom Persen [ ... % ] / Nominal Flat [ Rp ... ]          │
+│  • Syarat Minimum Belanja  : [ Rp 75.000 ] (Bebas Ongkir jika total belanja >= nominal ini) │
+│  • Teks Banner Promosi     : "🎉 Promo Spesial: Gratis Ongkir COD Radius 5 KM dari Studio!" │
+│  • Metrik Real-Time        : 31 Pesanan COD Menggunakan Promo Bulan Ini                     │
+│                                                                                             │
+│  [ 💾 SIMPAN PERUBAHAN KAMPANYE ]                                                           │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 18.3 Skema Database Relasional (PostgreSQL Supabase)
+
+Tiga tabel baru ditambahkan untuk menopang ketahanan data dan pelacakan riwayat kampanye:
+
+```sql
+-- 1. Konfigurasi Kampanye Toko (Single Row Config with JSONB Flexibility)
+CREATE TABLE IF NOT EXISTS campaign_settings (
+  id VARCHAR(50) PRIMARY KEY DEFAULT 'ATELIER_CAMPAIGN_DEFAULT',
+  -- Daily Attendance Config
+  attendance_enabled BOOLEAN DEFAULT true,
+  daily_points_reward INTEGER DEFAULT 10,
+  streak_days_target INTEGER DEFAULT 7,
+  streak_reward_type VARCHAR(50) DEFAULT 'VOUCHER_DISCOUNT',
+  streak_reward_value NUMERIC(12, 2) DEFAULT 15.00, -- 15% atau Rp 15.000
+  reset_streak_on_miss BOOLEAN DEFAULT true,
+
+  -- Stamp Card Config
+  stamp_card_enabled BOOLEAN DEFAULT true,
+  stamp_target_count INTEGER DEFAULT 5,
+  min_spend_per_stamp NUMERIC(12, 2) DEFAULT 50000.00,
+  stamp_reward_type VARCHAR(50) DEFAULT 'FREE_PRODUCT',
+  stamp_reward_product_id VARCHAR(50) REFERENCES products(id) ON DELETE SET NULL,
+  stamp_expiry_days INTEGER DEFAULT 180,
+
+  -- COD Radius & Subsidy Config
+  cod_promo_enabled BOOLEAN DEFAULT true,
+  cod_max_radius_km NUMERIC(5, 2) DEFAULT 5.00,
+  cod_subsidy_type VARCHAR(50) DEFAULT 'FREE_100', -- 'FREE_100', 'DISCOUNT_50', 'CUSTOM_PERCENT', 'FLAT_AMOUNT'
+  cod_subsidy_value NUMERIC(12, 2) DEFAULT 100.00,
+  cod_min_spend NUMERIC(12, 2) DEFAULT 75000.00,
+  cod_promo_banner_text VARCHAR(255) DEFAULT '🎉 Promo Area: Gratis Ongkir COD Titik Temu hingga 5 KM!',
+  
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 2. Log Absensi Harian Pengguna
+CREATE TABLE IF NOT EXISTS user_attendance_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_phone VARCHAR(20) NOT NULL,
+  check_in_date DATE NOT NULL,
+  points_earned INTEGER DEFAULT 10,
+  current_streak INTEGER DEFAULT 1,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT unique_user_daily_checkin UNIQUE (user_phone, check_in_date)
+);
+
+-- 3. Pelacakan Kartu Stempel Belanja Digital
+CREATE TABLE IF NOT EXISTS user_stamp_cards (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_phone VARCHAR(20) NOT NULL,
+  stamps_collected INTEGER DEFAULT 0,
+  target_stamps INTEGER DEFAULT 5,
+  card_status VARCHAR(30) DEFAULT 'ACTIVE', -- 'ACTIVE', 'COMPLETED', 'REDEEMED', 'EXPIRED'
+  reward_claimed_at TIMESTAMP WITH TIME ZONE,
+  last_stamped_order_id VARCHAR(50) REFERENCES orders(id) ON DELETE SET NULL,
+  expires_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+---
+
+### 18.4 Alur Interaksi Pengguna (User Experience Flow)
+
+#### A. Alur Absensi Harian (Customer Portal)
+1. Pembeli membuka menu akun atau portal pesanan `/portal`.
+2. Menemukan kartu **"Absensi Harian & Rawat Bunga"**:
+   - Menampilkan 7 slot hari dalam seminggu.
+   - Tombol interaktif: `[🌸 Absen Hari Ini (+10 Poin)]`.
+3. Saat diklik:
+   - Animasi kelopak bunga mekar + toast perolehan poin.
+   - Poin langsung masuk ke saldo akun dan dapat dipotongkan saat checkout.
+   - Jika berhasil 7 hari berturut-turut, kupon diskon jackpot otomatis diterbitkan.
+
+#### B. Alur Cap Stempel Belanja (Otomatis Pasca-Transaksi)
+1. Pelanggan menyelesaikan pesanan buket bunga kawat bulu.
+2. Saat status pesanan berubah menjadi **`CONFIRMED`** atau **`COMPLETED`**:
+   - Trigger backend mengecek nilai transaksi. Jika memenuhi `min_spend_per_stamp`, sistem menambahkan +1 stempel di kartu pelanggan.
+3. Di portal akun, kartu stempel menampilkan visual 5 slot bunga.
+4. Ketika stempel ke-5 tercapai:
+   - Kartu bersinar emas (*golden shimmer effect*).
+   - Tombol `[🎁 Klaim Buket Mini Gratis]` aktif.
+   - Hadiah otomatis disisipkan ke keranjang belanja pesanan berikutnya tanpa biaya tambahan (Rp 0).
+
+#### C. Alur Promo Radius COD di Checkout Drawer
+1. Pembeli memilih opsi pengiriman **COD Titik Temu**.
+2. Pembeli memilih lokasi titik temu di peta Google Maps.
+3. Sistem menghitung jarak Haversine dari koordinat Workshop:
+   - **Kasus 1 (Jarak <= Radius Promo & Belanja >= Min Spend):**  
+     Muncul badge hijau: `🎉 Promo Radius Aktif: Biaya COD Gratis 100%! (Hemat Rp 15.000)`. Biaya COD otomatis menjadi Rp 0.
+   - **Kasus 2 (Jarak <= Radius Promo tetapi Belanja < Min Spend):**  
+     Muncul notifikasi edukasi: `💡 Tambah Rp 15.000 lagi untuk mendapatkan Gratis Ongkir COD 100% (Saat ini Subsidi 50%)`.
+   - **Kasus 3 (Jarak > Radius Promo):**  
+     Sistem menampilkan opsi tarif normal atau merekomendasikan Ekspedisi Biteship (JNE/SiCepat) dengan penjelasan sopan.
+
+---
+
+### 18.5 Rekomendasi & Best Practice Bisnis (Expert Suggestions)
+
+1. **Strategi Berjenjang (Tiered Radius Zone):**
+   - **Zona Sangat Dekat (0 – 2.5 KM):** Gratis 100% tanpa syarat minimum belanja (memperkuat kedekatan dengan tetangga dan komunitas lokal).
+   - **Zona Menengah (2.6 – 5.0 KM):** Gratis 100% dengan syarat minimum belanja Rp 75.000, atau subsidi 50% jika di bawah itu.
+   - **Zona Luar (> 5.0 KM):** Menggunakan kurir Biteship agar staf florist tidak membuang waktu produktif merangkai bunga hanya untuk perjalanan jauh.
+2. **Kenaikan Nilai Keranjang (AOV Uplift via Minimum Spend):**
+   - Memasang syarat minimum belanja pada promo COD secara psikologis mendorong pembeli membeli produk pelengkap (*add-on*), seperti kartu ucapan akrilik, lampu LED peri, atau gantungan kunci bunga kawat bulu mini untuk mengejar batas bebas ongkir.
+3. **Pemisahan Peran Menu Panel Admin:**
+   - Menyimpan seluruh variabel kampanye (jarak COD, persentase subsidi, target stempel, poin absen) di menu **Campaigns** menjaga antarmuka **Settings** tetap bersih, fokus pada konfigurasi teknis dasar, dan memudahkan staf pemasaran mengatur promosi tanpa risiko merusak konfigurasi sistem utama.
+---
+
+## 19. Customer Behavior Telemetry & Conversion Optimization Engine
+
+Seksi ini merinci sistem analisis perilaku pembeli (*buyer behavior*), pelacakan titik hambatan (*drop-off funnel*), pencegahan keranjang terabaikan (*abandoned cart*), serta optimasi konversi transaksi terinspirasi dari standar *marketplace* terkemuka (Shopee, Tokopedia, Shopify).
 
 
+### 19.1 In-House Lightweight Event Telemetry (`user_events`)
+* **Tujuan:** Mengetahui perilaku pembeli secara *real-time* tanpa memberatkan web dan tanpa bergantung pada Google Analytics berbayar.
+* **Titik Lacak (Event Points):**
+  1. `PAGE_VIEW`: Mengetahui halaman yang paling lama dibaca.
+  2. `STUDIO_STEP_VIEWED`: Mencatat perpindahan langkah di Studio Custom (Step 1 $\rightarrow$ 2 $\rightarrow$ 3 $\rightarrow$ 4).
+  3. `SEARCH_QUERY`: Mencatat setiap kata kunci yang diketik pelanggan.
+  4. `ADD_TO_CART`: Mencatat buket dan variasi yang diminati.
+  5. `CHECKOUT_INITIATED`: Mengetahui saat pelanggan mulai mengisi formulir bayar.
+  6. `PAYMENT_SUCCESS`: Konversi akhir transaksi.
+
+### 19.2 Custom Studio 4-Step Drop-Off Funnel & Smart Auto-Styling Preset
+* **Analisis:** Mengukur persentase pembeli yang batal di setiap tahapan pembuatan buket kustom.
+* **Fitur Solutif (*Smart Auto-Styling Preset*):**
+  * Seringkali pelanggan batal di Step 3 (*Pilih Kertas Wrapping*) karena bingung mencocokkan warna (*decision fatigue*).
+  * Sistem menyediakan tombol: **`[🪄 Rekomendasi Paduan Warna Florist]`** yang dalam 1-klik langsung memilihkan kertas wrapping dan pita yang paling serasi dengan warna bunga pilihan mereka.
+
+### 19.3 Zero-Result Search Query Logger
+* **Logika:** Menyaring kata kunci pencarian yang menghasilkan `0 item`.
+* **Dashboard Admin:** Menampilkan daftar *Top Wanted Products* (contoh: *"Buket Karakter Cat"*, *"Bunga Kawat Wisuda Pria"*, *"Buket Cokelat"*).
+* **Manfaat:** Pemilik toko langsung tahu jenis buket baru apa yang harus dibuat pengrajin berdasarkan permintaan riil pembeli.
+
+### 19.4 Smart In-Cart Micro-Upsell (Menaikkan Nilai Rata-rata Belanja / AOV)
+* Saat pembeli membuka keranjang belanja (*drawer cart*), sistem menampilkan rekomendasi aksesori pelengkap berharga terjangkau:
+  * 🕯️ Lampu LED Peri Berkelap-kelip (+Rp 10.000)
+  * 🎓 Boneka Toga Wisuda (+Rp 15.000)
+  * 💌 Kartu Ucapan Akrilik Bening (+Rp 8.000)
+  * 📸 Cetak 2 Foto Polaroid Mini (+Rp 5.000)
+* Menghasilkan kenaikan nilai pesanan (*Average Order Value*) sebesar 20–30% tanpa terasa membebani pembeli.
+
+### 19.5 Spotify QR Code Audio-Visual Greeting Card (Fitur Viral Organik)
+* Di formulir checkout/ucapan, pembeli dapat menempelkan tautan lagu kenangan Spotify mereka.
+* Sistem men-*generate* stiker/kartu mini dengan kode gelombang Spotify resmi.
+* Saat penerima buket men-scan buketnya, lagu favorit langsung berputar di ponsel mereka. Momen ini secara alami akan diunggah ke TikTok/Instagram Story oleh penerima (*Free Word-of-Mouth*).
+
+### 19.6 Occasion Calendar & Automated WhatsApp Reminder
+* Fitur di profil member: **"Kalender Momen Penting Saya"** (Ulang Tahun Pasangan, Wisuda Sahabat, Anniversary).
+* Sistem otomatis mengirimkan pengingat ramah via WhatsApp H-7 sebelum hari H agar pembeli tidak panik mencari kado di hari-H dan kuota perakitan aman.
+
+### 19.7 Event Delivery Date & Time Slot Picker
+* Input di halaman checkout: *"Kapan buket ini dibutuhkan?"* (Pilihan tanggal kalender + jam estimasi acara).
+* Menghilangkan kecemasan pembeli wisuda kampus dan meningkatkan rasa percaya diri untuk menyelesaikan pembayaran.
+
+---
+
+
+### 19.8 Skema Database & Pemetaan Model Prisma (Telemetry & Occasion)
+
+Tiga model data baru ditambahkan ke `apps/api/prisma/schema.prisma` dan Supabase PostgreSQL:
+
+
+
+```prisma
+// 1. Log Telemetri Perilaku Pembeli
+model UserEventLog {
+  id          String   @id @default(uuid())
+  session_id  String
+  user_id     String?
+  event_name  String   // 'PAGE_VIEW', 'STUDIO_STEP', 'SEARCH', 'ADD_TO_CART', 'CHECKOUT'
+  step_number Int?     // Khusus event Studio Custom (1-4)
+  metadata    Json?    // Menyimpan detail search keyword, produk yang dilihat, dll.
+  created_at  DateTime @default(now())
+
+  @@index([session_id])
+  @@index([event_name])
+}
+
+// 2. Log Pencarian Kata Kunci & Zero-Result Analytics
+model SearchKeywordLog {
+  id           String   @id @default(uuid())
+  keyword      String
+  results_count Int     @default(0)
+  is_zero_hit  Boolean  @default(false)
+  created_at   DateTime @default(now())
+
+  @@index([keyword])
+  @@index([is_zero_hit])
+}
+
+// 3. Kalender Momen Spesial Pelanggan
+model CustomerOccasion {
+  id             String    @id @default(uuid())
+  user_phone     String
+  user_name      String
+  recipient_name String
+  occasion_title String    // 'Ulang Tahun', 'Wisuda', 'Anniversary'
+  event_date     DateTime
+  notes          String?
+  is_reminded    Boolean   @default(false)
+  reminded_at    DateTime?
+  created_at     DateTime  @default(now())
+
+  @@index([user_phone])
+  @@index([event_date])
+}
+```
+
+---
+
+
+---
+
+## 20. Multi-Theme Copywriting & Tone of Voice Matrix
+
+Seksi ini merupakan kamus dan pedoman baku penulisan teks antarmuka (*UI copywriting*) untuk ketiga tema katalog yang berbeda karakter (*Korean Pastel*, *Modern Romantic*, dan *Playful Kawaii*). Bahasa dirancang alami, berkarakter, tidak kaku, namun tetap sopan, estetik, dan tidak berlebihan (*anti-lebay*).
+
+
+Agar toko memiliki jiwa (*brand personality*) yang kuat, setiap tema memiliki **prinsip bahasa unik**:
+* **Tema A (Korean Pastel):** *Soft, mindful, comforting, aesthetic*. Menggunakan gaya bahasa yang tenang, hangat, ramah seperti kakak/sahabat perempuan, menekankan keindahan bunga kawat bulu yang awet selamanya.
+* **Tema B (Modern Romantic):** *Understated luxury, deep, poetic, timeless*. Gaya bahasa yang dewasa, elegan, tulus, menghargai momen berkelas tanpa terasa berlebihan (*anti-lebay*).
+* **Tema C (Playful Kawaii):** *Vibrant, joyful, energetic, friendly bestie*. Gaya bahasa yang ceria, santai, penuh senyum, merayakan pencapaian dan kebahagiaan dengan antusias.
+
+Berikut matriks perbandingan copywriting untuk setiap elemen halaman:
+
+### 20.1 Top Announcement Bar (Pemberitahuan Atas)
+| Elemen | Tema A: Korean Pastel | Tema B: Modern Romantic | Tema C: Playful Kawaii |
+| :--- | :--- | :--- | :--- |
+| **Pesan Kuota / Promo** | 🌸 *Kapasitas perakitan hari ini tersisa 5 buket. Amankan slot kirimmu dengan tenang.* | 🕯️ *Slot perakitan terbatas untuk menjaga kesempurnaan setiap tangkai bunga.* | ✨ *Yeay! Kuota buket wisuda hari ini tersisa 5 slot lagi! Yuk pesan sekarang!* |
+
+---
+
+### 20.2 Hero Section (Headline & Subheadline)
+| Elemen | Tema A: Korean Pastel | Tema B: Modern Romantic | Tema C: Playful Kawaii |
+| :--- | :--- | :--- | :--- |
+| **Badge Atas** | `100% Handcrafted Chenille Velvet` | `Timeless Botanical Craftsmanship` | `100% Handmade Bikin Senyum` |
+| **Headline Utama** | **Mekar Abadi dalam Lembutnya Cerita Kita.** | **Apresiasi Tulus yang Tak Pernah Pudar.** | **Kirim Senyum Manis Lewat Buket Bunga Lucu!** |
+| **Sub-headline** | Rangkaian buket kawat bulu bertekstur beludru lembut. Hadiah manis yang dirangkai teliti untuk momen wisuda dan hari istimewa. | Rangkaian estetika modern berbahan kawat bulu premium. Keindahan abadi yang mewakili rasa terima kasih dan cinta penuh makna. | Buket kawat bulu warna-warni berkarakter ceria. Bikin perayaan wisuda, ulang tahun, dan hari bahagiamu makin seru! |
+| **Tombol CTA 1** | `Jelajahi Koleksi 🌸` | `Lihat Katalog Eksklusif 🌹` | `Pilih Bunga Favorit 🌻` |
+| **Tombol CTA 2** | `Rangkai Sendiri ✨` | `Desain Buket Kustom 🖋️` | `Bikin Versi Kamu 🎨` |
+
+---
+
+### 20.3 Empat Kartu Nilai Jual Toko (*Trust Cards*)
+| Kartu | Tema A: Korean Pastel | Tema B: Modern Romantic | Tema C: Playful Kawaii |
+| :--- | :--- | :--- | :--- |
+| **1. Kualitas/Awet** | **Awet Bertahun-tahun**<br>Bahan beludru chenille pilihan, tidak rontok dan bebas layu. | **Keindahan Abadi**<br>Simbol memori berharga yang tetap anggun tanpa perlu perawatan. | **Anti Layu Selamanya**<br>Bisa dipajang di kamar terus tanpa takut rontok atau kering! |
+| **2. Pengemasan** | **Kardus Box Rapi & Tebal**<br>Dilindungi mika dan box kokoh agar bentuk buket tetap presisi. | **Kemasan Eksklusif Aman**<br>Pengemasan struktural berlapis standar kurir jarak jauh. | **Packing Super Aman**<br>Box tebal anti penyok, siap kirim sampai tujuan tanpa kusut! |
+| **3. Titik Temu COD** | **Titik Temu COD Kampus**<br>Bisa ambil langsung di sekitar gerbang kampus atau mall terdekat. | **Layanan Titik Temu Presisi**<br>Serah terima tepat waktu di lokasi pertemuan yang disepakati. | **Ketemuan COD Dekat Sini**<br>Bisa janjian di kampus atau spot nongkrong favoritmu! |
+| **4. Garansi** | **Garansi Rangkai Ulang**<br>Kami pastikan buket sesuai pesanan sebelum diserahkan. | **Jaminan Kepuasan Penuh**<br>Standar kurasi ketat pada setiap detail kelopak dan pita. | **Garansi 100% Sesuai Foto**<br>Buket cantik persis seperti preview, dijamin suka! |
+
+---
+
+### 20.4 Modul Katalog Bunga
+| Elemen | Tema A: Korean Pastel | Tema B: Modern Romantic | Tema C: Playful Kawaii |
+| :--- | :--- | :--- | :--- |
+| **Judul Seksi** | **Pilihan Buket Favorit** | **Koleksi Rangkaian Terkurasi** | **Koleksi Buket Paling Laris** |
+| **Sub-judul** | Sentuhan warna pastel yang manis, cocok untuk wisuda, sidang, atau kado kecil. | Paduan estetika tegas dan proporsi anggun untuk perayaan penting. | Warna cerah bikin *mood booster*, cocok buat sahabat tersayang! |
+| **Filter: Semua** | `Semua Sentuhan` | `Seluruh Koleksi` | `Semua Buket` |
+| **Filter: Wisuda** | `Momen Wisuda` | `Graduation Honors` | `Spesial Wisuda & Sidang` |
+| **Filter: Romantis** | `Kisah Manis` | `Romance & Anniversary` | `Bikin Deg-degan` |
+| **Filter: Karakter** | `Mini & Karakter` | `Artisan Sculpture` | `Karakter Super Gemas` |
+| **Tombol Beli** | `Simpan ke Keranjang 🛒` | `Pesan Rangkaian Ini 🛍️` | `Mau yang Ini! 💖` |
+
+---
+
+### 20.5 Modul Custom Studio Interaktif
+| Langkah | Tema A: Korean Pastel | Tema B: Modern Romantic | Tema C: Playful Kawaii |
+| :--- | :--- | :--- | :--- |
+| **Judul Studio** | **Atelier Rangkai Mandiri** | **Bespoke Bouquet Studio** | **Studio Rangkai Suka-Suka** |
+| **Panduan Singkat** | Padukan warna dan bunga kesukaanmu dalam 4 langkah santai. | Rancang buket personal dengan sentuhan material berkelas. | Rangkai buket impianmu sendiri, bebas pilih warna sesukamu! |
+| **Step 1: Bunga** | *Pilih Bunga Utama* | *Tentukan Bentuk Kelopak* | *Pilih Karakter Bunga* |
+| **Step 2: Warna** | *Pilih Nuansa Kawat Beludru* | *Palet Warna Tangkai* | *Warna Kawat Paling Kece* |
+| **Step 3: Kertas** | *Pilih Kertas Pembungkus* | *Material Wrapping Cellophane* | *Kertas Bungkus Favorit* |
+| **Step 4: Aksesori** | *Sentuhan Pelengkap Manis* | *Finishing Detail & Kartu* | *Aksesori Tambahan Gemas* |
+| **Tombol Rekomendasi**| `🪄 Rekomendasi Warna Florist` | `✨ Harmonikan Otomatis` | `🎨 Padukan Otomatis Dong!` |
+| **Tombol Checkout** | `Selesaikan Rangkaian Ini 🌸` | `Konfirmasi Desain Pesanan 🖋️` | `Bungkus Desain Keren Ini! 🎉` |
+
+---
+
+### 20.6 Modul Lookbook & Cerita Pelanggan
+| Elemen | Tema A: Korean Pastel | Tema B: Modern Romantic | Tema C: Playful Kawaii |
+| :--- | :--- | :--- | :--- |
+| **Judul Seksi** | **Cerita Hangat dari Pelanggan** | **Momen yang Kami Rayakan** | **Keseruan Bareng Sahabat** |
+| **Kutipan Sosial** | *"Bunganya tetap cantik di meja belajar walau wisudanya sudah 6 bulan lalu."* | *"Detail kawat bulunya rapi sekali, terasa eksklusif saat diserahkan ke pasangan."* | *"Boneka toga dan bunganya lucu banget, teman sekelasku pada nanya beli di mana!"* |
+
+---
+
+### 20.7 Modul Keranjang Belanja & Upsell (*Drawer Cart*)
+| Elemen | Tema A: Korean Pastel | Tema B: Modern Romantic | Tema C: Playful Kawaii |
+| :--- | :--- | :--- | :--- |
+| **Judul Keranjang** | **Pesanan Bunga Kamu (3)** | **Daftar Pesanan Atelier (3)** | **Keranjang Belanjamu (3)** |
+| **Judul Upsell** | *Lengkapi Momen Manismu:* | *Sempurnakan Hadiah Ini:* | *Biar Makin Berkesan, Tambah Ini Yuk:* |
+| **Opsi Spotify** | `🎵 Sisipkan Lagu Kenangan (Spotify QR)` | `🎼 Tautkan Lagu Memorial (Spotify QR)` | `🎶 Kasih Lagu Favorit Kalian (Spotify QR)` |
+| **Tombol Lanjut** | `Lanjut ke Pengiriman 🌸` | `Lanjutkan Pembayaran 💳` | `Gas Checkout Sekarang! 🚀` |
+
+---
+
+### 20.8 Modul Pengingat Hari Spesial (Portal Pelanggan)
+| Elemen | Tema A: Korean Pastel | Tema B: Modern Romantic | Tema C: Playful Kawaii |
+| :--- | :--- | :--- | :--- |
+| **Judul Fitur** | **Kalender Momen Berharga** | **Memorial Date Registry** | **Catatan Hari Spesial** |
+| **Deskripsi** | Simpan tanggal wisuda atau ulang tahun orang terdekat. Kami ingatkan seminggu sebelumnya. | Dokumentasikan momen penting. Kami pastikan hadiah Anda siap tepat waktu tanpa tergesa. | Jangan sampai lupa ultah sahabat atau doi! Tulis tanggalnya di sini, nanti kami ingetin! |
+| **Pesan WA H-7** | *"Halo Kak, 7 hari lagi tanggal ulang tahun Ayunda. Mau kami siapkan buketnya lebih awal agar tenang?"* | *"Mengingatkan, momen penting Anda tinggal 7 hari lagi. Slot perakitan siap kami amankan untuk Anda."* | *"Hai Kak! Seminggu lagi wisuda bestie nih! Yuk amanin buketnya sekarang sebelum antrean penuh!"* |
+
+---
+
+
+---
+
+## 21. UI/UX & Art Direction Visual per Tema
+
+Seksi ini menetapkan arahan visual (*art direction*), standardisasi aset, serta perombakan elemen antarmuka storefront agar etalase produk tampil premium, otentik, berkarakter, dan mengeliminasi impresi tampilan template generik.
+
+
+### 21.1 Transformasi Hero Section: Dari "Web Screenshot" ke "Bespoke Product Showcase"
+
+```
+[ SEBELUMNYA (Terasa Template) ]
+┌─────────────────────────────────┐
+│ Hero Kiri: Teks & Tombol        │  ┌──────────────────────────────┐
+│                                 │  │ Kartu berisi Screenshot Web   │ ❌ Terasa seperti jualan
+│                                 │  │ mini bertuliskan "THE ART OF  │    template website
+│                                 │  │ ROMANCE" & grid kecil        │
+└─────────────────────────────────┘  └──────────────────────────────┘
+
+[ PERANCANGAN BARU (Autentik & Berjiwa Atelier) ]
+┌─────────────────────────────────┐
+│ Hero Kiri:                      │  ┌──────────────────────────────┐
+│ • Monogram / Signature Icon     │  │ FOTO FISIK HIGH-RES BUKET    │ ✨ Fokus pada produk riil
+│ • Headline Tipografi Tematik    │  │ • Tekstur beludru kawat nyata │ • Kedalaman visual (depth)
+│ • Micro Trust Pills (3 Poin)    │  │ • Pita satin menjuntai halus │ • Efek interaktif
+│ • Tombol Aksi Khas Tema         │  │ ┌──────────────────────────┐ │ • Ambient lighting
+└─────────────────────────────────┘  │ │ Floating Badge Tekstur  │ │
+                                     │ └──────────────────────────┘ │
+                                     │ ┌──────────────────────────┐ │
+                                     │ │ [💡 Coba Nyalakan Lampu] │ │ 🌟 Interaktif toggle LED
+                                     │ └──────────────────────────┘ │
+                                     └──────────────────────────────┘
+```
+
+---
+
+### 21.2 Karakter Visual & Penataan Aset untuk Setiap Tema
+
+#### A. Tema A: Korean Pastel Atelier (*Hannam-dong Warm Florist*)
+* **Nuansa Rasa:** Lembut, hangat, tenang, estetik seperti kafe bunga di Seoul.
+* **Aset Visual Hero (Kanan):**
+  * **Foto Utama:** Foto *lifestyle* buket kawat bulu Tulip & Daisy pastel di atas meja kayu cerah beralas kain linen oat, dengan cangkir keramik dan buku catatan di sampingnya.
+  * **Bingkai & Bentuk:** *Polaroid Photo Frame* miring tipis 2 derajat, dengan aksen **stiker washi tape semi-transparan** di sudut atasnya.
+  * **Aset Dekoratif Khusus:**
+    * Partikel kelopak bunga kawat bulu pastel yang melayang lembut (*floating pastel petals with CSS drift*).
+    * Cap stempel lilin (*wax seal*) warna sage green dengan logo bunga monogram Chenille.
+  * **Gaya Ikonografi:** *Delicate Hand-Drawn Line-Art* (ikon garis tipis 1.5px bernuansa ilustrasi Korea, bukan emoji standar).
+  * **Elemen Interaktif:** Kartu kecil mengambang: *"Detail Benang Beludru Halus (100% Chenille Wire)"* dengan foto *macro zoom* tekstur kawat bulu.
+
+---
+
+#### B. Tema B: Modern Romantic & Editorial (*Haute Couture Luxury Atelier*)
+* **Nuansa Rasa:** Mewah, dewasa, elegan, seperti majalah fashion editorial / brand parfum kelas atas.
+* **Aset Visual Hero (Kanan):**
+  * **Foto Utama:** Foto *editorial high-fashion studio*: Buket Mawar Beludru *Deep Wine Velvet* di atas **pedestal silinder marmer hitam/gelap**, dengan pencahayaan dramatis (*cinematic spotlight / chiaroscuro*).
+  * **Bingkai & Bentuk:** *Arched European Portal* (bingkai lengkungan arsitektur klasik) bergaris emas *champagne gold*, dengan juntaian pita satin sutra yang menjuntai natural melewati batas bingkai (*breaking the grid*).
+  * **Aset Dekoratif Khusus:**
+    * Efek kilau debu emas (*gold dust shimmer*) di latar belakang.
+    * Pita segel fisik dengan cap medali emas bertuliskan *"Chenille Privé Atelier"*.
+  * **Gaya Ikonografi:** *Sophisticated Monoline Gold* (garis emas berkelas dengan aksen serif tipis).
+  * **Elemen Interaktif Eksklusif:**
+    * Tombol sakelar: **`[💡 Nyalakan Lampu LED Buket]`** — saat diklik, gambar buket berubah menjadi suasana temaram malam dengan lampu peri menyala berkilau!
+
+---
+
+#### C. Tema C: Playful Kawaii (*Joyful Harajuku & Graduation Sunshine*)
+* **Nuansa Rasa:** Ceria, enerjik, penuh senyum, warna-warni, merayakan wisuda dan persahabatan.
+* **Aset Visual Hero (Kanan):**
+  * **Foto Utama:** Foto cerah buket bunga matahari kawat bulu dipadu boneka beruang toga wisuda mini yang menggemaskan, dengan latar belakang pastel bergradasi peach-yellow ceria.
+  * **Bingkai & Bentuk:** *Chunky Squircle Frame* (sudut melengkung besar yang membal) dengan efek *puffy claymorphism* dan bayangan warna-warni (*colored soft glow*).
+  * **Aset Dekoratif Khusus:**
+    * Stiker 3D kartun timbul (*glossy 3D puffy stickers*): stiker toga wisuda *"Congrats!"*, stiker pita pink, dan kilauan bintang (*sparkles*).
+    * Konfeti mikro yang berputar halus saat kursor digerakkan.
+  * **Gaya Ikonografi:** *Chunky Duotone Icons* (ikon gemuk berisi dua warna cerah yang membal saat di-hover/klik).
+  * **Elemen Interaktif:** Stiker interaktif yang bisa bergoyang (*wiggle animation*) saat kursor mouse mendekat.
+
+---
+
+### 21.3 Matriks Penataan Aset Visual Komparatif Antar-Tema
+
+| Komponen Visual | Tema A (Korean Pastel) | Tema B (Modern Romantic) | Tema C (Playful Kawaii) |
+| :--- | :--- | :--- | :--- |
+| **Pencahayaan (Lighting)** | Cahaya matahari pagi alami (*soft morning window light*) | Spotlight panggung dramatis (*dramatic chiaroscuro & moody*) | Cahaya cerah merata tanpa bayangan tajam (*bright pop light*) |
+| **Material Pendukung** | Kain linen oat, kayu terang, kertas kraft | Marmer hitam, kaca kristal, pita satin sutra | Akrilik bening warna-warni, balon pastel, konfeti |
+| **Aksen Bingkai (Frame)** | Polaroid miring + washi tape bertekstur | Lengkungan arsitektur (*classical arch*) + garis emas | Bingkai bantal timbul (*3D puffy pill frame*) |
+| **Jenis Ikon** | Minimalist line art Korea | Monoline champagne gold elegan | Chunky duotone dengan animasi membal (*spring*) |
+| **Badge Interaktif** | Cap stempel lilin (*wax seal*) | Tombol sakelar lampu LED (*Day / Night Mode*) | Stiker wisuda 3D bergoyang (*wiggle badge*) |
+| **Aroma Suasana (Vibe)** | Santai, hangat, romantis bersahaja | Eksklusif, prestisius, puitis berkelas | Ceria, seru, sahabat karib, penuh energi |
+
+---
+
+### 21.4 Rencana Tata Letak Komponen Baru pada Kode Frontend (`apps/web`)
+
+Untuk merealisasikan perancangan di atas, kita akan memperbarui komponen `HeroSection` di `apps/web`:
+1. **Membuat Aset Visual Dedicated per Tema:**
+   - Menyediakan 3 aset foto resolusi tinggi buket asli (satu untuk setiap tema: buket pastel, buket mawar wine mewah, dan buket boneka wisuda).
+2. **Menghapus Tampilan "Mini Website Screenshot"**:
+   - Menggantinya dengan **Komposisi Produk Fisik** yang memiliki *floating cards* (info bahan kawat bulu, opsi lampu LED, dan garansi kardus tebal).
+3. **Menambahkan Dynamic Theme Container Styling:**
+   - Tema A menerapkan `border-amber-100 shadow-sm rotate-[-1.5deg]`.
+   - Tema B menerapkan `border-amber-500/30 shadow-2xl rounded-t-full ring-1 ring-amber-400/20`.
+   - Tema C menerapkan `border-4 border-yellow-200 rounded-[2.5rem] shadow-xl hover:scale-[1.02]`.
+
+---
+
+
+---
+
+## 22. Roadmap Implementasi & Panduan Eksekusi Bertahap (Step-by-Step Development Execution Plan)
+
+Agar proses implementasi berjalan terarah, terukur, dan tidak menimbulkan *breaking changes* pada sistem monorepo yang sudah ada, eksekusi rekayasa perangkat lunak dibagi menjadi 5 fase bertahap (*phased rollout*):
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                               ROADMAP PENGEMBANGAN SISTEM BERTAHAP                               │
+├─────────────────┬─────────────────┬─────────────────┬──────────────────┬─────────────────────────┤
+│     FASE 1      │     FASE 2      │     FASE 3      │      FASE 4      │         FASE 5          │
+│ Data Modeling & │ Backend RESTful │ Admin Dashboard │ Storefront &     │ End-to-End QA,          │
+│ Database Schema │ API Endpoints   │ Suite (Campaign)│ Portal Pelanggan │ Audit & Hardening       │
+└─────────────────┴─────────────────┴─────────────────┴──────────────────┴─────────────────────────┘
+```
+
+---
+
+### 22.1 Rincian Matriks Eksekusi Tiap Fase
+
+#### 🔹 Fase 1: Database & Data Modeling Foundation (Supabase PostgreSQL & Prisma)
+* **Tujuan:** Menyiapkan fondasi persistensi data yang kuat, relasional, dan terindeks sebelum menyentuh logika aplikasi.
+* **Daftar Deliverables:**
+  1. **Migrasi Tabel Kampanye (`campaign_settings`):** Menyimpan toggle switch, streak point, target stempel, dan radius COD beserta nilai subsidinya.
+  2. **Migrasi Tabel Log Absensi & Stempel (`user_attendance_logs`, `user_stamp_cards`):** Pelacakan daily check-in dan kartu stempel belanja digital.
+  3. **Migrasi Tabel Telemetri & Occasion (`user_event_logs`, `search_keyword_logs`, `customer_occasions`):** Menyimpan event telemetry ringan, kata kunci pencarian, dan agenda hari spesial pelanggan.
+  4. **Seeding Default Configuration:** Memasukkan 1 record default kampanye ke `campaign_settings` agar antarmuka tidak mengalami *null reference*.
+* **Verifikasi Kriteria (DoD Fase 1):**
+  * `npx prisma db push` atau `prisma migrate dev` berhasil tanpa konflik skema.
+  * Seluruh indeks (`session_id`, `event_name`, `keyword`, `user_phone`) terverifikasi aktif di Supabase Dashboard.
+
+---
+
+#### 🔹 Fase 2: Backend RESTful API & Business Logic (`apps/api`)
+* **Tujuan:** Mengembangkan API endpoint yang aman, memiliki guard clause, dan terisolasi untuk melayani kebutuhan modul baru.
+* **Daftar Deliverables:**
+  1. **Routing Kampanye (`/api/v1/campaigns`):**
+     * `GET /api/v1/campaigns`: Mengambil konfigurasi kampanye aktif untuk konsumsi publik/storefront.
+     * `PUT /api/v1/admin/campaigns`: Endpoint terproteksi peran admin untuk memperbarui setting absensi, stempel, dan radius COD.
+  2. **Routing Absensi & Loyalitas (`/api/v1/attendance`, `/api/v1/stamps`):**
+     * `POST /api/v1/attendance/check-in`: Logika absensi harian (validasi 1 kali per hari, kalkulasi streak 7 hari berturut-turut, penambahan poin).
+     * `GET /api/v1/stamps/my-card`: Mengambil status kartu stempel pengguna aktif.
+  3. **Enhancement Validasi COD Geofencing (`/api/v1/cod-points/calculate`):**
+     * Membaca konfigurasi `cod_max_radius_km` dan `cod_subsidy_type` dari database secara dinamis.
+     * Menghitung apakah jarak titik temu <= radius promo dan total belanja >= batas minimum guna menerapkan potongan ongkir (100% / 50%).
+  4. **Routing Telemetri & Zero-Result Search (`/api/v1/telemetry`):**
+     * `POST /api/v1/telemetry/event`: Menampung log `user_events` secara asinkron (*fire-and-forget* agar tidak memperlambat respon web).
+     * `POST /api/v1/telemetry/search`: Mencatat query pencarian dan menandai flag `is_zero_hit: true` jika hasil katalog kosong.
+  5. **Routing Kalender Momen Spesial (`/api/v1/occasions`):**
+     * `POST /api/v1/occasions`: Menyimpan tanggal momen spesial pelanggan dari profil/portal.
+* **Verifikasi Kriteria (DoD Fase 2):**
+  * Unit test endpoint menggunakan Vitest/Supertest lulus 100%.
+  * Guard clause menolak check-in ganda di hari yang sama dengan kode status `409 Conflict`.
+
+---
+
+#### 🔹 Fase 3: Admin Dashboard Suite - Menu Campaigns (`apps/web/src/components/admin`)
+* **Tujuan:** Memberikan antarmuka intuitif bagi pemilik atelier untuk memantau performa dan mengontrol seluruh kampanye.
+* **Daftar Deliverables:**
+  1. **Registrasi Tab Navigasi "Campaigns" di `AdminViews.tsx`:** Menjaga persistensi menu menggunakan arsitektur URL query + local storage.
+  2. **Sub-Modul 1: Pengaturan Daily Attendance:** Toggle switch, form poin harian, target streak, dan reward kupon.
+  3. **Sub-Modul 2: Pengaturan Digital Stamp Card:** Form batas minimum belanja per stempel, target cap, dan dropdown pemilihan buket hadiah gratis.
+  4. **Sub-Modul 3: Pengaturan Promo Subsidi COD Radius:** Input jarak desimal (KM), skema diskon ongkir (100% Gratis / 50% Subsidi / Kustom), dan teks banner promosi.
+  5. **Widget Analisis Telemetri & Funnel:**
+     * Visualisasi tingkat konversi Custom Studio (Step 1 -> 2 -> 3 -> 4).
+     * Tabel daftar 10 kata kunci pencarian teratas yang menghasilkan *zero hit* (produk belum ada).
+* **Verifikasi Kriteria (DoD Fase 3):**
+  * Form admin mampu melakukan *save* dan merefleksikan perubahan secara instan ke database.
+  * Toggle non-aktif langsung mematikan fitur terkait di sisi etalase pembeli.
+
+---
+
+#### 🔹 Fase 4: Storefront Refactoring, Multi-Theme Copywriting & Customer Portal UI (`apps/web`)
+* **Tujuan:** Meningkatkan estetika visual etalase, menyematkan copywriting berkarakter per tema, dan menghidupkan fitur loyalitas pelanggan.
+* **Daftar Deliverables:**
+  1. **Refactoring `HeroSection.tsx` (Bespoke Product Showcase):**
+     * Mengganti kartu miniatur screenshot web dengan visual foto fisik buket bunga kawat bulu asli resolusi tinggi.
+     * Mengintegrasikan *floating badges* (velvet kawat bulu, switch lampu peri LED, proteksi kardus tebal).
+     * Menerapkan aksen bingkai spesifik tema (Polaroid + washi tape pada Tema A, Classical Arch pada Tema B, 3D puffy pill pada Tema C).
+  2. **Penerapan Matriks Copywriting Multi-Tema (Seksi 20):**
+     * Menghubungkan kamus teks berkarakter pada Announcement Bar, Hero Headline, Button CTA, Deskripsi Produk, dan Empty State sesuai tema aktif.
+  3. **Penyempurnaan Custom Studio Interaktif:**
+     * Menambahkan tombol **`[🪄 Rekomendasi Paduan Warna Florist]`** di Step 3 untuk memilihkan warna wrapping & pita serasi dalam 1-klik.
+  4. **Pembaruan Cart Drawer & Smart Micro-Upsell:**
+     * Menambahkan opsi add-on kartu akrilik lagu kenangan Spotify QR Code dan lampu fairy light LED sebelum tombol checkout.
+     * Badge promo ongkir otomatis pada opsi pengiriman COD Titik Temu berdasarkan radius.
+  5. **Pembaruan Customer Portal (`/portal`):**
+     * Komponen interaktif **Absensi Harian & Rawat Bunga** dengan animasi mekar saat absen.
+     * Komponen visual **Kartu 5 Stempel Belanja** dengan progress bar dan tombol klaim hadiah buket gratis.
+     * Formulir pencatat **Kalender Momen Spesial** untuk pengingat wisuda/anniversary.
+* **Verifikasi Kriteria (DoD Fase 4):**
+  * Tampilan etalase pada Tema A, B, dan C memiliki diferensiasi visual dan gaya bahasa yang kentara dan tidak seragam.
+  * Interaksi absensi dan stempel terhubung mulus dengan API backend.
+
+---
+
+#### 🔹 Fase 5: End-to-End Verification, QA & Pre-Launch Hardening
+* **Tujuan:** Menguji ketahanan fungsional, performa beban, dan estetika visual secara komprehensif.
+* **Daftar Deliverables:**
+  1. **Uji Skenario Alur Pembelian & Loyalitas:**
+     * Pembeli absen harian -> klaim kupon -> rangkai buket di Studio dengan rekomendasi florist -> checkout COD titik temu dengan promo gratis ongkir 5 KM.
+     * Pembelian selesai (status `COMPLETED`) -> verifikasi +1 stempel otomatis bertambah di kartu.
+  2. **Uji Batas Geofencing Google Maps:**
+     * Menguji titik temu di jarak 1.5 KM (gratis 100%), 4.0 KM (diskon 50% atau min. spend), dan 6.5 KM (rekomendasi kurir Biteship).
+  3. **Audit Performa & Aksesibilitas (Lighthouse / UI Pro Max Standards):**
+     * Memastikan gambar WebP buket asli terkompresi optimal (< 250 KB per gambar).
+     * Waktu load halaman awal di bawah 1.5 detik.
+     * Tidak ada error/warning console pada browser.
+* **Verifikasi Kriteria (DoD Fase 5):**
+  * Semua tes otomatis (Vitest + Playwright) lulus tanpa kendala.
+  * Aplikasi siap dideploy ke staging dan produksi Vercel.
