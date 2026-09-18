@@ -162,3 +162,85 @@ export interface ThemeDefinition {
   };
 }
 
+// ==============================================================================
+// CAMPAIGN & LOYALTY GAMIFICATION ENGINE (PRD Seksi 18)
+// ==============================================================================
+
+export type CodSubsidyType = 'FREE_100' | 'DISCOUNT_50' | 'CUSTOM_PERCENT' | 'FLAT_AMOUNT';
+
+export interface CampaignConfig {
+  id: string;
+  attendanceEnabled: boolean;
+  dailyPointsReward: number;
+  streakDaysTarget: number;
+  streakRewardType: string;
+  streakRewardValue: number;
+  resetStreakOnMiss: boolean;
+  stampCardEnabled: boolean;
+  stampTargetCount: number;
+  minSpendPerStamp: number;
+  stampRewardType: string;
+  stampRewardProductId?: string | null;
+  stampExpiryDays: number;
+  codPromoEnabled: boolean;
+  codMaxRadiusKm: number;
+  codSubsidyType: CodSubsidyType;
+  codSubsidyValue: number;
+  codMinSpend: number;
+  codPromoBannerText: string;
+  updatedAt?: string;
+}
+
+export interface UserAttendanceRecord {
+  id: string;
+  userPhone: string;
+  checkInDate: string;
+  pointsEarned: number;
+  currentStreak: number;
+  createdAt: string;
+}
+
+export interface UserStampCardState {
+  id: string;
+  userPhone: string;
+  stampsCollected: number;
+  targetStamps: number;
+  cardStatus: 'ACTIVE' | 'COMPLETED' | 'REDEEMED' | 'EXPIRED';
+  rewardClaimedAt?: string | null;
+  lastStampedOrderId?: string | null;
+  expiresAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ==============================================================================
+// CUSTOMER BEHAVIOR TELEMETRY & CONVERSION OPTIMIZATION (PRD Seksi 19)
+// ==============================================================================
+
+export interface UserEventLogPayload {
+  sessionId: string;
+  userId?: string | null;
+  eventName: string;
+  stepNumber?: number | null;
+  metadata?: Record<string, any> | null;
+}
+
+export interface SearchKeywordLogPayload {
+  keyword: string;
+  resultsCount: number;
+  isZeroHit: boolean;
+}
+
+export interface CustomerOccasionItem {
+  id?: string;
+  userPhone: string;
+  userName: string;
+  recipientName: string;
+  occasionTitle: string;
+  eventDate: string;
+  notes?: string | null;
+  isReminded?: boolean;
+  remindedAt?: string | null;
+  createdAt?: string;
+}
+

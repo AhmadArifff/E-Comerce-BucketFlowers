@@ -671,3 +671,162 @@ VALUES
 ON CONFLICT (key) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description;
+
+-- ==============================================================================
+-- 9. CAMPAIGN, LOYALTY GAMIFICATION & COD RADIUS ENGINE (PRD Seksi 18)
+-- ==============================================================================
+
+-- 9.1 Konfigurasi Kampanye Toko (Single Row Configuration)
+CREATE TABLE IF NOT EXISTS campaign_settings (
+  id VARCHAR(50) PRIMARY KEY DEFAULT 'ATELIER_CAMPAIGN_DEFAULT',
+  -- Daily Attendance Config
+  attendance_enabled BOOLEAN DEFAULT true,
+  daily_points_reward INTEGER DEFAULT 10,
+  streak_days_target INTEGER DEFAULT 7,
+  streak_reward_type VARCHAR(50) DEFAULT 'VOUCHER_DISCOUNT',
+  streak_reward_value NUMERIC(12, 2) DEFAULT 15.00,
+  reset_streak_on_miss BOOLEAN DEFAULT true,
+
+  -- Stamp Card Config
+  stamp_card_enabled BOOLEAN DEFAULT true,
+  stamp_target_count INTEGER DEFAULT 5,
+  min_spend_per_stamp NUMERIC(12, 2) DEFAULT 50000.00,
+  stamp_reward_type VARCHAR(50) DEFAULT 'FREE_PRODUCT',
+  stamp_reward_product_id VARCHAR(50) REFERENCES products(id) ON DELETE SET NULL,
+  stamp_expiry_days INTEGER DEFAULT 180,
+
+  -- COD Radius & Subsidy Config
+  cod_promo_enabled BOOLEAN DEFAULT true,
+  cod_max_radius_km NUMERIC(5, 2) DEFAULT 5.00,
+  cod_subsidy_type VARCHAR(50) DEFAULT 'FREE_100',
+  cod_subsidy_value NUMERIC(12, 2) DEFAULT 100.00,
+  cod_min_spend NUMERIC(12, 2) DEFAULT 75000.00,
+  cod_promo_banner_text VARCHAR(255) DEFAULT '🎉 Promo Area: Gratis Ongkir COD Titik Temu hingga 5 KM!',
+  
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 9.2 Log Absensi Harian Pengguna
+CREATE TABLE IF NOT EXISTS user_attendance_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_phone VARCHAR(20) NOT NULL,
+  check_in_date DATE NOT NULL,
+  points_earned INTEGER DEFAULT 10,
+  current_streak INTEGER DEFAULT 1,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT unique_user_daily_checkin UNIQUE (user_phone, check_in_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_user_phone ON user_attendance_logs(user_phone);
+CREATE INDEX IF NOT EXISTS idx_attendance_checkin_date ON user_attendance_logs(check_in_date);
+
+-- 9.3 Pelacakan Kartu Stempel Belanja Digital
+CREATE TABLE IF NOT EXISTS user_stamp_cards (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_phone VARCHAR(20) NOT NULL,
+  stamps_collected INTEGER DEFAULT 0,
+  target_stamps INTEGER DEFAULT 5,
+  card_status VARCHAR(30) DEFAULT 'ACTIVE',
+  reward_claimed_at TIMESTAMP WITH TIME ZONE,
+  last_stamped_order_id VARCHAR(50) REFERENCES orders(id) ON DELETE SET NULL,
+  expires_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_stamp_cards_user_phone ON user_stamp_cards(user_phone);
+CREATE INDEX IF NOT EXISTS idx_stamp_cards_card_status ON user_stamp_cards(card_status);
+
+-- ==============================================================================
+-- 10. CUSTOMER BEHAVIOR TELEMETRY & CONVERSION OPTIMIZATION (PRD Seksi 19)
+-- ==============================================================================
+
+-- 10.1 In-House Event Telemetry
+CREATE TABLE IF NOT EXISTS user_event_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id VARCHAR(100) NOT NULL,
+  user_id VARCHAR(50),
+  event_name VARCHAR(50) NOT NULL,
+  step_number INTEGER,
+  metadata JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_telemetry_session_id ON user_event_logs(session_id);
+CREATE INDEX IF NOT EXISTS idx_telemetry_event_name ON user_event_logs(event_name);
+CREATE INDEX IF NOT EXISTS idx_telemetry_created_at ON user_event_logs(created_at);
+
+-- 10.2 Search Keywords & Zero-Hit Analytics
+CREATE TABLE IF NOT EXISTS search_keyword_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  keyword VARCHAR(255) NOT NULL,
+  results_count INTEGER DEFAULT 0,
+  is_zero_hit BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_search_keyword ON search_keyword_logs(keyword);
+CREATE INDEX IF NOT EXISTS idx_search_zero_hit ON search_keyword_logs(is_zero_hit);
+
+-- 10.3 Customer Occasion Calendar
+CREATE TABLE IF NOT EXISTS customer_occasions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_phone VARCHAR(20) NOT NULL,
+  user_name VARCHAR(100) NOT NULL,
+  recipient_name VARCHAR(100) NOT NULL,
+  occasion_title VARCHAR(100) NOT NULL,
+  event_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  notes TEXT,
+  is_reminded BOOLEAN DEFAULT false,
+  reminded_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_occasions_user_phone ON customer_occasions(user_phone);
+CREATE INDEX IF NOT EXISTS idx_occasions_event_date ON customer_occasions(event_date);
+
+-- ==============================================================================
+-- 11. SEED DEFAULT CONFIGURATION FOR CAMPAIGNS
+-- ==============================================================================
+INSERT INTO campaign_settings (
+  id,
+  attendance_enabled,
+  daily_points_reward,
+  streak_days_target,
+  streak_reward_type,
+  streak_reward_value,
+  reset_streak_on_miss,
+  stamp_card_enabled,
+  stamp_target_count,
+  min_spend_per_stamp,
+  stamp_reward_type,
+  stamp_expiry_days,
+  cod_promo_enabled,
+  cod_max_radius_km,
+  cod_subsidy_type,
+  cod_subsidy_value,
+  cod_min_spend,
+  cod_promo_banner_text
+)
+VALUES (
+  'ATELIER_CAMPAIGN_DEFAULT',
+  true,
+  10,
+  7,
+  'VOUCHER_DISCOUNT',
+  15.00,
+  true,
+  true,
+  5,
+  50000.00,
+  'FREE_PRODUCT',
+  180,
+  true,
+  5.00,
+  'FREE_100',
+  100.00,
+  75000.00,
+  '🎉 Promo Area: Gratis Ongkir COD Titik Temu hingga 5 KM!'
+)
+ON CONFLICT (id) DO NOTHING;
+

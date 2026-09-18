@@ -565,3 +565,117 @@ model FeatureToggle {
   is_enabled  Boolean  @default(true)
   updated_at  DateTime @updatedAt
 }
+
+// ============================================================================
+// CAMPAIGN, LOYALTY GAMIFICATION & COD RADIUS ENGINE (PRD Seksi 18)
+// ============================================================================
+
+model CampaignSetting {
+  id                      String   @id @default("ATELIER_CAMPAIGN_DEFAULT")
+  // Daily Attendance Config
+  attendance_enabled      Boolean  @default(true)
+  daily_points_reward     Int      @default(10)
+  streak_days_target      Int      @default(7)
+  streak_reward_type      String   @default("VOUCHER_DISCOUNT") // 'VOUCHER_DISCOUNT', 'FREE_POINTS', 'FREE_PRODUCT'
+  streak_reward_value     Decimal  @default(15.00) @db.Decimal(12, 2)
+  reset_streak_on_miss    Boolean  @default(true)
+
+  // Stamp Card Config
+  stamp_card_enabled      Boolean  @default(true)
+  stamp_target_count      Int      @default(5)
+  min_spend_per_stamp     Decimal  @default(50000.00) @db.Decimal(12, 2)
+  stamp_reward_type       String   @default("FREE_PRODUCT") // 'FREE_PRODUCT', 'VOUCHER_DISCOUNT', 'FREE_SHIPPING'
+  stamp_reward_product_id String?
+  stamp_expiry_days       Int      @default(180)
+
+  // COD Radius & Subsidy Config
+  cod_promo_enabled       Boolean  @default(true)
+  cod_max_radius_km       Decimal  @default(5.00) @db.Decimal(5, 2)
+  cod_subsidy_type        String   @default("FREE_100") // 'FREE_100', 'DISCOUNT_50', 'CUSTOM_PERCENT', 'FLAT_AMOUNT'
+  cod_subsidy_value       Decimal  @default(100.00) @db.Decimal(12, 2)
+  cod_min_spend           Decimal  @default(75000.00) @db.Decimal(12, 2)
+  cod_promo_banner_text   String   @default("🎉 Promo Area: Gratis Ongkir COD Titik Temu hingga 5 KM!")
+  
+  updated_at              DateTime @updatedAt
+
+  @@map("campaign_settings")
+}
+
+model UserAttendanceLog {
+  id             String   @id @default(uuid())
+  user_phone     String
+  check_in_date  DateTime @db.Date
+  points_earned  Int      @default(10)
+  current_streak Int      @default(1)
+  created_at     DateTime @default(now())
+
+  @@unique([user_phone, check_in_date])
+  @@index([user_phone])
+  @@index([check_in_date])
+  @@map("user_attendance_logs")
+}
+
+model UserStampCard {
+  id                    String    @id @default(uuid())
+  user_phone            String
+  stamps_collected      Int       @default(0)
+  target_stamps         Int       @default(5)
+  card_status           String    @default("ACTIVE") // 'ACTIVE', 'COMPLETED', 'REDEEMED', 'EXPIRED'
+  reward_claimed_at     DateTime?
+  last_stamped_order_id String?
+  expires_at            DateTime?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  @@index([user_phone])
+  @@index([card_status])
+  @@map("user_stamp_cards")
+}
+
+// ============================================================================
+// CUSTOMER BEHAVIOR TELEMETRY & CONVERSION OPTIMIZATION (PRD Seksi 19)
+// ============================================================================
+
+model UserEventLog {
+  id          String   @id @default(uuid())
+  session_id  String
+  user_id     String?
+  event_name  String   // 'PAGE_VIEW', 'STUDIO_STEP', 'SEARCH', 'ADD_TO_CART', 'CHECKOUT', 'PAYMENT_SUCCESS'
+  step_number Int?     // Khusus event Studio Custom (1-4)
+  metadata    Json?    // Detail search keyword, filter, theme, dll.
+  created_at  DateTime @default(now())
+
+  @@index([session_id])
+  @@index([event_name])
+  @@index([created_at])
+  @@map("user_event_logs")
+}
+
+model SearchKeywordLog {
+  id            String   @id @default(uuid())
+  keyword       String
+  results_count Int      @default(0)
+  is_zero_hit   Boolean  @default(false)
+  created_at    DateTime @default(now())
+
+  @@index([keyword])
+  @@index([is_zero_hit])
+  @@map("search_keyword_logs")
+}
+
+model CustomerOccasion {
+  id             String    @id @default(uuid())
+  user_phone     String
+  user_name      String
+  recipient_name String
+  occasion_title String    // 'Ulang Tahun', 'Wisuda', 'Anniversary', dll.
+  event_date     DateTime
+  notes          String?
+  is_reminded    Boolean   @default(false)
+  reminded_at    DateTime?
+  created_at     DateTime  @default(now())
+
+  @@index([user_phone])
+  @@index([event_date])
+  @@map("customer_occasions")
+}
