@@ -1905,14 +1905,23 @@ export const PromosView: React.FC = () => {
 export const MaintenanceThemeView: React.FC = () => {
   const { theme, setTheme } = useThemeStore();
   const { resetOrdersToDefault } = useOrderStore();
-  const { resetAllSettingsToDefault } = useSettingsStore();
+  const {
+    isMaintenanceMode,
+    setMaintenanceMode,
+    fetchServerSettings,
+    resetAllSettingsToDefault,
+  } = useSettingsStore();
 
-  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [refreshStep, setRefreshStep] = useState(0);
   const [copiedSql, setCopiedSql] = useState(false);
+
+  useEffect(() => {
+    fetchServerSettings();
+  }, [fetchServerSettings]);
 
   const handleCopySqlSnippet = () => {
     const textToCopy = `-- CHENILLE ATELIER - SUPABASE SQL SCHEMA (27 TABLES & 7 BUCKETS)
@@ -2000,15 +2009,22 @@ export const MaintenanceThemeView: React.FC = () => {
 
   const handleSelectTheme = (tId: ThemeId) => {
     setTheme(tId, true);
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: 'THEME_CHANGED', theme: tId }, '*');
+    }
     showMagicToast('Tema Diperbarui! 🎨', `Tema etalase toko aktif sekarang: ${tId.toUpperCase()}`, '✨');
   };
 
-  const toggleMaintenance = () => {
-    setIsMaintenanceMode(!isMaintenanceMode);
+  const toggleMaintenance = async () => {
+    const nextMode = !isMaintenanceMode;
+    await setMaintenanceMode(nextMode);
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: 'MAINTENANCE_TOGGLED', isMaintenanceMode: nextMode }, '*');
+    }
     showMagicToast(
-      !isMaintenanceMode ? 'Mode Pemeliharaan Aktif ⚠️' : 'Toko Dibuka Kembali! 🌸',
-      !isMaintenanceMode ? 'Pengunjung akan diarahkan ke halaman pemeliharaan.' : 'Storefront live dan dapat menerima pesanan.',
-      !isMaintenanceMode ? '🛑' : '🚀'
+      nextMode ? 'Mode Pemeliharaan Aktif ⚠️' : 'Toko Dibuka Kembali! 🌸',
+      nextMode ? 'Pengunjung akan diarahkan ke halaman pemeliharaan.' : 'Storefront live dan dapat menerima pesanan.',
+      nextMode ? '🛑' : '🚀'
     );
   };
 
@@ -2318,9 +2334,10 @@ export const MaintenanceThemeView: React.FC = () => {
             }`}
           >
             <iframe
+              ref={iframeRef}
               src="/"
               title="Storefront Live Preview"
-              className="w-full h-full border-none"
+              className="w-full h-full border-none transition-all duration-300"
             />
           </div>
         </div>

@@ -409,6 +409,9 @@ router.patch('/settings', async (req, res) => {
       longitude,
       maps_link,
       max_cod_radius_km,
+      is_maintenance_mode,
+      maintenance_title,
+      maintenance_desc,
     } = req.body;
     const updateSql = `
       UPDATE store_settings
@@ -422,21 +425,27 @@ router.patch('/settings', async (req, res) => {
           longitude = COALESCE($8, longitude),
           maps_link = COALESCE($9, maps_link),
           max_cod_radius_km = COALESCE($10, max_cod_radius_km),
+          is_maintenance_mode = COALESCE($11, is_maintenance_mode),
+          maintenance_title = COALESCE($12, maintenance_title),
+          maintenance_desc = COALESCE($13, maintenance_desc),
           updated_at = NOW()
       WHERE id = 'atelier_setting'
       RETURNING *;
     `;
     const result = await pool.query(updateSql, [
-      store_name,
-      tagline,
-      official_whatsapp,
-      studio_address,
-      daily_po_limit,
-      active_theme,
-      latitude,
-      longitude,
-      maps_link,
-      max_cod_radius_km,
+      store_name ?? null,
+      tagline ?? null,
+      official_whatsapp ?? null,
+      studio_address ?? null,
+      daily_po_limit ?? null,
+      active_theme ?? null,
+      latitude ?? null,
+      longitude ?? null,
+      maps_link ?? null,
+      max_cod_radius_km ?? null,
+      is_maintenance_mode !== undefined ? is_maintenance_mode : null,
+      maintenance_title ?? null,
+      maintenance_desc ?? null,
     ]);
     return res.json({ success: true, data: result.rows[0] });
   } catch (error: any) {

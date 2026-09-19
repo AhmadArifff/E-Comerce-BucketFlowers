@@ -4,6 +4,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CodPoint } from '@chenille/shared';
 
+import { getApiUrl } from '@/lib/api-client';
+import { broadcastMaintenanceToggle, subscribeStorefrontSync } from '@/lib/sync-channel';
+
 export interface WasteMaterialItem {
   id: string;
   materialName: string;
@@ -144,6 +147,13 @@ interface SettingsState {
   coupons: StoreCoupon[];
   rawMaterials: RawMaterial[];
   procurementOrders: ProcurementOrder[];
+
+  isMaintenanceMode: boolean;
+  maintenanceTitle: string;
+  maintenanceDesc: string;
+  setMaintenanceMode: (enabled: boolean, title?: string, desc?: string, persistToBackend?: boolean) => Promise<void>;
+  fetchServerSettings: () => Promise<void>;
+  initSettingsSyncListener: () => () => void;
 
   // Actions
   updateStoreProfile: (profile: {
@@ -446,6 +456,65 @@ export const useSettingsStore = create<SettingsState>()(
       longitude: '106.8315',
       mapsLink: 'https://maps.google.com/?q=-6.3728,106.8315',
       maxCodRadiusKm: 5.0,
+      isMaintenanceMode: false,
+      maintenanceTitle: 'Atelier Chenille Sedang Istirahat Produksi 🌸',
+      maintenanceDesc: 'Kapasitas buket wisuda hari ini telah penuh demi menjaga kualitas kerapian terbaik. Kami akan segera kembali!',
+
+      setMaintenanceMode: async (enabled, title, desc, persistToBackend = true) => {
+        const finalTitle = title ?? get().maintenanceTitle;
+        const finalDesc = desc ?? get().maintenanceDesc;
+        set({
+          isMaintenanceMode: enabled,
+          maintenanceTitle: finalTitle,
+          maintenanceDesc: finalDesc,
+        });
+        broadcastMaintenanceToggle(enabled, finalTitle, finalDesc);
+
+        if (persistToBackend) {
+          try {
+            await fetch(getApiUrl('/api/v1/admin/settings'), {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                is_maintenance_mode: enabled,
+                maintenance_title: finalTitle,
+                maintenance_desc: finalDesc,
+              }),
+            });
+          } catch (e) {
+            console.warn('[useSettingsStore] Gagal menyimpan maintenance mode ke database:', e);
+          }
+        }
+      },
+
+      fetchServerSettings: async () => {
+        try {
+          const res = await fetch(getApiUrl('/api/v1/admin/settings'));
+          const json = await res.json();
+          if (json.success && json.data) {
+            const d = json.data;
+            set({
+              isMaintenanceMode: Boolean(d.is_maintenance_mode),
+              maintenanceTitle: d.maintenance_title || get().maintenanceTitle,
+              maintenanceDesc: d.maintenance_desc || get().maintenanceDesc,
+            });
+          }
+        } catch (e) {
+          console.warn('[useSettingsStore] Gagal fetch server settings:', e);
+        }
+      },
+
+      initSettingsSyncListener: () => {
+        return subscribeStorefrontSync((event) => {
+          if (event.type === 'MAINTENANCE_TOGGLED') {
+            set({
+              isMaintenanceMode: event.isMaintenanceMode,
+              maintenanceTitle: event.title ?? get().maintenanceTitle,
+              maintenanceDesc: event.desc ?? get().maintenanceDesc,
+            });
+          }
+        });
+      },
       paymentGateways: {
         midtrans: {
           isEnabled: true,

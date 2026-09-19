@@ -16,9 +16,11 @@ import { ProductDetailModal } from '@/components/storefront/ProductDetailModal';
 import { CartDrawer } from '@/components/storefront/CartDrawer';
 import { LiveChatWidget } from '@/components/storefront/LiveChatWidget';
 import { Footer } from '@/components/storefront/Footer';
+import { MaintenanceOverlay } from '@/components/storefront/MaintenanceOverlay';
 import type { ExtendedProduct } from '@chenille/shared';
 import { MOCK_PRODUCTS } from '@chenille/shared';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { getThemeCopy } from '@/lib/theme-copy';
 import { getApiUrl } from '@/lib/api-client';
 
@@ -26,6 +28,15 @@ const ITEMS_PER_PAGE = 12;
 
 export default function StorefrontPage() {
   const { theme } = useThemeStore();
+  const {
+    isMaintenanceMode,
+    maintenanceTitle,
+    maintenanceDesc,
+    waNumber,
+    initSettingsSyncListener,
+    fetchServerSettings,
+  } = useSettingsStore();
+
   const [mounted, setMounted] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
@@ -43,10 +54,28 @@ export default function StorefrontPage() {
   });
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch real products from Supabase API via backend engine & sync active theme from DB
+  // Fetch real products from Supabase API via backend engine & sync active theme & maintenance from DB
   useEffect(() => {
     setMounted(true);
     useThemeStore.getState().fetchServerTheme();
+    fetchServerSettings();
+
+    const unsubTheme = useThemeStore.getState().initSyncListener();
+    const unsubSettings = initSettingsSyncListener();
+
+    // Periodic check & tab visibility listener for cross-device sync (PRD 23.2 C)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        useThemeStore.getState().fetchServerTheme();
+        fetchServerSettings();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const pollInterval = setInterval(() => {
+      useThemeStore.getState().fetchServerTheme();
+      fetchServerSettings();
+    }, 12000);
 
     fetch(getApiUrl('/api/v1/products?limit=50'))
       .then((res) => res.json())
@@ -56,7 +85,14 @@ export default function StorefrontPage() {
         }
       })
       .catch((err) => console.warn('Could not load products from Supabase API, using fallback:', err));
-  }, []);
+
+    return () => {
+      unsubTheme();
+      unsubSettings();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(pollInterval);
+    };
+  }, [fetchServerSettings, initSettingsSyncListener]);
 
   const activeTheme = mounted ? theme : 'tema-a';
   const copy = getThemeCopy(activeTheme);
@@ -270,7 +306,7 @@ export default function StorefrontPage() {
   }, [filteredProducts, currentPage]);
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col theme-transition">
       <AnnouncementBar />
       
       {/* 6-MENU FIXED NAVBAR WITH AUTO-SUGGEST */}
@@ -368,6 +404,15 @@ export default function StorefrontPage() {
       />
 
       <Footer />
+
+      {/* 7. REAL-TIME AESTHETIC MAINTENANCE OVERLAY (PRD Seksi 23.3) */}
+      {isMaintenanceMode && mounted && (
+        <MaintenanceOverlay
+          title={maintenanceTitle}
+          desc={maintenanceDesc}
+          waNumber={waNumber}
+        />
+      )}
     </div>
   );
 }

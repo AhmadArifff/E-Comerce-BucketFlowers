@@ -4,6 +4,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { getApiUrl } from '@/lib/api-client';
 
+import { broadcastThemeChange, subscribeStorefrontSync } from '@/lib/sync-channel';
+
 export type ThemeId = 'tema-a' | 'tema-b' | 'tema-c';
 
 export const THEME_DB_MAP: Record<ThemeId, string> = {
@@ -26,6 +28,7 @@ interface ThemeState {
   setTheme: (theme: ThemeId, persistToBackend?: boolean) => Promise<void>;
   syncFromServer: (dbTheme: string) => void;
   fetchServerTheme: () => Promise<ThemeId | null>;
+  initSyncListener: () => () => void;
 }
 
 export const useThemeStore = create<ThemeState>()(
@@ -38,6 +41,7 @@ export const useThemeStore = create<ThemeState>()(
           document.documentElement.setAttribute('data-theme', theme);
         }
         set({ theme });
+        broadcastThemeChange(theme);
 
         if (persistToBackend) {
           try {
@@ -51,6 +55,20 @@ export const useThemeStore = create<ThemeState>()(
             console.warn('[useThemeStore] Gagal menyimpan tema ke basis data:', e);
           }
         }
+      },
+
+      initSyncListener: () => {
+        return subscribeStorefrontSync((event) => {
+          if (event.type === 'THEME_CHANGED' && event.theme) {
+            const mapped = DB_THEME_MAP[event.theme];
+            if (mapped && mapped !== get().theme) {
+              if (typeof document !== 'undefined') {
+                document.documentElement.setAttribute('data-theme', mapped);
+              }
+              set({ theme: mapped });
+            }
+          }
+        });
       },
 
       syncFromServer: (dbTheme: string) => {

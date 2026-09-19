@@ -4011,3 +4011,85 @@ Agar proses implementasi berjalan terarah, terukur, dan tidak menimbulkan *break
 * **Verifikasi Kriteria (DoD Fase 5):**
   * Semua tes otomatis (Vitest + Playwright) lulus tanpa kendala.
   * Aplikasi siap dideploy ke staging dan produksi Vercel.
+
+---
+
+## 23. Arsitektur Sinkronisasi Real-Time & Transisi Visual Halus (Real-Time Reactive State & Smooth Multi-View Synchronization)
+
+Seksi ini menetapkan arsitektur teknis dan standar antarmuka untuk sinkronisasi seketika (*real-time reactive synchronization*) antara Admin Dashboard, Live Preview Browser, dan Storefront Publik pelanggan tanpa mengharuskan refresh manual, serta standar transisi animasi halus (*zero-flicker smooth CSS motion*) saat terjadi perubahan status operasional.
+
+### 23.1 Problem Statement & Kebutuhan Pengguna
+1. **Kendala Mode Pemeliharaan (Maintenance Mode):**
+   - Sebelumnya, tombol toggle mode pemeliharaan di Admin Dashboard hanya mengubah state lokal React dan tidak tersimpan ke basis data `store_settings`.
+   - Etalase pelanggan tidak secara otomatis beralih ke tampilan pemeliharaan secara real-time tanpa me-refresh halaman web secara manual.
+2. **Kendala Live Preview Tema & Cross-Tab Sync:**
+   - Iframe pratinjau di menu Admin `MaintenanceThemeView` menggunakan URL statis (`/`) tanpa mekanisme komunikasi dua arah (*cross-window messaging*), sehingga ketika admin memilih tema baru, iframe tidak berubah secara seketika.
+   - Pergantian tema antar-tema terasa instan/kaku atau memerlukan refresh penuh, tanpa ada transisi warna dan tata letak yang mulus (*smooth cross-fade animation*).
+
+---
+
+### 23.2 Arsitektur Sinkronisasi 4-Lapis (4-Tier Real-Time Synchronization Engine)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│             ARSITEKTUR SINKRONISASI REAL-TIME & REACTIVE MULTI-VIEW              │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ 1. Zero-Latency BroadcastChannel API ('chenille_storefront_sync') + postMessage  │
+│    └─ Sinkronisasi 0ms antar Tab Admin, Iframe Preview, & Tab Storefront         │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ 2. PostgreSQL Supabase Single Source of Truth (Tabel store_settings)             │
+│    └─ Kolom is_maintenance_mode, maintenance_title, maintenance_desc, active_theme│
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ 3. REST API Endpoint: PATCH /api/v1/admin/settings & GET /settings               │
+│    └─ Validasi input, atomic update, dan broadcasting status operasional toko    │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ 4. Periodic Heartbeat Polling & Visibility Listener (Cross-Device Sync)         │
+│    └─ Polling latar belakang (setiap 10s & on-focus) untuk sinkronisasi beda HP/PC│
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### A. Lapis 1: Zero-Latency Client BroadcastChannel & PostMessage
+* Menggunakan browser native `BroadcastChannel('chenille_storefront_sync')`.
+* Saat Admin mengubah tema atau mengaktifkan mode pemeliharaan, event disiarkan ke seluruh window/tab/iframe pada origin yang sama:
+  * Event Tema: `{ type: 'THEME_CHANGED', theme: 'tema-a' | 'tema-b' | 'tema-c' }`
+  * Event Pemeliharaan: `{ type: 'MAINTENANCE_TOGGLED', isMaintenanceMode: boolean, title?: string, desc?: string }`
+* Iframe Live Preview di `MaintenanceThemeView` mendengarkan event via `BroadcastChannel` dan `window.postMessage`, lalu memperbarui state secara seketika tanpa melakukan reload halaman.
+
+#### B. Lapis 2 & 3: Persistensi Database & API Kontrak
+* Database Supabase `store_settings`:
+  * `is_maintenance_mode BOOLEAN DEFAULT false`
+  * `maintenance_title TEXT DEFAULT 'Atelier Chenille Sedang Istirahat Produksi'`
+  * `maintenance_desc TEXT DEFAULT 'Kapasitas buket wisuda hari ini telah penuh.'`
+* Endpoint `PATCH /api/v1/admin/settings` mendukung mutasi ketiga kolom di atas.
+* Endpoint `GET /api/v1/admin/settings` mengembalikan status pemeliharaan ke storefront publik.
+
+#### C. Lapis 4: Cross-Device Reactive Polling & Tab Visibility Listener
+* Komponen `StorefrontPage` dan `PortalPage` menyematkan listener `document.addEventListener('visibilitychange')`.
+* Saat pelanggan membuka kembali tab browser mereka, atau setiap 15 detik di latar belakang, sistem mengecek endpoint pengaturan toko untuk mendeteksi apakah admin sedang menyalakan mode pemeliharaan atau mengganti tema, sehingga sinkronisasi lintas perangkat (PC ke HP atau browser berbeda) berjalan otomatis.
+
+---
+
+### 23.3 Standar Transisi Visual Animasi Halus (Smooth Motion & Zero-Flicker Transitions)
+
+1. **Transisi Global Tema (Smooth Theme Cross-Fade):**
+   * Menyematkan kelas utilitas transisi CSS pada elemen akar `html`, `body`, dan kontainer kartu etalase:
+     ```css
+     html, body, [data-theme], .theme-transition {
+       transition: background-color 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                   color 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                   border-color 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                   box-shadow 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+     }
+     ```
+   * Efek animasi masuk (*smooth fade-scale*) pada Hero Section saat tema berganti agar terasa dinamis, mewah, dan hidup.
+
+2. **Tampilan Mode Pemeliharaan Estetis (Aesthetic Atelier Maintenance Screen):**
+   * Ketika `is_maintenance_mode === true`:
+     * Muncul layar pemeliharaan penuh (*full-screen maintenance view*) atau modal overlay kaca lembut (*glassmorphism backdrop blur*).
+     * Ikon animasi: Bunga kawat bulu dengan animasi denyut napas (*gentle breathing pulse*).
+     * Judul: *"Atelier Chenille Sedang Istirahat Produksi 🌸"* (atau judul dinamis dari database).
+     * Deskripsi: *"Kapasitas perakitan buket wisuda hari ini telah terpenuhi demi menjaga kualitas kerapian terbaik. Pemesanan akan dibuka kembali segera."*
+     * Tombol Aksi:
+       1. **Konsultasi Darurat via WhatsApp:** Mengarahkan ke nomor resmi atelier dengan pesan otomatis: *"Halo Atelier Chenille, saya ingin menanyakan ketersediaan slot buket untuk hari ini."*
+       2. **Tombol Masuk Admin (Bypass):** Membuka modal login admin agar pengrajin/pemilik toko tetap dapat mengakses dashboard admin tanpa terblokir.
+     * Transisi keluar/masuk menggunakan animasi `fade-in` dan `scale-in-95` berdurasi 400ms.
