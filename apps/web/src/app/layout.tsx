@@ -212,6 +212,21 @@ export default function RootLayout({
             `,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+                  navigator.serviceWorker.getRegistrations().then(function(regs) {
+                    for (var i = 0; i < regs.length; i++) {
+                      regs[i].unregister();
+                    }
+                  });
+                }
+              })();
+            `,
+          }}
+        />
       </head>
       <body
         className="font-sans antialiased bg-theme-bg text-theme-text-main min-h-screen flex flex-col w-full max-w-full overflow-x-hidden"

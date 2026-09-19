@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   transpilePackages: ['@chenille/shared'],
   compress: true,
   poweredByHeader: false,
+  devIndicators: false,
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [

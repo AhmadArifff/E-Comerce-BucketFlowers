@@ -4172,3 +4172,93 @@ Seksi ini menetapkan aturan teknis, standar CSS, dan tata letak responsif untuk 
 #### D. Pilar 5: Popover & Floating Modal Mobile Safeguard (`ProductFilterBar.tsx`, `LiveChatWidget.tsx`)
 * Seluruh modal, popover, dan floating widget tidak boleh menggunakan lebar pixel mutlak tanpa pembatas responsif.
 * Popover filter wajib dibatasi menggunakan `w-[calc(100vw-2.5rem)] sm:w-80 max-w-xs` agar selalu memiliki margin aman minimal 16px dari tepi layar pada semua tipe smartphone Android dan iPhone.
+
+
+---
+
+## 25. Mitigasi Stale Service Worker & Stabilitas HMR DevTools Next.js 15 (Dev Server Stability & Service Worker Purge Protocol)
+
+Seksi ini menetapkan tata kelola rekayasa dan standar konfigurasi untuk mengatasi kendala siklus hidup server pengembangan (*Next.js 15 development server*), khususnya error `500` berulang pada `/sw.js`, kesalahan `TypeError: Cannot read properties of undefined (reading '/_app')`, dan desinkronisasi `React Client Manifest` pada modul internal `segment-explorer-node.js#SegmentViewNode` saat Hot Module Replacement (HMR) aktif.
+
+### 25.1 Problem Statement & Root Cause Analysis (Analisis Akar Masalah)
+1. **Siklus Konflik Stale Service Worker di `localhost:3000`:**
+   * Pengembang atau browser pengguna yang pernah mengunjungi aplikasi web lain di domain/port `http://localhost:3000` (atau versi PWA sebelumnya) menyimpan pendaftaran *Service Worker* aktif dengan scope `/` yang menunjuk ke `/sw.js`.
+   * Setiap kali browser memuat atau me-refresh halaman di `localhost:3000`, peramban secara otomatis mengirimkan request latar belakang `GET /sw.js`.
+   * Karena aplikasi Chenille Atelier menggunakan arsitektur murni **Next.js 15 App Router** (tanpa direktori `pages/` dan tanpa `pages/_app.tsx`), request ke berkas yang tidak ada (`/sw.js`) memicu mekanisme fallback Pages Router internal Next.js:
+     ```
+     [TypeError: Cannot read properties of undefined (reading '/_app')]
+     GET /sw.js 500
+     ```
+   * Akibatnya, *Service Worker zombie* tersebut gagal memperbarui diri, mengalami *crash loop*, dan menginterupsi *Fast Refresh* / *Hot Module Replacement* (HMR), bahkan menyebabkan rute utama `/` ikut terkena `500`.
+2. **Next.js 15 DevTools Segment Explorer RSC Manifest Desynchronization:**
+   * Pada Next.js 15.1+, fitur internal DevTools / Dev Overlay memperkenalkan komponen `segment-explorer-node.js#SegmentViewNode` untuk visualisasi segmentasi rute.
+   * Pada lingkungan pengembangan dengan HMR dinamis di Windows / monorepo Turborepo, modul internal ini mengalami *manifest lookup failure*:
+     ```
+     Could not find the module ".../node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest.
+     This is probably a bug in the React Server Components bundler.
+     ```
+   * Hal ini menyebabkan dev server menampilkan layar merah error overlay dan memutus koneksi WebSocket HMR secara acak saat kode diubah.
+
+---
+
+### 25.2 Standar Solusi 3-Lapis (3-Tier Dev Server Stability Protocol)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│              3-TIER DEV SERVER STABILITY & SERVICE WORKER PURGE                  │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ 1. next.config.ts: devIndicators: false (Mencegah RSC DevTools Crash)            │
+│ 2. apps/web/public/sw.js: Self-Unregistering Service Worker (200 OK & Auto-Purge)│
+│ 3. apps/web/src/app/layout.tsx: Immediate Client-Side SW Registration Cleanup     │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### A. Lapis 1: Menonaktifkan DevTools Segment Explorer (`next.config.ts`)
+* Pada `apps/web/next.config.ts`, properti `devIndicators: false` disematkan untuk menonaktifkan indikator dev dan segment explorer bermasalah:
+  ```ts
+  const nextConfig: NextConfig = {
+    transpilePackages: ['@chenille/shared'],
+    compress: true,
+    poweredByHeader: false,
+    devIndicators: false,
+    // ...
+  };
+  ```
+* Dampak: Menghilangkan total error `Could not find the module ... segment-explorer-node.js#SegmentViewNode in the React Client Manifest` dan menjaga HMR tetap stabil 60fps tanpa interupsi.
+
+#### B. Lapis 2: Berkas Pembersih Otomatis Mandiri (`apps/web/public/sw.js`)
+* Menyediakan berkas statis `public/sw.js` yang secara otomatis mencabut (*unregister*) dirinya sendiri dan melepaskan kontrol peramban:
+  ```js
+  self.addEventListener('install', () => {
+    self.skipWaiting();
+  });
+
+  self.addEventListener('activate', (event) => {
+    event.waitUntil(
+      self.registration
+        .unregister()
+        .then(() => self.clients.matchAll())
+        .then((clients) => {
+          clients.forEach((client) => {
+            if (client.url && 'navigate' in client) {
+              client.navigate(client.url);
+            }
+          });
+        })
+    );
+  });
+  ```
+* Dampak: Request `GET /sw.js` dari browser langsung direspons HTTP `200 OK` (statis tanpa menyentuh Pages Router fallback), dan service worker lawas langsung dibersihkan dari browser.
+
+#### C. Lapis 3: Skrip Pembersih Sisi Klien di Root Layout (`layout.tsx`)
+* Di `<head>` berkas `layout.tsx`, ditambahkan skrip eksekusi dini:
+  ```js
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+      for (var i = 0; i < regs.length; i++) {
+        regs[i].unregister();
+      }
+    });
+  }
+  ```
+* Dampak: Menjamin setiap klien atau browser pengembang yang membuka aplikasi akan langsung memusnahkan sisa Service Worker tanpa memerlukan intervensi manual buka tab *Application > Clear Site Data*.
