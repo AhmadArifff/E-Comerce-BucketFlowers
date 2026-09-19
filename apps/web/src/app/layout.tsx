@@ -229,7 +229,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className="font-sans antialiased bg-theme-bg text-theme-text-main min-h-screen flex flex-col w-full max-w-full overflow-x-hidden"
+        className="font-sans antialiased bg-theme-bg text-theme-text-main min-h-screen flex flex-col w-full max-w-full overflow-x-clip"
         suppressHydrationWarning
       >
         {children}

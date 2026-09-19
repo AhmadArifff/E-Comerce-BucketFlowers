@@ -306,7 +306,7 @@ export default function StorefrontPage() {
   }, [filteredProducts, currentPage]);
 
   return (
-    <div className="flex-1 flex flex-col theme-transition w-full max-w-full overflow-x-hidden">
+    <div className="flex-1 flex flex-col theme-transition w-full max-w-full overflow-x-clip">
       <AnnouncementBar />
       
       {/* 6-MENU FIXED NAVBAR WITH AUTO-SUGGEST */}
@@ -320,7 +320,7 @@ export default function StorefrontPage() {
         }}
       />
 
-      <main className="flex-1 w-full max-w-full overflow-x-hidden">
+      <main className="flex-1 w-full max-w-full overflow-x-clip">
         {/* 1. BERANDA / HERO SECTION */}
         <HeroSection onNavigate={handleNavigate} />
 
