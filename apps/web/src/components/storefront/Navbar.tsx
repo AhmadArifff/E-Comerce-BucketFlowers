@@ -216,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-theme-border shadow-2xs transition-colors duration-300">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-theme-border shadow-2xs transition-colors duration-300 w-full max-w-full overflow-hidden">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-3 lg:gap-4">
           
@@ -613,7 +613,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Mobile Horizontal Navigation Pills Bar */}
         <div
           ref={mobileNavRef}
-          className="xl:hidden overflow-x-auto scrollbar-none py-2 flex items-center gap-1.5 border-t border-theme-border -mx-4 px-4 sm:-mx-6 sm:px-6"
+          className="xl:hidden overflow-x-auto scrollbar-none py-2 flex items-center gap-1.5 border-t border-theme-border -mx-4 px-4 sm:-mx-6 sm:px-6 touch-pan-x overscroll-x-contain"
         >
           {navMenuItems.map((menu) => {
             const isActive = activeSection === menu.id;

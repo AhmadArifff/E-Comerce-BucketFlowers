@@ -149,7 +149,7 @@ export const ProductFilterBar: React.FC<ProductFilterBarProps> = ({
 
             {/* Price Popover Modal */}
             {isPriceOpen && (
-              <div className="absolute left-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-40 animate-in fade-in-50 zoom-in-95 duration-150">
+              <div className="absolute left-0 mt-2 w-[calc(100vw-2.5rem)] sm:w-80 max-w-xs bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-40 animate-in fade-in-50 zoom-in-95 duration-150">
                 <div className="flex items-center justify-between pb-2 border-b border-stone-100 mb-3">
                   <span className="text-xs font-black text-stone-800 uppercase tracking-wider">Filter Rentang Harga</span>
                   <button
@@ -277,7 +277,7 @@ export const ProductFilterBar: React.FC<ProductFilterBarProps> = ({
             </button>
 
             {isSortOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden z-40 divide-y divide-stone-100 animate-in fade-in-50 zoom-in-95 duration-150">
+              <div className="absolute right-0 mt-2 w-[calc(100vw-2.5rem)] sm:w-56 max-w-xs bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden z-40 divide-y divide-stone-100 animate-in fade-in-50 zoom-in-95 duration-150">
                 <div className="px-3.5 py-2 bg-stone-50/80 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
                   Opsi Pengurutan Katalog
                 </div>

@@ -83,7 +83,7 @@ export const AnnouncementBar: React.FC = () => {
   return (
     <div
       style={{ background: bar.background, color: bar.color }}
-      className={`py-2 px-4 shadow-2xs transition-colors duration-300 ${bar.className}`}
+      className={`py-2 px-4 shadow-2xs transition-colors duration-300 w-full max-w-full overflow-hidden ${bar.className}`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2 text-center sm:text-left">
         <div className="flex items-center gap-2 justify-center w-full sm:w-auto">

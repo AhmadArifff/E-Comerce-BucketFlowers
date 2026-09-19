@@ -52,7 +52,9 @@ export const viewport: Viewport = {
   ],
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 5,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export const metadata: Metadata = {
@@ -212,7 +214,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className="font-sans antialiased bg-theme-bg text-theme-text-main min-h-screen flex flex-col"
+        className="font-sans antialiased bg-theme-bg text-theme-text-main min-h-screen flex flex-col w-full max-w-full overflow-x-hidden"
         suppressHydrationWarning
       >
         {children}

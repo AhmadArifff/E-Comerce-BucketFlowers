@@ -286,7 +286,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
       <div className="max-w-7xl mx-auto space-y-8 sm:space-y-10">
         
         {/* KOREAN PASTEL HERO BANNER */}
-        <div className="bg-white border border-[#EFE8E1] rounded-[24px] p-6 sm:p-12 shadow-[0_10px_30px_-8px_rgba(244,167,185,0.22)] relative">
+        <div className="bg-white border border-[#EFE8E1] rounded-[24px] p-6 sm:p-12 shadow-[0_10px_30px_-8px_rgba(244,167,185,0.22)] relative overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
             
             {/* LEFT COLUMN: PASTEL COPYWRITING */}
@@ -360,12 +360,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
                     </div>
                   </div>
 
-                  <div className="bg-[#FFF9F6] p-3 rounded-[14px] border border-[#F5E6DF] flex items-center justify-between">
-                    <div>
-                      <div className="text-xs font-black text-[#2D2A2A]">Pink Tulip Bliss Trio</div>
-                      <div className="text-[10px] text-[#7E7676] font-medium">Bunga Kawat Bulu Korea Halus & Wrapping Matte</div>
+                  <div className="bg-[#FFF9F6] p-3 rounded-[14px] border border-[#F5E6DF] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-[#2D2A2A] truncate">Pink Tulip Bliss Trio</div>
+                      <div className="text-[10px] text-[#7E7676] font-medium line-clamp-1">Bunga Kawat Bulu Korea Halus & Wrapping Matte</div>
                     </div>
-                    <div className="text-right flex items-center gap-2">
+                    <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
                       <div>
                         <span className="text-xs font-black text-[#9C3D52] block">Rp 185.000</span>
                         <span className="text-[9px] text-stone-400 line-through block">Rp 210.000</span>

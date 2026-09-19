@@ -4093,3 +4093,82 @@ Seksi ini menetapkan arsitektur teknis dan standar antarmuka untuk sinkronisasi 
        1. **Konsultasi Darurat via WhatsApp:** Mengarahkan ke nomor resmi atelier dengan pesan otomatis: *"Halo Atelier Chenille, saya ingin menanyakan ketersediaan slot buket untuk hari ini."*
        2. **Tombol Masuk Admin (Bypass):** Membuka modal login admin agar pengrajin/pemilik toko tetap dapat mengakses dashboard admin tanpa terblokir.
      * Transisi keluar/masuk menggunakan animasi `fade-in` dan `scale-in-95` berdurasi 400ms.
+
+
+---
+
+## 24. Standar Viewport & Pencegahan Horizontal Overflow Mobile (Native App-Like Viewport & X-Axis Spill Elimination)
+
+Seksi ini menetapkan aturan teknis, standar CSS, dan tata letak responsif untuk memastikan aplikasi web Chenille Flowers Atelier memiliki perilaku tampilan yang terkunci rapat (*fixed viewport*) seperti aplikasi Android / iOS native, bebas dari pergeseran horizontal (*zero horizontal scroll / no x-axis spill*), dan mulus saat digulir vertikal di seluruh ukuran perangkat layar sentuh (mobile/smartphone).
+
+### 24.1 Problem Statement & Root Cause Analysis (Analisis Akar Masalah)
+1. **Unbounded Document Canvas (`html` & `body`):**
+   * Berkas `globals.css` sebelumnya belum menyematkan pembatas ketat `max-width: 100vw`, `overflow-x: hidden`, dan `overscroll-behavior-x: none` pada elemen `html` dan `body`.
+   * Akibatnya, jika ada satu saja elemen turunan (*child element*) yang lebarnya melebihi lebar layar sebanyak 1 pixel saja (karena padding, margin negatif, rotasi transform, atau teks yang tidak *wrap*), browser mobile secara otomatis memunculkan *scroll-track* horizontal dan memungkinkan seluruh halaman digeser/ditarik ke kanan (*horizontal panning*).
+2. **Viewport Meta Tag Permissive Configuration:**
+   * Pada `apps/web/src/app/layout.tsx`, objek `viewport` sebelumnya menggunakan `maximumScale: 5` tanpa atribut `userScalable: false` dan `viewportFit: 'cover'`. Hal ini memicu perilaku zoom & pan browser bawaan saat pengguna menyentuh layar secara diagonal atau horizontal.
+3. **Negative Margin Bleed pada Navigasi Mobile:**
+   * Komponen `Navbar.tsx` menyematkan kelas `-mx-4 px-4 sm:-mx-6 sm:px-6` pada baris menu navigasi horizontal mobile tanpa adanya `overflow-hidden` pada tag `<header>` induk, sehingga margin negatif dapat merembes keluar (*bleed*) dari batas kanvas dokumen.
+4. **Transform Bounding Box & Squeezed Cards pada Hero Section:**
+   * Pada `HeroSection.tsx` Tema A, banner card tidak memiliki `overflow-hidden`. Kartu polaroid berotasi `rotate-[-1.5deg]` dan stiker washi tape (`-top-3.5 w-32`) menjulur keluar dari kotak grid.
+   * Kartu produk di bagian bawah polaroid menggunakan layout flexbar dengan tombol `whitespace-nowrap` yang pada layar smartphone sempit (< 375px) menyebabkan konten tertekan dan meluap ke samping.
+5. **Fixed Popover Widths pada Filter Bar:**
+   * Popover filter harga pada `ProductFilterBar.tsx` memiliki lebar tetap `w-72` atau `w-80` yang jika dibuka di dekat tepi layar smartphone dapat melampaui batas kanan viewport.
+
+---
+
+### 24.2 Standar Rekayasa App-Like Viewport (The 5 Pillars of Mobile Viewport Lockdown)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│           THE 5 PILLARS OF APP-LIKE MOBILE VIEWPORT LOCKDOWN (PRD 24)            │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ 1. Viewport Meta: width=device-width, initial-scale=1, max-scale=1, no-scalable  │
+│ 2. Document Reset: html, body { max-width: 100vw; overflow-x: hidden; }         │
+│ 3. Touch Gesture Lockdown: touch-action: pan-y; overscroll-behavior-x: none;     │
+│ 4. Structural Isolation: wrappers & headers { w-full max-w-full overflow-hidden }│
+│ 5. Safe Element Sizing: Popover & Modals { max-w-[calc(100vw-2rem)] }            │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### A. Pilar 1: Viewport Meta Tag App-Like Lockdown (`layout.tsx`)
+* Konfigurasi metadata Viewport wajib menggunakan spesifikasi native app:
+  ```ts
+  export const viewport: Viewport = {
+    themeColor: [
+      { media: '(prefers-color-scheme: light)', color: '#FFF5F7' },
+      { media: '(prefers-color-scheme: dark)', color: '#181216' },
+    ],
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover',
+  };
+  ```
+
+#### B. Pilar 2 & 3: CSS Canvas Boundary & Touch Gesture Control (`globals.css`)
+* Seluruh deklarasi canvas wajib mengunci pergerakan sumbu horizontal:
+  ```css
+  html,
+  body {
+    max-width: 100vw;
+    width: 100%;
+    overflow-x: hidden;
+    position: relative;
+    touch-action: pan-y;
+    overscroll-behavior-x: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  ```
+* Kelas utilitas `.theme-transition` dan kontainer utama etalase wajib menyertakan `w-full max-w-full overflow-x-hidden`.
+
+#### C. Pilar 4: Isolasi Struktur Kontainer (`Navbar`, `HeroSection`, `page.tsx`)
+* Tag `<header>` pada `Navbar.tsx` wajib memiliki kelas `w-full max-w-full overflow-hidden`.
+* Baris menu scroll horizontal mobile pada `Navbar.tsx` dan `CategoryFilter.tsx` wajib disematkan `touch-pan-x overscroll-x-contain` agar usapan horizontal pengguna terisolasi hanya di dalam wadah pill filter dan tidak menyeret halaman utama.
+* Banner card `HeroSection.tsx` Tema A wajib menyertakan `overflow-hidden` setara dengan Tema B dan Tema C.
+* Kartu produk di kaki polaroid Tema A wajib beradaptasi secara fleksibel (`flex-col sm:flex-row sm:items-center`) dengan proteksi `min-w-0 truncate` agar tidak mendorong batas lebar pada layar < 375px.
+
+#### D. Pilar 5: Popover & Floating Modal Mobile Safeguard (`ProductFilterBar.tsx`, `LiveChatWidget.tsx`)
+* Seluruh modal, popover, dan floating widget tidak boleh menggunakan lebar pixel mutlak tanpa pembatas responsif.
+* Popover filter wajib dibatasi menggunakan `w-[calc(100vw-2.5rem)] sm:w-80 max-w-xs` agar selalu memiliki margin aman minimal 16px dari tepi layar pada semua tipe smartphone Android dan iPhone.

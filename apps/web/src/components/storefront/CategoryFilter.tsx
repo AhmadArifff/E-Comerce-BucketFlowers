@@ -31,7 +31,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({ selectedCategory
   const copy = getThemeCopy(activeTheme);
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 scrollbar-none">
+    <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 scrollbar-none touch-pan-x overscroll-x-contain max-w-full w-full">
       {CATEGORIES.map((cat) => {
         const isSelected = selectedCategory === cat.id;
         const Icon = cat.icon;
