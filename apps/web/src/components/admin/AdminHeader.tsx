@@ -52,8 +52,8 @@ const TAB_TITLES: Record<AdminTab, { title: string; subtitle: string }> = {
     subtitle: 'Kelola seluruh opsi kustomisasi buket bunga kawat bulu (7 kategori) langsung ke database.',
   },
   BOM: {
-    title: 'Bahan Baku & Resep BOM (Bill of Materials)',
-    subtitle: 'Kalkulasi HPP akurat per batang chenille kawat bulu, kain wrapping, pita, dan box corrugated.',
+    title: 'Bahan Baku & Komposisi HPP',
+    subtitle: 'Kalkulasi HPP akurat per batang chenille kawat bulu, kain wrapping, pita satin, dan box corrugated.',
   },
   PROMOS: {
     title: 'Pemasaran & Kupon Diskon',

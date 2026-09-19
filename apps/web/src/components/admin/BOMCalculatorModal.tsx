@@ -97,7 +97,7 @@ export const BOMCalculatorModal: React.FC = () => {
   } = useSettingsStore();
 
   // ==========================================
-  // TAB 1: RESEP BOM PRODUK & HPP
+  // TAB 1: KOMPOSISI BAHAN BUKET & HPP
   // ==========================================
   const [selectedProductId, setSelectedProductId] = useState<string>('prod-01');
   const [rows, setRows] = useState<BomRow[]>(PRODUCT_RECIPES['prod-01'] || []);
@@ -440,10 +440,10 @@ export const BOMCalculatorModal: React.FC = () => {
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-black text-stone-800 tracking-tight">
-              Manajemen Bahan Baku, Pengadaan & Resep BOM
+              Manajemen Bahan Baku, Pengadaan & Komposisi HPP
             </h2>
             <p className="text-xs text-stone-500">
-              Katalog stok bahan mentah, pesanan restock supplier (ETA), resep BOM buket, dan audit bahan afkir.
+              Katalog stok bahan mentah, pesanan restock supplier (ETA), komposisi bahan buket, dan audit bahan afkir.
             </p>
           </div>
         </div>
@@ -491,7 +491,7 @@ export const BOMCalculatorModal: React.FC = () => {
             }`}
           >
             <Calculator className="w-3.5 h-3.5" />
-            <span>Resep BOM Produk</span>
+            <span>Komposisi Bahan Buket</span>
           </button>
 
           <button
@@ -923,14 +923,14 @@ export const BOMCalculatorModal: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 3: RESEP BOM PRODUK & STRICT VALIDASI HARGA */}
+      {/* TAB 3: KOMPOSISI BAHAN BUKET & VALIDASI HARGA HPP */}
       {/* ========================================================================= */}
       {activeTab === 'RECIPES' && (
         <div className="space-y-6">
           {/* Product Selector Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-stone-50 rounded-2xl border border-stone-200">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-extrabold text-stone-700">Pilih Produk Buket untuk Resep BOM:</span>
+              <span className="text-xs font-extrabold text-stone-700">Pilih Produk Buket untuk Komposisi Bahan:</span>
               <select
                 value={selectedProductId}
                 onChange={(e) => handleSelectProduct(e.target.value)}
@@ -1138,11 +1138,11 @@ export const BOMCalculatorModal: React.FC = () => {
 
             <button
               onClick={() => {
-                showMagicToast('Resep Tersimpan 🎉', `Resep BOM untuk ${selectedProductId} berhasil diperbarui.`, '✨');
+                showMagicToast('Komposisi Tersimpan 🎉', `Komposisi bahan untuk ${selectedProductId} berhasil diperbarui.`, '✨');
               }}
               className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-bold transition-all shadow-sm cursor-pointer whitespace-nowrap self-end sm:self-auto"
             >
-              Simpan Perubahan Resep
+              Simpan Komposisi Bahan
             </button>
           </div>
         </div>

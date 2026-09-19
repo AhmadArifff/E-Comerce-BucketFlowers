@@ -80,7 +80,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         { id: 'REPORTS', label: 'Laporan & Ekspor Excel', icon: FileSpreadsheet },
         { id: 'PRODUCTS', label: 'Produk & Klik Pelanggan', icon: Package },
         { id: 'STUDIO', label: 'Custom Studio Builder', icon: Sparkles, badge: 'Live', badgeColor: 'bg-gradient-to-r from-rose-500 to-pink-500 text-white' },
-        { id: 'BOM', label: 'Bahan Baku & Resep BOM', icon: Layers },
+        { id: 'BOM', label: 'Bahan Baku & Komposisi HPP', icon: Layers },
         { id: 'PROMOS', label: 'Pemasaran & Kupon', icon: Tag },
         { id: 'CAMPAIGNS', label: 'Loyalitas & Kampanye', icon: Gift, badge: 'Live', badgeColor: 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' },
       ],

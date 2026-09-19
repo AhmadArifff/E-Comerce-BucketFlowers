@@ -878,7 +878,7 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
             <tr>
               <TableSortHeader label="Buket Produk" field="name" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[280px]" />
               <TableSortHeader label="Kategori" field="category" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[120px]" align="center" />
-              <TableSortHeader label="Resep Bahan" field="recipe" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[160px]" align="center" />
+              <TableSortHeader label="Komposisi Bahan" field="recipe" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[160px]" align="center" />
               <TableSortHeader label="HPP (Modal)" field="rawCostHpp" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" align="right" />
               <TableSortHeader label="Harga Jual" field="price" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" align="right" />
               <TableSortHeader label="Margin" field="margin" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[100px]" align="center" />
@@ -921,7 +921,7 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
                       className="px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50/80 hover:bg-rose-100 text-rose-700 font-extrabold text-[11px] inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95 whitespace-nowrap"
                     >
                       <Layers className="w-3.5 h-3.5 text-rose-600" />
-                      <span>Lihat Resep BOM</span>
+                      <span>Lihat Komposisi Bahan</span>
                     </button>
                   </td>
                   <td className="py-3.5 px-4 text-right font-mono font-bold text-stone-700 whitespace-nowrap">
@@ -968,7 +968,7 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
               <div className="flex items-center gap-2">
                 <Layers className="w-5 h-5 text-rose-600" />
                 <div>
-                  <h3 className="font-extrabold text-stone-800 text-sm">Resep Bahan Baku (BOM): 1 Produk</h3>
+                  <h3 className="font-extrabold text-stone-800 text-sm">Komposisi Bahan Baku: 1 Produk</h3>
                   <span className="text-[11px] text-stone-500">{selectedProdBom.name}</span>
                 </div>
               </div>
@@ -2104,9 +2104,9 @@ export const MaintenanceThemeView: React.FC = () => {
             <div className="text-[10px] text-emerald-600 font-bold">100% Asset Lokal Backup</div>
           </div>
           <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-100">
-            <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Bahan Baku (BOM)</div>
+            <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Bahan Baku (Komposisi HPP)</div>
             <div className="text-sm sm:text-base font-black text-stone-800 mt-0.5">7 Master Bahan</div>
-            <div className="text-[10px] text-indigo-600 font-bold">Resep HPP Otomatis</div>
+            <div className="text-[10px] text-indigo-600 font-bold">Komposisi HPP Otomatis</div>
           </div>
           <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-100">
             <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Titik COD Maps</div>
@@ -4743,7 +4743,7 @@ export const AddProductModal: React.FC<{
           <div className="flex items-center gap-2">
             <Package className="w-5 h-5 text-rose-600" />
             <div>
-              <h3 className="font-extrabold text-stone-800 text-sm">Tambah Buket Baru & Resep Bahan Baku (BOM)</h3>
+              <h3 className="font-extrabold text-stone-800 text-sm">Tambah Buket Baru & Komposisi Bahan Baku</h3>
               <span className="text-[11px] text-stone-500">
                 Wajib mencantumkan bahan baku untuk 1 buket. Harga jual tidak boleh kurang dari HPP.
               </span>
@@ -4827,7 +4827,7 @@ export const AddProductModal: React.FC<{
               <div className="flex items-center gap-1.5">
                 <Layers className="w-4 h-4 text-rose-600" />
                 <span className="font-extrabold text-stone-800 text-xs">
-                  Bahan Baku yang Dibutuhkan untuk 1 Produk Buket Ini (Resep BOM):
+                  Bahan Baku yang Dibutuhkan untuk 1 Produk Buket Ini (Komposisi HPP):
                 </span>
               </div>
               <button

@@ -4358,3 +4358,43 @@ CREATE TABLE IF NOT EXISTS custom_studio_options (
    * Form validasi dengan input: Nama Opsi, Kategori (Dropdown 7 tipe), Nominal Harga (Rp), Ikon/Emoji, Hex Color Picker (aktif untuk kategori warna), Deskripsi Singkat, dan Urutan Tampil.
 4. **Pembaruan Seketika (Real-Time Storefront Sync):**
    * Saat admin menyimpan opsi baru atau mengubah harga, etalase toko yang dimuat pengunjung langsung mengonsumsi data terbaru via API tanpa perlu menyunting kode.
+
+---
+
+## Seksi 27: Standarisasi Terminologi Domain Kerajinan Tangan (Handmade Bouquet Linguistic Standardization & Elimination of Food/Pharma Confusion) — v3.1
+
+### 27.1 Latar Belakang & Pernyataan Kebijakan Domain
+Chenille Flowers Atelier adalah bisnis e-commerce kerajinan tangan (*handcrafted flower bouquets*) yang memproduksi dan menjual buket bunga kawat bulu (*chenille stems / velvet wire*), bukan produk makanan, minuman, obat-obatan, maupun kosmetik.
+
+> [!IMPORTANT]
+> **PENETAPAN BATAS DOMAIN (NON-FOOD & NON-PHARMA POLICY):**
+> 1. **Bebas dari Regulasi Makanan & Farmasi:** Sistem Chenille Flowers Atelier tidak tunduk dan tidak memerlukan sertifikasi BPOM (Badan Pengawas Obat dan Makanan), izin edar P-IRT, tabel nutrisi/gizi, ataupun tanggal kadaluarsa konsumsi.
+> 2. **Eliminasi Kerancuan "BOM vs BPOM":** Istilah industri manufaktur/akuntansi **"BOM"** (*Bill of Materials*) yang sebelumnya disandingkan dengan kata **"Resep"** ("Resep BOM") rentan disalahpahami sebagai "BPOM" atau resep makanan/obat oleh pengguna Indonesia.
+> 3. **Standarisasi Bahasa Indonesia yang Natural:** Seluruh teks antarmuka dan dokumentasi perancangan wajib menggunakan istilah yang natural, anggun, dan tepat bagi sebuah atelier kerajinan buket bunga (misal: "Komposisi Bahan & HPP", bukan "Resep BOM").
+
+---
+
+### 27.2 Glosarium Resmi Standarisasi Terminologi Atelier
+
+Berikut adalah tabel padanan resmi terminologi Chenille Flowers Atelier untuk menggantikan istilah warisan yang memicu kerancuan:
+
+| Konsep Bisnis | ❌ Istilah Warisan (Rancu Makanan/BPOM) | ✅ Terminologi Resmi Atelier (Elegan & Tepat) | Penjelasan Kontekstual |
+| :--- | :--- | :--- | :--- |
+| **Daftar Kebutuhan Bahan Per Buket** | `Resep BOM Produk` / `Resep Bahan` | **Komposisi Bahan Buket** | Rincian kebutuhan kawat bulu, kain wrapping, pita, boneka, dan kardus untuk 1 unit buket. |
+| **Menu Sidebar / Tab Admin** | `Bahan Baku & Resep BOM` | **Bahan Baku & Komposisi HPP** | Navigasi menu untuk mengelola stok bahan mentah dan kalkulator biaya modal riil per buket. |
+| **Kalkulator Biaya Pokok Produksi** | `BOM & HPP Calculator` | **Kalkulator Komposisi HPP** | Alat hitung otomatis harga pokok produksi berdasarkan harga beli bahan baku supplier. |
+| **Alasan Bahan Afkir / Rusak Gudang** | `KADALUARSA_SIMPAN` (Kadaluarsa Simpan) | **Lama Simpan / Berdebu / Usang** | Bunga kawat bulu tidak memiliki tanggal kadaluarsa; bahan afkir murni karena kotor, berdebu, atau usang di gudang. |
+| **Sampel Buket Pajangan Toko** | `SAMPLE_DISPLAY_EXPIRED` | **Sampel Display Usang / Rusak** | Buket display yang sudah terlalu lama dipajang di etalase dan tidak layak jual. |
+| **Penyimpanan Perubahan Formulasi** | `Simpan Perubahan Resep` | **Simpan Komposisi Bahan** | Tombol konfirmasi penyimpanan kebutuhan bahan baku produk buket. |
+
+---
+
+### 27.3 Aturan Audit Kepatuhan Antarmuka Pengguna (UI Compliance Rules)
+1. **Dilarang Menampilkan Singkatan "BOM" Tanpa Konteks:** Pada teks yang dilihat pengguna atau staf florist, gunakan istilah **"Komposisi Bahan & HPP"**. Jika singkatan teknis dibutuhkan untuk kebutuhan data kontrak backend, beri keterangan jelas *(Bill of Materials)*.
+2. **Dilarang Menggunakan Kata "Kadaluarsa" untuk Bahan Fisik:** Kata "kadaluarsa" (*expired*) hanya diizinkan untuk entitas digital yang memiliki batas waktu numerik, yaitu:
+   * Batas waktu pembayaran pesanan (*Payment Gateway countdown / expired*).
+   * Batas masa berlaku kode kupon promosi (*Coupon validity date*).
+   * Batas masa aktif kartu stamp loyalty digital (*Digital stamp card expiry*).
+   Bahan baku kerajinan (kawat bulu, pita, kertas wrapping) **dilarang** menggunakan kata kadaluarsa.
+3. **Pemberian Label Bersih & Mewah:** Seluruh modal, tabel, dan kartu analitik di panel admin mencerminkan citra *artisan flower boutique* yang eksklusif, rapi, dan bebas dari anomali istilah teknis yang membingungkan.
+
