@@ -1,7 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, GraduationCap, Heart, Flower2, Smile, Coffee } from 'lucide-react';
+import { useThemeStore } from '@/stores/useThemeStore';
+import { getThemeCopy } from '@/lib/theme-copy';
 
 interface CategoryFilterProps {
   selectedCategory: string;
@@ -18,11 +20,23 @@ const CATEGORIES = [
 ];
 
 export const CategoryFilter: React.FC<CategoryFilterProps> = ({ selectedCategory, onSelectCategory }) => {
+  const { theme } = useThemeStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const activeTheme = mounted ? theme : 'tema-a';
+  const copy = getThemeCopy(activeTheme);
+
   return (
     <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 scrollbar-none">
       {CATEGORIES.map((cat) => {
         const isSelected = selectedCategory === cat.id;
         const Icon = cat.icon;
+        const displayName = copy.catalog.filterLabels[cat.id] || cat.name;
+
         return (
           <button
             key={cat.id}
@@ -32,7 +46,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({ selectedCategory
             }`}
           >
             <Icon className="w-3.5 h-3.5" />
-            <span>{cat.name}</span>
+            <span>{displayName}</span>
           </button>
         );
       })}

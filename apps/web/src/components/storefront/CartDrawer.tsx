@@ -30,6 +30,8 @@ import { useCartStore } from '@/stores/useCartStore';
 import { useOrderStore } from '@/stores/useOrderStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useThemeStore } from '@/stores/useThemeStore';
+import { getThemeCopy } from '@/lib/theme-copy';
 import { getApiUrl } from '@/lib/api-client';
 import { useMidtransSnap } from '@/hooks/useMidtransSnap';
 import { MOCK_MEETUP_POINTS, type MockOrder } from '@chenille/shared';
@@ -38,6 +40,15 @@ import { showMagicToast } from '@/lib/magic-motion';
 export const CartDrawer: React.FC = () => {
   const router = useRouter();
   const { pay: payWithMidtrans } = useMidtransSnap();
+  const { theme } = useThemeStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const copy = getThemeCopy(mounted ? theme : 'tema-a');
+
   const {
     items,
     isCartOpen,
@@ -453,7 +464,7 @@ export const CartDrawer: React.FC = () => {
               )}
               <div>
                 <h2 className="text-sm sm:text-base font-extrabold text-stone-800">
-                  {step === 'CART' ? 'Keranjang Belanja' : 'Checkout & Pembayaran'}
+                  {step === 'CART' ? copy.cart.drawerTitle(items.length) : 'Checkout & Pembayaran'}
                 </h2>
                 <span className="text-[11px] text-stone-500">
                   {step === 'CART' ? `${items.length} Macam Buket Dipilih` : 'Isi Data Diri & Pembayaran'}
@@ -970,7 +981,7 @@ export const CartDrawer: React.FC = () => {
                     onClick={handleProceedToCheckout}
                     className="btn-primary-atelier w-full py-3.5 text-xs sm:text-sm font-extrabold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>Lanjut ke Data Pemesan & Bayar</span>
+                    <span>{copy.cart.checkoutBtn}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>

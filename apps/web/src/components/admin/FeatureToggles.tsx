@@ -95,7 +95,7 @@ export const FeatureToggles: React.FC = () => {
             return (
               <div
                 key={t.id}
-                onClick={() => setTheme(t.id)}
+                onClick={() => setTheme(t.id, true)}
                 className={`cursor-pointer rounded-2xl p-5 border-2 transition-all relative overflow-hidden flex flex-col justify-between ${
                   isCurrent
                     ? 'border-rose-500 bg-rose-50/70 shadow-md ring-2 ring-rose-400/20'
@@ -118,7 +118,7 @@ export const FeatureToggles: React.FC = () => {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setTheme(t.id);
+                    setTheme(t.id, true);
                   }}
                   className={`w-full py-2 rounded-xl text-xs font-extrabold transition-colors flex items-center justify-center gap-1.5 ${
                     isCurrent

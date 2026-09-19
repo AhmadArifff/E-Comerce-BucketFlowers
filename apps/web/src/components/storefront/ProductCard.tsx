@@ -5,6 +5,8 @@ import { ShoppingBag, Star, Eye, MessageCircle, Clock } from 'lucide-react';
 import type { ExtendedProduct } from '@chenille/shared';
 import { useCartStore } from '@/stores/useCartStore';
 import { useChatStore } from '@/stores/useChatStore';
+import { useThemeStore } from '@/stores/useThemeStore';
+import { getThemeCopy } from '@/lib/theme-copy';
 import { flyToCart, showMagicToast } from '@/lib/magic-motion';
 
 interface ProductCardProps {
@@ -15,6 +17,8 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProduct }) => {
   const { addItem, setIsCartOpen } = useCartStore();
   const { setIsOpen: setChatOpen, sendMessage } = useChatStore();
+  const { theme } = useThemeStore();
+  const copy = getThemeCopy(theme);
   const [isAdding, setIsAdding] = useState(false);
 
   const handleAskAboutProduct = (e: React.MouseEvent) => {
@@ -147,7 +151,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
               className="btn-card-add cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              <span>{isAdding ? 'Menerbangkan...' : 'Tambah'}</span>
+              <span>{isAdding ? 'Menerbangkan...' : copy.catalog.buyButton}</span>
             </button>
           </div>
         </div>

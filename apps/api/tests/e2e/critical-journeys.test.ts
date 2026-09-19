@@ -12,8 +12,8 @@ describe('PRD Section 14.3: 5 Critical User Journeys (End-to-End)', () => {
   let createdMemberOrderId: string = '';
 
   beforeAll(async () => {
-    // Fetch a real active product from DB
-    const prodRes = await pool.query('SELECT id, price::float, discount_price::float FROM products WHERE is_active = true LIMIT 1;');
+    // Fetch a real active product with available stock from DB
+    const prodRes = await pool.query('SELECT id, price::float, discount_price::float FROM products WHERE is_active = true AND stock > 0 LIMIT 1;');
     if (prodRes.rows.length > 0) {
       sampleProductId = prodRes.rows[0].id;
       sampleProductPrice = prodRes.rows[0].discount_price ?? prodRes.rows[0].price;

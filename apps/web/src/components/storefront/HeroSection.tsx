@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
-import { Sparkles, ArrowRight, ShieldCheck, Heart, Award, CheckCircle2, PackageCheck, MapPin, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, ArrowRight, Lightbulb, CheckCircle2 } from 'lucide-react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { getThemeCopy } from '@/lib/theme-copy';
 
 interface HeroSectionProps {
   onNavigate?: (section: string) => void;
@@ -10,6 +11,16 @@ interface HeroSectionProps {
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
   const { theme } = useThemeStore();
+  const [mounted, setMounted] = useState(false);
+  const [isNightModeLed, setIsNightModeLed] = useState(false);
+  const [isWiggling, setIsWiggling] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const activeTheme = mounted ? theme : 'tema-a';
+  const copy = getThemeCopy(activeTheme);
 
   const handleAction = (sectionId: string) => {
     if (onNavigate) {
@@ -20,35 +31,41 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
     }
   };
 
-  if (theme === 'tema-b') {
-    // Modern Romantic & Editorial Luxury Theme
+  // =========================================================================
+  // TEMA B: MODERN ROMANTIC & EDITORIAL LUXURY
+  // Arch Frame + Champagne Gold + Interactive Day/Night LED Switch
+  // =========================================================================
+  if (activeTheme === 'tema-b') {
     return (
       <section id="home" className="relative overflow-hidden bg-[#FAFAFA] text-[#1E1919] py-10 sm:py-14 px-4 sm:px-6 lg:px-8 border-b border-[#E8E0DA]">
         <div className="max-w-7xl mx-auto space-y-8 sm:space-y-10">
-          {/* EDITORIAL HERO BANNER WITH GOLD INNER FRAME */}
-          <div className="bg-white border border-[#E8E0DA] rounded-[10px] p-6 sm:p-12 shadow-[0_12px_32px_rgba(107,45,92,0.08)] relative overflow-hidden after:content-[''] after:absolute after:inset-2 sm:after:inset-3 after:border after:border-[#D4AF37]/30 after:rounded-[6px] after:pointer-events-none">
+          
+          {/* EDITORIAL HERO BANNER WITH GOLD INNER ACCENT */}
+          <div className="bg-white border border-[#E8E0DA] rounded-[14px] p-6 sm:p-12 shadow-[0_12px_36px_rgba(107,45,92,0.08)] relative overflow-hidden after:content-[''] after:absolute after:inset-2 sm:after:inset-3 after:border after:border-[#D4AF37]/30 after:rounded-[10px] after:pointer-events-none">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center relative z-10">
+              
+              {/* LEFT COLUMN: EDITORIAL COPY */}
               <div className="lg:col-span-7 space-y-4 sm:space-y-5 text-center lg:text-left">
                 <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[2.5px] text-[#C98A90] font-bold">
                   <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  <span>✦ Exclusive Handcrafted Atelier Privé</span>
+                  <span>✦ {copy.hero.topBadge}</span>
                 </div>
 
                 <h1 className="text-3xl sm:text-5xl font-bold font-heading-b tracking-tight leading-tight text-[#6B2D5C]">
-                  Buket Bunga Kawat Bulu <span className="italic text-[#C98A90]">Kemewahan Abadi</span>
+                  {copy.hero.headlinePart1} <span className="italic text-[#C98A90]">{copy.hero.headlineHighlight}</span>
                 </h1>
 
                 <p className="text-sm sm:text-base text-[#6E6868] max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
-                  Mahakarya kawat bulu beludru deep wine velvet & champagne gold. Dirangkai presisi untuk perayaan wisuda prestisius, lamaran, dan hari jadi pernikahan penuh cinta.
+                  {copy.hero.subheadline}
                 </p>
 
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => handleAction('katalog')}
-                    className="btn-primary-atelier px-7 py-3.5 rounded-[6px] text-xs font-bold tracking-[1.5px] uppercase cursor-pointer shadow-md active:scale-95"
+                    className="btn-primary-atelier px-7 py-3.5 rounded-[6px] text-xs font-bold tracking-[1.5px] uppercase cursor-pointer shadow-md active:scale-95 flex items-center gap-2"
                   >
-                    <span>Lihat Koleksi Mewah 🌹</span>
+                    <span>{copy.hero.ctaPrimary}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
@@ -57,81 +74,115 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
                     onClick={() => handleAction('custom')}
                     className="px-6 py-3 rounded-[6px] border border-[#6B2D5C] text-[#6B2D5C] hover:bg-[#6B2D5C] hover:text-white transition-all text-xs font-bold tracking-[1px] uppercase cursor-pointer active:scale-95"
                   >
-                    Rangkai Custom Atelier ✨
+                    {copy.hero.ctaSecondary}
                   </button>
                 </div>
               </div>
 
-              <div className="lg:col-span-5 flex justify-center">
-                <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-square rounded-[8px] overflow-hidden shadow-xl border border-[#E8D399] group">
+              {/* RIGHT COLUMN: BESPOKE ARCH SHOWCASE + LED INTERACTIVE TOGGLE */}
+              <div className="lg:col-span-5 flex flex-col items-center">
+                <div
+                  className={`relative w-full max-w-sm aspect-[3/4] rounded-t-[120px] rounded-b-[16px] overflow-hidden border-2 border-[#D4AF37] ring-4 ring-[#D4AF37]/15 shadow-2xl transition-all duration-700 group ${
+                    isNightModeLed ? 'shadow-[0_0_45px_rgba(212,175,55,0.45)]' : ''
+                  }`}
+                >
                   <img
                     src="/preview-tema-b.jpg"
-                    alt="Modern Romantic Velvet Bouquet Preview"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    alt="Modern Romantic Velvet Bouquet on Marble Pedestal"
+                    className={`w-full h-full object-cover transition-all duration-700 ${
+                      isNightModeLed ? 'brightness-75 contrast-125 saturate-110' : 'brightness-100 group-hover:scale-105'
+                    }`}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent flex items-end p-5 sm:p-6">
-                    <div className="text-left w-full flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] bg-black/60 px-3 py-1 rounded-[4px] border border-[#D4AF37]/50 inline-block">
-                          ✦ 100% Velvet Chenille Stem
-                        </span>
-                        <div className="text-base sm:text-lg font-bold text-white mt-1">Midnight Velvet & Champagne Gold</div>
-                        <div className="text-xs text-[#C98A90]">Tahan Selamanya Tanpa Perlu Disiram</div>
-                      </div>
+
+                  {/* NIGHT MODE LED FAIRY LIGHTS OVERLAY */}
+                  {isNightModeLed && (
+                    <div className="absolute inset-0 bg-radial from-amber-300/25 via-black/40 to-black/70 pointer-events-none flex items-center justify-center animate-fade-in">
+                      <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-amber-200 rounded-full blur-[2px] animate-ping" />
+                      <div className="absolute top-1/3 right-1/4 w-2.5 h-2.5 bg-yellow-100 rounded-full blur-[1px] animate-pulse" />
+                      <div className="absolute top-1/2 left-1/3 w-3 h-3 bg-amber-300 rounded-full blur-[2px] animate-pulse" />
+                      <div className="absolute bottom-1/3 right-1/3 w-2 h-2 bg-yellow-200 rounded-full blur-[1px] animate-ping" />
                     </div>
+                  )}
+
+                  {/* FLOATING TEXTURE BADGE */}
+                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] bg-black/70 backdrop-blur-md px-3 py-1 rounded-[4px] border border-[#D4AF37]/50 shadow-md">
+                      ✦ 100% Velvet Chenille Stem
+                    </span>
+                  </div>
+
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 text-left">
+                    <div className="text-sm sm:text-base font-bold text-white">Midnight Velvet & Champagne Gold</div>
+                    <div className="text-xs text-[#E8D399] font-light">Tahan Selamanya Tanpa Perlu Disiram</div>
                   </div>
                 </div>
+
+                {/* PRD 21.2 B INTERACTIVE LED TOGGLE BUTTON */}
+                <button
+                  type="button"
+                  onClick={() => setIsNightModeLed(!isNightModeLed)}
+                  className={`mt-3.5 px-4 py-2 rounded-full border text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer active:scale-95 ${
+                    isNightModeLed
+                      ? 'bg-amber-500 text-stone-900 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]'
+                      : 'bg-white hover:bg-stone-100 text-stone-700 border-stone-300'
+                  }`}
+                >
+                  <Lightbulb className={`w-3.5 h-3.5 ${isNightModeLed ? 'text-stone-900 fill-stone-900 animate-bounce' : 'text-amber-500'}`} />
+                  <span>{isNightModeLed ? '✨ Matikan Lampu LED Buket' : '💡 Coba Nyalakan Lampu Buket'}</span>
+                </button>
               </div>
             </div>
           </div>
 
-          {/* 4 EDITORIAL VALUE CARDS (CLEAN WHITE) */}
+          {/* 4 EDITORIAL VALUE CARDS WITH LUCIDE ICONS (NO RAW EMOJI) */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            <div className="p-5 rounded-[8px] bg-white border border-[#E8E0DA] space-y-1.5 text-center shadow-[0_4px_16px_rgba(107,45,92,0.06)] hover:border-[#D4AF37] transition-all cursor-default">
-              <div className="text-2xl">🌹</div>
-              <div className="text-xs font-bold text-[#6B2D5C] uppercase tracking-wider">Awet Selamanya</div>
-              <div className="text-[11px] text-[#6E6868] leading-tight">Kawat bulu premium anti-rontok & tak pernah layu</div>
-            </div>
-            <div className="p-5 rounded-[8px] bg-white border border-[#E8E0DA] space-y-1.5 text-center shadow-[0_4px_16px_rgba(107,45,92,0.06)] hover:border-[#D4AF37] transition-all cursor-default">
-              <div className="text-2xl">📦</div>
-              <div className="text-xs font-bold text-[#6B2D5C] uppercase tracking-wider">Rigid Hardbox</div>
-              <div className="text-[11px] text-[#6E6868] leading-tight">Packaging kokoh mewah tahan benturan ekspedisi</div>
-            </div>
-            <div className="p-5 rounded-[8px] bg-white border border-[#E8E0DA] space-y-1.5 text-center shadow-[0_4px_16px_rgba(107,45,92,0.06)] hover:border-[#D4AF37] transition-all cursor-default">
-              <div className="text-2xl">🤝</div>
-              <div className="text-xs font-bold text-[#6B2D5C] uppercase tracking-wider">COD Eksklusif</div>
-              <div className="text-[11px] text-[#6E6868] leading-tight">Janji temu langsung di kampus UI & Margo City</div>
-            </div>
-            <div className="p-5 rounded-[8px] bg-white border border-[#E8E0DA] space-y-1.5 text-center shadow-[0_4px_16px_rgba(107,45,92,0.06)] hover:border-[#D4AF37] transition-all cursor-default">
-              <div className="text-2xl">🛡️</div>
-              <div className="text-xs font-bold text-[#6B2D5C] uppercase tracking-wider">Garansi 100% Baru</div>
-              <div className="text-[11px] text-[#6E6868] leading-tight">Ganti buket baru gratis jika rusak di perjalanan</div>
-            </div>
+            {copy.trustCards.map((card) => {
+              const Icon = card.icon;
+              return (
+                <div
+                  key={card.id}
+                  className="p-5 rounded-[10px] bg-white border border-[#E8E0DA] space-y-2 text-center shadow-[0_4px_16px_rgba(107,45,92,0.06)] hover:border-[#D4AF37] transition-all cursor-default group"
+                >
+                  <div className="w-10 h-10 mx-auto rounded-full bg-[#FAFAFA] border border-[#E8E0DA] flex items-center justify-center text-[#6B2D5C] group-hover:scale-110 group-hover:border-[#D4AF37] transition-transform">
+                    <Icon className="w-5 h-5 text-[#6B2D5C]" />
+                  </div>
+                  <div className="text-xs font-bold text-[#6B2D5C] uppercase tracking-wider">{card.title}</div>
+                  <div className="text-[11px] text-[#6E6868] leading-tight font-light">{card.desc}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
     );
   }
 
-  if (theme === 'tema-c') {
-    // Playful Pastel & Kawaii Dream Theme
+  // =========================================================================
+  // TEMA C: PLAYFUL KAWAII & GRADUATION SUNSHINE
+  // Chunky Squircle 3D + Wiggle Badge + High-Res Sunflower Bear Photo
+  // =========================================================================
+  if (activeTheme === 'tema-c') {
     return (
       <section id="home" className="relative overflow-hidden bg-[#FFFDF9] text-[#2C3E50] py-10 sm:py-14 px-4 sm:px-6 lg:px-8 border-b border-[#F2E8DE]">
         <div className="max-w-7xl mx-auto space-y-8 sm:space-y-10">
+          
           {/* PLAYFUL KAWAII HERO BANNER */}
-          <div className="bg-gradient-to-br from-[#FFF2F4] via-[#FFF9E6] to-[#E8FAF8] border-2 border-[#FFE3E6] rounded-[26px] p-6 sm:p-12 shadow-[0_12px_28px_rgba(255,107,129,0.18)] relative overflow-hidden">
+          <div className="bg-gradient-to-br from-[#FFF2F4] via-[#FFF9E6] to-[#E8FAF8] border-3 border-[#FFE3E6] rounded-[32px] p-6 sm:p-12 shadow-[0_14px_32px_rgba(255,107,129,0.18)] relative overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center relative z-10">
+              
+              {/* LEFT COLUMN: VIBRANT POP COPY */}
               <div className="lg:col-span-7 space-y-4 sm:space-y-5 text-center lg:text-left">
                 <div className="inline-flex items-center gap-1.5 bg-[#FFD166] text-[#2C3E50] px-4 py-1.5 rounded-full text-xs font-black -rotate-2 shadow-xs">
-                  <span>🎉 Super Cute Handcrafted Flowers! ⭐</span>
+                  <Sparkles className="w-3.5 h-3.5 text-[#2C3E50]" />
+                  <span>{copy.hero.topBadge}</span>
                 </div>
 
                 <h1 className="text-3xl sm:text-5xl font-black font-heading-c tracking-tight leading-tight text-[#2C3E50]">
-                  Buket Bunga Kawat Bulu <span className="text-[#FF6B81]">Gemas & Ceria!</span> 🌻
+                  {copy.hero.headlinePart1} <span className="text-[#FF6B81]">{copy.hero.headlineHighlight}</span>
                 </h1>
 
                 <p className="text-sm sm:text-base text-[#576574] max-w-xl mx-auto lg:mx-0 leading-relaxed font-semibold">
-                  Pilihan buket karakter boneka beruang toga wisuda, bunga matahari tersenyum, dan tulip pastel ceria. Bikin momen sidang dan wisuda makin seru dan berkesan!
+                  {copy.hero.subheadline}
                 </p>
 
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
@@ -140,7 +191,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
                     onClick={() => handleAction('katalog')}
                     className="btn-primary-atelier px-7 py-3.5 rounded-full text-sm font-black shadow-md shadow-[#FF6B81]/40 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer"
                   >
-                    <span>Jelajahi Buket Lucu 🌻</span>
+                    <span>{copy.hero.ctaPrimary}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
@@ -149,75 +200,93 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
                     onClick={() => handleAction('custom')}
                     className="px-6 py-3 rounded-full bg-white text-[#2C3E50] border-2 border-[#FFEAA7] hover:bg-[#FFF9E6] text-xs sm:text-sm font-extrabold shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
                   >
-                    Custom Karakter Toga ✨
+                    {copy.hero.ctaSecondary}
                   </button>
                 </div>
               </div>
 
+              {/* RIGHT COLUMN: CHUNKY SQUIRCLE WITH SUNFLOWER BEAR PHOTO & WIGGLE BADGE */}
               <div className="lg:col-span-5 flex justify-center">
-                <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-square rounded-[24px] overflow-hidden shadow-xl border-4 border-[#FFEAA7] bg-[#FFF9F0] flex items-center justify-center group">
-                  <div className="text-center p-6 space-y-3">
-                    <div className="animate-float-hero text-7xl inline-block drop-shadow-md">🌻🧸</div>
-                    <div className="font-extrabold text-[#2C3E50] text-lg">Sunshine Bear Graduation</div>
-                    <div className="text-xs text-[#FF6B81] font-black bg-white px-3 py-1 rounded-full shadow-xs inline-block">
-                      100% Bulu Halus & Topi Toga Nama
-                    </div>
-                  </div>
-                  <div className="animate-bounce-in absolute top-3 right-3 bg-[#FFD166] text-[#2C3E50] text-[10px] font-black px-3 py-1 rounded-full shadow-xs rotate-3">
+                <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-square rounded-[36px] overflow-hidden shadow-2xl border-4 border-[#FFEAA7] bg-[#FFF9F0] group hover:scale-[1.02] transition-transform duration-500">
+                  <img
+                    src="/preview-tema-c.jpg"
+                    alt="Playful Kawaii Chenille Sunflower Bouquet with Graduation Bear"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+
+                  {/* PRD 21.2 C INTERACTIVE WIGGLE BADGE */}
+                  <div
+                    onMouseEnter={() => setIsWiggling(true)}
+                    onAnimationEnd={() => setIsWiggling(false)}
+                    className={`absolute top-4 right-4 bg-[#FFD166] text-[#2C3E50] text-xs font-black px-3.5 py-1.5 rounded-full shadow-md border-2 border-white cursor-pointer select-none ${
+                      isWiggling ? 'animate-wiggle' : 'rotate-2 hover:rotate-6'
+                    }`}
+                  >
                     ⭐ Favorit Wisudawan
+                  </div>
+
+                  <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md p-3.5 rounded-[22px] border-2 border-[#FFEAA7] shadow-lg flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-black text-[#2C3E50]">Sunshine Bear Graduation</div>
+                      <div className="text-[10px] text-[#FF6B81] font-bold">100% Bulu Halus & Topi Toga Nama</div>
+                    </div>
+                    <div className="bg-[#FFE3E6] text-[#FF6B81] px-3 py-1 rounded-full text-xs font-black">
+                      Super Gemas!
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 4 KAWAII VALUE CARDS */}
+          {/* 4 KAWAII VALUE CARDS WITH LUCIDE ICONS (NO RAW EMOJI) */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            <div className="p-5 rounded-[20px] bg-white border-2 border-[#F2E8DE] space-y-1.5 text-center shadow-[0_4px_14px_rgba(255,107,129,0.08)] hover:border-[#FF6B81] transition-all cursor-default">
-              <div className="text-2xl">🌿</div>
-              <div className="text-xs font-extrabold text-[#2C3E50]">Awet Selamanya</div>
-              <div className="text-[11px] text-[#7F8C8D] font-medium leading-tight">Bunga kawat bulu tahan tahunan tanpa rontok</div>
-            </div>
-            <div className="p-5 rounded-[20px] bg-white border-2 border-[#F2E8DE] space-y-1.5 text-center shadow-[0_4px_14px_rgba(255,107,129,0.08)] hover:border-[#FF6B81] transition-all cursor-default">
-              <div className="text-2xl">📦</div>
-              <div className="text-xs font-extrabold text-[#2C3E50]">Kardus Tebal Double</div>
-              <div className="text-[11px] text-[#7F8C8D] font-medium leading-tight">Aman dikirim ke seluruh Indonesia tanpa gepeng</div>
-            </div>
-            <div className="p-5 rounded-[20px] bg-white border-2 border-[#F2E8DE] space-y-1.5 text-center shadow-[0_4px_14px_rgba(255,107,129,0.08)] hover:border-[#FF6B81] transition-all cursor-default">
-              <div className="text-2xl">🤝</div>
-              <div className="text-xs font-extrabold text-[#2C3E50]">COD Gratis Kampus</div>
-              <div className="text-[11px] text-[#7F8C8D] font-medium leading-tight">Bebas ongkir UI, Gundar, dan PNJ Depok</div>
-            </div>
-            <div className="p-5 rounded-[20px] bg-white border-2 border-[#F2E8DE] space-y-1.5 text-center shadow-[0_4px_14px_rgba(255,107,129,0.08)] hover:border-[#FF6B81] transition-all cursor-default">
-              <div className="text-2xl">🛡️</div>
-              <div className="text-xs font-extrabold text-[#2C3E50]">Garansi 100% Ganti</div>
-              <div className="text-[11px] text-[#7F8C8D] font-medium leading-tight">Langsung dikirim baru bila rusak saat pengiriman</div>
-            </div>
+            {copy.trustCards.map((card) => {
+              const Icon = card.icon;
+              return (
+                <div
+                  key={card.id}
+                  className="p-5 rounded-[24px] bg-white border-2 border-[#F2E8DE] space-y-2 text-center shadow-[0_6px_18px_rgba(255,107,129,0.08)] hover:border-[#FF6B81] hover:-translate-y-1 transition-all cursor-default group"
+                >
+                  <div className="w-11 h-11 mx-auto rounded-2xl bg-[#FFF2F4] border border-[#FFE3E6] flex items-center justify-center text-[#FF6B81] group-hover:rotate-12 transition-transform">
+                    <Icon className="w-5 h-5 text-[#FF6B81]" />
+                  </div>
+                  <div className="text-xs font-black text-[#2C3E50]">{card.title}</div>
+                  <div className="text-[11px] text-[#7F8C8D] font-medium leading-tight">{card.desc}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
     );
   }
 
-  // Default: Tema A (Korean Pastel Atelier)
+  // =========================================================================
+  // TEMA A (DEFAULT): KOREAN PASTEL ATELIER
+  // Polaroid Frame + Washi Tape + Handcrafted Lucide Icons
+  // =========================================================================
   return (
     <section id="home" className="relative overflow-hidden bg-gradient-to-b from-[#FFF5F7] via-[#FAF8F5] to-[#FAF8F5] py-10 sm:py-14 px-4 sm:px-6 lg:px-8 border-b border-[#EFE8E1]">
       <div className="max-w-7xl mx-auto space-y-8 sm:space-y-10">
+        
         {/* KOREAN PASTEL HERO BANNER */}
-        <div className="bg-white border border-[#EFE8E1] rounded-[20px] p-6 sm:p-12 shadow-[0_10px_30px_-8px_rgba(244,167,185,0.22)] relative">
+        <div className="bg-white border border-[#EFE8E1] rounded-[24px] p-6 sm:p-12 shadow-[0_10px_30px_-8px_rgba(244,167,185,0.22)] relative">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
+            
+            {/* LEFT COLUMN: PASTEL COPYWRITING */}
             <div className="lg:col-span-7 space-y-4 sm:space-y-5 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FDF2F4] border border-[#F7D1D9] text-[#9C3D52] text-xs font-bold uppercase tracking-wider shadow-2xs">
                 <Sparkles className="w-3.5 h-3.5 text-[#F4A7B9]" />
-                <span>✨ Korean Florist Craft • Everlasting Love</span>
+                <span>{copy.hero.topBadge}</span>
               </div>
 
               <h1 className="text-3xl sm:text-5xl font-extrabold font-heading-a text-[#2D2A2A] tracking-tight leading-tight">
-                Buket Bunga Kawat Bulu <span className="text-[#E38EA1] italic">Estetik & Abadi</span>
+                {copy.hero.headlinePart1} <span className="text-[#E38EA1] italic">{copy.hero.headlineHighlight}</span>
               </h1>
 
               <p className="text-sm sm:text-base text-[#7E7676] max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
-                Sentuhan lembut beludru chenille stem buatan tangan yang tahan selamanya tanpa layu. Kado paling manis dan berkesan untuk momen wisuda, sidang skripsi, dan perayaan romantis.
+                {copy.hero.subheadline}
               </p>
 
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
@@ -226,7 +295,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
                   onClick={() => handleAction('katalog')}
                   className="btn-primary-atelier px-7 py-3.5 rounded-full text-xs sm:text-sm font-bold shadow-md shadow-[#F4A7B9]/40 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer"
                 >
-                  <span>Jelajahi Katalog 🌸</span>
+                  <span>{copy.hero.ctaPrimary}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -235,25 +304,35 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
                   onClick={() => handleAction('custom')}
                   className="px-6 py-3 rounded-full bg-white hover:bg-[#FDF2F4] text-[#2D2A2A] border border-[#EFE8E1] text-xs sm:text-sm font-bold shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
                 >
-                  Rangkai Custom ✨
+                  {copy.hero.ctaSecondary}
                 </button>
               </div>
             </div>
 
+            {/* RIGHT COLUMN: POLAROID FRAME + WASHI TAPE ACCENT */}
             <div className="lg:col-span-5 flex justify-center">
-              <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-square rounded-[20px] overflow-hidden shadow-2xl border-4 border-white group">
-                <img
-                  src="/preview-tema-a.jpg"
-                  alt="Preview Koleksi Buket Bunga Kawat Bulu Korean Pastel Atelier"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="animate-float-hero absolute top-4 left-4 bg-white/95 backdrop-blur-md text-[#9C3D52] text-xs font-black px-3 py-1.5 rounded-full shadow-md border border-[#F7D1D9] flex items-center gap-1.5">
-                  <span>🌸 100% Handcrafted Chenille Velvet</span>
+              <div className="relative w-full max-w-md p-3.5 pb-8 bg-white rounded-[16px] shadow-2xl border border-stone-200/80 rotate-[-1.5deg] hover:rotate-0 transition-transform duration-500 group">
+                
+                {/* PRD 21.2 A WASHI TAPE STICKER ACCENT */}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 bg-[#E8DCC4]/80 backdrop-blur-xs border-dashed border border-[#D4C3A3] shadow-xs rotate-[-1deg] pointer-events-none z-20 rounded-xs" />
+
+                <div className="relative aspect-square w-full rounded-[10px] overflow-hidden bg-stone-100">
+                  <img
+                    src="/preview-tema-a.jpg"
+                    alt="Korean Pastel Atelier Bouquet Lifestyle Preview"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="animate-float-hero absolute top-4 left-4 bg-white/95 backdrop-blur-md text-[#9C3D52] text-xs font-black px-3 py-1.5 rounded-full shadow-md border border-[#F7D1D9] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#E38EA1]" />
+                    <span>🌸 100% Chenille Velvet</span>
+                  </div>
                 </div>
-                <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md p-3.5 rounded-[16px] border border-[#F7D1D9] shadow-lg flex items-center justify-between">
+
+                {/* POLAROID HANDWRITTEN LABEL */}
+                <div className="mt-3 px-2 flex items-center justify-between text-left">
                   <div>
                     <div className="text-xs font-black text-[#2D2A2A]">Pink Tulip Bliss Trio</div>
-                    <div className="text-[10px] text-[#7E7676] font-semibold">Bunga Kawat Bulu Korea Halus</div>
+                    <div className="text-[10px] text-[#7E7676] font-medium">Bunga Kawat Bulu Korea Halus</div>
                   </div>
                   <div className="text-right">
                     <span className="text-xs font-black text-[#9C3D52]">Rp 185.000</span>
@@ -265,28 +344,23 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* 4 PASTEL VALUE CARDS */}
+        {/* 4 PASTEL VALUE CARDS WITH LUCIDE ICONS (NO RAW EMOJI) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          <div className="p-5 rounded-[16px] bg-white border border-[#EFE8E1] space-y-1.5 text-center shadow-[0_4px_12px_rgba(244,167,185,0.08)] hover:border-[#F7D1D9] transition-all cursor-default">
-            <div className="text-2xl">🌿</div>
-            <div className="text-xs font-extrabold text-[#2D2A2A]">Awet Selamanya</div>
-            <div className="text-[11px] text-[#7E7676] leading-tight">Kawat bulu premium anti-rontok & tak pernah layu</div>
-          </div>
-          <div className="p-5 rounded-[16px] bg-white border border-[#EFE8E1] space-y-1.5 text-center shadow-[0_4px_12px_rgba(244,167,185,0.08)] hover:border-[#F7D1D9] transition-all cursor-default">
-            <div className="text-2xl">📦</div>
-            <div className="text-xs font-extrabold text-[#2D2A2A]">Kardus Box Tebal</div>
-            <div className="text-[11px] text-[#7E7676] leading-tight">Double-wall box aman dari tekanan kurir</div>
-          </div>
-          <div className="p-5 rounded-[16px] bg-white border border-[#EFE8E1] space-y-1.5 text-center shadow-[0_4px_12px_rgba(244,167,185,0.08)] hover:border-[#F7D1D9] transition-all cursor-default">
-            <div className="text-2xl">🤝</div>
-            <div className="text-xs font-extrabold text-[#2D2A2A]">COD Titik Temu</div>
-            <div className="text-[11px] text-[#7E7676] leading-tight">Janji temu langsung di kampus UI atau stasiun</div>
-          </div>
-          <div className="p-5 rounded-[16px] bg-white border border-[#EFE8E1] space-y-1.5 text-center shadow-[0_4px_12px_rgba(244,167,185,0.08)] hover:border-[#F7D1D9] transition-all cursor-default">
-            <div className="text-2xl">🛡️</div>
-            <div className="text-xs font-extrabold text-[#2D2A2A]">Garansi 100% Baru</div>
-            <div className="text-[11px] text-[#7E7676] leading-tight">Ganti buket baru jika rusak saat pengiriman</div>
-          </div>
+          {copy.trustCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div
+                key={card.id}
+                className="p-5 rounded-[18px] bg-white border border-[#EFE8E1] space-y-2 text-center shadow-[0_4px_14px_rgba(244,167,185,0.08)] hover:border-[#F7D1D9] hover:-translate-y-0.5 transition-all cursor-default group"
+              >
+                <div className="w-10 h-10 mx-auto rounded-full bg-[#FDF2F4] border border-[#F7D1D9] flex items-center justify-center text-[#9C3D52] group-hover:scale-110 transition-transform">
+                  <Icon className="w-5 h-5 text-[#9C3D52]" />
+                </div>
+                <div className="text-xs font-extrabold text-[#2D2A2A]">{card.title}</div>
+                <div className="text-[11px] text-[#7E7676] leading-tight">{card.desc}</div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -19,12 +19,14 @@ import { Footer } from '@/components/storefront/Footer';
 import type { ExtendedProduct } from '@chenille/shared';
 import { MOCK_PRODUCTS } from '@chenille/shared';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { getThemeCopy } from '@/lib/theme-copy';
 import { getApiUrl } from '@/lib/api-client';
 
 const ITEMS_PER_PAGE = 12;
 
 export default function StorefrontPage() {
   const { theme } = useThemeStore();
+  const [mounted, setMounted] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,8 +43,11 @@ export default function StorefrontPage() {
   });
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch real products from Supabase API via backend engine
+  // Fetch real products from Supabase API via backend engine & sync active theme from DB
   useEffect(() => {
+    setMounted(true);
+    useThemeStore.getState().fetchServerTheme();
+
     fetch(getApiUrl('/api/v1/products?limit=50'))
       .then((res) => res.json())
       .then((res) => {
@@ -52,6 +57,9 @@ export default function StorefrontPage() {
       })
       .catch((err) => console.warn('Could not load products from Supabase API, using fallback:', err));
   }, []);
+
+  const activeTheme = mounted ? theme : 'tema-a';
+  const copy = getThemeCopy(activeTheme);
 
   // Sync data-theme attribute on client mount
   useEffect(() => {
@@ -289,13 +297,13 @@ export default function StorefrontPage() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
               <div className="text-xs font-black text-theme-primary uppercase tracking-widest mb-1">
-                Koleksi Bunga Kawat Bulu Atelier
+                {copy.catalog.sectionEyebrow}
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-theme-text-main tracking-tight font-heading">
-                Katalog Lengkap Buket Bunga
+                {copy.catalog.sectionTitle}
               </h2>
               <p className="text-xs sm:text-sm text-stone-500 mt-1">
-                Temukan buket kawat bulu istimewa yang dirangkai teliti untuk setiap momen kebahagiaan Anda
+                {copy.catalog.sectionSubtitle}
               </p>
             </div>
 

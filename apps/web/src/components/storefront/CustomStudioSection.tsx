@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, MessageCircle, ShoppingBag, Check, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '@/stores/useCartStore';
+import { useThemeStore } from '@/stores/useThemeStore';
+import { getThemeCopy } from '@/lib/theme-copy';
 import { flyToCart, showMagicToast } from '@/lib/magic-motion';
 import { getApiUrl } from '@/lib/api-client';
 
@@ -104,6 +106,16 @@ const ADDONS: AddonOpt[] = [
 
 export const CustomStudioSection: React.FC = () => {
   const { addItem, setIsCartOpen } = useCartStore();
+  const { theme } = useThemeStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const activeTheme = mounted ? theme : 'tema-a';
+  const copy = getThemeCopy(activeTheme);
+
   const [selectedFlower, setSelectedFlower] = useState<FlowerOpt>(FLOWERS[0]);
   const [selectedColor, setSelectedColor] = useState<ColorOpt>(COLORS[0]);
   const [selectedWrapping, setSelectedWrapping] = useState<WrappingOpt>(WRAPPINGS[0]);
@@ -243,10 +255,10 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
             <span>Interactive Bouquet Builder</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-theme-text-main tracking-tight font-heading">
-            Custom Buket Studio Interaktif
+            {copy.customStudio.title}
           </h2>
           <p className="text-xs sm:text-sm text-theme-text-muted leading-relaxed">
-            Rangkai buket impian Anda sendiri secara live dalam 7 langkah mudah. Pilih jenis bunga, warna kawat bulu, wrapping, pita, packaging box, kartu ucapan wax seal, dan aksesori wisuda favorit.
+            {copy.customStudio.subtitle}
           </p>
         </div>
 
@@ -259,7 +271,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
             <div className="space-y-3">
               <label className="text-xs font-black uppercase tracking-wider text-theme-text-main flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">1</span>
-                <span>Pilih Jenis Bunga Utama:</span>
+                <span>{copy.customStudio.step1Label}:</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 {FLOWERS.map((f) => {
@@ -293,7 +305,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
             <div className="space-y-3">
               <label className="text-xs font-black uppercase tracking-wider text-theme-text-main flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">2</span>
-                <span>Pilih Warna Kawat Bulu (Chenille Stem):</span>
+                <span>{copy.customStudio.step2Label}:</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 {COLORS.map((c) => {
@@ -327,7 +339,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
             <div className="space-y-3">
               <label className="text-xs font-black uppercase tracking-wider text-theme-text-main flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">3</span>
-                <span>Tema Kertas Wrapping (Cellophane):</span>
+                <span>{copy.customStudio.step3Label}:</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 {WRAPPINGS.map((w) => {
@@ -358,7 +370,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
             <div className="space-y-3">
               <label className="text-xs font-black uppercase tracking-wider text-theme-text-main flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">4</span>
-                <span>Pita & Ribbon Cantik:</span>
+                <span>{copy.customStudio.step4Label}:</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 {RIBBONS.map((r) => {
@@ -589,7 +601,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                   className="w-full py-2.5 px-4 rounded-2xl bg-theme-surface-subtle hover:bg-white text-theme-primary border border-theme-border font-extrabold text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.01] cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  <span>{isAdding ? 'Buket Custom Ditambahkan...' : '+ Masukkan ke Keranjang Belanja'}</span>
+                  <span>{isAdding ? 'Buket Custom Ditambahkan...' : copy.customStudio.checkoutBtn}</span>
                 </button>
               </div>
 

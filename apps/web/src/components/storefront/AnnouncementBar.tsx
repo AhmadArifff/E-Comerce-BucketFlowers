@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Clock, Truck } from 'lucide-react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { getThemeCopy } from '@/lib/theme-copy';
 import { getApiUrl } from '@/lib/api-client';
 
 export const AnnouncementBar: React.FC = () => {
   const { theme } = useThemeStore();
+  const [mounted, setMounted] = useState(false);
   const [campaign, setCampaign] = useState<{
     cod_promo_enabled?: boolean;
     cod_promo_banner_text?: string;
@@ -24,6 +26,8 @@ export const AnnouncementBar: React.FC = () => {
   });
 
   useEffect(() => {
+    setMounted(true);
+
     // 1. Fetch live campaign settings
     fetch(getApiUrl('/api/v1/campaigns'))
       .then((r) => r.json())
@@ -45,22 +49,23 @@ export const AnnouncementBar: React.FC = () => {
       .catch(() => {});
   }, []);
 
+  const activeTheme = mounted ? theme : 'tema-a';
+  const copy = getThemeCopy(activeTheme);
+
   const getBarStyle = () => {
-    if (theme === 'tema-b') {
+    if (activeTheme === 'tema-b') {
       return {
         background: '#6B2D5C',
         color: '#FDF9F0',
-        className: 'border-b border-[#D4AF37] tracking-[2px] uppercase text-[11px] font-semibold',
-        accentColor: '#D4AF37',
-        badgeClass: 'bg-black/30 text-[#D4AF37] border border-[#D4AF37]/40 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider',
+        className: 'border-b border-[#D4AF37] tracking-[1.5px] uppercase text-[11px] font-semibold',
+        badgeClass: 'bg-black/40 text-[#D4AF37] border border-[#D4AF37]/50 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider',
       };
     }
-    if (theme === 'tema-c') {
+    if (activeTheme === 'tema-c') {
       return {
         background: 'linear-gradient(90deg, #FFB7B2, #FFEAA7, #B4F8C8, #A0E7E5, #FFB7B2)',
         color: '#2C3E50',
         className: 'animate-rainbow-move border-b border-[#FFD4DB] font-extrabold text-xs sm:text-[13px]',
-        accentColor: '#FF6B81',
         badgeClass: 'bg-white text-[#FF6B81] px-2.5 py-0.5 rounded-full text-[11px] font-black shadow-xs',
       };
     }
@@ -69,7 +74,6 @@ export const AnnouncementBar: React.FC = () => {
       background: 'linear-gradient(90deg, #F4A7B9, #FCEADE, #F4A7B9)',
       color: '#722332',
       className: 'animate-gradient-move border-b border-[#F7D1D9] font-bold text-xs sm:text-[13px]',
-      accentColor: '#9C3D52',
       badgeClass: 'bg-white/80 text-[#722332] px-2 py-0.5 rounded-md text-[11px] font-extrabold tracking-wide',
     };
   };
@@ -91,25 +95,15 @@ export const AnnouncementBar: React.FC = () => {
           <span className="truncate max-w-xl">
             {campaign?.cod_promo_enabled && campaign.cod_promo_banner_text ? (
               <strong>{campaign.cod_promo_banner_text}</strong>
-            ) : theme === 'tema-b' ? (
-              <>
-                ✦ <strong>Musim Wisuda 2026:</strong> Free Greeting Card Emas & Selempang Nama
-              </>
-            ) : theme === 'tema-c' ? (
-              <>
-                🎉 <strong>Spesial Wisuda Depok:</strong> Free Kartu Ucapan & Pita Custom! 🎀
-              </>
             ) : (
-              <>
-                🌸 <strong>Musim Wisuda 2026:</strong> Free Greeting Card & Selempang Custom PO H-3!
-              </>
+              <span>{copy.announcement.quotaTemplate(quota.remaining_slots ?? 5)}</span>
             )}
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-4 text-[11px] font-bold">
           <div className={bar.badgeClass}>
             <Clock className="w-3 h-3 inline mr-1" />
-            <span>Sisa Kuota Hari Ini: {quota.remaining_slots ?? 8} / {quota.daily_limit ?? 20} Buket</span>
+            <span>Sisa Kuota: {quota.remaining_slots ?? 8} / {quota.daily_limit ?? 20} Buket</span>
           </div>
           <span>Bebas Ongkir COD Radius {campaign?.cod_max_radius_km ?? 5} KM UI</span>
         </div>
@@ -117,4 +111,3 @@ export const AnnouncementBar: React.FC = () => {
     </div>
   );
 };
-

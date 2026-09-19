@@ -718,6 +718,16 @@ body, .font-body {
   animation: cartBumpAnim 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 }
 
+@keyframes wiggleAnim {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-8deg) scale(1.08); }
+  50% { transform: rotate(8deg) scale(1.08); }
+  75% { transform: rotate(-4deg) scale(1.04); }
+}
+.animate-wiggle {
+  animation: wiggleAnim 0.6s ease-in-out;
+}
+
 /* 18. MAGIC UI FLY-TO-CART PARABOLIC FLYER */
 .magic-flyer {
   position: fixed;

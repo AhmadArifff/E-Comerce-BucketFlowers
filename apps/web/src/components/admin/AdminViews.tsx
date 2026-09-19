@@ -1999,7 +1999,7 @@ export const MaintenanceThemeView: React.FC = () => {
   ];
 
   const handleSelectTheme = (tId: ThemeId) => {
-    setTheme(tId);
+    setTheme(tId, true);
     showMagicToast('Tema Diperbarui! 🎨', `Tema etalase toko aktif sekarang: ${tId.toUpperCase()}`, '✨');
   };
 
