@@ -4262,3 +4262,99 @@ Seksi ini menetapkan tata kelola rekayasa dan standar konfigurasi untuk mengatas
   }
   ```
 * Dampak: Menjamin setiap klien atau browser pengembang yang membuka aplikasi akan langsung memusnahkan sisa Service Worker tanpa memerlukan intervensi manual buka tab *Application > Clear Site Data*.
+
+
+---
+
+## 26. Arsitektur Manajemen Konten Dinamis Custom Studio (Dynamic Custom Studio Management Suite)
+
+Seksi ini menetapkan tata kelola rekayasa, skema basis data, kontrak API backend, dan antarmuka Admin Panel untuk pengelolaan seluruh varian dan elemen **Custom Studio Interaktif** secara dinamis (*zero hardcoded options*), sehingga pemilik atelier dapat mengelola harga, nama, deskripsi, warna hex, gambar/emoji, dan ketersediaan stok setiap opsi kustomisasi buket secara langsung dari dashboard admin.
+
+### 26.1 Problem Statement & Kebutuhan Pengguna
+1. **Ketergantungan Kode Tetap (Hardcoded In-Memory Arrays):**
+   * Komponen etalase `CustomStudioSection.tsx` sebelumnya mendefinisikan 7 array opsi kustomisasi (`FLOWERS`, `COLORS`, `WRAPPINGS`, `RIBBONS`, `PACKAGINGS`, `GREETINGS`, `ADDONS`) secara statis di dalam kode program React.
+   * Setiap penambahan bunga baru (misal: *Daisy Korea*, *Peony Velvet*), kenaikan harga material, atau pergantian palet warna kawat bulu menuntut modifikasi berkas kode dan deployment ulang aplikasi.
+2. **Ketiadaan Kontrol Operasional Harian bagi Florist:**
+   * Jika stok kertas wrapping *Korean Two-Tone Pink* atau lampu LED sedang habis di atelier, florist tidak memiliki sakelar (*toggle*) di dashboard admin untuk menonaktifkan opsi tersebut sementara dari pilihan pelanggan.
+3. **Kepatuhan Mutlak Zero-Dummy (PRD Seksi 1.2 & RULES.md):**
+   * Seluruh entitas transaksi dan perakitan buket kustom wajib terhubung dengan tabel fisik PostgreSQL `custom_studio_options` di Supabase.
+
+---
+
+### 26.2 Skema Basis Data & 7 Kategori Opsi (`custom_studio_options`)
+
+Tabel PostgreSQL `custom_studio_options` di Supabase menyimpan seluruh konfigurasi elemen:
+
+```sql
+CREATE TABLE IF NOT EXISTS custom_studio_options (
+  id VARCHAR(50) PRIMARY KEY,
+  category custom_category NOT NULL,
+  name VARCHAR(150) NOT NULL,
+  description TEXT,
+  price_modifier DECIMAL(12, 2) DEFAULT 0,
+  emoji_or_icon VARCHAR(50),
+  hex_color VARCHAR(20),
+  sort_order INT DEFAULT 0,
+  is_active BOOLEAN DEFAULT true
+);
+```
+
+#### 7 Kategori Opsi Resmi:
+1. `FLOWER_TYPE`: Bunga Utama (Tulip, Mawar, Matahari, Lavender, dsb). Memiliki `price_modifier` sebagai harga dasar buket dan `emoji_or_icon`.
+2. `CHENILLE_COLOR`: Varian Warna Kawat Bulu (Pastel Pink, Lavender Lilac, Sky Blue, Matcha Sage, dsb). Memiliki `hex_color` untuk preview kanvas dinamis.
+3. `WRAPPING_STYLE`: Kertas Pembungkus Cellophane (Korean Two-Tone, Lilac Velvet, Clean Oat, dsb). Memiliki `description` jenis kertas dan `price_modifier`.
+4. `RIBBON_STYLE`: Pita Penghias (Pita Satin, Organza Transparan, Chiffon Ruffle, Tali Rami). Memiliki `price_modifier` dan `emoji_or_icon`.
+5. `PACKAGING_BOX`: Kemasan Pelindung (Standard Sleeve, Box Jendela Mika, Tas PVC Bening, Paper Bag Mewah). Memiliki `price_modifier` dan `emoji_or_icon`.
+6. `GREETING_SEAL`: Kartu Ucapan & Segel (Kartu Standard Cetak, Hotprint Gold Foil, Vintage Wax Seal Stamp). Memiliki `price_modifier` dan `emoji_or_icon`.
+7. `ACCESSORY_ADDON`: Aksesori Tambahan Upselling (Lampu LED Fairy Light, Boneka Toga Mini, Pin Bros Kristal). Memiliki `price_modifier` dan `emoji_or_icon`.
+
+---
+
+### 26.3 Kontrak RESTful API Backend (`apps/api`)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                   KONTRAK ENDPOINT API CUSTOM STUDIO SUITE                       │
+├─────────┬──────────────────────────────────┬─────────────────────────────────────┤
+│ METHOD  │ ENDPOINT                         │ DESKRIPSI & OTORISASI               │
+├─────────┼──────────────────────────────────┼─────────────────────────────────────┤
+│ GET     │ /api/v1/custom-studio            │ Publik: Mengambil opsi aktif (7 kat)│
+│ GET     │ /api/v1/admin/custom-studio      │ Admin: Mengambil seluruh opsi       │
+│ POST    │ /api/v1/admin/custom-studio      │ Admin: Tambah opsi baru             │
+│ PUT     │ /api/v1/admin/custom-studio/:id  │ Admin: Update nama, harga, visual   │
+│ DELETE  │ /api/v1/admin/custom-studio/:id  │ Admin: Hapus opsi dari database     │
+│ PATCH   │ /api/v1/admin/custom-studio/:id/toggle │ Admin: Sakelar aktif/nonaktif  │
+└─────────┴──────────────────────────────────┴─────────────────────────────────────┘
+```
+
+#### Format Respon `GET /api/v1/custom-studio`:
+```json
+{
+  "success": true,
+  "data": {
+    "raw": [...],
+    "grouped": {
+      "FLOWER_TYPE": [...],
+      "CHENILLE_COLOR": [...],
+      "WRAPPING_STYLE": [...],
+      "RIBBON_STYLE": [...],
+      "PACKAGING_BOX": [...],
+      "GREETING_SEAL": [...],
+      "ACCESSORY_ADDON": [...]
+    }
+  }
+}
+```
+
+---
+
+### 26.4 Desain Antarmuka Admin Panel (Tab "STUDIO")
+
+1. **Navigasi Tab Kategori:**
+   * Filter pill horizontal untuk beralih antara 7 kategori opsi secara instan.
+2. **Tabel Data Interaktif:**
+   * Kolom: Visual (Emoji/Warna Hex), Nama & Kategori, Deskripsi, Harga Dasar / Tambahan (+Rp), Urutan Tampil (`sort_order`), Status Aktif (Switch Button), dan Tombol Tindakan (Edit & Hapus).
+3. **Modal Tambah & Edit Opsi:**
+   * Form validasi dengan input: Nama Opsi, Kategori (Dropdown 7 tipe), Nominal Harga (Rp), Ikon/Emoji, Hex Color Picker (aktif untuk kategori warna), Deskripsi Singkat, dan Urutan Tampil.
+4. **Pembaruan Seketika (Real-Time Storefront Sync):**
+   * Saat admin menyimpan opsi baru atau mengubah harga, etalase toko yang dimuat pengunjung langsung mengonsumsi data terbaru via API tanpa perlu menyunting kode.

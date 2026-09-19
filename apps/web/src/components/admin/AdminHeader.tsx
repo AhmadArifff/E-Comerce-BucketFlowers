@@ -47,6 +47,10 @@ const TAB_TITLES: Record<AdminTab, { title: string; subtitle: string }> = {
     title: 'Produk & Klik Pelanggan',
     subtitle: 'Katalog buket kawat bulu, pantauan minat klik pengunjung, dan pengelolaan margin HPP.',
   },
+  STUDIO: {
+    title: 'Custom Studio Builder & Opsi Dinamis',
+    subtitle: 'Kelola seluruh opsi kustomisasi buket bunga kawat bulu (7 kategori) langsung ke database.',
+  },
   BOM: {
     title: 'Bahan Baku & Resep BOM (Bill of Materials)',
     subtitle: 'Kalkulasi HPP akurat per batang chenille kawat bulu, kain wrapping, pita, dan box corrugated.',

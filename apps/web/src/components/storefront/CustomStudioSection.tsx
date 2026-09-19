@@ -109,6 +109,15 @@ export const CustomStudioSection: React.FC = () => {
   const { theme } = useThemeStore();
   const [mounted, setMounted] = useState(false);
 
+  // Dynamic Options State (initialized with static fallback)
+  const [flowers, setFlowers] = useState<FlowerOpt[]>(FLOWERS);
+  const [colors, setColors] = useState<ColorOpt[]>(COLORS);
+  const [wrappings, setWrappings] = useState<WrappingOpt[]>(WRAPPINGS);
+  const [ribbons, setRibbons] = useState<RibbonOpt[]>(RIBBONS);
+  const [packagings, setPackagings] = useState<PackagingOpt[]>(PACKAGINGS);
+  const [greetings, setGreetings] = useState<GreetingOpt[]>(GREETINGS);
+  const [addons, setAddons] = useState<AddonOpt[]>(ADDONS);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -124,6 +133,100 @@ export const CustomStudioSection: React.FC = () => {
   const [selectedGreeting, setSelectedGreeting] = useState<GreetingOpt>(GREETINGS[0]);
   const [selectedAddons, setSelectedAddons] = useState<string[]>(['led']);
   const [isAdding, setIsAdding] = useState(false);
+
+  // Fetch dynamic custom studio options from database
+  useEffect(() => {
+    const fetchStudioOptions = async () => {
+      try {
+        const res = await fetch(getApiUrl('/api/v1/custom-studio'));
+        const json = await res.json();
+        if (json.success && json.data?.grouped) {
+          const g = json.data.grouped;
+
+          if (Array.isArray(g.FLOWER_TYPE) && g.FLOWER_TYPE.length > 0) {
+            const mappedFlowers: FlowerOpt[] = g.FLOWER_TYPE.map((f: any) => ({
+              id: f.id,
+              name: f.name,
+              emoji: f.emoji_or_icon || '🌸',
+              basePrice: Number(f.price_modifier) || 0,
+            }));
+            setFlowers(mappedFlowers);
+            setSelectedFlower((prev) => mappedFlowers.find((f) => f.id === prev.id) || mappedFlowers[0]);
+          }
+
+          if (Array.isArray(g.CHENILLE_COLOR) && g.CHENILLE_COLOR.length > 0) {
+            const mappedColors: ColorOpt[] = g.CHENILLE_COLOR.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              colorHex: c.hex_color || '#F4A7B9',
+            }));
+            setColors(mappedColors);
+            setSelectedColor((prev) => mappedColors.find((c) => c.id === prev.id) || mappedColors[0]);
+          }
+
+          if (Array.isArray(g.WRAPPING_STYLE) && g.WRAPPING_STYLE.length > 0) {
+            const mappedWrappings: WrappingOpt[] = g.WRAPPING_STYLE.map((w: any) => ({
+              id: w.id,
+              name: w.name,
+              desc: w.description || '',
+            }));
+            setWrappings(mappedWrappings);
+            setSelectedWrapping((prev) => mappedWrappings.find((w) => w.id === prev.id) || mappedWrappings[0]);
+          }
+
+          if (Array.isArray(g.RIBBON_STYLE) && g.RIBBON_STYLE.length > 0) {
+            const mappedRibbons: RibbonOpt[] = g.RIBBON_STYLE.map((r: any) => ({
+              id: r.id,
+              name: r.name,
+              desc: r.description || '',
+              price: Number(r.price_modifier) || 0,
+              emoji: r.emoji_or_icon || '🎀',
+            }));
+            setRibbons(mappedRibbons);
+            setSelectedRibbon((prev) => mappedRibbons.find((r) => r.id === prev.id) || mappedRibbons[0]);
+          }
+
+          if (Array.isArray(g.PACKAGING_BOX) && g.PACKAGING_BOX.length > 0) {
+            const mappedPackagings: PackagingOpt[] = g.PACKAGING_BOX.map((p: any) => ({
+              id: p.id,
+              name: p.name,
+              desc: p.description || '',
+              price: Number(p.price_modifier) || 0,
+              icon: p.emoji_or_icon || '📦',
+            }));
+            setPackagings(mappedPackagings);
+            setSelectedPackaging((prev) => mappedPackagings.find((p) => p.id === prev.id) || mappedPackagings[0]);
+          }
+
+          if (Array.isArray(g.GREETING_SEAL) && g.GREETING_SEAL.length > 0) {
+            const mappedGreetings: GreetingOpt[] = g.GREETING_SEAL.map((gr: any) => ({
+              id: gr.id,
+              name: gr.name,
+              desc: gr.description || '',
+              price: Number(gr.price_modifier) || 0,
+              icon: gr.emoji_or_icon || '✉️',
+            }));
+            setGreetings(mappedGreetings);
+            setSelectedGreeting((prev) => mappedGreetings.find((gr) => gr.id === prev.id) || mappedGreetings[0]);
+          }
+
+          if (Array.isArray(g.ACCESSORY_ADDON) && g.ACCESSORY_ADDON.length > 0) {
+            const mappedAddons: AddonOpt[] = g.ACCESSORY_ADDON.map((a: any) => ({
+              id: a.id,
+              name: a.name,
+              price: Number(a.price_modifier) || 0,
+              icon: a.emoji_or_icon || '✨',
+            }));
+            setAddons(mappedAddons);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load live custom studio options, using fallbacks:', e);
+      }
+    };
+
+    fetchStudioOptions();
+  }, []);
 
   // Telemetry: Log Custom Studio 4-Step funnel event
   const logStudioStep = (stepNumber: number) => {
@@ -165,7 +268,7 @@ export const CustomStudioSection: React.FC = () => {
   };
 
   const addonsTotal = selectedAddons.reduce((sum, addonId) => {
-    const found = ADDONS.find((a) => a.id === addonId);
+    const found = addons.find((a) => a.id === addonId);
     return sum + (found ? found.price : 0);
   }, 0);
 
@@ -178,7 +281,7 @@ export const CustomStudioSection: React.FC = () => {
 
   const handleWhatsAppOrder = () => {
     const activeAddonNames = selectedAddons
-      .map((id) => ADDONS.find((a) => a.id === id)?.name)
+      .map((id) => addons.find((a) => a.id === id)?.name)
       .filter(Boolean)
       .join(', ');
 
@@ -213,7 +316,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
       setIsCartOpen(true);
     }
     const activeAddonNames = selectedAddons
-      .map((id) => ADDONS.find((a) => a.id === id)?.name)
+      .map((id) => addons.find((a) => a.id === id)?.name)
       .filter(Boolean)
       .join(', ');
 
@@ -274,7 +377,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                 <span>{copy.customStudio.step1Label}:</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {FLOWERS.map((f) => {
+                {flowers.map((f) => {
                   const isSelected = selectedFlower.id === f.id;
                   return (
                     <button
@@ -308,7 +411,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                 <span>{copy.customStudio.step2Label}:</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {COLORS.map((c) => {
+                {colors.map((c) => {
                   const isSelected = selectedColor.id === c.id;
                   return (
                     <button
@@ -342,7 +445,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                 <span>{copy.customStudio.step3Label}:</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                {WRAPPINGS.map((w) => {
+                {wrappings.map((w) => {
                   const isSelected = selectedWrapping.id === w.id;
                   return (
                     <button
@@ -373,7 +476,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                 <span>{copy.customStudio.step4Label}:</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {RIBBONS.map((r) => {
+                {ribbons.map((r) => {
                   const isSelected = selectedRibbon.id === r.id;
                   return (
                     <button
@@ -407,7 +510,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                 <span>Packaging Eksklusif & Delivery:</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {PACKAGINGS.map((p) => {
+                {packagings.map((p) => {
                   const isSelected = selectedPackaging.id === p.id;
                   return (
                     <button
@@ -438,7 +541,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                 <span>Kartu Ucapan & Finishing Seal:</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                {GREETINGS.map((g) => {
+                {greetings.map((g) => {
                   const isSelected = selectedGreeting.id === g.id;
                   return (
                     <button
@@ -472,7 +575,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                 <span>Tambahan Aksesori (Upselling Add-ons):</span>
               </label>
               <div className="space-y-2">
-                {ADDONS.map((a) => {
+                {addons.map((a) => {
                   const isChecked = selectedAddons.includes(a.id);
                   return (
                     <div

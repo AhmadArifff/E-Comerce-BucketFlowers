@@ -28,12 +28,14 @@ import {
 import { ProductCtrAnalyticsCard } from '@/components/admin/ProductCtrAnalyticsCard';
 import { UsersManagementView } from '@/components/admin/UsersManagementView';
 import { CampaignsView } from '@/components/admin/CampaignsView';
+import { CustomStudioManagementView } from '@/components/admin/CustomStudioManagementView';
 
 const VALID_TABS: AdminTab[] = [
   'DASHBOARD',
   'ORDERS',
   'REPORTS',
   'PRODUCTS',
+  'STUDIO',
   'BOM',
   'PROMOS',
   'CAMPAIGNS',
@@ -199,6 +201,13 @@ export default function AdminPage() {
           {activeTab === 'PRODUCTS' && (
             <div className="admin-view-fade">
               <ProductsClicksView onOpenAddModal={() => setIsAddProductOpen(true)} />
+            </div>
+          )}
+
+          {/* 4.5. CUSTOM STUDIO BUILDER & OPTIONS TAB */}
+          {activeTab === 'STUDIO' && (
+            <div className="admin-view-fade">
+              <CustomStudioManagementView />
             </div>
           )}
 

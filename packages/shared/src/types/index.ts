@@ -244,3 +244,29 @@ export interface CustomerOccasionItem {
   createdAt?: string;
 }
 
+// ==============================================================================
+// DYNAMIC CUSTOM STUDIO SUITE (PRD Seksi 26)
+// ==============================================================================
+
+export type CustomStudioCategory =
+  | 'FLOWER_TYPE'
+  | 'CHENILLE_COLOR'
+  | 'WRAPPING_STYLE'
+  | 'RIBBON_STYLE'
+  | 'PACKAGING_BOX'
+  | 'GREETING_SEAL'
+  | 'ACCESSORY_ADDON';
+
+export interface CustomStudioOption {
+  id: string;
+  category: CustomStudioCategory;
+  name: string;
+  description?: string | null;
+  price_modifier: number;
+  emoji_or_icon?: string | null;
+  hex_color?: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at?: string;
+}
+
