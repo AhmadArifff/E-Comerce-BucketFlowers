@@ -3802,72 +3802,102 @@ Seksi ini menetapkan arahan visual (*art direction*), standardisasi aset, serta 
 
 ### 21.2 Karakter Visual & Penataan Aset untuk Setiap Tema
 
+Sesuai dengan standar baku **UI/UX Pro Max** dan ketentuan [RULES.md](file:///c:/Users/ASUS/Documents/Web%20Dev/improving/E-Comerce-BucketFlowers/RULES.md) (Seksi 4.2), seluruh etalase produk **DILARANG KERAS** menampilkan gambar tangkapan layar website tiruan (*website screenshot mockup inside a card*). Setiap tema wajib menampilkan foto fisik asli produk buket kawat bulu resolusi tinggi dengan karakteristik visual, bingkai, lencana, kartu ringkasan produk, dan interaktivitas yang unik serta berdaya tarik tinggi.
+
+---
+
 #### A. Tema A: Korean Pastel Atelier (*Hannam-dong Warm Florist*)
-* **Nuansa Rasa:** Lembut, hangat, tenang, estetik seperti kafe bunga di Seoul.
-* **Aset Visual Hero (Kanan):**
-  * **Foto Utama:** Foto *lifestyle* buket kawat bulu Tulip & Daisy pastel di atas meja kayu cerah beralas kain linen oat, dengan cangkir keramik dan buku catatan di sampingnya.
-  * **Bingkai & Bentuk:** *Polaroid Photo Frame* miring tipis 2 derajat, dengan aksen **stiker washi tape semi-transparan** di sudut atasnya.
-  * **Aset Dekoratif Khusus:**
-    * Partikel kelopak bunga kawat bulu pastel yang melayang lembut (*floating pastel petals with CSS drift*).
-    * Cap stempel lilin (*wax seal*) warna sage green dengan logo bunga monogram Chenille.
-  * **Gaya Ikonografi:** *Delicate Hand-Drawn Line-Art* (ikon garis tipis 1.5px bernuansa ilustrasi Korea, bukan emoji standar).
-  * **Elemen Interaktif:** Kartu kecil mengambang: *"Detail Benang Beludru Halus (100% Chenille Wire)"* dengan foto *macro zoom* tekstur kawat bulu.
+* **Esensi & Nuansa Emosional:** Hangat, lembut, puitis, damai, estetik seperti kafe bunga Hannam-dong di Seoul pada pagi hari.
+* **Aset Fotografi Fisik Utama (`preview-tema-a.jpg`):**
+  * **Komposisi Foto:** Foto fisik nyata *close-up & lifestyle* buket kawat bulu asli (*Pink Tulip & White Daisy Korean Bouquet*). Menampilkan tekstur beludru kawat bulu halus (*chenille stem*), kelopak tulip merah muda lembut, putik bunga daisy putih, dan aksen daun eucalyptus kawat bulu.
+  * **Penataan & Latar:** Buket terbungkus kertas *cellophane* matte dua warna (*two-tone frosted pink & cream*) dengan pita satin lembut, diletakkan di atas meja kayu cerah bertekstur alami, beralas kain linen oat, dengan cangkir keramik kerajinan tangan dan buku catatan bersampul kraft di sampingnya.
+  * **Pencahayaan:** Cahaya matahari pagi alami yang menembus jendela (*soft morning diffused daylight*), menciptakan bayangan lembut bergradasi hangat (*soft warm shadows*). Dilarang menyertakan teks tiruan website di dalam foto.
+* **Bingkai & Wadah Visual (Frame):**
+  * **Format:** *Vintage Korean Polaroid Photo Frame* dengan border putih krem tebal (`bg-white p-3.5 pb-7 sm:pb-8 shadow-[0_20px_40px_rgba(229,180,170,0.25)] border border-[#EFE8E1] rounded-[18px] rotate-[-1.5deg] hover:rotate-0 transition-transform duration-500 ease-out`).
+  * **Ornamen Washi Tape:** Aksen plester kertas washi tape semi-transparan bertekstur serat di sudut atas tengah bingkai (`bg-[#EBE2D8]/85 border-b border-white/60 shadow-xs`).
+  * **Teks Polaroid Chin (Label Kaki):** Tulisan bergaya kaligrafi elegan / *handwritten font*: *"Spring Blossom Trio (봄날의 튤립) • Handcrafted in Hannam-dong Atelier"*.
+* **Floating Badges & Elemen Interaktif:**
+  * **Top-Left Floating Badge:** Kapsul lembut berlatar putih kaca: `🌸 100% Chenille Korea Halus` dengan garis pinggir pink pastel lembut dan micro-pulse.
+  * **Stempel Lilin Monogram (Wax Seal Badge):** Di sudut kanan atas foto terdapat medali cap stempel lilin warna *terracotta / sage rose* berlogo monogram bunga dengan bayangan timbul 3D (*wax seal relief*).
+  * **Bottom Showcase Pill / Card:** Kartu ringkasan melayang di bagian bawah foto:
+    * Judul: **Pink Tulip Bliss Trio**
+    * Subjudul: *Bunga Kawat Bulu Korea Halus & Wrapping Matte*
+    * Harga & Tombol: `Rp 185.000` dengan pil manis bertuliskan **Adopsi Sekarang 🌷** (`bg-[#E8A598] hover:bg-[#D98E80] text-white`).
+* **Latar Belakang & Aura Suasana (Ambient Glow):**
+  * Gradasi lembut warna krem pastel, peach hangat, dan sakura pink muda (`from-[#FFF9F6] via-[#FFF3EE] to-[#FFEBE5]`) dengan partikel kelopak bunga melayang lembut (*subtle petal drift*).
 
 ---
 
 #### B. Tema B: Modern Romantic & Editorial (*Haute Couture Luxury Atelier*)
-* **Nuansa Rasa:** Mewah, dewasa, elegan, seperti majalah fashion editorial / brand parfum kelas atas.
-* **Aset Visual Hero (Kanan):**
-  * **Foto Utama:** Foto *editorial high-fashion studio*: Buket Mawar Beludru *Deep Wine Velvet* di atas **pedestal silinder marmer hitam/gelap**, dengan pencahayaan dramatis (*cinematic spotlight / chiaroscuro*).
-  * **Bingkai & Bentuk:** *Arched European Portal* (bingkai lengkungan arsitektur klasik) bergaris emas *champagne gold*, dengan juntaian pita satin sutra yang menjuntai natural melewati batas bingkai (*breaking the grid*).
-  * **Aset Dekoratif Khusus:**
-    * Efek kilau debu emas (*gold dust shimmer*) di latar belakang.
-    * Pita segel fisik dengan cap medali emas bertuliskan *"Chenille Privé Atelier"*.
-  * **Gaya Ikonografi:** *Sophisticated Monoline Gold* (garis emas berkelas dengan aksen serif tipis).
-  * **Elemen Interaktif Eksklusif:**
-    * Tombol sakelar: **`[💡 Nyalakan Lampu LED Buket]`** — saat diklik, gambar buket berubah menjadi suasana temaram malam dengan lampu peri menyala berkilau!
+* **Esensi & Nuansa Emosional:** Mewah, anggun, eksklusif, puitis berkelas, seperti katalog koleksi perhiasan tinggi / *haute couture perfume house* Paris.
+* **Aset Fotografi Fisik Utama (`preview-tema-b.jpg`):**
+  * **Komposisi Foto:** Foto fisik nyata *high-fashion editorial studio* buket kawat bulu kustom mewah (*Royal Crimson Velvet Rose & Gold Chenille Bouquet*). Menampilkan kelopak mawar kawat bulu merah anggur tua (*deep wine & burgundy chenille*), tekstur beludru padat berkelas, dedaunan beraksen serbuk emas *champagne*, dan untaian kawat peri LED mikro yang diselipkan di antara kelopak bunga.
+  * **Penataan & Latar:** Buket dibalut kertas mewah hitam doff berlis emas dan pita sutra satin marun menjuntai bebas melewati tepi pedestal, bertengger anggun di atas silinder marmer hitam berurat emas (*black Nero Marquina marble pedestal*).
+  * **Pencahayaan:** Pencahayaan panggung dramatis (*cinematic chiaroscuro spotlighting*) dengan pantulan lembut pada urat marmer. Dilarang menyertakan elemen teks mockup website di dalam foto.
+* **Bingkai & Wadah Visual (Frame):**
+  * **Format:** *European Arched Portal Frame* (gerbang arsitektur lengkung klasik Eropa) dengan lis ganda emas sampanye (`rounded-t-full rounded-b-2xl border-2 border-[#D4AF37]/50 ring-1 ring-[#D4AF37]/30 shadow-[0_25px_60px_rgba(114,35,50,0.35)] overflow-hidden relative bg-stone-950`).
+  * **Aksen Ornamen Kemewahan:** Garis tepi tipis berkilau emas dengan efek *sheen reflex* saat terkena sorotan kursor.
+* **Floating Badges & Fitur Interaktif Eksklusif:**
+  * **Top-Left Floating Badge:** Medali pita beludru berlis emas: `🍷 Haute Couture Edition` dengan kilau emas halus.
+  * **Fitur Interaktif Saklar Lampu LED Buket (`[💡 Coba Nyalakan Lampu Buket]`):** 
+    * Tombol switch interaktif yang dapat diklik oleh pengunjung etalase.
+    * **Mode Siang (Daylight Editorial):** Menampilkan keanggunan beludru bunga kawat bulu di bawah spotlight studio.
+    * **Mode Malam (Nighttime Ambient Fairy Lights):** Gambar buket bertransformasi menjadi suasana temaram romantis berhiaskan lampu kawat peri (*fairy lights*) warna kuning hangat (*warm golden glow*) yang menyala dan berkedip lembut di antara kelopak beludru, disertai partikel kilau debu emas (*gold dust sparkles*).
+  * **Bottom Showcase Pill / Card:** Kartu elegan melayang berlatar hitam transparan kaca (*dark glassmorphism*) dengan tipografi serif emas:
+    * Judul: **The Royal Crimson Velvet**
+    * Subjudul: *Deep Wine Chenille • Lis Champagne Gold*
+    * Harga & Tombol: `Rp 275.000` dengan pil mewah bertuliskan **Pesan Mahakarya 🌹** (`bg-gradient-to-r from-[#8B1E3F] to-[#722332] text-amber-100 border border-amber-400/40`).
+* **Latar Belakang & Aura Suasana (Ambient Glow):**
+  * Radiasi lembut warna merah marun (*deep wine noir glow*) berpadu pendar emas sampanye hangat (`from-[#FAF6F0] via-[#F4EBE1] to-[#EBD5C5]`) menciptakan atmosfer atelier seni yang tak tertandingi.
 
 ---
 
-#### C. Tema C: Playful Kawaii (*Joyful Harajuku & Graduation Sunshine*)
-* **Nuansa Rasa:** Ceria, enerjik, penuh senyum, warna-warni, merayakan wisuda dan persahabatan.
-* **Aset Visual Hero (Kanan):**
-  * **Foto Utama:** Foto cerah buket bunga matahari kawat bulu dipadu boneka beruang toga wisuda mini yang menggemaskan, dengan latar belakang pastel bergradasi peach-yellow ceria.
-  * **Bingkai & Bentuk:** *Chunky Squircle Frame* (sudut melengkung besar yang membal) dengan efek *puffy claymorphism* dan bayangan warna-warni (*colored soft glow*).
-  * **Aset Dekoratif Khusus:**
-    * Stiker 3D kartun timbul (*glossy 3D puffy stickers*): stiker toga wisuda *"Congrats!"*, stiker pita pink, dan kilauan bintang (*sparkles*).
-    * Konfeti mikro yang berputar halus saat kursor digerakkan.
-  * **Gaya Ikonografi:** *Chunky Duotone Icons* (ikon gemuk berisi dua warna cerah yang membal saat di-hover/klik).
-  * **Elemen Interaktif:** Stiker interaktif yang bisa bergoyang (*wiggle animation*) saat kursor mouse mendekat.
+#### C. Tema C: Playful Kawaii (*Joyful Harajuku & Graduation Sunshine - Baseline Acuan*)
+* **Esensi & Nuansa Emosional:** Ceria, enerjik, penuh senyum, warna-warni, merayakan wisuda kampus, ulang tahun sahabat, dan momen kemenangan penuh antusiasme.
+* **Aset Fotografi Fisik Utama (`preview-tema-c.jpg`):**
+  * **Komposisi Foto:** Foto fisik nyata buket wisuda bunga matahari kawat bulu ceria (*Sunshine Bear Graduation Bouquet*). Menampilkan bunga matahari kuning cerah dengan senyuman rajut, boneka beruang kawat bulu mini bertoga wisuda dan memegang ijazah kecil, bunga daisy aneka warna pastel, pita rami warna-warni, dan kartu ucapan wisuda mini.
+  * **Penataan & Latar:** Buket terbungkus kertas pembungkus cerah dua warna (kuning peach & baby pink) di atas latar belakang bergradasi pastel ceria dengan hiasan balon pastel lembut. Telah divalidasi dan disukai oleh pengguna.
+* **Bingkai & Wadah Visual (Frame):**
+  * **Format:** *Chunky Squircle 3D Puffy Frame* (`border-4 border-amber-300 rounded-[2.5rem] shadow-[0_20px_45px_rgba(251,191,36,0.3)] bg-gradient-to-b from-amber-50 to-orange-50 p-2 sm:p-2.5 transition-transform hover:scale-[1.01]`).
+* **Floating Badges & Elemen Interaktif:**
+  * **Top-Right Floating Wiggle Badge:** `⭐ Favorit Wisudawan` beranimasi goyang (*wiggle on hover*) dengan warna kuning madu berkilau.
+  * **Bottom Showcase Pill / Card:** Kapsul membal ceria:
+    * Judul: **Sunshine Bear Graduation**
+    * Subjudul: *100% Bulu Halus & Topi Toga Nama*
+    * Tombol Interaktif: **Super Gemas!** (`bg-pink-100 text-pink-600 font-black rounded-full px-3 py-1 text-xs hover:scale-105 transition-transform`).
+* **Latar Belakang & Aura Suasana (Ambient Glow):**
+  * Pendaran warna kuning matahari (*warm yellow sunshine aura*) berpadu gradasi peach ceria yang membangkitkan senyuman seketika.
 
 ---
 
 ### 21.3 Matriks Penataan Aset Visual Komparatif Antar-Tema
 
-| Komponen Visual | Tema A (Korean Pastel) | Tema B (Modern Romantic) | Tema C (Playful Kawaii) |
+| Komponen Visual | Tema A (Korean Pastel Atelier) | Tema B (Modern Romantic Atelier) | Tema C (Playful Kawaii Craft) |
 | :--- | :--- | :--- | :--- |
+| **Aset Foto Fisik Utama** | `preview-tema-a.jpg` (Tulip & Daisy Pastel di Meja Kafe Kayu) | `preview-tema-b.jpg` (Royal Crimson Rose di Pedestal Marmer) | `preview-tema-c.jpg` (Sunflower Bear Graduation di Balon Pastel) |
 | **Pencahayaan (Lighting)** | Cahaya matahari pagi alami (*soft morning window light*) | Spotlight panggung dramatis (*dramatic chiaroscuro & moody*) | Cahaya cerah merata tanpa bayangan tajam (*bright pop light*) |
-| **Material Pendukung** | Kain linen oat, kayu terang, kertas kraft | Marmer hitam, kaca kristal, pita satin sutra | Akrilik bening warna-warni, balon pastel, konfeti |
-| **Aksen Bingkai (Frame)** | Polaroid miring + washi tape bertekstur | Lengkungan arsitektur (*classical arch*) + garis emas | Bingkai bantal timbul (*3D puffy pill frame*) |
-| **Jenis Ikon** | Minimalist line art Korea | Monoline champagne gold elegan | Chunky duotone dengan animasi membal (*spring*) |
-| **Badge Interaktif** | Cap stempel lilin (*wax seal*) | Tombol sakelar lampu LED (*Day / Night Mode*) | Stiker wisuda 3D bergoyang (*wiggle badge*) |
-| **Aroma Suasana (Vibe)** | Santai, hangat, romantis bersahaja | Eksklusif, prestisius, puitis berkelas | Ceria, seru, sahabat karib, penuh energi |
+| **Material Pendukung** | Kain linen oat, kayu cerah, kertas kraft | Marmer hitam Nero Marquina, pita satin sutra, kaca kristal | Balon pastel, pita kado ceria, konfeti akrilik |
+| **Bentuk Bingkai (Frame)** | Vintage Polaroid miring 1.5° + washi tape bertekstur | Arched European Portal klasik + lis emas ganda | Chunky Squircle 3D Puffy tebal + sudut melengkung 40px |
+| **Label Kaki Bingkai (Chin)** | Kaligrafi Korea: *Spring Blossom Trio (봄날의 튤립)* | Monogram Serif Emas: *Atelier Chenille Privé* | Polkadot ceria timbul dengan stiker bintang |
+| **Lencana Mengambang Atas** | `🌸 100% Chenille Korea Halus` | `🍷 Haute Couture Edition` | `⭐ Favorit Wisudawan` (Animasi Wiggle) |
+| **Elemen Interaktif Utama** | Cap Stempel Lilin Monogram 3D (*Wax Seal*) | Saklar Lampu LED Buket `[💡 Coba Nyalakan Lampu]` (Day/Night) | Stiker Wisuda Membal 3D (*Bouncy Spring Sticker*) |
+| **Kartu Ringkasan Produk** | *Pink Tulip Bliss Trio* • `Rp 185.000` • `Adopsi Sekarang 🌷` | *The Royal Crimson Velvet* • `Rp 275.000` • `Pesan Mahakarya 🌹` | *Sunshine Bear Graduation* • `Super Gemas!` |
+| **Suasana Visual (Aura)** | Lembut, hangat, santai, romantis bersahaja | Mewah, prestisius, puitis berkelas, eksklusif | Ceria, seru, sahabat karib, penuh perayaan |
 
 ---
 
-### 21.4 Rencana Tata Letak Komponen Baru pada Kode Frontend (`apps/web`)
+### 21.4 Rencana Implementasi & Standardisasi Berkas Aset (`apps/web`)
 
-Untuk merealisasikan perancangan di atas, kita akan memperbarui komponen `HeroSection` di `apps/web`:
-1. **Membuat Aset Visual Dedicated per Tema:**
-   - Menyediakan 3 aset foto resolusi tinggi buket asli (satu untuk setiap tema: buket pastel, buket mawar wine mewah, dan buket boneka wisuda).
-2. **Menghapus Tampilan "Mini Website Screenshot"**:
-   - Menggantinya dengan **Komposisi Produk Fisik** yang memiliki *floating cards* (info bahan kawat bulu, opsi lampu LED, dan garansi kardus tebal).
-3. **Menambahkan Dynamic Theme Container Styling:**
-   - Tema A menerapkan `border-amber-100 shadow-sm rotate-[-1.5deg]`.
-   - Tema B menerapkan `border-amber-500/30 shadow-2xl rounded-t-full ring-1 ring-amber-400/20`.
-   - Tema C menerapkan `border-4 border-yellow-200 rounded-[2.5rem] shadow-xl hover:scale-[1.02]`.
-
----
+1. **Pembuatan Aset Fisik Otentik Tanpa Mockup Screenshot:**
+   * Menghasilkan berkas citra fisik asli `preview-tema-a.jpg` (Buket Tulip Pastel Korea di meja kayu linen) menggunakan generator visual resolusi tinggi.
+   * Menghasilkan berkas citra fisik asli `preview-tema-b.jpg` (Buket Mawar Beludru Wine di pedestal marmer hitam dengan lampu LED) menggunakan generator visual resolusi tinggi.
+   * Mempertahankan berkas citra fisik `preview-tema-c.jpg` (Buket Bunga Matahari Wisuda Beruang) yang telah disetujui.
+2. **Eliminasi Total Screenshot Mini Website:**
+   * Seluruh referensi gambar berkarakter website mockup pada komponen etalase digantikan 100% oleh aset foto fisik buket asli bertekstur kawat bulu nyata.
+3. **Penyempurnaan Komponen `HeroSection.tsx`:**
+   * Menyematkan struktur bingkai Polaroid otentik (dengan *chin label* dan *washi tape*) untuk Tema A.
+   * Menyematkan struktur gerbang *European Arch* (dengan lis emas sampanye dan saklar lampu LED interaktif yang menyalakan pendaran peri malam hari) untuk Tema B.
+   * Mempertahankan struktur *Chunky Squircle 3D* dengan lencana wiggle untuk Tema C.
 
 
 ---

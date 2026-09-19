@@ -82,38 +82,53 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
               {/* RIGHT COLUMN: BESPOKE ARCH SHOWCASE + LED INTERACTIVE TOGGLE */}
               <div className="lg:col-span-5 flex flex-col items-center">
                 <div
-                  className={`relative w-full max-w-sm aspect-[3/4] rounded-t-[120px] rounded-b-[16px] overflow-hidden border-2 border-[#D4AF37] ring-4 ring-[#D4AF37]/15 shadow-2xl transition-all duration-700 group ${
-                    isNightModeLed ? 'shadow-[0_0_45px_rgba(212,175,55,0.45)]' : ''
+                  className={`relative w-full max-w-sm aspect-[3/4] rounded-t-[140px] rounded-b-[20px] overflow-hidden border-2 border-[#D4AF37] ring-4 ring-[#D4AF37]/20 shadow-2xl transition-all duration-700 group bg-stone-950 ${
+                    isNightModeLed ? 'shadow-[0_0_55px_rgba(212,175,55,0.55)] border-amber-400' : ''
                   }`}
                 >
                   <img
                     src="/preview-tema-b.jpg"
-                    alt="Modern Romantic Velvet Bouquet on Marble Pedestal"
+                    alt="The Royal Crimson Velvet Rose Chenille Bouquet on Nero Marquina Marble Pedestal"
                     className={`w-full h-full object-cover transition-all duration-700 ${
-                      isNightModeLed ? 'brightness-75 contrast-125 saturate-110' : 'brightness-100 group-hover:scale-105'
+                      isNightModeLed ? 'brightness-80 contrast-125 saturate-110' : 'brightness-100 group-hover:scale-105'
                     }`}
                   />
 
                   {/* NIGHT MODE LED FAIRY LIGHTS OVERLAY */}
                   {isNightModeLed && (
-                    <div className="absolute inset-0 bg-radial from-amber-300/25 via-black/40 to-black/70 pointer-events-none flex items-center justify-center animate-fade-in">
-                      <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-amber-200 rounded-full blur-[2px] animate-ping" />
-                      <div className="absolute top-1/3 right-1/4 w-2.5 h-2.5 bg-yellow-100 rounded-full blur-[1px] animate-pulse" />
-                      <div className="absolute top-1/2 left-1/3 w-3 h-3 bg-amber-300 rounded-full blur-[2px] animate-pulse" />
-                      <div className="absolute bottom-1/3 right-1/3 w-2 h-2 bg-yellow-200 rounded-full blur-[1px] animate-ping" />
+                    <div className="absolute inset-0 bg-radial from-amber-300/30 via-black/45 to-black/75 pointer-events-none flex items-center justify-center animate-fade-in">
+                      <div className="absolute top-1/4 left-1/4 w-3.5 h-3.5 bg-amber-200 rounded-full blur-[2px] animate-ping" />
+                      <div className="absolute top-1/3 right-1/4 w-3 h-3 bg-yellow-100 rounded-full blur-[1px] animate-pulse" />
+                      <div className="absolute top-1/2 left-1/3 w-3.5 h-3.5 bg-amber-300 rounded-full blur-[2px] animate-pulse" />
+                      <div className="absolute bottom-1/3 right-1/3 w-2.5 h-2.5 bg-yellow-200 rounded-full blur-[1px] animate-ping" />
+                      <div className="absolute top-1/5 right-1/3 w-2 h-2 bg-amber-100 rounded-full blur-[1px] animate-pulse" />
+                      <div className="absolute bottom-1/4 left-1/4 w-2.5 h-2.5 bg-amber-400 rounded-full blur-[1.5px] animate-ping" />
                     </div>
                   )}
 
-                  {/* FLOATING TEXTURE BADGE */}
-                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] bg-black/70 backdrop-blur-md px-3 py-1 rounded-[4px] border border-[#D4AF37]/50 shadow-md">
-                      ✦ 100% Velvet Chenille Stem
+                  {/* TOP BADGES */}
+                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none z-10">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] bg-black/80 backdrop-blur-md px-3.5 py-1.5 rounded-[4px] border border-[#D4AF37]/50 shadow-md">
+                      ✦ Haute Couture Edition
+                    </span>
+                    <span className="text-[9px] font-serif font-black tracking-widest text-amber-200/90 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-[4px] border border-amber-500/30">
+                      PARIS • ATELIER
                     </span>
                   </div>
 
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 text-left">
-                    <div className="text-sm sm:text-base font-bold text-white">Midnight Velvet & Champagne Gold</div>
-                    <div className="text-xs text-[#E8D399] font-light">Tahan Selamanya Tanpa Perlu Disiram</div>
+                  {/* PRD 21.2 B BOTTOM SHOWCASE PILL / CARD (DARK GLASSMORPHISM) */}
+                  <div className="absolute inset-x-3 bottom-3 bg-black/85 backdrop-blur-md p-3.5 sm:p-4 rounded-[14px] border border-amber-500/40 shadow-xl flex items-center justify-between z-10">
+                    <div className="min-w-0 pr-2">
+                      <div className="text-xs sm:text-sm font-bold font-heading-b text-amber-100 truncate">The Royal Crimson Velvet</div>
+                      <div className="text-[10px] text-amber-300/80 font-light truncate">Deep Wine Chenille • Lis Emas</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAction('katalog')}
+                      className="bg-gradient-to-r from-[#8B1E3F] to-[#722332] hover:from-[#A02349] hover:to-[#8B1E3F] text-amber-100 border border-amber-400/40 px-3.5 py-1.5 rounded-[6px] text-[11px] font-bold tracking-wider uppercase cursor-pointer active:scale-95 transition-all flex-shrink-0 shadow-sm"
+                    >
+                      Pesan Mahakarya 🌹
+                    </button>
                   </div>
                 </div>
 
@@ -121,13 +136,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
                 <button
                   type="button"
                   onClick={() => setIsNightModeLed(!isNightModeLed)}
-                  className={`mt-3.5 px-4 py-2 rounded-full border text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer active:scale-95 ${
+                  className={`mt-4 px-5 py-2.5 rounded-full border text-xs font-bold tracking-wide uppercase transition-all shadow-sm flex items-center gap-2 cursor-pointer active:scale-95 ${
                     isNightModeLed
-                      ? 'bg-amber-500 text-stone-900 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]'
-                      : 'bg-white hover:bg-stone-100 text-stone-700 border-stone-300'
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 border-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.6)]'
+                      : 'bg-white hover:bg-stone-50 text-stone-800 border-stone-300 hover:border-amber-400'
                   }`}
                 >
-                  <Lightbulb className={`w-3.5 h-3.5 ${isNightModeLed ? 'text-stone-900 fill-stone-900 animate-bounce' : 'text-amber-500'}`} />
+                  <Lightbulb className={`w-4 h-4 ${isNightModeLed ? 'text-stone-950 fill-stone-950 animate-bounce' : 'text-amber-500'}`} />
                   <span>{isNightModeLed ? '✨ Matikan Lampu LED Buket' : '💡 Coba Nyalakan Lampu Buket'}</span>
                 </button>
               </div>
@@ -309,34 +324,60 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
               </div>
             </div>
 
-            {/* RIGHT COLUMN: POLAROID FRAME + WASHI TAPE ACCENT */}
+            {/* RIGHT COLUMN: POLAROID FRAME + WASHI TAPE + WAX SEAL + PRODUCT PILL */}
             <div className="lg:col-span-5 flex justify-center">
-              <div className="relative w-full max-w-md p-3.5 pb-8 bg-white rounded-[16px] shadow-2xl border border-stone-200/80 rotate-[-1.5deg] hover:rotate-0 transition-transform duration-500 group">
+              <div className="relative w-full max-w-md p-3.5 sm:p-4 pb-8 sm:pb-9 bg-white rounded-[20px] shadow-[0_20px_45px_rgba(229,180,170,0.3)] border-2 border-[#EFE8E1] rotate-[-1.5deg] hover:rotate-0 transition-transform duration-500 group">
                 
                 {/* PRD 21.2 A WASHI TAPE STICKER ACCENT */}
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 bg-[#E8DCC4]/80 backdrop-blur-xs border-dashed border border-[#D4C3A3] shadow-xs rotate-[-1deg] pointer-events-none z-20 rounded-xs" />
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-32 h-7 bg-[#EBE2D8]/90 backdrop-blur-xs border-dashed border border-[#D4C3A3] shadow-xs rotate-[-1deg] pointer-events-none z-20 rounded-xs flex items-center justify-center">
+                  <span className="text-[9px] uppercase tracking-widest text-[#8C7A6B] font-semibold opacity-75">HANNAM FLORIST</span>
+                </div>
 
-                <div className="relative aspect-square w-full rounded-[10px] overflow-hidden bg-stone-100">
+                {/* PRD 21.2 A WAX SEAL MONOGRAM BADGE (TOP RIGHT) */}
+                <div className="absolute top-3.5 right-3.5 w-9 h-9 rounded-full bg-gradient-to-br from-[#D98E80] to-[#B85D4F] border border-[#FADCD5] shadow-md flex items-center justify-center text-white text-[11px] font-serif font-black z-20 select-none shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_2px_4px_rgba(0,0,0,0.2)]">
+                  C
+                </div>
+
+                <div className="relative aspect-square w-full rounded-[14px] overflow-hidden bg-stone-100 shadow-inner">
                   <img
                     src="/preview-tema-a.jpg"
-                    alt="Korean Pastel Atelier Bouquet Lifestyle Preview"
+                    alt="Korean Pastel Atelier Tulip & Daisy Chenille Bouquet Lifestyle Preview"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
-                  <div className="animate-float-hero absolute top-4 left-4 bg-white/95 backdrop-blur-md text-[#9C3D52] text-xs font-black px-3 py-1.5 rounded-full shadow-md border border-[#F7D1D9] flex items-center gap-1.5">
+                  
+                  {/* FLOATING CHENILLE VELVET BADGE */}
+                  <div className="animate-float-hero absolute top-3.5 left-3.5 bg-white/95 backdrop-blur-md text-[#9C3D52] text-xs font-black px-3.5 py-1.5 rounded-full shadow-md border border-[#F7D1D9] flex items-center gap-1.5 z-10">
                     <Sparkles className="w-3.5 h-3.5 text-[#E38EA1]" />
-                    <span>🌸 100% Chenille Velvet</span>
+                    <span>🌸 100% Chenille Korea Halus</span>
                   </div>
                 </div>
 
-                {/* POLAROID HANDWRITTEN LABEL */}
-                <div className="mt-3 px-2 flex items-center justify-between text-left">
-                  <div>
-                    <div className="text-xs font-black text-[#2D2A2A]">Pink Tulip Bliss Trio</div>
-                    <div className="text-[10px] text-[#7E7676] font-medium">Bunga Kawat Bulu Korea Halus</div>
+                {/* POLAROID CHIN: HANDWRITTEN LABEL + PRODUCT PILL */}
+                <div className="mt-3.5 px-1 space-y-2.5">
+                  <div className="text-center">
+                    <div className="text-[11px] font-serif italic text-[#8C7A6B] tracking-wide">
+                      Spring Blossom Trio (봄날의 튤립) • Handcrafted in Hannam-dong Atelier
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs font-black text-[#9C3D52]">Rp 185.000</span>
-                    <span className="text-[10px] text-stone-400 line-through block">Rp 210.000</span>
+
+                  <div className="bg-[#FFF9F6] p-3 rounded-[14px] border border-[#F5E6DF] flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-black text-[#2D2A2A]">Pink Tulip Bliss Trio</div>
+                      <div className="text-[10px] text-[#7E7676] font-medium">Bunga Kawat Bulu Korea Halus & Wrapping Matte</div>
+                    </div>
+                    <div className="text-right flex items-center gap-2">
+                      <div>
+                        <span className="text-xs font-black text-[#9C3D52] block">Rp 185.000</span>
+                        <span className="text-[9px] text-stone-400 line-through block">Rp 210.000</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAction('katalog')}
+                        className="bg-[#E8A598] hover:bg-[#D98E80] text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+                      >
+                        Adopsi Sekarang 🌷
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
