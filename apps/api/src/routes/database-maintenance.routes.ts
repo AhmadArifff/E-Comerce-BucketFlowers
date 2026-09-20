@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import { pool } from '../config/database.js';
 import { requireAdmin, AuthenticatedRequest } from '../middleware/auth.middleware.js';
+import { syncCanonicalBouquetImagesToStorage } from '../services/storage.service.js';
 import type { GranularResetOptions } from '@chenille/shared';
 
 const router = Router();
@@ -275,6 +276,18 @@ router.post('/granular-reset', requireAdmin, async (req: AuthenticatedRequest, r
       tablesAffected['raw_materials'] = '9 bahan baku kanonikal diinisialisasi';
       tablesAffected['products'] = '8 produk kanonikal diinisialisasi';
       tablesAffected['bill_of_materials'] = 'Resep BOM kanonikal diinisialisasi';
+
+      // Sinkronisasi foto buket kawat bulu ke Supabase Storage
+      try {
+        const syncResult = await syncCanonicalBouquetImagesToStorage();
+        if (syncResult.syncedCount > 0) {
+          tablesAffected['supabase_storage_sync'] = `${syncResult.syncedCount} foto buket kawat bulu berhasil diunggah ke Supabase Storage (bucket: product-images)`;
+        } else {
+          tablesAffected['supabase_storage_sync'] = '8 foto buket kawat bulu siap menggunakan cadangan lokal (public/images/products/)';
+        }
+      } catch (storageErr) {
+        tablesAffected['supabase_storage_sync'] = 'Fallback ke aset gambar lokal public/images/products/';
+      }
     }
 
     // 8. Berkas Aset Fisik & Storage

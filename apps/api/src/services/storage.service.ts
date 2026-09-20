@@ -108,3 +108,57 @@ export async function deleteProductImage(filename: string, bucket = DEFAULT_BUCK
 
   return true;
 }
+
+/**
+ * Sync all 8 canonical bouquet images from apps/web/public/images/products to Supabase Storage
+ */
+export async function syncCanonicalBouquetImagesToStorage(): Promise<{
+  syncedCount: number;
+  urls: Record<string, string>;
+  isStorageConfigured: boolean;
+}> {
+  const productsDir = path.resolve(__dirname, '../../../../apps/web/public/images/products');
+  const urls: Record<string, string> = {};
+  let syncedCount = 0;
+
+  if (!fs.existsSync(productsDir)) {
+    return { syncedCount: 0, urls, isStorageConfigured: Boolean(supabase) };
+  }
+
+  const files = fs
+    .readdirSync(productsDir)
+    .filter((f) => f.endsWith('.jpg') || f.endsWith('.png') || f.endsWith('.webp'));
+
+  for (const file of files) {
+    const filePath = path.join(productsDir, file);
+    const fileBuffer = fs.readFileSync(filePath);
+
+    // If Supabase is configured and not placeholder key
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.storage.from(DEFAULT_BUCKET).upload(file, fileBuffer, {
+          contentType: 'image/jpeg',
+          upsert: true,
+        });
+
+        if (!error && data) {
+          const { data: pubData } = supabase.storage.from(DEFAULT_BUCKET).getPublicUrl(file);
+          urls[file] = pubData.publicUrl;
+          syncedCount++;
+          continue;
+        }
+      } catch (e) {
+        console.warn(`Could not upload ${file} to Supabase storage:`, e);
+      }
+    }
+
+    // Fallback to local path
+    urls[file] = `/images/products/${file}`;
+  }
+
+  return {
+    syncedCount,
+    urls,
+    isStorageConfigured: Boolean(supabase),
+  };
+}

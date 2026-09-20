@@ -4831,3 +4831,48 @@ Untuk menghindari ketidaksengajaan klik:
   }
 }
 ```
+
+---
+
+## 31. Standarisasi Bibit Aset Gambar Kawat Bulu, Supabase Storage Seeding Engine & Perbaikan Visual Modal Reset (Zero-Anomali Castle/Kaktus & Storage Synchronization)
+
+### 31.1. Latar Belakang & Identifikasi Anomali Visual
+Pada implementasi bibit data katalog dan penyimpanan aset, ditemukan beberapa anomali dan kekurangan:
+1. **Anomali Gambar Non-Buket:**
+   - Produk `prod-007` (`midnight-rose-velvet-romance.jpg`) secara keliru menampilkan foto kastil abad pertengahan (Burg Eltz di Jerman) dan bukan buket mawar merah tua velvet kawat bulu.
+   - Produk `prod-005` (`buket-karakter-wisuda-toga.jpg`), `prod-006` (`mini-pot-daisy-kawat-bulu.jpg`), `prod-004` (`buket-lavender-lilac-dream.jpg`), dan `prod-008` (`buket-matahari-kawaii-smile.jpg`) menampilkan gambar bunga asli atau tanaman kaktus, bukan kerajinan buket kawat bulu (*chenille stem*) asli.
+2. **Kekosongan Supabase Storage Bucket:**
+   - Seluruh bucket Supabase Storage (`product-images` / `products`) saat ini masih kosong karena bibit data hanya menunjuk ke direktori lokal `/images/products/` tanpa ada sinkronisasi otomatis ke Supabase Storage saat `migrate-refresh` atau re-seed dijalankan.
+3. **Bug Visual Layout Modal Reset Database (`DatabaseResetManager.tsx`):**
+   - Pada Tahap 2 (Modal Seleksi Granular), teks judul akun admin `Akun Admin Anda (${email})` dan badge `TERKUNCI / DILINDUNGI` tidak terbungkus (*no wrap*) dengan baik di dalam flex container.
+   - Hal ini menyebabkan kartu toggle melebar melampaui lebar modal (*horizontal overflow*), sehingga sakelar (*toggle button*) terpotong (*clipped*) pada sisi kanan dan memunculkan garis/scrollbar pink yang merusak estetika antarmuka.
+
+### 31.2. Spesifikasi Standarisasi Gambar Kanonikal 8 Buket Kawat Bulu
+Seluruh 8 produk kanonikal wajib menggunakan gambar kerajinan tangan kawat bulu (*chenille stem*) berkualitas tinggi dan bebas dari gambar anomali:
+1. `prod-001` - `buket-mawar-merah-velvet.jpg`: 12 tangkai mawar kawat bulu merah velvet dengan wrapping hitam-emas elegan (Sudah sesuai).
+2. `prod-002` - `buket-tulip-pastel-pink.jpg`: Buket tulip kawat bulu kelopak baby pink dan daun hijau sage (Sudah sesuai).
+3. `prod-003` - `buket-matahari-graduation.jpg`: Bunga matahari kawat bulu kuning ceria bertema wisuda (Sudah sesuai).
+4. `prod-004` - `buket-lavender-lilac-dream.jpg`: Buket tangkai lavender dan lilac kawat bulu ungu berpadu pita satin (Generated kawat bulu).
+5. `prod-005` - `buket-karakter-wisuda-toga.jpg`: Buket kawat bulu dengan ornamen boneka ber-toga wisuda mini (Generated kawat bulu).
+6. `prod-006` - `mini-pot-daisy-kawat-bulu.jpg`: Bunga daisy putih-kuning kawat bulu di dalam pot mini keramik meja (Generated kawat bulu).
+7. `prod-007` - `midnight-rose-velvet-romance.jpg`: Buket mawar merah maroon gelap velvet kawat bulu mewah (Generated kawat bulu — Pengganti kastil).
+8. `prod-008` - `buket-matahari-kawaii-smile.jpg`: Buket bunga matahari kawat bulu dengan senyum wajah kawaii ceria (Generated kawat bulu).
+
+### 31.3. Spesifikasi Supabase Storage Seeding & Sync Engine
+1. **Sinkronisasi Otomatis Saat Reset:**
+   - Ketika admin menjalankan "Reset & Re-seed Master Katalog Produk & BOM", backend API (`database-maintenance.routes.ts`) atau skrip pemeliharaan memeriksa apakah Supabase Storage bucket (`product-images`) telah terisi.
+   - Jika bucket kosong atau perlu sinkronisasi, sistem menyediakan fungsi untuk mengunggah seluruh berkas gambar kanonikal lokal (`apps/web/public/images/products/*.jpg`) ke Supabase Storage bucket `product-images`.
+   - URL gambar di tabel `products` diperbarui menjadi URL publik Supabase Storage (dengan tetap mempertahankan fallback lokal jika Supabase offline).
+2. **Idempotensi & Error Resilience:**
+   - Jika Supabase Storage gagal dihubungi (misalnya batas kuota atau koneksi offline), sistem tetap berjalan menggunakan jalur lokal `/images/products/...` tanpa menyebabkan proses reset gagal (*Graceful Degradation*).
+
+### 31.4. Spesifikasi Perbaikan Visual Modal Reset Database (`DatabaseResetManager.tsx`)
+1. **Pelebaran & Fleksibilitas Wadah Modal:**
+   - Lebar modal ditingkatkan menjadi `max-w-2xl` (672px) agar memberikan ruang yang cukup bagi teks tabel dan sakelar.
+2. **Pencegahan Horizontal Overflow:**
+   - Menambahkan `overflow-x-hidden` pada container scrollable `max-h-[85vh]`.
+   - Menambahkan `min-w-0` pada seluruh elemen anak flexbox teks.
+   - Pada kartu admin: teks judul menggunakan `flex-wrap` atau `truncate` sehingga email panjang (`ahmad@chenilleatelier.com`) dan badge `TERKUNCI / DILINDUNGI` terdistribusi rapi tanpa mendesak sakelar keluar batas.
+3. **Proteksi Sakelar Toggle:**
+   - Seluruh sakelar toggle diberikan properti `flex-shrink-0` dan margin yang aman sehingga tidak terpotong oleh scrollbar atau tepi batas kanan modal.
+

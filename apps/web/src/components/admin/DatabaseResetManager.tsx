@@ -169,7 +169,7 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-stone-900/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-xl w-full border border-rose-100 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-8">
+      <div className="bg-white rounded-3xl max-w-2xl w-full border border-rose-100 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-8">
         
         {/* ================================================================ */}
         {/* TAHAP 1: PRE-FLIGHT SAFETY INFORMATIONAL ALERT */}
@@ -180,7 +180,7 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
               <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-6 h-6" />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0 flex-1">
                 <div className="inline-block px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black tracking-wider uppercase mb-1">
                   Tahap 1 / 3: Peringatan Bahaya &amp; Informasi Awal
                 </div>
@@ -217,7 +217,7 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
               <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <ShieldCheck className="w-4 h-4" />
               </div>
-              <div className="space-y-0.5">
+              <div className="space-y-0.5 min-w-0 flex-1">
                 <div className="font-bold text-emerald-950">Jaminan Keamanan Akun Admin Aktif:</div>
                 <p className="text-[11px] text-emerald-800 leading-relaxed">
                   Sistem menerapkan <strong>Admin Self-Preservation Policy</strong>. Akun Anda saat ini (
@@ -251,9 +251,9 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
         {/* TAHAP 2: MODAL SELEKSI DATA GRANULAR (TOGGLES) */}
         {/* ================================================================ */}
         {currentStage === 2 && (
-          <div className="p-6 sm:p-8 space-y-6 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-start justify-between">
-              <div>
+          <div className="p-5 sm:p-7 space-y-5 max-h-[85vh] overflow-y-auto overflow-x-hidden">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
                 <div className="inline-block px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-black tracking-wider uppercase mb-1">
                   Tahap 2 / 3: Seleksi Data Granular
                 </div>
@@ -267,7 +267,7 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                className="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors flex-shrink-0 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -283,11 +283,11 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
               <div className="space-y-2">
                 {/* 1. Transaksi */}
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
                       Riwayat Transaksi &amp; Finansial Midtrans
                     </div>
-                    <div className="text-[11px] text-stone-500">
+                    <div className="text-[11px] text-stone-500 leading-relaxed">
                       Tabel <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">orders</code>, <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">payment_transactions</code>, <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">order_items</code> ({stats?.transactions.total ?? 0} baris)
                     </div>
                   </div>
@@ -306,11 +306,11 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
 
                 {/* 2. Logistik */}
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
                       Riwayat Logistik &amp; Resi Ekspedisi
                     </div>
-                    <div className="text-[11px] text-stone-500">
+                    <div className="text-[11px] text-stone-500 leading-relaxed">
                       Tabel <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">shipping_orders</code> dan log resi kurir
                     </div>
                   </div>
@@ -329,11 +329,11 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
 
                 {/* 3. Komplain & Garansi */}
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
                       Data Komplain Pelanggan &amp; Klaim Garansi
                     </div>
-                    <div className="text-[11px] text-stone-500">
+                    <div className="text-[11px] text-stone-500 leading-relaxed">
                       Tabel <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">customer_complaints</code>, <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">warranty_claims</code> ({stats?.complaints.total ?? 0} baris)
                     </div>
                   </div>
@@ -352,11 +352,11 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
 
                 {/* 4. Loyalitas & CRM */}
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
                       Loyalitas Pelanggan (Absensi, Poin, &amp; Momen)
                     </div>
-                    <div className="text-[11px] text-stone-500">
+                    <div className="text-[11px] text-stone-500 leading-relaxed">
                       Tabel <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">user_attendance_logs</code>, <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">user_stamp_cards</code> ({stats?.loyalty.total ?? 0} baris)
                     </div>
                   </div>
@@ -375,11 +375,11 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
 
                 {/* 5. Akun Pelanggan Member */}
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
                       Akun Pelanggan (*Customer Members*)
                     </div>
-                    <div className="text-[11px] text-stone-500">
+                    <div className="text-[11px] text-stone-500 leading-relaxed">
                       Tabel <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">users</code> dengan role CUSTOMER_MEMBER ({stats?.customers.customer_members ?? 0} akun)
                     </div>
                   </div>
@@ -398,11 +398,11 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
 
                 {/* 6. Master Katalog Re-seed */}
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
                       Reset &amp; Re-seed Master Katalog Produk &amp; BOM
                     </div>
-                    <div className="text-[11px] text-stone-500">
+                    <div className="text-[11px] text-stone-500 leading-relaxed">
                       Mengembalikan 8 buket kanonikal, 9 bahan baku, dan resep HPP ke standar atelier
                     </div>
                   </div>
@@ -421,21 +421,21 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
 
                 {/* 7. AKUN ADMIN AKTIF (LOCKED & DISABLED) */}
                 <div className="p-3.5 rounded-2xl border border-emerald-200 bg-emerald-50/50 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <Lock className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <div>
-                      <div className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
-                        <span>Akun Admin Anda ({currentAdminEmail})</span>
-                        <span className="px-1.5 py-0.2 rounded-md bg-emerald-200 text-emerald-800 text-[9px] font-black uppercase">
+                  <div className="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
+                    <Lock className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5 sm:mt-0" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-bold text-emerald-950 flex flex-wrap items-center gap-1.5">
+                        <span className="truncate">Akun Admin Anda ({currentAdminEmail})</span>
+                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-200 text-emerald-800 text-[9px] font-black uppercase shrink-0">
                           Terkunci / Dilindungi
                         </span>
                       </div>
-                      <div className="text-[10px] text-emerald-700">
+                      <div className="text-[10px] text-emerald-700 leading-tight mt-0.5">
                         Admin Self-Preservation Policy: Dilarang dihapus demi stabilitas akses
                       </div>
                     </div>
                   </div>
-                  <div className="w-11 h-6 rounded-full bg-emerald-600/40 relative opacity-60 cursor-not-allowed">
+                  <div className="w-11 h-6 rounded-full bg-emerald-600/40 relative opacity-60 cursor-not-allowed flex-shrink-0">
                     <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 left-5.5 shadow-xs" />
                   </div>
                 </div>
@@ -451,11 +451,11 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
 
               <div className="space-y-2">
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
                       Berkas Foto Bukti Komplain Pelanggan
                     </div>
-                    <div className="text-[11px] text-stone-500">
+                    <div className="text-[11px] text-stone-500 leading-relaxed">
                       Bucket <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">complaints-proof</code>
                     </div>
                   </div>
@@ -473,11 +473,11 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                 </div>
 
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
                       Berkas Foto Bukti Klaim Garansi 30 Hari
                     </div>
-                    <div className="text-[11px] text-stone-500">
+                    <div className="text-[11px] text-stone-500 leading-relaxed">
                       Bucket <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">warranty-proof</code>
                     </div>
                   </div>
