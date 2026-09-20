@@ -15,10 +15,13 @@ import {
   CheckCircle2,
   Sparkles,
   Send,
+  ShieldAlert,
+  MessageSquare,
 } from 'lucide-react';
 import { useOrderStore, deduplicateOrders } from '@/stores/useOrderStore';
 import type { MockOrder } from '@chenille/shared';
 import { OrderStepper } from './OrderStepper';
+import { CustomerComplaintModal } from './CustomerComplaintModal';
 import { getApiUrl } from '@/lib/api-client';
 import { showMagicToast } from '@/lib/magic-motion';
 
@@ -32,6 +35,7 @@ export const GuestTracker: React.FC = () => {
 
   // OTP Verification Modal State
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
   const [otpPhone, setOtpPhone] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpError, setOtpError] = useState('');
@@ -444,6 +448,29 @@ export const GuestTracker: React.FC = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Need Help / Complaint & Evaluation CTA Card */}
+              <div className="p-4 rounded-2xl bg-white border border-rose-200/70 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center flex-shrink-0">
+                    <ShieldAlert className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-stone-800">Ada Kendala dengan Pesanan Ini?</div>
+                    <p className="text-[11px] text-stone-500 mt-0.5">
+                      Sampaikan keterlambatan kurir, bunga rusak, atau ketidaksesuaian pesanan untuk evaluasi atelier.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsComplaintModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs active:scale-95 transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Ajukan Keluhan / Komplain</span>
+                </button>
+              </div>
             </div>
           ) : (
             <div className="p-6 bg-stone-50 rounded-2xl text-center text-xs text-stone-500">
@@ -554,6 +581,15 @@ export const GuestTracker: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* CUSTOMER COMPLAINT & EVALUATION MODAL */}
+      <CustomerComplaintModal
+        isOpen={isComplaintModalOpen}
+        onClose={() => setIsComplaintModalOpen(false)}
+        defaultInvoice={activeSearchedOrder?.invoiceNumber || query}
+        customerName={activeSearchedOrder?.customerName}
+        customerPhone={activeSearchedOrder?.customerPhone}
+      />
     </div>
   );
 };

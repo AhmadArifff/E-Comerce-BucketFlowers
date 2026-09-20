@@ -15,6 +15,7 @@ import { DailyCheckinWidget } from '@/components/portal/DailyCheckinWidget';
 import { DigitalStampCardWidget } from '@/components/portal/DigitalStampCardWidget';
 import { OccasionCalendarWidget } from '@/components/portal/OccasionCalendarWidget';
 import { WarrantyClaimModal } from '@/components/portal/WarrantyClaimModal';
+import { CustomerComplaintModal } from '@/components/portal/CustomerComplaintModal';
 import { useOrderStore, deduplicateOrders } from '@/stores/useOrderStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useThemeStore } from '@/stores/useThemeStore';
@@ -43,6 +44,7 @@ export default function CustomerPortalPage() {
   const [activeTab, setActiveTab] = useState<'MEMBER' | 'GUEST'>('MEMBER');
   const [searchQuery, setSearchQuery] = useState('');
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
+  const [isComplaintOpen, setIsComplaintOpen] = useState(false);
 
   const { orders, activeOrderId, setActiveOrderId, updateOrderStep, syncDbOrders, warrantyClaims } = useOrderStore();
   const { user } = useAuthStore();
@@ -400,7 +402,7 @@ export default function CustomerPortalPage() {
                   </div>
                 </div>
 
-                {/* 100% Warranty Claim Guarantee Action Card */}
+                {/* 100% Warranty Claim Guarantee & Complaint Action Card */}
                 <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-white text-rose-600 flex items-center justify-center shadow-sm shrink-0">
@@ -408,20 +410,30 @@ export default function CustomerPortalPage() {
                     </div>
                     <div>
                       <div className="text-xs font-black text-stone-800">
-                        Garansi 100% Anti-Patah & Ganti Baru
+                        Garansi 100% Anti-Patah & Evaluasi Layanan
                       </div>
                       <p className="text-[11px] text-stone-500">
-                        Bunga bengkok atau tertindih kurir saat unboxing? Kami ganti 100% baru tanpa dipungut biaya!
+                        Bunga rusak atau ada kendala kurir & pelayanan florist? Ajukan garansi atau keluhan untuk solusi cepat.
                       </p>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => setIsWarrantyOpen(true)}
-                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-sm shadow-rose-600/20 active:scale-95 transition-all shrink-0 self-start sm:self-auto cursor-pointer"
-                  >
-                    Klaim Garansi 100%
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setIsComplaintOpen(true)}
+                      className="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                    >
+                      Ajukan Komplain
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsWarrantyOpen(true)}
+                      className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-sm shadow-rose-600/20 active:scale-95 transition-all cursor-pointer"
+                    >
+                      Klaim Garansi 100%
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -573,6 +585,15 @@ export default function CustomerPortalPage() {
       <WarrantyClaimModal
         isOpen={isWarrantyOpen}
         onClose={() => setIsWarrantyOpen(false)}
+        defaultInvoice={activeOrder?.invoiceNumber}
+        customerName={user?.name}
+        customerPhone={user?.phone}
+      />
+
+      {/* Customer Complaint & Quality Evaluation Modal */}
+      <CustomerComplaintModal
+        isOpen={isComplaintOpen}
+        onClose={() => setIsComplaintOpen(false)}
         defaultInvoice={activeOrder?.invoiceNumber}
         customerName={user?.name}
         customerPhone={user?.phone}
