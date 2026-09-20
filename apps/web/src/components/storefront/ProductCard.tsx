@@ -41,10 +41,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
       {/* Product Image Container */}
       <div className="relative aspect-square w-full overflow-hidden bg-theme-surface-subtle">
         <img
-          src={product.image}
+          src={product.image || (product as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg'}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
+          onError={(e) => {
+            e.currentTarget.src = '/images/products/buket-mawar-merah-velvet.jpg';
+          }}
         />
 
         {/* Badge: Best seller / Ready Stock */}

@@ -80,8 +80,29 @@ export default function StorefrontPage() {
     fetch(getApiUrl('/api/v1/products?limit=50'))
       .then((res) => res.json())
       .then((res) => {
-        if (res.success && res.data?.products?.length > 0) {
-          setProductsList(res.data.products);
+        if (res.success && Array.isArray(res.data?.products) && res.data.products.length > 0) {
+          const normalized: ExtendedProduct[] = res.data.products.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            category: p.category || p.category_name || 'Buket Bunga',
+            price: Number(p.price),
+            discountPrice: p.discountPrice !== undefined ? Number(p.discountPrice) : (p.discount_price !== undefined && p.discount_price !== null ? Number(p.discount_price) : undefined),
+            rawCostHpp: Number(p.rawCostHpp ?? p.raw_cost_hpp ?? Math.round(Number(p.price) * 0.42)),
+            stock: Number(p.stock ?? 10),
+            poLeadDays: Number(p.poLeadDays ?? p.po_lead_days ?? 2),
+            clickCount: Number(p.clickCount ?? p.click_count ?? 0),
+            isReadyStock: Boolean(p.isReadyStock ?? p.is_ready_stock),
+            isActive: p.isActive !== undefined ? Boolean(p.isActive) : (p.is_active !== undefined ? Boolean(p.is_active) : true),
+            description: p.description || '',
+            image: p.image || p.image_url || '/images/products/buket-mawar-merah-velvet.jpg',
+            rating: Number(p.rating ?? 5.0),
+            reviewCount: Number(p.reviewCount ?? p.review_count ?? 0),
+            badge: p.badge || undefined,
+            colors: p.colors || [],
+            themeSuitability: p.themeSuitability || p.theme_suitability || ['tema-a', 'tema-b', 'tema-c'],
+          }));
+          setProductsList(normalized);
         }
       })
       .catch((err) => console.warn('Could not load products from Supabase API, using fallback:', err));

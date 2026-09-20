@@ -613,9 +613,12 @@ export const ProductCtrAnalyticsCard: React.FC<{ onOpenBom?: (prod: Product) => 
                       <td className="py-3.5 px-4 min-w-[280px]">
                         <div className="flex items-center gap-3">
                           <img
-                            src={prod.image}
+                            src={prod.image || (prod as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg'}
                             alt={prod.name}
                             className="w-11 h-11 rounded-xl object-cover border border-stone-200 shrink-0 shadow-2xs"
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/products/buket-mawar-merah-velvet.jpg';
+                            }}
                           />
                           <div className="min-w-0">
                             <div className="font-extrabold text-stone-800 text-xs leading-snug">

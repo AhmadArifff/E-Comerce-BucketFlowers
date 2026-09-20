@@ -79,9 +79,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           {/* Image Side */}
           <div className="relative aspect-square sm:aspect-auto sm:h-full bg-theme-surface-subtle overflow-hidden">
             <img
-              src={product.image}
+              src={product.image || (product as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg'}
               alt={product.name}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = '/images/products/buket-mawar-merah-velvet.jpg';
+              }}
             />
             {product.badge && (
               <div className="absolute top-4 left-4 badge-atelier text-[10px] font-black uppercase tracking-wider px-2.5 py-1 shadow-md">

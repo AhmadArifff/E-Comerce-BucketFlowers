@@ -101,18 +101,27 @@ router.get('/', async (req, res) => {
         c.slug as category_slug,
         p.price::float as price,
         p.discount_price::float as discount_price,
+        p.discount_price::float as "discountPrice",
         p.raw_cost_hpp::float as raw_cost_hpp,
+        p.raw_cost_hpp::float as "rawCostHpp",
         p.stock,
         p.po_lead_days,
+        p.po_lead_days as "poLeadDays",
         p.click_count,
+        p.click_count as "clickCount",
         p.is_ready_stock,
+        p.is_ready_stock as "isReadyStock",
         p.is_active,
+        p.is_active as "isActive",
         p.badge,
         p.rating::float as rating,
         p.review_count,
+        p.review_count as "reviewCount",
         p.description,
         p.image_url,
+        p.image_url as image,
         p.theme_suitability,
+        p.theme_suitability as "themeSuitability",
         p.colors,
         p.created_at,
         p.updated_at
@@ -159,8 +168,11 @@ router.get('/suggest', async (req, res) => {
         c.slug as category_slug,
         p.price::float as price,
         p.discount_price::float as discount_price,
+        p.discount_price::float as "discountPrice",
         p.image_url,
+        p.image_url as image,
         p.is_ready_stock,
+        p.is_ready_stock as "isReadyStock",
         p.rating::float as rating,
         p.badge
       FROM products p
@@ -205,7 +217,19 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Produk tidak ditemukan.' });
     }
 
-    const product = productRes.rows[0];
+    const rawProduct = productRes.rows[0];
+    const product = {
+      ...rawProduct,
+      image: rawProduct.image || rawProduct.image_url,
+      poLeadDays: rawProduct.poLeadDays ?? rawProduct.po_lead_days,
+      isReadyStock: rawProduct.isReadyStock ?? rawProduct.is_ready_stock,
+      isActive: rawProduct.isActive ?? rawProduct.is_active,
+      rawCostHpp: rawProduct.rawCostHpp ?? (rawProduct.raw_cost_hpp !== undefined ? Number(rawProduct.raw_cost_hpp) : undefined),
+      discountPrice: rawProduct.discountPrice ?? (rawProduct.discount_price !== undefined ? Number(rawProduct.discount_price) : undefined),
+      clickCount: rawProduct.clickCount ?? rawProduct.click_count,
+      reviewCount: rawProduct.reviewCount ?? rawProduct.review_count,
+      themeSuitability: rawProduct.themeSuitability ?? rawProduct.theme_suitability,
+    };
 
     // Fetch BOM recipe
     let bomItems: any[] = [];

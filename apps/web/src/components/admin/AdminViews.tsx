@@ -899,9 +899,12 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
                   <td className="py-3.5 px-4 min-w-[280px]">
                     <div className="flex items-center gap-3">
                       <img
-                        src={prod.image}
+                        src={prod.image || (prod as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg'}
                         alt={prod.name}
                         className="w-12 h-12 rounded-2xl object-cover border border-rose-100 shadow-2xs shrink-0"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/products/buket-mawar-merah-velvet.jpg';
+                        }}
                       />
                       <div className="min-w-0">
                         <div className="font-extrabold text-stone-800 text-xs leading-snug">{prod.name}</div>

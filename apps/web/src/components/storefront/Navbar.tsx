@@ -535,11 +535,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                       >
                         {/* Thumbnail */}
                         <div className="w-10 h-10 rounded-xl overflow-hidden bg-rose-50 flex-shrink-0 border border-stone-200/50 relative flex items-center justify-center text-base">
-                          {item.image_url ? (
+                          {item.image || item.image_url ? (
                             <img
-                              src={item.image_url}
+                              src={item.image || item.image_url}
                               alt={item.name}
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/images/products/buket-mawar-merah-velvet.jpg';
+                              }}
                             />
                           ) : (
                             <span>🌸</span>

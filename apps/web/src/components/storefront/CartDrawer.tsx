@@ -539,9 +539,12 @@ export const CartDrawer: React.FC = () => {
                         className="flex gap-3 p-3 rounded-2xl bg-theme-surface-subtle border border-theme-border"
                       >
                         <img
-                          src={item.product.image}
+                          src={item.product.image || (item.product as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg'}
                           alt={item.product.name}
                           className="w-16 h-16 rounded-xl object-cover border border-theme-border flex-shrink-0"
+                          onError={(e) => {
+                            e.currentTarget.src = '/images/products/buket-mawar-merah-velvet.jpg';
+                          }}
                         />
                         <div className="flex-1 min-w-0 flex flex-col justify-between">
                           <div className="flex items-start justify-between gap-2">

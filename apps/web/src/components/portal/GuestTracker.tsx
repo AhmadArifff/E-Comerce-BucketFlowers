@@ -427,7 +427,14 @@ export const GuestTracker: React.FC = () => {
                 {activeSearchedOrder.items.map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-white border border-stone-100 text-xs shadow-2xs">
                     <div className="flex items-center gap-3">
-                      <img src={item.productImage} alt={item.productName} className="w-10 h-10 rounded-xl object-cover" />
+                      <img
+                        src={item.productImage || '/images/products/buket-mawar-merah-velvet.jpg'}
+                        alt={item.productName}
+                        className="w-10 h-10 rounded-xl object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/products/buket-mawar-merah-velvet.jpg';
+                        }}
+                      />
                       <div>
                         <div className="font-bold text-stone-800">{item.productName}</div>
                         <span className="text-[10px] text-stone-400">Qty: {item.quantity} x Rp {item.unitPrice.toLocaleString('id-ID')}</span>

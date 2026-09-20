@@ -4398,3 +4398,135 @@ Berikut adalah tabel padanan resmi terminologi Chenille Flowers Atelier untuk me
    Bahan baku kerajinan (kawat bulu, pita, kertas wrapping) **dilarang** menggunakan kata kadaluarsa.
 3. **Pemberian Label Bersih & Mewah:** Seluruh modal, tabel, dan kartu analitik di panel admin mencerminkan citra *artisan flower boutique* yang eksklusif, rapi, dan bebas dari anomali istilah teknis yang membingungkan.
 
+---
+
+## Seksi 28: Sinkronisasi Kontrak Aset Gambar Produk & Multi-Layer Defensive Fallback Architecture — v3.2
+
+### 28.1 Latar Belakang Masalah & Investigasi Akar Penyebab (Root Cause Analysis)
+Pada pengujian antarmuka etalase produk (`apps/web`), ditemukan anomali visual di mana kartu produk katalog gagal menampilkan gambar (*broken image icon* dan teks *alt* fallback), sementara pada panel admin (`/admin?tab=PRODUCTS`) gambar produk tampil dengan thumbnail yang sempurna.
+
+Berdasarkan audit end-to-end terhadap seluruh alur data dari database hingga rendering DOM:
+1. **Ketidakcocokan Skema Properti (`image_url` vs `image`):**
+   * **Database & API Layer (`apps/api`):** Tabel database Supabase Postgres menyimpan URL aset pada kolom `image_url`. Endpoint `GET /api/v1/products` mengembalikan objek baris Postgres dengan properti `image_url`.
+   * **Frontend Shared Contract (`packages/shared`):** Antarmuka `ExtendedProduct` mendefinisikan properti gambar dengan nama `image: string` (mengacu pada kontrak awal mock data storefront).
+   * **Inkonsistensi Konsumsi Data:** Pada storefront `apps/web/src/app/page.tsx`, hasil panggilan API langsung di-assign ke state `setProductsList(res.data.products)` tanpa mapper adapter. Akibatnya, `product.image` bernilai `undefined`, memicu `<img src="undefined" />` pada `ProductCard.tsx`. Sebaliknya, pada `AdminViews.tsx`, developer sebelumnya telah menyematkan mapper manual `image: p.image_url || '/images/products/buket-mawar-merah-velvet.jpg'`, sehingga panel admin tidak terpengaruh.
+2. **Ketidakcocokan Konvensi Kasus Huruf (snake_case vs camelCase):**
+   * Postgres mengembalikan properti dalam snake_case (`po_lead_days`, `review_count`, `is_ready_stock`, `discount_price`).
+   * Komponen etalase (`ProductCard.tsx`) membaca properti dalam format camelCase (`product.poLeadDays`, `product.reviewCount`).
+   * Anomali ini menyebabkan badge PO menampilkan teks mentah `⏱ PO Hari` tanpa jumlah hari, serta rating menampilkan `★ 5 ()` tanpa jumlah ulasan.
+3. **Integritas Aset Fisik:**
+   * Seluruh 8 file gambar produk fisik (resolusi tinggi, rasio 1:1, format JPG terkompresi optimal) terbukti ada dan valid di direktori `apps/web/public/images/products/`.
+
+---
+
+### 28.2 Arsitektur Dual-Contract Compatibility pada REST API Backend (`apps/api`)
+Untuk memastikan backward compatibility dengan komponen yang membaca snake_case maupun camelCase, endpoint produk backend (`products.routes.ts`) mengimplementasikan dual alias pada query SQL dan response object:
+
+```sql
+SELECT 
+  p.id,
+  p.name,
+  p.slug,
+  p.category_id,
+  c.name as category,
+  c.slug as category_slug,
+  p.price::float as price,
+  p.discount_price::float as discount_price,
+  p.discount_price::float as "discountPrice",
+  p.raw_cost_hpp::float as raw_cost_hpp,
+  p.raw_cost_hpp::float as "rawCostHpp",
+  p.stock,
+  p.po_lead_days,
+  p.po_lead_days as "poLeadDays",
+  p.click_count,
+  p.click_count as "clickCount",
+  p.is_ready_stock,
+  p.is_ready_stock as "isReadyStock",
+  p.is_active,
+  p.is_active as "isActive",
+  p.badge,
+  p.rating::float as rating,
+  p.review_count,
+  p.review_count as "reviewCount",
+  p.description,
+  p.image_url,
+  p.image_url as image,
+  p.theme_suitability,
+  p.theme_suitability as "themeSuitability",
+  p.colors,
+  p.created_at,
+  p.updated_at
+FROM products p
+LEFT JOIN categories c ON p.category_id = c.id
+```
+
+Endpoint terkait yang turut diselaraskan:
+- `GET /api/v1/products`: Mengembalikan daftar produk publik dengan dual alias.
+- `GET /api/v1/products/suggest`: Menyertakan `image_url as image`, `discount_price as "discountPrice"`, dan `is_ready_stock as "isReadyStock"`.
+- `GET /api/v1/products/:id`: Menormalkan objek detail produk tunggal sebelum dikembalikan ke klien.
+
+---
+
+### 28.3 Lapisan Normalisasi Data Storefront (`apps/web/src/app/page.tsx`)
+Storefront tidak lagi langsung mengonsumsi payload mentah dari API, melainkan melalui adapter normalisasi defensif:
+
+```typescript
+const normalized: ExtendedProduct[] = res.data.products.map((p: any) => ({
+  id: p.id,
+  name: p.name,
+  slug: p.slug,
+  category: p.category || p.category_name || 'Buket Bunga',
+  price: Number(p.price),
+  discountPrice: p.discountPrice !== undefined ? Number(p.discountPrice) : (p.discount_price ? Number(p.discount_price) : undefined),
+  rawCostHpp: Number(p.rawCostHpp ?? p.raw_cost_hpp ?? Math.round(Number(p.price) * 0.42)),
+  stock: Number(p.stock ?? 10),
+  poLeadDays: Number(p.poLeadDays ?? p.po_lead_days ?? 2),
+  clickCount: Number(p.clickCount ?? p.click_count ?? 0),
+  isReadyStock: Boolean(p.isReadyStock ?? p.is_ready_stock),
+  isActive: p.isActive !== undefined ? Boolean(p.isActive) : (p.is_active !== undefined ? Boolean(p.is_active) : true),
+  description: p.description || '',
+  image: p.image || p.image_url || '/images/products/buket-mawar-merah-velvet.jpg',
+  rating: Number(p.rating ?? 5.0),
+  reviewCount: Number(p.reviewCount ?? p.review_count ?? 0),
+  badge: p.badge || undefined,
+  colors: p.colors || [],
+  themeSuitability: p.themeSuitability || p.theme_suitability || ['tema-a', 'tema-b', 'tema-c'],
+}));
+```
+
+---
+
+### 28.4 Multi-Layer Defensive Fallback System pada Komponen UI
+Untuk mengantisipasi kegagalan jaringan atau URL aset eksternal yang tidak dapat diakses, seluruh komponen yang merender gambar produk menerapkan dua lapis proteksi:
+1. **Fallback Nilai Sumber (`src` Attribute):**
+   `src={product.image || (product as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg'}`
+2. **Event Listener Kegagalan Rendering (`onError` Handler):**
+   `onError={(e) => { e.currentTarget.src = '/images/products/buket-mawar-merah-velvet.jpg'; }}`
+
+Daftar komponen yang telah dilindungi:
+- `ProductCard.tsx`: Kartu produk etalase utama (grid & filter).
+- `ProductDetailModal.tsx`: Modal popup detail spesifikasi produk.
+- `CartDrawer.tsx`: Thumbnail item keranjang belanja.
+- `Navbar.tsx`: Thumbnail pada dropdown autocomplete pencarian.
+- `GuestTracker.tsx`: Thumbnail buket pada pelacakan pesanan publik.
+- `ProductCtrAnalyticsCard.tsx`: Thumbnail produk pada kartu analitik CTR admin.
+- `AdminViews.tsx`: Thumbnail produk pada tabel master produk admin.
+
+---
+
+### 28.5 Matriks Audit Aset Lintas Menu (Cross-Menu Asset Integrity Matrix)
+
+| Menu / Komponen | Tipe Aset | Sumber Aset | Status Integritas | Proteksi Fallback |
+| :--- | :--- | :--- | :--- | :--- |
+| **Katalog Produk (`#products`)** | JPG (8 Produk) | `/images/products/*.jpg` | ✅ 8/8 Tersedia di `public` | Dual lookup + `onError` |
+| **Modal Detail Produk** | JPG | `/images/products/*.jpg` | ✅ Tersedia | Dual lookup + `onError` |
+| **Hero Section (3 Tema)** | JPG (3 Tema) | `/preview-tema-{a,b,c}.jpg` | ✅ 3/3 Tersedia di `public` | Static verified asset |
+| **Custom Studio** | Canvas Procedural | CSS Swatches + Emoji | ✅ 100% Procedural Vector | Default preview image |
+| **Lookbook Section** | Typographic Cards | Gradient + Avatar Initial | ✅ 100% Vector & Typography | Bebas dependensi bitmap |
+| **Navbar Autocomplete** | JPG Thumbnail | `/images/products/*.jpg` | ✅ Tersedia | Dual lookup + `onError` |
+| **Cart Drawer** | JPG Thumbnail | `/images/products/*.jpg` | ✅ Tersedia | Dual lookup + `onError` |
+| **Guest Order Tracker** | JPG Thumbnail | `/images/products/*.jpg` | ✅ Tersedia | Static fallback + `onError` |
+| **Admin Master Products** | JPG Thumbnail | `/images/products/*.jpg` | ✅ Tersedia | Dual lookup + `onError` |
+| **Admin CTR Analytics** | JPG Thumbnail | `/images/products/*.jpg` | ✅ Tersedia | Dual lookup + `onError` |
+
+
