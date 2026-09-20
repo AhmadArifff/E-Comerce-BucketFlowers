@@ -58,6 +58,7 @@ import {
   Crosshair,
 } from 'lucide-react';
 import { MOCK_PRODUCTS, type ExtendedProduct as Product } from '@chenille/shared';
+import { DatabaseResetManager } from './DatabaseResetManager';
 import { useThemeStore, type ThemeId } from '@/stores/useThemeStore';
 import { useSettingsStore, type WasteMaterialItem } from '@/stores/useSettingsStore';
 import { useOrderStore } from '@/stores/useOrderStore';
@@ -2150,89 +2151,16 @@ export const MaintenanceThemeView: React.FC = () => {
         </div>
       </div>
 
-      {/* CONFIRMATION & RESET PROGRESS MODAL */}
-      {showResetModal && (
-        <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-rose-100 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-start gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-base sm:text-lg font-black text-stone-900">
-                  Konfirmasi Migrate Refresh Database
-                </h3>
-                <p className="text-xs text-stone-500 mt-0.5">
-                  Tindakan ini akan mengembalikan data atelier ke bibit data awal (*seed defaults*).
-                </p>
-              </div>
-            </div>
-
-            {isRefreshing ? (
-              <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-100 space-y-3">
-                <div className="flex items-center gap-2.5 text-xs font-bold text-indigo-900">
-                  <RefreshCw className="w-4 h-4 animate-spin text-indigo-600" />
-                  <span>Sedang memproses reset database...</span>
-                </div>
-                <div className="space-y-1.5 text-[11px] text-stone-600">
-                  <div className={`flex items-center gap-2 ${refreshStep >= 1 ? 'font-bold text-indigo-700' : 'text-stone-400'}`}>
-                    <span>{refreshStep > 1 ? '✓' : '1.'}</span>
-                    <span>Membersihkan transaksi pengujian & keranjang...</span>
-                  </div>
-                  <div className={`flex items-center gap-2 ${refreshStep >= 2 ? 'font-bold text-indigo-700' : 'text-stone-400'}`}>
-                    <span>{refreshStep > 2 ? '✓' : '2.'}</span>
-                    <span>Memulihkan 8 produk buket bunga & 7 bahan baku BOM...</span>
-                  </div>
-                  <div className={`flex items-center gap-2 ${refreshStep >= 3 ? 'font-bold text-indigo-700' : 'text-stone-400'}`}>
-                    <span>{refreshStep > 3 ? '✓' : '3.'}</span>
-                    <span>Mengatur ulang 6 titik COD Google Maps Depok...</span>
-                  </div>
-                  <div className={`flex items-center gap-2 ${refreshStep >= 4 ? 'font-bold text-emerald-600' : 'text-stone-400'}`}>
-                    <span>{refreshStep >= 4 ? '✓' : '4.'}</span>
-                    <span>Selesai! Database siap digunakan.</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-xs text-stone-600 space-y-2.5 bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                <div className="font-bold text-stone-800">Item yang akan di-refresh:</div>
-                <ul className="list-disc pl-4 space-y-1 text-stone-600 text-[11px]">
-                  <li>Semua transaksi pengujian akan dibersihkan.</li>
-                  <li>Stok 8 katalog buket bunga kawat bulu dikembalikan ke default.</li>
-                  <li>7 master bahan baku BOM & 6 titik COD Google Maps dipulihkan.</li>
-                  <li>Pengaturan toko dan kuota PO harian di-reset ke 25 order.</li>
-                </ul>
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-2.5 pt-2">
-              <button
-                type="button"
-                disabled={isRefreshing}
-                onClick={() => setShowResetModal(false)}
-                className="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-600 text-xs font-bold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                disabled={isRefreshing}
-                onClick={handleExecuteMigrateRefresh}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isRefreshing ? (
-                  <>
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Mereset Data...</span>
-                  </>
-                ) : (
-                  <span>Ya, Reset Sekarang ⚡</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 2.5 GRANULAR DATABASE RESET SUITE */}
+      <DatabaseResetManager
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        onSuccess={() => {
+          fetchServerSettings();
+          resetOrdersToDefault();
+          resetAllSettingsToDefault();
+        }}
+      />
 
       {/* 3. THEME SELECTION CARDS */}
       <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs space-y-5">

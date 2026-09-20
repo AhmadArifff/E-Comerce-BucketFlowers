@@ -11,6 +11,7 @@ import { BOMCalculatorModal } from '@/components/admin/BOMCalculatorModal';
 import { CODMapModal } from '@/components/admin/CODMapModal';
 import { CSHubModal } from '@/components/admin/CSHubModal';
 import { WarrantyClaimsTable } from '@/components/admin/WarrantyClaimsTable';
+import { CustomerComplaintsManager } from '@/components/admin/CustomerComplaintsManager';
 import { useOrderStore, type Order } from '@/stores/useOrderStore';
 import {
   FinancialChartCard,
@@ -235,7 +236,7 @@ export default function AdminPage() {
           {/* 7. COMPLAINTS & WARRANTY CLAIMS TAB */}
           {activeTab === 'COMPLAINTS' && (
             <div className="admin-view-fade">
-              <WarrantyClaimsTable />
+              <CustomerComplaintsManager />
             </div>
           )}
 
