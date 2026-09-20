@@ -4529,4 +4529,90 @@ Daftar komponen yang telah dilindungi:
 | **Admin Master Products** | JPG Thumbnail | `/images/products/*.jpg` | ✅ Tersedia | Dual lookup + `onError` |
 | **Admin CTR Analytics** | JPG Thumbnail | `/images/products/*.jpg` | ✅ Tersedia | Dual lookup + `onError` |
 
+---
+
+## Seksi 29: Standarisasi Data Katalog Produk Kerajinan & Master Seed Migration (Artisan Chenille Bouquet Canonical Catalog & Database Seed Specification) — v3.3
+
+### 29.1 Latar Belakang & Filosofi Standarisasi Data Kerajinan Tangan
+Chenille Flowers Atelier memproduksi buket bunga berbahan kawat bulu (*chenille stems / pipe cleaners*) yang memiliki ciri khas tekstur beludru (*fuzzy velvet*), warna cerah tahan lama, dan tidak pernah layu.
+
+Sesuai dengan arahan pengguna dan prinsip *Zero-Dummy* pada [RULES.md](file:///c:/Users/ASUS/Documents/Web%20Dev/improving/E-Comerce-BucketFlowers/RULES.md), seluruh data produk buket bunga kawat bulu wajib distandarisasi mulai dari:
+1. **Representasi Visual Otentik:** Foto produk wajib menampilkan kerajinan buket kawat bulu asli (seperti buket bunga matahari kelopak kuning ceria, daun hijau kawat bulu, pita satin emas, dan kartu wisuda).
+2. **Kesesuaian Komposisi Bahan Baku (BOM Recipes):** Setiap produk harus memiliki resep kebutuhan bahan baku fisik yang masuk akal dan menghasilkan kalkulasi Harga Pokok Produksi (HPP) yang akurat.
+3. **Reproduksibilitas Database (*Database Seed Standardization*):** Menyediakan skrip migrasi dan seed standar yang dapat dijalankan secara idempoten kapan saja (`npm run db:seed`) untuk menjamin konsistensi data di seluruh lingkungan (*Local Dev, Staging, Production Supabase*).
+
+---
+
+### 29.2 Spesifikasi Katalog 8 Buket Kanonikal (Canonical Catalog Matrix)
+
+| ID Produk | Nama Buket | Kategori | Harga Jual | Diskon | HPP Riil | Lead PO | Stok | Rating / Ulasan | Tema Cocok | Palet Hex Warna | File Aset Gambar |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `prod-001` | Buket Mawar Merah Velvet Wisuda | Wisuda | Rp 165.000 | Rp 149.000 | Rp 48.500 | 2 Hari | 12 | 4.9 (184) | Tema A, B | `#E11D48`, `#FDA4AF`, `#FFE4E6` | `/images/products/buket-mawar-merah-velvet.jpg` |
+| `prod-002` | Buket Tulip Pastel Pink Korean Style | Pastel | Rp 145.000 | - | Rp 38.000 | 1 Hari | 8 | 4.8 (96) | Tema A, B | `#FBCFE8`, `#BBF7D0` | `/images/products/buket-tulip-pastel-pink.jpg` |
+| `prod-003` | Buket Bunga Matahari Graduation Ceria | Wisuda | Rp 135.000 | - | Rp 35.500 | 2 Hari | 10 | 4.9 (112) | Tema A, C | `#FACC15`, `#EA580C`, `#FEF08A` | `/images/products/buket-matahari-graduation.jpg` |
+| `prod-004` | Buket Lavender Lilac Dream | Pastel | Rp 125.000 | - | Rp 32.000 | 2 Hari | 6 | 4.9 (78) | Tema A, B | `#C084FC`, `#E9D5FF`, `#F5D0FE` | `/images/products/buket-lavender-lilac-dream.jpg` |
+| `prod-005` | Buket Karakter Wisuda Ber-toga | Karakter | Rp 175.000 | Rp 159.000 | Rp 54.000 | 3 Hari | 7 | 5.0 (104) | Tema C, A | `#38BDF8`, `#FDE047`, `#1E293B` | `/images/products/buket-karakter-wisuda-toga.jpg` |
+| `prod-006` | Mini Pot Bunga Daisy Kawat Bulu Meja Belajar | Mini Pot | Rp 45.000 | - | Rp 14.000 | 1 Hari | 20 | 4.7 (54) | Tema A, C | `#FDE047`, `#E0E7FF`, `#FBCFE8` | `/images/products/mini-pot-daisy-kawat-bulu.jpg` |
+| `prod-007` | Midnight Rose & Velvet Romance Deluxe | Romantis | Rp 195.000 | Rp 175.000 | Rp 58.000 | 3 Hari | 5 | 5.0 (62) | Tema B | `#881337`, `#B45309`, `#1E293B` | `/images/products/midnight-rose-velvet-romance.jpg` |
+| `prod-008` | Buket Bunga Matahari Kawaii Smile Sunflower | Karakter | Rp 85.000 | - | Rp 24.500 | 1 Hari | 15 | 4.9 (118) | Tema C, A | `#FACC15`, `#EA580C`, `#4ADE80` | `/images/products/buket-matahari-kawaii-smile.jpg` |
+
+---
+
+### 29.3 Formula Komposisi Bahan Baku (BOM Recipes) & Struktur HPP
+
+Setiap buket dihitung HPP-nya secara matematis berdasarkan konsumsi bahan baku aktual:
+
+$$\text{HPP Produk} = \sum_{i=1}^{n} (\text{Kuantitas Bahan}_i \times \text{Harga Beli Satuan}_i)$$
+
+#### Contoh Rincian Komposisi: Buket Bunga Matahari Graduation Ceria (`prod-003`)
+* **Kawat Bulu Kuning Emas (`mat-8`):** 40 batang kelopak $\times$ Rp 350 = Rp 14.000
+* **Kawat Bulu Cokelat Gelap (`mat-9`):** 15 batang putik spiral $\times$ Rp 350 = Rp 5.250
+* **Kawat Bulu Hijau Zaitun (`mat-2`):** 15 batang dedaunan $\times$ Rp 350 = Rp 5.250
+* **Kawat Penyangga No. 18 (`mat-4`):** 5 batang $\times$ Rp 500 = Rp 2.500
+* **Kertas Cellophane Matte (`mat-5`):** 1 lembar $\times$ Rp 4.500 = Rp 4.500
+* **Pita Satin Emas (`mat-6`):** 1 meter $\times$ Rp 2.200 = Rp 2.200
+* **Kartu Ucapan Wisuda & Tali Rami:** Free bonus / overhead
+* **Total HPP Terkalkulasi:** **Rp 33.700** (Dibulatkan HPP standar atelier: **Rp 35.500**, Margin Profit = 73.7%)
+
+---
+
+### 29.4 Standar Kualitas Aset Visual Produk (Product Visual Asset Standards)
+
+1. **Karakteristik Fotografi Fisik:**
+   * Wajib menampilkan buket fisik kawat bulu asli (*genuine pipe cleaner art*).
+   * Tekstur beludru (*chenille fuzz*) harus terlihat jelas dan tajam.
+   * Pencahayaan studio natural (*soft daylight*) dengan aksen pendukung (toga, pita satin, kertas wrapping rapi).
+   * **Dilarang** menggunakan ilustrasi vektor 2D, screenshot UI, atau gambar sintetis flat yang tidak merepresentasikan kerajinan buket fisik.
+2. **Spesifikasi Teknis Berkas Gambar:**
+   * **Format:** JPEG terkompresi optimal (kualitas 85-90%).
+   * **Aspek Rasio:** 1:1 (*Square*) dengan resolusi minimal 800x800px.
+   * **Lokasi Penyimpanan:** `apps/web/public/images/products/*.jpg`.
+
+---
+
+### 29.5 Prosedur Eksekusi Master Seed Database (`npm run db:seed`)
+
+Untuk melakukan inisialisasi ulang atau standarisasi database PostgreSQL Supabase:
+
+```powershell
+# Eksekusi dari root monorepo
+npm run db:seed
+
+# Atau dari workspace API
+npm run db:seed --workspace=@chenille/api
+```
+
+#### Tahapan Eksekusi Otomatis (10 Langkah):
+1. `store_settings`: Profil toko, alamat Margonda, nomor WhatsApp, koordinat GPS.
+2. `categories`: 5 kategori resmi atelier.
+3. `products`: 8 produk kanonikal lengkap dengan harga dan metadata.
+4. `raw_materials`: 9 jenis bahan baku kawat bulu, kertas, pita, dan boneka.
+5. `bill_of_materials`: Relasi resep bahan baku dan kalkulasi biaya HPP per buket.
+6. `cod_meetup_points`: 6 titik temu COD strategis kampus & mall di Depok.
+7. `custom_studio_options`: 7 kategori opsi interaktif Custom Studio.
+8. `coupons`: 3 kupon promosi aktif.
+9. `feature_toggles`: 7 sakelar fitur toko.
+10. `campaign_settings`: Pengaturan absensi harian, kartu stempel, dan event wisuda.
+
+
 

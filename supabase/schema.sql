@@ -599,7 +599,26 @@ VALUES
   ('mat-4', 'Kawat Batang Penyangga Hijau No. 18', 'OTHER_MATERIALS', 600, 150, 'Batang', 500, 'Florist Hardware Jakarta Pasar Pagi', '081987654321', 'https://tokopedia.com/floristhardware', 'Batang kawat kokoh panjang 40cm'),
   ('mat-5', 'Kertas Wrapping Cellophane Korean Matte Maroon Gold', 'CELLOPHANE_PAPER', 85, 25, 'Lembar', 4500, 'Korean Wrapping Depok Grosir', '082133445566', 'https://shopee.co.id/koreanwrapping', 'Kertas tahan air dua sisi matte lis gold'),
   ('mat-6', 'Pita Satin Premium Burgundy Lis Emas (2.5cm)', 'PITA_SATIN', 95, 20, 'Meter', 2200, 'Toko Pita Cantik Mangga Dua', '085711223344', 'https://tokopedia.com/pitacantik', 'Pita satin mengkilap untuk ikatan buket'),
-  ('mat-7', 'Boneka Teddy Wisuda Ber-toga Mini (10cm)', 'AKSESORI_BONEKA', 35, 10, 'Pcs', 7400, 'Souvenir Wisuda Depok Jaya', '081399887766', 'https://shopee.co.id/souvenirwisuda', 'Boneka wisuda ber-toga hitam & selempang')
+  ('mat-7', 'Boneka Teddy Wisuda Ber-toga Mini (10cm)', 'AKSESORI_BONEKA', 35, 10, 'Pcs', 7400, 'Souvenir Wisuda Depok Jaya', '081399887766', 'https://shopee.co.id/souvenirwisuda', 'Boneka wisuda ber-toga hitam & selempang'),
+  ('mat-8', 'Batang Kawat Bulu Kuning Emas Sunflower (6mm)', 'KAWAT_BULU', 400, 100, 'Batang', 350, 'Toko Kawat Bulu Chenille Jaya Bandung', '081234567890', 'https://shopee.co.id/chenille-jaya-bandung', 'Kelopak ceria bunga matahari'),
+  ('mat-9', 'Batang Kawat Bulu Cokelat Gelap (6mm)', 'KAWAT_BULU', 300, 80, 'Batang', 350, 'Toko Kawat Bulu Chenille Jaya Bandung', '081234567890', 'https://shopee.co.id/chenille-jaya-bandung', 'Pusat spiral bunga matahari')
+ON CONFLICT (id) DO NOTHING;
+
+-- 4.1 Bill of Materials (BOM Recipes)
+INSERT INTO bill_of_materials (id, product_id, raw_material_id, quantity_needed, subtotal_cost)
+VALUES
+  ('bom-001-1', 'prod-001', 'mat-1', 60, 21000),
+  ('bom-001-2', 'prod-001', 'mat-2', 20, 7000),
+  ('bom-001-3', 'prod-001', 'mat-4', 12, 6000),
+  ('bom-001-4', 'prod-001', 'mat-5', 1, 4500),
+  ('bom-001-5', 'prod-001', 'mat-6', 1, 2200),
+  ('bom-001-6', 'prod-001', 'mat-7', 1, 7400),
+  ('bom-003-1', 'prod-003', 'mat-8', 40, 14000),
+  ('bom-003-2', 'prod-003', 'mat-9', 15, 5250),
+  ('bom-003-3', 'prod-003', 'mat-2', 15, 5250),
+  ('bom-003-4', 'prod-003', 'mat-4', 5, 2500),
+  ('bom-003-5', 'prod-003', 'mat-5', 1, 4500),
+  ('bom-003-6', 'prod-003', 'mat-6', 1, 2200)
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. 6 COD Points Depok

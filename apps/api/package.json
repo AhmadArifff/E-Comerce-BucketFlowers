@@ -11,6 +11,8 @@
     "type-check": "tsc --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
+    "prisma:seed": "tsx src/scripts/seed.ts",
+    "db:seed": "tsx src/scripts/seed.ts",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
