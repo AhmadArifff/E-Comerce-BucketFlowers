@@ -102,6 +102,78 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
   const [isCopied, setIsCopied] = useState(false);
   const logsEndRef = useRef<HTMLDivElement | null>(null);
 
+  // Pre-Activation Toggle Confirmation Modal State
+  const [pendingToggle, setPendingToggle] = useState<{
+    key: keyof GranularResetOptions;
+    title: string;
+    description: string;
+    countWarning?: string;
+  } | null>(null);
+  const [isSyncingStorage, setIsSyncingStorage] = useState(false);
+
+  const TOGGLE_METADATA: Record<
+    keyof GranularResetOptions,
+    {
+      title: string;
+      description: string;
+      countWarning?: (stats: DatabaseStats | null) => string;
+    }
+  > = {
+    delete_transactions: {
+      title: 'Hapus Riwayat Transaksi & Finansial Midtrans',
+      description:
+        'Mengaktifkan opsi ini akan menghapus seluruh data pesanan (orders), rincian buket (order_items), transaksi pembayaran (payment_transactions), dan log riwayat status pesanan secara permanen.',
+      countWarning: (s) =>
+        `${s?.transactions.total ?? 0} baris data transaksi akan dihapus. Laporan omzet dan audit finansial akan terdampak!`,
+    },
+    delete_logistics: {
+      title: 'Hapus Riwayat Logistik & Resi Ekspedisi',
+      description:
+        'Mengaktifkan opsi ini akan menghapus data pengiriman pesanan (shipping_orders), nomor resi kurir, dan catatan pengantaran barang.',
+      countWarning: () => 'Bukti serah terima ekspedisi dan riwayat resi pengiriman akan dibersihkan.',
+    },
+    delete_complaints: {
+      title: 'Hapus Data Komplain Pelanggan & Klaim Garansi',
+      description:
+        'Mengaktifkan opsi ini akan menghapus seluruh tiket keluhan kualitas buket (customer_complaints) dan riwayat klaim garansi 30 hari (warranty_claims).',
+      countWarning: (s) => `${s?.complaints.total ?? 0} data evaluasi kualitas atelier akan dihapus.`,
+    },
+    delete_loyalty_data: {
+      title: 'Hapus Data Loyalitas Pelanggan (Absensi & Stamp Cards)',
+      description:
+        'Mengaktifkan opsi ini akan menghapus seluruh log absensi harian (user_attendance_logs), kartu stempel digital (user_stamp_cards), dan pengingat momen hari spesial (customer_occasions).',
+      countWarning: (s) => `${s?.loyalty.total ?? 0} baris data loyalitas member akan di-reset ke nol.`,
+    },
+    delete_customer_accounts: {
+      title: 'Hapus Akun Pelanggan (*Customer Members*)',
+      description:
+        'Mengaktifkan opsi ini akan menghapus seluruh akun pengguna pelanggan (role: CUSTOMER_MEMBER). Akun Super Admin Anda tetap terkunci dan dilindungi.',
+      countWarning: (s) => `${s?.customers.customer_members ?? 0} akun pelanggan terdaftar akan dihapus permanen.`,
+    },
+    reset_master_catalog: {
+      title: 'Reset & Re-seed Master Katalog Produk & BOM',
+      description:
+        'Mengaktifkan opsi ini akan mengatur ulang katalog 8 buket kanonikal, 9 bahan baku kawat bulu, dan resep HPP ke standar kanonikal awal atelier.',
+      countWarning: (s) =>
+        `${(s?.catalog.products ?? 0) + (s?.catalog.raw_materials ?? 0)} entitas katalog akan diinisialisasi ulang ke standar kanonikal.`,
+    },
+    delete_complaint_asset_files: {
+      title: 'Hapus Berkas Foto Bukti Komplain Pelanggan',
+      description:
+        'Mengaktifkan opsi ini akan menghapus seluruh berkas foto fisik bukti komplain yang tersimpan di bucket Supabase Storage "complaints-proof".',
+    },
+    delete_warranty_asset_files: {
+      title: 'Hapus Berkas Foto Bukti Klaim Garansi 30 Hari',
+      description:
+        'Mengaktifkan opsi ini akan menghapus seluruh foto bukti fisik unboxing dan kerusakan buket di bucket Supabase Storage "warranty-proof".',
+    },
+    delete_custom_studio_asset_files: {
+      title: 'Hapus Berkas Aset Gambar Custom Studio',
+      description:
+        'Mengaktifkan opsi ini akan menghapus berkas gambar referensi buket kustom yang diunggah pelanggan saat konsultasi studio.',
+    },
+  };
+
   // Auto-scroll to latest log
   useEffect(() => {
     if (currentStage === 'executing' && logsEndRef.current) {
@@ -145,15 +217,76 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
       setCurrentStepText('');
       setIsExecutionComplete(false);
       setHasExecutionError(false);
+      setPendingToggle(null);
       fetchStats();
     }
   }, [isOpen, fetchStats]);
 
   const handleToggle = (key: keyof GranularResetOptions) => {
-    setOptions((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+    const isCurrentlyOn = options[key];
+    if (isCurrentlyOn) {
+      // Turning OFF is safe -> immediately turn off
+      setOptions((prev) => ({
+        ...prev,
+        [key]: false,
+      }));
+    } else {
+      // Turning ON requires user confirmation
+      const meta = TOGGLE_METADATA[key];
+      setPendingToggle({
+        key,
+        title: meta.title,
+        description: meta.description,
+        countWarning: meta.countWarning ? meta.countWarning(stats) : undefined,
+      });
+    }
+  };
+
+  const handleConfirmToggleOn = () => {
+    if (pendingToggle) {
+      setOptions((prev) => ({
+        ...prev,
+        [pendingToggle.key]: true,
+      }));
+      setPendingToggle(null);
+    }
+  };
+
+  const handleCancelToggleOn = () => {
+    setPendingToggle(null);
+  };
+
+  const handleManualStorageSync = async () => {
+    setIsSyncingStorage(true);
+    try {
+      const res = await fetch(getApiUrl('/api/v1/admin/database/sync-storage'), {
+        method: 'POST',
+        headers: { Authorization: 'Bearer admin-token' },
+      });
+      const json = await res.json();
+      if (json.success) {
+        if (json.data.isStorageConfigured) {
+          showMagicToast(
+            'Sinkronisasi Storage Sukses! ☁️',
+            `${json.data.syncedCount} gambar kanonikal berhasil diunggah ke Supabase Storage.`,
+            '✅'
+          );
+        } else {
+          showMagicToast(
+            'Supabase Key Masih Placeholder ⚠️',
+            'SUPABASE_ANON_KEY masih berupa placeholder (...xxxxxxxxx...). Gambar disajikan dari jalur statis lokal (/images/products/).',
+            'ℹ️'
+          );
+        }
+      } else {
+        showMagicToast('Gagal Sinkronisasi Storage', json.error || 'Terjadi kesalahan sistem.', '⚠️');
+      }
+    } catch (err) {
+      console.error('Error syncing storage:', err);
+      showMagicToast('Gagal Sinkronisasi Storage', 'Tidak dapat menghubungi server API.', '⚠️');
+    } finally {
+      setIsSyncingStorage(false);
+    }
   };
 
   // Calculate live impact counter
@@ -607,12 +740,12 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => handleToggle('delete_transactions')}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer flex-shrink-0 ${
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 relative cursor-pointer flex-shrink-0 ${
                       options.delete_transactions ? 'bg-rose-600' : 'bg-stone-200'
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white transition-transform absolute top-0.5 shadow-xs ${
-                      options.delete_transactions ? 'left-5.5' : 'left-0.5'
+                    <div className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 absolute top-0.5 left-0.5 shadow-xs ${
+                      options.delete_transactions ? 'translate-x-5' : 'translate-x-0'
                     }`} />
                   </button>
                 </div>
@@ -630,12 +763,12 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => handleToggle('delete_logistics')}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer flex-shrink-0 ${
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 relative cursor-pointer flex-shrink-0 ${
                       options.delete_logistics ? 'bg-rose-600' : 'bg-stone-200'
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white transition-transform absolute top-0.5 shadow-xs ${
-                      options.delete_logistics ? 'left-5.5' : 'left-0.5'
+                    <div className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 absolute top-0.5 left-0.5 shadow-xs ${
+                      options.delete_logistics ? 'translate-x-5' : 'translate-x-0'
                     }`} />
                   </button>
                 </div>
@@ -653,12 +786,12 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => handleToggle('delete_complaints')}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer flex-shrink-0 ${
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 relative cursor-pointer flex-shrink-0 ${
                       options.delete_complaints ? 'bg-rose-600' : 'bg-stone-200'
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white transition-transform absolute top-0.5 shadow-xs ${
-                      options.delete_complaints ? 'left-5.5' : 'left-0.5'
+                    <div className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 absolute top-0.5 left-0.5 shadow-xs ${
+                      options.delete_complaints ? 'translate-x-5' : 'translate-x-0'
                     }`} />
                   </button>
                 </div>
@@ -676,12 +809,12 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => handleToggle('delete_loyalty_data')}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer flex-shrink-0 ${
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 relative cursor-pointer flex-shrink-0 ${
                       options.delete_loyalty_data ? 'bg-rose-600' : 'bg-stone-200'
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white transition-transform absolute top-0.5 shadow-xs ${
-                      options.delete_loyalty_data ? 'left-5.5' : 'left-0.5'
+                    <div className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 absolute top-0.5 left-0.5 shadow-xs ${
+                      options.delete_loyalty_data ? 'translate-x-5' : 'translate-x-0'
                     }`} />
                   </button>
                 </div>
@@ -699,12 +832,12 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => handleToggle('delete_customer_accounts')}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer flex-shrink-0 ${
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 relative cursor-pointer flex-shrink-0 ${
                       options.delete_customer_accounts ? 'bg-rose-600' : 'bg-stone-200'
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white transition-transform absolute top-0.5 shadow-xs ${
-                      options.delete_customer_accounts ? 'left-5.5' : 'left-0.5'
+                    <div className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 absolute top-0.5 left-0.5 shadow-xs ${
+                      options.delete_customer_accounts ? 'translate-x-5' : 'translate-x-0'
                     }`} />
                   </button>
                 </div>
@@ -722,12 +855,12 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => handleToggle('reset_master_catalog')}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer flex-shrink-0 ${
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 relative cursor-pointer flex-shrink-0 ${
                       options.reset_master_catalog ? 'bg-indigo-600' : 'bg-stone-200'
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white transition-transform absolute top-0.5 shadow-xs ${
-                      options.reset_master_catalog ? 'left-5.5' : 'left-0.5'
+                    <div className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 absolute top-0.5 left-0.5 shadow-xs ${
+                      options.reset_master_catalog ? 'translate-x-5' : 'translate-x-0'
                     }`} />
                   </button>
                 </div>
@@ -749,7 +882,7 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                     </div>
                   </div>
                   <div className="w-11 h-6 rounded-full bg-emerald-600/40 relative opacity-60 cursor-not-allowed flex-shrink-0">
-                    <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 left-5.5 shadow-xs" />
+                    <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 left-0.5 translate-x-5 shadow-xs" />
                   </div>
                 </div>
               </div>
@@ -760,6 +893,37 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
               <div className="text-xs font-bold text-stone-400 uppercase tracking-wider flex items-center gap-1.5">
                 <ImageIcon className="w-3.5 h-3.5" />
                 <span>Kelompok Berkas Fisik &amp; Aset Gambar (Supabase Storage)</span>
+              </div>
+
+              {/* STORAGE SYNC STATUS & ACTION BAR */}
+              <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-indigo-950">
+                <div className="space-y-0.5 min-w-0 flex-1">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <Server className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+                    <span>Status Bucket: product-images (Supabase Storage)</span>
+                  </div>
+                  <div className="text-[11px] text-indigo-800/80 leading-relaxed">
+                    Jika bucket di dashboard Supabase masih kosong, klik tombol untuk menyinkronkan 8 gambar buket kanonikal secara langsung.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={isSyncingStorage}
+                  onClick={handleManualStorageSync}
+                  className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5 flex-shrink-0"
+                >
+                  {isSyncingStorage ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      <span>Mengunggah ke Storage...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3" />
+                      <span>Sinkronkan ke Supabase Storage</span>
+                    </>
+                  )}
+                </button>
               </div>
 
               <div className="space-y-2">
@@ -775,12 +939,12 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => handleToggle('delete_complaint_asset_files')}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer flex-shrink-0 ${
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 relative cursor-pointer flex-shrink-0 ${
                       options.delete_complaint_asset_files ? 'bg-rose-600' : 'bg-stone-200'
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white transition-transform absolute top-0.5 shadow-xs ${
-                      options.delete_complaint_asset_files ? 'left-5.5' : 'left-0.5'
+                    <div className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 absolute top-0.5 left-0.5 shadow-xs ${
+                      options.delete_complaint_asset_files ? 'translate-x-5' : 'translate-x-0'
                     }`} />
                   </button>
                 </div>
@@ -797,12 +961,12 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => handleToggle('delete_warranty_asset_files')}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer flex-shrink-0 ${
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 relative cursor-pointer flex-shrink-0 ${
                       options.delete_warranty_asset_files ? 'bg-rose-600' : 'bg-stone-200'
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white transition-transform absolute top-0.5 shadow-xs ${
-                      options.delete_warranty_asset_files ? 'left-5.5' : 'left-0.5'
+                    <div className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 absolute top-0.5 left-0.5 shadow-xs ${
+                      options.delete_warranty_asset_files ? 'translate-x-5' : 'translate-x-0'
                     }`} />
                   </button>
                 </div>
@@ -1165,6 +1329,64 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
           </div>
         )}
       </div>
+
+      {/* ================================================================ */}
+      {/* PRE-ACTIVATION CONFIRMATION MODAL (DESTRUCTIVE TOGGLE GUARD) */}
+      {/* ================================================================ */}
+      {pendingToggle && (
+        <div className="fixed inset-0 z-60 bg-stone-950/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-md w-full border border-rose-200 shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1 min-w-0 flex-1">
+                <div className="inline-block px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[9px] font-black uppercase tracking-wider">
+                  Konfirmasi Pengaktifan Opsi
+                </div>
+                <h4 className="text-sm font-bold text-stone-900 leading-tight">
+                  {pendingToggle.title}
+                </h4>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-200/70 text-xs text-rose-900 space-y-2">
+              <p className="leading-relaxed">
+                {pendingToggle.description}
+              </p>
+              {pendingToggle.countWarning && (
+                <div className="pt-1.5 border-t border-rose-200 text-[11px] font-semibold text-rose-800 flex items-start gap-1.5">
+                  <span className="font-bold">⚠️</span>
+                  <span>{pendingToggle.countWarning}</span>
+                </div>
+              )}
+            </div>
+
+            <p className="text-[11px] text-stone-500 italic">
+              Data ini akan dimasukkan ke dalam daftar data yang <strong>dihapus permanen</strong> saat Anda menekan tombol konfirmasi akhir di Tahap 3.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-100">
+              <button
+                type="button"
+                onClick={handleCancelToggleOn}
+                className="px-4 py-2 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-600 text-xs font-bold transition-all cursor-pointer"
+              >
+                Batal / Jangan Aktifkan
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmToggleOn}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-md shadow-rose-600/20 active:scale-95 cursor-pointer flex items-center gap-1.5"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>Ya, Aktifkan Pilihan Ini</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+

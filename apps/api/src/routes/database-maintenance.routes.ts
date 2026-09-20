@@ -90,6 +90,28 @@ router.get('/stats', requireAdmin, async (_req: AuthenticatedRequest, res: Respo
 });
 
 /**
+ * POST /api/v1/admin/database/sync-storage
+ * Melakukan sinkronisasi manual berkas aset gambar buket fisik ke Supabase Storage bucket.
+ */
+router.post('/sync-storage', requireAdmin, async (_req: AuthenticatedRequest, res: Response) => {
+  try {
+    const result = await syncCanonicalBouquetImagesToStorage();
+    return res.status(200).json({
+      success: true,
+      message: result.isStorageConfigured
+        ? `Sinkronisasi berhasil: ${result.syncedCount} gambar diunggah ke Supabase Storage.`
+        : 'Supabase Storage API key masih berupa placeholder. Gambar disajikan dari jalur statis lokal (/images/products/).',
+      data: result,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Gagal melakukan sinkronisasi storage.',
+    });
+  }
+});
+
+/**
  * POST /api/v1/admin/database/granular-reset
  * Menjalankan reset database modular dengan multi-stage validation dan Admin Self-Preservation Guard.
  */

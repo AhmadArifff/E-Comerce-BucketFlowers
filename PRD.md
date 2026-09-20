@@ -4946,4 +4946,69 @@ Untuk menghasilkan pengalaman visual yang mulus tanpa mengorbankan performa:
 3. **Penanganan Galat (*Graceful Failure State*):**
    - Jika terjadi galat jaringan atau error dari backend, terminal mencetak baris log merah `[ERROR] Transaksi dibatalkan (ROLLBACK) - Tidak ada data yang rusak`, progress bar berubah merah, dan disediakan tombol untuk memeriksa kendala atau mencoba kembali.
 
+---
+
+## 33. Perbaikan Sinkronisasi Posisi Sakelar (Toggle Knob Symmetry), Pre-Activation Guard Modal & Kredensial Supabase Storage — v3.6
+
+### 33.1. Perbaikan Bug Posisi Kenop Sakelar (Toggle Knob Geometry & Symmetry)
+1. **Analisis Akar Masalah:**
+   - Pada `DatabaseResetManager.tsx`, komponen sakelar (*toggle switch*) menggunakan ekspresi kelas Tailwind:
+     `options.reset_master_catalog ? 'left-5.5' : 'left-0.5'`.
+   - Di dalam spesifikasi bawaan Tailwind CSS v3/v4, kelas `left-5.5` **tidak terdefinisi** (skala spacing standar hanya mencakup `0, 0.5, 1, 1.5, ..., 5, 6`).
+   - Akibatnya, browser tidak menerima aturan CSS untuk posisi kanan, sehingga kenop putih tetap berada di sisi kiri (`left: 0.125rem` / 2px) meskipun warna latar belakang telah berubah menjadi ungu (`bg-indigo-600`) atau merah (`bg-rose-600`). Hal ini menciptakan kesan visual paradoksal: *"warna menunjukkan aktif (ON), tetapi kenop menunjukkan nonaktif (OFF)"*.
+2. **Solusi Rekayasa Geometri Simetris:**
+   - Menghapus ketergantungan pada kelas `left-5.5`.
+   - Menggunakan kombinasi posisi jangkar tetap `top-0.5 left-0.5` dengan kelas translasi transform standar Tailwind:
+     ```tsx
+     className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 absolute top-0.5 left-0.5 shadow-xs ${
+       isActive ? 'translate-x-5' : 'translate-x-0'
+     }`}
+     ```
+   - **Kalkulasi Simetri:**
+     - Lebar wadah: `w-11` (44px / 2.75rem).
+     - Lebar kenop: `w-5` (20px / 1.25rem).
+     - Posisi awal (OFF): `left: 2px` ($44 - 20 - 2 = 22\text{px}$ ruang kosong kanan).
+     - Posisi aktif (ON): `translate-x-5` (+20px), posisi akhir $2 + 20 = 22\text{px}$ ($44 - 20 - 22 = 2\text{px}$ ruang kosong kanan).
+     - Hasil: Margin kiri dan kanan presisi dan simetris persis 2px pada kedua kondisi (*pixel-perfect alignment*).
+
+---
+
+### 33.2. Spesifikasi Pre-Activation Guard Modal untuk Sakelar Destruktif
+Untuk memberikan perlindungan berlapis dan meminimalisir kekeliruan klik (*accidental activation*) sebelum pengguna mencapai Tahap 3:
+1. **Aturan Pemicu (*Trigger Rules*):**
+   - Ketika pengguna mengklik sakelar yang saat ini berstatus **OFF** untuk diubah menjadi **ON**, sistem **tidak langsung menyalakan sakelar**.
+   - Sistem memunculkan dialog pop-up konfirmasi (*Pre-Activation Confirmation Modal*).
+   - Sebaliknya, jika sakelar berstatus **ON** diklik untuk dimatikan menjadi **OFF**, sakelar langsung mati seketika tanpa dialog konfirmasi (karena tindakan mematikan bersifat aman / non-destruktif).
+2. **Komponen Visual Pre-Activation Modal:**
+   - **Backdrop Blur & High Z-Index:** Muncul di atas modal seleksi dengan latar gelap transparan (`z-60 bg-stone-950/60 backdrop-blur-xs`).
+   - **Header & Ikon Peringatan:** Ikon `AlertTriangle` atau `ShieldAlert` berlatar amber/rose dengan judul tegas: *"Konfirmasi Pengaktifan Opsi Penghapusan"*.
+   - **Deskripsi Dampak Spesifik:**
+     - Transaksi: *"Mengaktifkan opsi ini akan menghapus seluruh data pesanan, pembayaran Midtrans, dan riwayat status pesanan secara permanen."*
+     - Logistik: *"Mengaktifkan opsi ini akan menghapus riwayat resi kurir dan koordinat titik temu COD."*
+     - Komplain: *"Mengaktifkan opsi ini akan menghapus data evaluasi keluhan pelanggan dan klaim garansi."*
+     - Loyalitas: *"Mengaktifkan opsi ini akan menghapus data absensi harian dan kartu stempel member."*
+     - Member: *"Mengaktifkan opsi ini akan menghapus seluruh akun pelanggan (kecuali admin)."*
+     - Storage: *"Mengaktifkan opsi ini akan menghapus berkas foto fisik lampiran dari bucket Supabase."*
+   - **Tombol Aksi Ganda:**
+     - `Batal / Jangan Aktifkan`: Menutup dialog, status toggle tetap OFF.
+     - `Ya, Saya Yakin Aktifkan`: Menyalakan toggle menjadi ON dan menutup dialog.
+
+---
+
+### 33.3. Spesifikasi Resolusi Supabase Storage Bucket & Panduan Kredensial
+1. **Akar Penyebab Bucket `product-images` Kosong di Supabase:**
+   - Berkas konfigurasi lingkungan (`apps/api/.env` dan `apps/web/.env.local`) memuat:
+     `SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxxxxxxxx"`.
+   - Kode backend di `storage.service.ts` memiliki pengecekan `isPlaceholderKey = SUPABASE_ANON_KEY.includes('xxxx')`.
+   - Karena kunci masih berupa *placeholder*, backend secara otomatis mengaktifkan *defensive local fallback* ke `/images/products/` agar aplikasi tidak mengalami *crash* saat dijalankan tanpa API key.
+   - Akibatnya, berkas gambar belum pernah dikirimkan ke cloud storage Supabase.
+2. **Langkah Konfigurasi Kredensial:**
+   - Pengguna membuka Supabase Dashboard project `wpdfxuwhqwvglqoiubfq` $\rightarrow$ **Project Settings** $\rightarrow$ **API**.
+   - Menyalin nilai **Project API Keys** bagian `anon` / `public`.
+   - Memasukkan kunci tersebut ke dalam variabel `SUPABASE_ANON_KEY` pada `apps/api/.env` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` pada `apps/web/.env.local`.
+3. **Endpoint & Fitur Sinkronisasi Langsung:**
+   - Menambahkan tombol utilitas pada antarmuka admin: *"⚡ Unggah & Sinkronkan Semua Gambar ke Supabase Storage Sekarang"*.
+   - Tombol ini memanggil endpoint `POST /api/v1/admin/database/sync-storage` untuk langsung mengunggah 8 gambar kanonikal ke bucket `product-images` dan memverifikasi keberadaan berkas secara *real-time*.
+
+
 
