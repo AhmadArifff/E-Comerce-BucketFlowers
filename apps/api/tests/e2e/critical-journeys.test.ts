@@ -12,11 +12,22 @@ describe('PRD Section 14.3: 5 Critical User Journeys (End-to-End)', () => {
   let createdMemberOrderId: string = '';
 
   beforeAll(async () => {
-    // Fetch a real active product with available stock from DB
-    const prodRes = await pool.query('SELECT id, price::float, discount_price::float FROM products WHERE is_active = true AND stock > 0 LIMIT 1;');
+    // Fetch a real active product with available stock from DB (prefer stock >= 5)
+    let prodRes = await pool.query(
+      'SELECT id, price::float, discount_price::float, stock FROM products WHERE is_active = true AND stock >= 5 ORDER BY stock DESC LIMIT 1;'
+    );
+    if (prodRes.rows.length === 0) {
+      prodRes = await pool.query(
+        'SELECT id, price::float, discount_price::float, stock FROM products WHERE is_active = true ORDER BY stock DESC LIMIT 1;'
+      );
+    }
     if (prodRes.rows.length > 0) {
       sampleProductId = prodRes.rows[0].id;
       sampleProductPrice = prodRes.rows[0].discount_price ?? prodRes.rows[0].price;
+      // Ensure sufficient stock for multi-item test journeys
+      if (prodRes.rows[0].stock < 10) {
+        await pool.query('UPDATE products SET stock = 25 WHERE id = $1', [sampleProductId]);
+      }
     }
   });
 

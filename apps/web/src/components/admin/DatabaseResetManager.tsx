@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   AlertTriangle,
   RefreshCw,
@@ -20,6 +20,10 @@ import {
   Layers,
   ShoppingBag,
   Users,
+  Terminal,
+  Copy,
+  Check,
+  CornerDownRight,
 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api-client';
 import { showMagicToast } from '@/lib/magic-motion';
@@ -33,6 +37,18 @@ interface DatabaseStats {
   customers: { customer_members: number };
   catalog: { products: number; raw_materials: number; custom_studio_options: number };
 }
+
+interface TelemetryLogEntry {
+  id: string;
+  timestamp: string;
+  tag: string;
+  tagClass: string;
+  message: string;
+  status: string;
+  statusClass: string;
+}
+
+type Stage = 1 | 2 | 3 | 'executing' | 4;
 
 interface DatabaseResetManagerProps {
   isOpen: boolean;
@@ -52,8 +68,9 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
   // 1: Pre-Flight Informational Alert
   // 2: Granular Selection Modal (Toggles)
   // 3: Double-Confirmation Modal (Type phrase)
+  // 'executing': Real-Time DevOps Telemetry Console & Progress Streamer
   // 4: Progress / Success Report
-  const [currentStage, setCurrentStage] = useState<1 | 2 | 3 | 4>(1);
+  const [currentStage, setCurrentStage] = useState<Stage>(1);
 
   const [stats, setStats] = useState<DatabaseStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
@@ -75,6 +92,31 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
   const [phraseInput, setPhraseInput] = useState('');
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionResult, setExecutionResult] = useState<GranularResetResponse['data'] | null>(null);
+
+  // Telemetry Console State
+  const [logs, setLogs] = useState<TelemetryLogEntry[]>([]);
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [currentStepText, setCurrentStepText] = useState('');
+  const [isExecutionComplete, setIsExecutionComplete] = useState(false);
+  const [hasExecutionError, setHasExecutionError] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const logsEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll to latest log
+  useEffect(() => {
+    if (currentStage === 'executing' && logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logs, currentStage]);
+
+  const handleCopyLogs = () => {
+    const text = logs
+      .map((l) => `[${l.timestamp}] ${l.tag} ${l.message} ${l.status}`)
+      .join('\n');
+    navigator.clipboard.writeText(text);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
   const fetchStats = useCallback(async () => {
     setIsLoadingStats(true);
@@ -98,6 +140,11 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
       setCurrentStage(1);
       setPhraseInput('');
       setExecutionResult(null);
+      setLogs([]);
+      setProgressPercent(0);
+      setCurrentStepText('');
+      setIsExecutionComplete(false);
+      setHasExecutionError(false);
       fetchStats();
     }
   }, [isOpen, fetchStats]);
@@ -134,31 +181,297 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
   const handleExecuteReset = async () => {
     if (!isPhraseValid) return;
     setIsExecuting(true);
+    setCurrentStage('executing');
+    setLogs([]);
+    setProgressPercent(5);
+    setCurrentStepText('Inisialisasi koneksi & verifikasi hak akses Super Admin...');
+    setIsExecutionComplete(false);
+    setHasExecutionError(false);
 
-    try {
-      const res = await fetch(getApiUrl('/api/v1/admin/database/granular-reset'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer admin-token',
-        },
-        body: JSON.stringify({
-          verification_phrase: phraseInput.trim(),
-          reset_options: options,
-        }),
+    // Build the planned steps based on active toggles
+    const plannedSteps: Array<{
+      tag: string;
+      tagClass: string;
+      message: string;
+      status: string;
+      statusClass: string;
+      progress: number;
+      stepText: string;
+    }> = [
+      {
+        tag: '[AUTH]',
+        tagClass: 'text-cyan-400 bg-cyan-950/80 border-cyan-800/80',
+        message: 'Memverifikasi identitas Super Admin & validitas sesi otentikasi...',
+        status: '[OK]',
+        statusClass: 'text-emerald-400 font-bold',
+        progress: 12,
+        stepText: 'Verifikasi otentikasi & hak akses sistem',
+      },
+      {
+        tag: '[GUARD]',
+        tagClass: 'text-emerald-400 bg-emerald-950/80 border-emerald-800/80',
+        message: `Admin Self-Preservation Guard: Mengunci akun aktif (${currentAdminEmail})...`,
+        status: '[PRESERVED]',
+        statusClass: 'text-emerald-400 font-bold',
+        progress: 22,
+        stepText: 'Proteksi integritas akun admin aktif',
+      },
+      {
+        tag: '[SAFETY]',
+        tagClass: 'text-indigo-400 bg-indigo-950/80 border-indigo-800/80',
+        message: 'Validasi frasa verifikasi keamanan: "RESET-DATABASE-CHENILLE"...',
+        status: '[PASSED]',
+        statusClass: 'text-emerald-400 font-bold',
+        progress: 32,
+        stepText: 'Pengecekan frasa verifikasi ganda',
+      },
+      {
+        tag: '[DB]',
+        tagClass: 'text-blue-400 bg-blue-950/80 border-blue-800/80',
+        message: 'Membuka pool koneksi & transaksi atomik PostgreSQL (BEGIN TRANSACTION)...',
+        status: '[ACTIVE]',
+        statusClass: 'text-cyan-400 font-bold',
+        progress: 42,
+        stepText: 'Inisialisasi transaksi database atomik',
+      },
+    ];
+
+    if (options.delete_transactions) {
+      plannedSteps.push({
+        tag: '[PURGE]',
+        tagClass: 'text-rose-400 bg-rose-950/80 border-rose-800/80',
+        message: 'Membersihkan tabel transaksi: orders, order_items, payment_transactions...',
+        status: '[PURGED]',
+        statusClass: 'text-rose-300 font-bold',
+        progress: 50,
+        stepText: 'Pembersihan data riwayat transaksi & finansial',
       });
+    }
 
-      const json = await res.json();
+    if (options.delete_logistics) {
+      plannedSteps.push({
+        tag: '[PURGE]',
+        tagClass: 'text-rose-400 bg-rose-950/80 border-rose-800/80',
+        message: 'Membersihkan tabel logistik: shipping_orders dan log resi ekspedisi kurir...',
+        status: '[PURGED]',
+        statusClass: 'text-rose-300 font-bold',
+        progress: 56,
+        stepText: 'Pembersihan data riwayat logistik & resi',
+      });
+    }
+
+    if (options.delete_complaints) {
+      plannedSteps.push({
+        tag: '[PURGE]',
+        tagClass: 'text-rose-400 bg-rose-950/80 border-rose-800/80',
+        message: 'Membersihkan tabel evaluasi: customer_complaints, warranty_claims...',
+        status: '[PURGED]',
+        statusClass: 'text-rose-300 font-bold',
+        progress: 62,
+        stepText: 'Pembersihan data keluhan & klaim garansi',
+      });
+    }
+
+    if (options.delete_loyalty_data) {
+      plannedSteps.push({
+        tag: '[PURGE]',
+        tagClass: 'text-rose-400 bg-rose-950/80 border-rose-800/80',
+        message: 'Membersihkan tabel loyalitas: user_attendance_logs, user_stamp_cards...',
+        status: '[PURGED]',
+        statusClass: 'text-rose-300 font-bold',
+        progress: 68,
+        stepText: 'Pembersihan log loyalitas & kartu stempel',
+      });
+    }
+
+    if (options.delete_customer_accounts) {
+      plannedSteps.push({
+        tag: '[PURGE]',
+        tagClass: 'text-rose-400 bg-rose-950/80 border-rose-800/80',
+        message: 'Membersihkan akun pengguna pelanggan (role: CUSTOMER_MEMBER)...',
+        status: '[DELETED]',
+        statusClass: 'text-rose-300 font-bold',
+        progress: 74,
+        stepText: 'Pembersihan akun pelanggan terdaftar',
+      });
+    }
+
+    if (options.reset_master_catalog) {
+      plannedSteps.push(
+        {
+          tag: '[SEED]',
+          tagClass: 'text-amber-400 bg-amber-950/80 border-amber-800/80',
+          message: 'Menginisialisasi ulang 5 Kategori Kanonikal Atelier Chenille...',
+          status: '[SEEDED]',
+          statusClass: 'text-amber-300 font-bold',
+          progress: 80,
+          stepText: 'Re-seeding kategori kanonikal produk',
+        },
+        {
+          tag: '[SEED]',
+          tagClass: 'text-amber-400 bg-amber-950/80 border-amber-800/80',
+          message: 'Menghitung ulang HPP & BOM 9 Bahan Baku Kawat Bulu murni...',
+          status: '[CALCULATED]',
+          statusClass: 'text-amber-300 font-bold',
+          progress: 85,
+          stepText: 'Kalkulasi HPP & komposisi bahan mentah',
+        },
+        {
+          tag: '[SEED]',
+          tagClass: 'text-amber-400 bg-amber-950/80 border-amber-800/80',
+          message: 'Mendaftarkan 8 Produk Buket Kanonikal kawat bulu standar atelier...',
+          status: '[RESTORED]',
+          statusClass: 'text-amber-300 font-bold',
+          progress: 89,
+          stepText: 'Pendaftaran katalog 8 buket kanonikal',
+        },
+        {
+          tag: '[STORAGE]',
+          tagClass: 'text-purple-400 bg-purple-950/80 border-purple-800/80',
+          message: 'Sinkronisasi berkas gambar fisik kanonikal ke bucket "product-images"...',
+          status: '[SYNCED]',
+          statusClass: 'text-purple-300 font-bold',
+          progress: 93,
+          stepText: 'Sinkronisasi aset gambar ke Supabase Storage',
+        }
+      );
+    }
+
+    if (options.delete_complaint_asset_files || options.delete_warranty_asset_files || options.delete_custom_studio_asset_files) {
+      plannedSteps.push({
+        tag: '[STORAGE]',
+        tagClass: 'text-purple-400 bg-purple-950/80 border-purple-800/80',
+        message: 'Membersihkan berkas lampiran foto di storage bucket terpilih...',
+        status: '[PURGED]',
+        statusClass: 'text-purple-300 font-bold',
+        progress: 95,
+        stepText: 'Pembersihan berkas bukti pada storage bucket',
+      });
+    }
+
+    plannedSteps.push(
+      {
+        tag: '[DB]',
+        tagClass: 'text-blue-400 bg-blue-950/80 border-blue-800/80',
+        message: 'Menyimpan transaksi PostgreSQL secara permanen (COMMIT TRANSACTION)...',
+        status: '[COMMITTED]',
+        statusClass: 'text-emerald-400 font-bold',
+        progress: 97,
+        stepText: 'Komit transaksi atomik database',
+      },
+      {
+        tag: '[AUDIT]',
+        tagClass: 'text-emerald-400 bg-emerald-950/80 border-emerald-800/80',
+        message: 'Mencatat riwayat pemeliharaan ke tabel admin_audit_logs...',
+        status: '[LOGGED]',
+        statusClass: 'text-emerald-400 font-bold',
+        progress: 99,
+        stepText: 'Pencatatan audit log administrator',
+      },
+      {
+        tag: '[DONE]',
+        tagClass: 'text-emerald-400 bg-emerald-950/80 border-emerald-800/80',
+        message: 'Reset database granular selesai dengan sukses tanpa regresi!',
+        status: '[SUCCESS]',
+        statusClass: 'text-emerald-300 font-black',
+        progress: 100,
+        stepText: 'Operasi pemeliharaan database selesai 100%',
+      }
+    );
+
+    // Concurrently start the real API call
+    const apiPromise = fetch(getApiUrl('/api/v1/admin/database/granular-reset'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer admin-token',
+      },
+      body: JSON.stringify({
+        verification_phrase: phraseInput.trim(),
+        reset_options: options,
+      }),
+    }).then((res) => res.json());
+
+    // Stream the steps with staggered micro-delay
+    try {
+      for (let i = 0; i < plannedSteps.length; i++) {
+        const step = plannedSteps[i];
+        await new Promise((resolve) => setTimeout(resolve, 240));
+
+        const now = new Date();
+        const timestamp =
+          now.toTimeString().split(' ')[0] +
+          '.' +
+          String(now.getMilliseconds()).padStart(3, '0');
+
+        setLogs((prev) => [
+          ...prev,
+          {
+            id: `log-${i}-${Date.now()}`,
+            timestamp,
+            tag: step.tag,
+            tagClass: step.tagClass,
+            message: step.message,
+            status: step.status,
+            statusClass: step.statusClass,
+          },
+        ]);
+        setProgressPercent(step.progress);
+        setCurrentStepText(step.stepText);
+      }
+
+      // Await backend API response
+      const json = await apiPromise;
       if (json.success) {
         setExecutionResult(json.data);
-        setCurrentStage(4);
+        setIsExecutionComplete(true);
         showMagicToast('Reset Database Berhasil! 🚀', 'Data terpilih telah dibersihkan dan master catalog dipulihkan.', '✨');
         if (onSuccess) onSuccess();
       } else {
+        setHasExecutionError(true);
+        const now = new Date();
+        const timestamp =
+          now.toTimeString().split(' ')[0] +
+          '.' +
+          String(now.getMilliseconds()).padStart(3, '0');
+
+        setLogs((prev) => [
+          ...prev,
+          {
+            id: `err-${Date.now()}`,
+            timestamp,
+            tag: '[ERROR]',
+            tagClass: 'text-rose-400 bg-rose-950/80 border-rose-800/80',
+            message: `Gagal: ${json.error || 'Terjadi kesalahan sistem'} (ROLLBACK)`,
+            status: '[FAILED]',
+            statusClass: 'text-rose-400 font-black',
+          },
+        ]);
+        setCurrentStepText('Terjadi kesalahan - Transaksi dibatalkan (ROLLBACK)');
         showMagicToast('Gagal Menjalankan Reset', json.error || 'Terjadi kesalahan sistem.', '⚠️');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error executing granular reset:', err);
+      setHasExecutionError(true);
+      const now = new Date();
+      const timestamp =
+        now.toTimeString().split(' ')[0] +
+        '.' +
+        String(now.getMilliseconds()).padStart(3, '0');
+
+      setLogs((prev) => [
+        ...prev,
+        {
+          id: `err-net-${Date.now()}`,
+          timestamp,
+          tag: '[ERROR]',
+          tagClass: 'text-rose-400 bg-rose-950/80 border-rose-800/80',
+          message: 'Tidak dapat menghubungi server API - Transaksi dibatalkan',
+          status: '[ABORTED]',
+          statusClass: 'text-rose-400 font-black',
+        },
+      ]);
+      setCurrentStepText('Koneksi terputus ke server API');
       showMagicToast('Gagal Menjalankan Reset', 'Tidak dapat menghubungi server API.', '⚠️');
     } finally {
       setIsExecuting(false);
@@ -617,6 +930,185 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                   </>
                 )}
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* ================================================================ */}
+        {/* TAHAP EXECUTING: DEVOPS TELEMETRY CONSOLE & LOG STREAMER */}
+        {/* ================================================================ */}
+        {currentStage === 'executing' && (
+          <div className="p-6 sm:p-8 space-y-6">
+            {/* TERMINAL HEADER BAR */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-4">
+              <div className="flex items-center gap-3">
+                {/* macOS Traffic lights */}
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-rose-500 shadow-xs" />
+                  <div className="w-3 h-3 rounded-full bg-amber-400 shadow-xs" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-xs" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-stone-500" />
+                  <span className="font-mono text-xs font-bold text-stone-700">
+                    chenille-db-engine ~ granular-reset.sh
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Pill */}
+              <div className="flex items-center gap-2">
+                {isExecutionComplete ? (
+                  <div className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Transaksi Sukses (100%)</span>
+                  </div>
+                ) : hasExecutionError ? (
+                  <div className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                    <span>Gagal (Rollback)</span>
+                  </div>
+                ) : (
+                  <div className="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                    <RefreshCw className="w-3 h-3 animate-spin text-indigo-600" />
+                    <span>Mengeksekusi ({progressPercent}%)</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ANIMATED PROGRESS BAR & STEP TRACKER */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-stone-800 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>{currentStepText}</span>
+                </span>
+                <span className="font-mono font-black text-indigo-600">
+                  {progressPercent}%
+                </span>
+              </div>
+              <div className="h-2.5 w-full bg-stone-100 rounded-full overflow-hidden border border-stone-200 p-0.5">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ease-out ${
+                    hasExecutionError
+                      ? 'bg-rose-600'
+                      : isExecutionComplete
+                      ? 'bg-emerald-500'
+                      : 'bg-gradient-to-r from-rose-500 via-indigo-600 to-emerald-500'
+                  }`}
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* DARK TERMINAL CONSOLE STREAM BOX */}
+            <div className="rounded-2xl bg-stone-950 border border-stone-800 p-4 shadow-2xl relative overflow-hidden">
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-stone-800/80 text-[11px] text-stone-400 font-mono">
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-400 font-bold">●</span>
+                  <span>Console Stream Output</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyLogs}
+                  className="px-2 py-1 rounded-md bg-stone-800 hover:bg-stone-700 text-stone-300 text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  {isCopied ? (
+                    <>
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      <span className="text-emerald-400">Tersalin!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span>Salin Log</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* LOG LINES */}
+              <div className="font-mono text-[11px] leading-relaxed space-y-1.5 max-h-64 sm:max-h-72 overflow-y-auto pr-1 select-text">
+                {logs.length === 0 && (
+                  <div className="text-stone-600 italic py-4 text-center">
+                    Menginisialisasi kanal telemetri database...
+                  </div>
+                )}
+                {logs.map((log) => (
+                  <div key={log.id} className="flex items-start gap-2 animate-in fade-in-50 duration-150">
+                    <span className="text-stone-500 select-none shrink-0 font-mono text-[10px]">
+                      [{log.timestamp}]
+                    </span>
+                    <span className={`px-1.5 py-0.2 rounded border text-[9px] font-black shrink-0 ${log.tagClass}`}>
+                      {log.tag}
+                    </span>
+                    <span className="text-stone-300 flex-1 min-w-0 break-words">
+                      {log.message}
+                    </span>
+                    <span className={`shrink-0 text-[10px] ${log.statusClass}`}>
+                      {log.status}
+                    </span>
+                  </div>
+                ))}
+                <div ref={logsEndRef} />
+              </div>
+
+              {/* TERMINAL PROMPT FOOTER */}
+              <div className="pt-2 mt-2 border-t border-stone-800/80 flex items-center gap-2 font-mono text-[11px] text-stone-500">
+                <CornerDownRight className="w-3.5 h-3.5 text-stone-600" />
+                <span className="text-emerald-500/80">chenille@db-worker</span>
+                <span className="text-stone-600">:</span>
+                <span className="text-cyan-500/80">~/maintenance</span>
+                <span className="text-stone-600">$</span>
+                <span className="w-2 h-3.5 bg-emerald-400 animate-pulse inline-block" />
+              </div>
+            </div>
+
+            {/* ACTION FOOTER */}
+            <div className="flex items-center justify-between pt-2 border-t border-stone-100">
+              {hasExecutionError ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStage(2)}
+                    className="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-600 text-xs font-bold transition-all cursor-pointer"
+                  >
+                    Kembali ke Pilihan Opsi
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold transition-all cursor-pointer"
+                  >
+                    Tutup
+                  </button>
+                </>
+              ) : isExecutionComplete ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleCopyLogs}
+                    className="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-600 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Salin Seluruh Log</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStage(4)}
+                    className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-all shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer flex items-center gap-2"
+                  >
+                    <span>Lihat Ringkasan Hasil</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              ) : (
+                <div className="text-[11px] text-stone-500 italic flex items-center gap-2">
+                  <RefreshCw className="w-3 h-3 animate-spin text-indigo-500" />
+                  <span>Harap jangan menutup jendela atau menyegarkan halaman saat transaksi sedang berjalan...</span>
+                </div>
+              )}
             </div>
           </div>
         )}

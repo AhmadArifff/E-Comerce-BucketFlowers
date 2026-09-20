@@ -4876,3 +4876,74 @@ Seluruh 8 produk kanonikal wajib menggunakan gambar kerajinan tangan kawat bulu 
 3. **Proteksi Sakelar Toggle:**
    - Seluruh sakelar toggle diberikan properti `flex-shrink-0` dan margin yang aman sehingga tidak terpotong oleh scrollbar atau tepi batas kanan modal.
 
+---
+
+## 32. Sistem Animasi Telemetri & Real-Time Process Logging pada Granular Database Reset Suite (DevOps Terminal Experience) — v3.5
+
+### 32.1. Latar Belakang & Urgensi Visual Telemetri
+Proses reset dan migrasi database merupakan operasi tingkat kritis (*destructive high-stakes operation*). Pada implementasi awal, setelah menekan tombol konfirmasi akhir, pengguna hanya dihadapkan pada indikator *spinner* sederhana pada tombol (*"Mengeksekusi Reset..."*).
+Kelemahan pendekatan ini:
+1. **Ketidakpastian Proses (*Black-Box Dilemma*):** Pengguna tidak mengetahui apakah sistem sedang bekerja, terhenti (*freeze*), atau mengalami *network timeout*.
+2. **Kurang Informatif:** Tidak ada visibilitas mengenai tahapan teknis internal yang sedang berlangsung (pembukaan transaksi PostgreSQL, pembersihan tabel, re-seeding kanonikal, atau pengunggahan aset ke Supabase Storage).
+3. **Kesan Kurang Profesional:** Standar aplikasi modern (*enterprise grade*) menyajikan visualisasi telemetri proses *real-time* yang memberikan kepuasan visual, transparansi audit, dan rasa percaya (*user confidence*).
+
+### 32.2. Spesifikasi Komponen DevOps Terminal Console & Micro-Animations
+Saat proses reset dimulai dari Tahap 3, sistem secara dinamis memunculkan antarmuka **DevOps Telemetry Console** terintegrasi:
+
+```mermaid
+flowchart TD
+    A["Admin Klik: 'Hapus Permanen Data Terpilih' (Tahap 3)"] --> B["Buka Tampilan Telemetri: Stage 'EXECUTING_LOGS'"]
+    B --> C["Inisialisasi Progress Bar (0%) & Status Pill 'LIVE OPERATION'"]
+    C --> D["Step 1: Auth & Admin Self-Preservation Check (0% -> 15%)"]
+    D --> E["Step 2: Validasi Frasa & Buka PostgreSQL Transaction (15% -> 30%)"]
+    E --> F["Step 3: Purge Tabel Granular Sesuai Toggle Matrix (30% -> 55%)"]
+    F --> G["Step 4: Re-seed Master Katalog & Bahan Baku (55% -> 75%)"]
+    G --> H["Step 5: Sinkronisasi Aset Gambar ke Supabase Storage (75% -> 90%)"]
+    H --> I["Step 6: Commit Transaksi Atomik & Simpan Audit Log (90% -> 100%)"]
+    I --> J{"Eksekusi Berhasil?"}
+    J -- Ya --> K["Status 'COMPLETED' (Hijau) + Tombol 'Lihat Ringkasan Hasil'"]
+    J -- Gagal / Error --> L["Status 'FAILED' (Merah) + Rollback Notice + Tombol 'Kembali'"]
+```
+
+#### 32.2.1. Elemen Desain & Visual Hierarchy
+1. **Window Header Konsol (macOS/Unix Style):**
+   * Tiga tombol dekoratif (*traffic lights*): Merah (`#ff5f56`), Kuning (`#ffbd2e`), Hijau (`#27c93f`).
+   * Judul Konsol: `chenille-db-engine ~ granular-reset.sh (PID: 48921)`.
+   * Badge Status Berkedip: `● MENGEKSEKUSI TRANSAKSI ATOMIK` dengan efek *pulsing dot* berlatar amber/rose halus.
+
+2. **Animated Progress Bar & Step Tracker:**
+   * Batang kemajuan (*progress bar*) dengan gradien warna dinamis (Indigo ke Rose atau Rose ke Emerald).
+   * Persentase numerik dengan interpolasi halus ($0\% \rightarrow 100\%$).
+   * Label deskripsi langkah aktif: Contoh *"Langkah 3 dari 6: Membersihkan Tabel Relasional & Log Transaksi..."*.
+
+3. **DevOps Terminal Stream Box (`bg-stone-950`):**
+   * Menggunakan tipografi monospace modern (`font-mono text-[11px] leading-relaxed`).
+   * Warna teks kontras tinggi dengan palet semantik:
+     - Timestamp: `text-stone-500` (format `[HH:mm:ss.SSS]`).
+     - Tag Modul:
+       - `[AUTH]` : `text-cyan-400 font-bold` (Verifikasi identitas & token).
+       - `[GUARD]` : `text-emerald-400 font-bold` (Proteksi akun admin aktif).
+       - `[SAFETY]`: `text-indigo-400 font-bold` (Validasi frasa verifikasi).
+       - `[DB]`     : `text-blue-400 font-bold` (Koneksi & transaksi PostgreSQL).
+       - `[PURGE]`  : `text-rose-400 font-bold` (Pembersihan tabel terpilih).
+       - `[SEED]`   : `text-amber-400 font-bold` (Re-seeding master data & BOM).
+       - `[STORAGE]`: `text-purple-400 font-bold` (Sinkronisasi bucket Supabase).
+       - `[DONE]`   : `text-emerald-400 font-bold` (Penyelesaian transaksi).
+     - Status Hasil Per Baris: `[OK]`, `[PRESERVED]`, `[OPEN]`, `[PURGED]`, `[SEEDED]`, `[SYNCED]`, `[COMMITTED]`.
+   * Efek kursor berkedip (*blinking terminal cursor* `█` atau `_`).
+   * *Auto-scroll* otomatis ke baris log terbaru setiap ada penambahan entri log.
+
+4. **Fitur Salin Log (*Copy Logs to Clipboard*):**
+   * Tombol utilitas berikon *clipboard* untuk menyalin seluruh baris log teks ke clipboard guna mempermudah pelaporan teknis atau arsip admin.
+
+### 32.3. Koreografi Langkah & Sinkronisasi Eksekusi
+Untuk menghasilkan pengalaman visual yang mulus tanpa mengorbankan performa:
+1. **Sinkronisasi Asinkronus Real-Time:**
+   - Saat request `POST /api/v1/admin/database/granular-reset` dikirimkan ke server backend, *telemetry engine* di frontend mengalirkan langkah-langkah log proses secara bertahap dengan jeda mikro (*micro-stagger delay* 200–350ms).
+   - Log disesuaikan secara dinamis dengan opsi toggle yang dipilih admin (hanya menampilkan log untuk modul yang diaktifkan).
+2. **Kondisi Selesai (*Completion Handshake*):**
+   - Begitu API backend mengembalikan status respon berhasil, kemajuan progress di-snap ke $100\%$, log penutupan `[COMMIT]` dan `[DONE]` dicetak, dan tombol beralih menjadi `Lihat Ringkasan Hasil` yang mengarahkan pengguna ke Tahap 4 (Ringkasan Eksekusi).
+3. **Penanganan Galat (*Graceful Failure State*):**
+   - Jika terjadi galat jaringan atau error dari backend, terminal mencetak baris log merah `[ERROR] Transaksi dibatalkan (ROLLBACK) - Tidak ada data yang rusak`, progress bar berubah merah, dan disediakan tombol untuk memeriksa kendala atau mencoba kembali.
+
+
