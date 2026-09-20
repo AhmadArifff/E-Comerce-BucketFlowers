@@ -112,6 +112,35 @@ enum CustomCategory {
   ACCESSORY_ADDON
 }
 
+enum ComplaintCategory {
+  KETERLAMBATAN_PENGIRIMAN
+  KERUSAKAN_BUNGA
+  KETIDAKSESUAIAN_PESANAN
+  PELAYANAN_FLORIST
+  LAINNYA
+}
+
+enum ComplaintSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ComplaintStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+enum ComplaintCompensation {
+  NONE
+  VOUCHER_DISCOUNT
+  REPLACEMENT_BOUQUET
+  REFUND
+}
+
 // ============================================================================
 // MODELS
 // ============================================================================
@@ -128,9 +157,10 @@ model User {
   profile       Profile?
   addresses     UserAddress[]
   orders        Order[]
-  chat_sessions ChatSession[]
-  reviews       ProductReview[]
-  saved_designs SavedCustomDesign[]
+  chat_sessions      ChatSession[]
+  reviews            ProductReview[]
+  saved_designs      SavedCustomDesign[]
+  handled_complaints CustomerComplaint[]
 
   @@index([role])
 }
@@ -414,6 +444,7 @@ model Order {
   status_histories       OrderStatusHistory[]
   transactions           PaymentTransaction[]
   reviews                ProductReview[]
+  complaints             CustomerComplaint[]
 
   @@index([user_id])
   @@index([customer_phone])
@@ -678,4 +709,34 @@ model CustomerOccasion {
   @@index([user_phone])
   @@index([event_date])
   @@map("customer_occasions")
+}
+
+// ============================================================================
+// CUSTOMER COMPLAINTS FOR QUALITY EVALUATION (PRD Seksi 30)
+// ============================================================================
+
+model CustomerComplaint {
+  id                  String                @id @default(uuid())
+  order_id            String?
+  order               Order?                @relation(fields: [order_id], references: [id], onDelete: SetNull)
+  customer_name       String
+  customer_phone      String
+  complaint_category  ComplaintCategory
+  description         String                @db.Text
+  evidence_photo_url  String?
+  severity            ComplaintSeverity     @default(MEDIUM)
+  status              ComplaintStatus       @default(SUBMITTED)
+  resolution_notes    String?               @db.Text
+  compensation_type   ComplaintCompensation @default(NONE)
+  compensation_amount Decimal               @default(0) @db.Decimal(12, 2)
+  handled_by_admin_id String?
+  handled_by_admin    User?                 @relation(fields: [handled_by_admin_id], references: [id], onDelete: SetNull)
+  created_at          DateTime              @default(now())
+  resolved_at         DateTime?
+
+  @@index([order_id])
+  @@index([status])
+  @@index([complaint_category])
+  @@index([created_at])
+  @@map("customer_complaints")
 }

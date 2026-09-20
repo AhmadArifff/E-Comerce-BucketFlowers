@@ -270,3 +270,100 @@ export interface CustomStudioOption {
   created_at?: string;
 }
 
+// ==============================================================================
+// CUSTOMER COMPLAINTS & QUALITY EVALUATION (PRD Seksi 30)
+// ==============================================================================
+
+export type ComplaintCategory =
+  | 'KETERLAMBATAN_PENGIRIMAN'
+  | 'KERUSAKAN_BUNGA'
+  | 'KETIDAKSESUAIAN_PESANAN'
+  | 'PELAYANAN_FLORIST'
+  | 'LAINNYA';
+
+export type ComplaintSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export type ComplaintStatus = 'SUBMITTED' | 'UNDER_REVIEW' | 'RESOLVED' | 'REJECTED';
+
+export type ComplaintCompensation =
+  | 'NONE'
+  | 'VOUCHER_DISCOUNT'
+  | 'REPLACEMENT_BOUQUET'
+  | 'REFUND';
+
+export interface CustomerComplaint {
+  id: string;
+  order_id?: string | null;
+  customer_name: string;
+  customer_phone: string;
+  complaint_category: ComplaintCategory;
+  description: string;
+  evidence_photo_url?: string | null;
+  severity: ComplaintSeverity;
+  status: ComplaintStatus;
+  resolution_notes?: string | null;
+  compensation_type: ComplaintCompensation;
+  compensation_amount: number;
+  handled_by_admin_id?: string | null;
+  created_at: string;
+  resolved_at?: string | null;
+}
+
+export interface CreateComplaintPayload {
+  order_id?: string | null;
+  customer_name: string;
+  customer_phone: string;
+  complaint_category: ComplaintCategory;
+  description: string;
+  evidence_photo_url?: string | null;
+}
+
+export interface UpdateComplaintPayload {
+  status?: ComplaintStatus;
+  severity?: ComplaintSeverity;
+  resolution_notes?: string | null;
+  compensation_type?: ComplaintCompensation;
+  compensation_amount?: number;
+  handled_by_admin_id?: string | null;
+}
+
+export interface ComplaintMetrics {
+  total_complaints: number;
+  resolved_complaints: number;
+  pending_complaints: number;
+  complaint_rate_pct: number;
+  mttr_hours: number;
+  category_breakdown: Record<ComplaintCategory, number>;
+}
+
+// ==============================================================================
+// GRANULAR DATABASE RESET SUITE (PRD Seksi 30)
+// ==============================================================================
+
+export interface GranularResetOptions {
+  delete_transactions: boolean;
+  delete_logistics: boolean;
+  delete_complaints: boolean;
+  delete_loyalty_data: boolean;
+  delete_customer_accounts: boolean;
+  reset_master_catalog: boolean;
+  delete_complaint_asset_files: boolean;
+  delete_warranty_asset_files: boolean;
+  delete_custom_studio_asset_files: boolean;
+}
+
+export interface GranularResetRequest {
+  verification_phrase: string;
+  reset_options: GranularResetOptions;
+}
+
+export interface GranularResetResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    tables_affected: Record<string, string>;
+    storage_files_deleted: number;
+    admin_account_preserved: string;
+    executed_at: string;
+  };
+}

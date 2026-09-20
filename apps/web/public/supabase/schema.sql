@@ -690,3 +690,75 @@ VALUES
 ON CONFLICT (key) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description;
+
+-- ============================================================================
+-- 21. CUSTOMER COMPLAINTS & QUALITY EVALUATION (PRD Seksi 30)
+-- ============================================================================
+
+DO $$ BEGIN
+    CREATE TYPE complaint_category_enum AS ENUM (
+        'KETERLAMBATAN_PENGIRIMAN',
+        'KERUSAKAN_BUNGA',
+        'KETIDAKSESUAIAN_PESANAN',
+        'PELAYANAN_FLORIST',
+        'LAINNYA'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE complaint_severity_enum AS ENUM (
+        'LOW',
+        'MEDIUM',
+        'HIGH',
+        'CRITICAL'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE complaint_status_enum AS ENUM (
+        'SUBMITTED',
+        'UNDER_REVIEW',
+        'RESOLVED',
+        'REJECTED'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE complaint_compensation_enum AS ENUM (
+        'NONE',
+        'VOUCHER_DISCOUNT',
+        'REPLACEMENT_BOUQUET',
+        'REFUND'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS customer_complaints (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID REFERENCES orders(id) ON DELETE SET NULL,
+    customer_name VARCHAR(150) NOT NULL,
+    customer_phone VARCHAR(30) NOT NULL,
+    complaint_category complaint_category_enum NOT NULL,
+    description TEXT NOT NULL,
+    evidence_photo_url TEXT,
+    severity complaint_severity_enum DEFAULT 'MEDIUM',
+    status complaint_status_enum DEFAULT 'SUBMITTED',
+    resolution_notes TEXT,
+    compensation_type complaint_compensation_enum DEFAULT 'NONE',
+    compensation_amount NUMERIC(12, 2) DEFAULT 0,
+    handled_by_admin_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    resolved_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_complaints_order ON customer_complaints(order_id);
+CREATE INDEX IF NOT EXISTS idx_complaints_status ON customer_complaints(status);
+CREATE INDEX IF NOT EXISTS idx_complaints_category ON customer_complaints(complaint_category);
+CREATE INDEX IF NOT EXISTS idx_complaints_created_at ON customer_complaints(created_at);
