@@ -17,6 +17,8 @@ import campaignsRoutes from './campaigns.routes.js';
 import loyaltyRoutes from './loyalty.routes.js';
 import telemetryRoutes from './telemetry.routes.js';
 import occasionsRoutes from './occasions.routes.js';
+import complaintsRoutes from './complaints.routes.js';
+import databaseMaintenanceRoutes from './database-maintenance.routes.js';
 import { authLimiter, otpLimiter, checkoutLimiter } from '../middleware/rate-limiter.js';
 
 const apiV1Router = Router();
@@ -30,9 +32,11 @@ apiV1Router.use('/cod-points', codRoutes);
 apiV1Router.use('/cod', codRoutes);
 apiV1Router.use('/raw-materials', materialsRoutes);
 apiV1Router.use('/admin', adminRoutes);
+apiV1Router.use('/admin/database', databaseMaintenanceRoutes);
 apiV1Router.use('/coupons', couponsRoutes);
 apiV1Router.use('/chat', chatRoutes);
 apiV1Router.use('/warranty', warrantyRoutes);
+apiV1Router.use('/complaints', complaintsRoutes);
 apiV1Router.use('/auth', authLimiter, authRoutes);
 apiV1Router.use('/custom-studio', customStudioRoutes);
 apiV1Router.use('/procurement', procurementRoutes);
@@ -42,4 +46,5 @@ apiV1Router.use('/telemetry', telemetryRoutes);
 apiV1Router.use('/occasions', occasionsRoutes);
 
 export default apiV1Router;
+
 
