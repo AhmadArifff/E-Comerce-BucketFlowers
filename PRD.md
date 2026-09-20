@@ -4614,5 +4614,220 @@ npm run db:seed --workspace=@chenille/api
 9. `feature_toggles`: 7 sakelar fitur toko.
 10. `campaign_settings`: Pengaturan absensi harian, kartu stempel, dan event wisuda.
 
+---
 
+## Seksi 30: Sistem Manajemen Komplain Evaluasi & Granular Database Reset Suite dengan Multi-Stage Confirmation — v3.4
 
+### 30.1 Latar Belakang & Urgensi Sistem Komplain untuk Evaluasi Berkelanjutan
+Dalam industri kerajinan buket bunga kawat bulu (*handmade chenille craft*), kepuasan pelanggan ditentukan oleh kombinasi kualitas estetika fisik, kerapian pembungkusan (*wrapping*), keutuhan produk saat diterima melalui ekspedisi/COD, serta keramahan komunikasi florist.
+
+Untuk mewujudkan prinsip *Continuous Quality Improvement* (Kaizen), sistem menyediakan modul **Pencatatan & Manajemen Komplain Pelanggan (`customer_complaints`)** yang terintegrasi di Admin Panel dengan tujuan:
+1. **Identifikasi Titik Lemah Operasional:** Melacak penyebab utama ketidakpuasan pelanggan (misal: bunga peyot akibat handling kurir ekspedisi, salah warna kawat bulu, atau keterlambatan pesanan wisuda).
+2. **Evaluasi Standar Kerja Pengrajin & Logistik:** Memberikan metrik performa objektif bagi tim florist mengenai kerapian pengeleman kawat bulu, kekuatan kawat batang penyangga, dan efektivitas proteksi kemasan (*corrugated box* + *bubble wrap*).
+3. **Penyelesaian Cepat & Retensi Pelanggan:** Memastikan setiap keluhan terdokumentasi dengan bukti foto otentik, memiliki status penanganan yang jelas, dan solusi kompensasi yang adil (voucher diskon, ganti buket baru, atau pengembalian dana).
+
+---
+
+### 30.2 Spesifikasi Skema Database Modul Komplain Pelanggan (`customer_complaints`)
+
+```sql
+-- ENUM Tipe Kategori Komplain
+CREATE TYPE complaint_category_enum AS ENUM (
+    'KETERLAMBATAN_PENGIRIMAN',   -- Pesanan datang melewati jadwal acara/wisuda
+    'KERUSAKAN_BUNGA',            -- Kelopak kawat bulu peyot/patah/lepas saat pengiriman
+    'KETIDAKSESUAIAN_PESANAN',    -- Warna/karakter/kartu ucapan tidak sesuai pesanan/Custom Studio
+    'PELAYANAN_FLORIST',          -- Respon lambat atau komunikasi tidak ramah
+    'LAINNYA'                     -- Kasus khusus lainnya
+);
+
+-- ENUM Tingkat Keparahan Komplain
+CREATE TYPE complaint_severity_enum AS ENUM (
+    'LOW',                        -- Keluhan minor (kartu ucapan ada typo kecil, dapat diselesaikan via chat)
+    'MEDIUM',                     -- Bunga sedikit miring namun masih dapat diperbaiki sendiri oleh pembeli
+    'HIGH',                       -- Kerusakan signifikan pada buket utama atau keterlambatan hari H wisuda
+    'CRITICAL'                    -- Paket hilang/rusak total atau komplain eskalasi publik
+);
+
+-- ENUM Status Penanganan Komplain
+CREATE TYPE complaint_status_enum AS ENUM (
+    'SUBMITTED',                  -- Komplain baru diajukan oleh pelanggan
+    'UNDER_REVIEW',               -- Sedang diteliti oleh admin/florist lead dengan bukti foto
+    'RESOLVED',                   -- Masalah selesai diselesaikan dengan solusi yang disepakati
+    'REJECTED'                    -- Ditolak setelah investigasi (misal: klaim palsu / bukan kelalaian atelier)
+);
+
+-- ENUM Bentuk Kompensasi
+CREATE TYPE complaint_compensation_enum AS ENUM (
+    'NONE',                       -- Tanpa kompensasi finansial (hanya permintaan maaf & perbaikan catatan)
+    'VOUCHER_DISCOUNT',           -- Pemberian kode kupon diskon untuk pesanan berikutnya
+    'REPLACEMENT_BOUQUET',        -- Pengiriman buket pengganti gratis
+    'REFUND'                      -- Pengembalian dana penuh atau sebagian
+);
+
+-- Tabel customer_complaints
+CREATE TABLE IF NOT EXISTS customer_complaints (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID REFERENCES orders(id) ON DELETE SET NULL,
+    customer_name VARCHAR(150) NOT NULL,
+    customer_phone VARCHAR(30) NOT NULL,
+    complaint_category complaint_category_enum NOT NULL,
+    description TEXT NOT NULL,
+    evidence_photo_url TEXT,                         -- URL foto fisik buket/kemasan di Supabase Storage
+    severity complaint_severity_enum DEFAULT 'MEDIUM',
+    status complaint_status_enum DEFAULT 'SUBMITTED',
+    resolution_notes TEXT,                           -- Catatan investigasi & tindakan perbaikan admin
+    compensation_type complaint_compensation_enum DEFAULT 'NONE',
+    compensation_amount NUMERIC(12, 2) DEFAULT 0,    -- Nilai rupiah refund / voucher jika ada
+    handled_by_admin_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    resolved_at TIMESTAMPTZ
+);
+
+-- Indeks untuk pencarian cepat & analitik evaluasi
+CREATE INDEX IF NOT EXISTS idx_complaints_order ON customer_complaints(order_id);
+CREATE INDEX IF NOT EXISTS idx_complaints_status ON customer_complaints(status);
+CREATE INDEX IF NOT EXISTS idx_complaints_category ON customer_complaints(complaint_category);
+CREATE INDEX IF NOT EXISTS idx_complaints_created_at ON customer_complaints(created_at);
+```
+
+#### Metrik Evaluasi Kualitas Layanan di Dashboard Admin:
+* **Complaint Rate (%):** $(\text{Total Komplain} / \text{Total Pesanan Selesai}) \times 100\%$ (Target: $< 1.5\%$).
+* **Mean Time to Resolution (MTTR):** Rata-rata durasi penanganan komplain dari `SUBMITTED` hingga `RESOLVED` (Target: $< 24$ jam).
+* **Pareto Kategori Komplain:** Grafik visualisasi kategori komplain terbanyak untuk fokus perbaikan material atau SOP packing.
+
+---
+
+### 30.3 Matriks Klasifikasi Data Terproteksi (Protected Core Tables Matrix)
+
+Saat melakukan pemeliharaan database, pengujian (*staging*), atau *migrate refresh*, sistem membedakan secara tegas antara **Master Data Statis** dan **Protected Core Data**:
+
+| Kategori Data | Nama Tabel Terkait | Status Standar Migrasi | Alasan Proteksi Bisnis & Hukum |
+| :--- | :--- | :--- | :--- |
+| **Transaksi & Finansial** | `orders`, `order_items`, `payment_transactions`, `order_status_histories` | 🔒 **TERPROTEKSI KETAT** | Bukti transaksi Midtrans riil, rekonsiliasi kas, pelaporan omzet, audit pajak, dan riwayat pesanan pelanggan. |
+| **Logistik & Pengiriman** | `shipping_orders`, data resi Biteship/JNE, koordinat COD transaksi | 🔒 **TERPROTEKSI KETAT** | Bukti serah terima kurir/COD, pelacakan histori klaim asuransi barang hilang, dan evaluasi performa ekspedisi. |
+| **Evaluasi Kualitas & Garansi** | `customer_complaints`, `warranty_claims`, `product_reviews`, `waste_material_logs` | 🔒 **TERPROTEKSI KETAT** | Bahan evaluasi berkelanjutan kualitas buket kawat bulu, histori klaim garansi 30 hari, dan efisiensi konsumsi bahan. |
+| **CRM, Loyalitas, & Pengguna** | `users` (customer), `user_attendance_logs`, `user_stamp_cards`, `customer_occasions` | 🔒 **TERPROTEKSI KETAT** | Hak loyalitas pelanggan (poin, streak absensi, kartu stempel digital), pengingat momen hari spesial (H-3 WhatsApp). |
+| **Akun Admin yang Sedang Aktif** | `users` (dengan ID `current_admin_id`) | 🛡️ **ABSOLUT TERKUNCI** | **Admin Self-Preservation Policy**: Sistem menolak keras menghapus akun admin yang sedang login untuk mencegah penguncian sistem (*lockout*). |
+| **Master Data Katalog & Opsi** | `products`, `categories`, `raw_materials`, `bill_of_materials`, `custom_studio_options`, `store_settings` | 🔄 **DAPAT DI-SEED ULANG** | Data acuan kanonikal produk dan bahan baku yang dapat di-reset ke standar pabrik via `npm run db:seed`. |
+
+---
+
+### 30.4 Desain Suite Migrate Refresh & Reset Database Granular di Admin Panel
+
+Fitur ini dirancang khusus untuk administrator toko yang membutuhkan fleksibilitas dalam membersihkan data uji coba (*testing data*) atau melakukan inisialisasi ulang sistem, **tanpa risiko menghapus data vital secara tidak sengaja**.
+
+```mermaid
+flowchart TD
+    A["Tombol Admin: '⚠️ Pemeliharaan & Reset Database'"] --> B["Tahap 1: Pre-Flight Safety Informational Alert"]
+    B --> C{"Admin Membaca Informasi & Klik 'Lanjut ke Opsi Reset'?"}
+    C -- Tidak / Batal --> D["Batal & Kembali ke Menu Pengaturan"]
+    C -- Ya --> E["Tahap 2: Modal Seleksi Data Granular (Toggles)"]
+    E --> F["Pilih Toggle Data Teks & Berkas Aset Gambar"]
+    F --> G["Kunci Otomatis: Akun Admin Aktif Dilarang Dihapus"]
+    G --> H["Klik 'Lanjut ke Konfirmasi Akhir'"]
+    H --> I["Tahap 3: Modal Konfirmasi Ganda (Double-Confirmation)"]
+    I --> J["Wajib Ketik Frasa: 'RESET-DATABASE-CHENILLE'"]
+    J --> K{"Frasa Valid 100% & Klik 'Mulai Reset'?"}
+    K -- Tidak Sesuai --> L["Tombol Disabled / Validasi Gagal"]
+    K -- Ya --> M["Backend Endpoint: POST /api/v1/admin/database/granular-reset"]
+    M --> N["PostgreSQL Atomic Transaction (BEGIN ... COMMIT)"]
+    N --> O["Audit Log Dicatat di admin_audit_logs"]
+    O --> P["Notifikasi Berhasil & Refresh Halaman"]
+```
+
+#### 30.4.1 Tahap 1: Pre-Flight Safety Informational Alert (Pencegahan Human Error)
+Sebelum membuka opsi seleksi, sistem memunculkan kotak pesan peringatan (*amber warning box*):
+* **Pesan Utama:** *"Perhatian: Tindakan reset database akan menghapus data yang Anda tentukan secara permanen dari server PostgreSQL dan Supabase Storage. Data yang telah dihapus tidak dapat dipulihkan kembali."*
+* **Informasi Rinci Konsekuensi:**
+  * Penjelasan dampak penghapusan terhadap laporan keuangan dan histori pesanan jika toggle transaksi diaktifkan.
+  * Jaminan keamanan akun admin: *"Akun Anda (`admin@chenilleflowers.com`) dilindungi secara otomatis dan tidak akan pernah terhapus."*
+* **Aksi Pengguna:** Tombol `Saya Memahami Risikonya, Buka Menu Seleksi` atau `Batal`.
+
+#### 30.4.2 Tahap 2: Modal Seleksi Data Granular (Granular Selection Toggles)
+Modal interaktif dengan daftar sakelar (*toggle switch*) yang memungkinkan admin menentukan secara presisi data apa saja yang ingin dihapus:
+
+1. **Kelompok Data Teks (Database Tables):**
+   * `[Toggle: OFF]` **Riwayat Transaksi & Finansial:** Menghapus `orders`, `order_items`, `payment_transactions`, `order_status_histories`. (Default: OFF / Terproteksi).
+   * `[Toggle: OFF]` **Riwayat Logistik & Pengiriman:** Menghapus `shipping_orders` dan log resi ekspedisi. (Default: OFF / Terproteksi).
+   * `[Toggle: OFF]` **Data Komplain & Klaim Garansi:** Menghapus `customer_complaints` dan `warranty_claims`. (Default: OFF / Terproteksi).
+   * `[Toggle: OFF]` **Loyalitas Pelanggan & Momen:** Menghapus `user_attendance_logs`, `user_stamp_cards`, `customer_occasions`. (Default: OFF / Terproteksi).
+   * `[Toggle: OFF]` **Akun Pelanggan (Customer Users):** Menghapus seluruh user ber-role `customer`. (Default: OFF / Terproteksi).
+   * `[Toggle: ON]` **Data Master Katalog & Bahan Baku:** Mereset tabel `products`, `categories`, `raw_materials`, `bill_of_materials` dan menjalankan *re-seed* kanonikal otomatis.
+   * `[LOCKED: OFF]` **Akun Admin Aktif:** Status terkunci (*disabled*) dengan label *"Akun admin Anda saat ini dilindungi dari penghapusan"*.
+
+2. **Kelompok Berkas Fisik & Aset Gambar (Storage Buckets):**
+   * `[Toggle: OFF]` **Aset Bukti Komplain Pelanggan:** Menghapus foto fisik keluhan yang tersimpan di bucket storage.
+   * `[Toggle: OFF]` **Aset Bukti Garansi & Nota Manual:** Menghapus berkas lampiran klaim garansi.
+   * `[Toggle: OFF]` **Aset Gambar Custom Studio User:** Menghapus gambar referensi yang diunggah pelanggan saat konsultasi studio.
+
+3. **Impact Summary Bar:**
+   * Menampilkan ringkasan langsung: *"Data yang dipilih untuk dihapus: X baris tabel, Y berkas aset storage."*
+   * Tombol `Lanjutkan ke Konfirmasi Akhir` (Warna Merah/Destructive).
+
+#### 30.4.3 Tahap 3: Modal Konfirmasi Ganda (Critical Double-Confirmation Modal)
+Untuk menghindari ketidaksengajaan klik:
+* **Tampilan Dialog Bahaya:** Ikon peringatan merah berkedip lembut (*danger pulsing indicator*).
+* **Instruksi Validasi Ketat:**
+  * Pengguna diwajibkan mengetik frasa verifikasi persis:
+  $$\mathbf{\text{RESET-DATABASE-CHENILLE}}$$
+* **State Tombol Eksekusi:**
+  * Tombol `Hapus Permanen Data Terpilih` berada dalam status *disabled* ($opacity: 50\%$) selama input teks belum cocok 100%.
+  * Begitu teks valid, tombol berubah menjadi aktif dengan efek visual tegas.
+* **Proses Eksekusi & Feedback:**
+  * Menampilkan *progress loading bar* saat proses migrasi/penghapusan berjalan di latar belakang.
+  * Mencegah penutupan modal (*backdrop click disabled*) saat operasi I/O database sedang berlangsung.
+
+---
+
+### 30.5 Spesifikasi Kontrak API Backend (`POST /api/v1/admin/database/granular-reset`)
+
+#### Request Header & Authentication:
+* `Authorization: Bearer <ADMIN_JWT_TOKEN>`
+* Wajib melalui middleware `requireAdmin`.
+
+#### Request Body (JSON Payload):
+```json
+{
+  "verification_phrase": "RESET-DATABASE-CHENILLE",
+  "reset_options": {
+    "delete_transactions": false,
+    "delete_logistics": false,
+    "delete_complaints": false,
+    "delete_loyalty_data": false,
+    "delete_customer_accounts": false,
+    "reset_master_catalog": true,
+    "delete_complaint_asset_files": false,
+    "delete_warranty_asset_files": false,
+    "delete_custom_studio_asset_files": false
+  }
+}
+```
+
+#### Aturan Eksekusi Backend (Security & Atomicity Constraints):
+1. **Validasi Frasa:** Jika `verification_phrase !== 'RESET-DATABASE-CHENILLE'`, kembalikan `400 Bad Request` seketika.
+2. **Admin Self-Preservation Guard:**
+   * Query penghapusan akun pengguna wajib menyertakan filter:
+   ```sql
+   DELETE FROM users WHERE role = 'customer' OR (role = 'admin' AND id != :current_admin_id);
+   ```
+   * Akun dengan `id === req.user.id` tidak boleh tersentuh sama sekali.
+3. **Database Transaction Block:** Seluruh operasi penghapusan dan re-seed dibungkus dalam blok `BEGIN ... COMMIT`. Jika terjadi galat pada salah satu tabel, lakukan `ROLLBACK` penuh.
+4. **Audit Logging:** Setiap kali endpoint ini dipanggil, buat catatan di `admin_audit_logs` berisi ID admin, alamat IP, timestamp, dan daftar tabel yang direset.
+
+#### Response JSON:
+```json
+{
+  "success": true,
+  "message": "Reset database granular berhasil dijalankan.",
+  "data": {
+    "tables_affected": {
+      "products": "re-seeded",
+      "raw_materials": "re-seeded",
+      "bill_of_materials": "re-seeded"
+    },
+    "storage_files_deleted": 0,
+    "admin_account_preserved": "admin@chenilleflowers.com",
+    "executed_at": "2026-09-20T09:30:00.000Z"
+  }
+}
+```
