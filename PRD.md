@@ -5122,6 +5122,70 @@ Untuk menjaga keindahan estetika (*Rich Aesthetics* & *UI/UX Pro Max*) tanpa mem
    - **Admin CS Hub (`CSHubModal.tsx`):** Menjalankan interval polling setiap 3 detik saat tab CS WhatsApp Hub aktif untuk memperbarui daftar sesi dan histori pesan sesi yang sedang dipilih.
    - **Storefront Widget (`LiveChatWidget.tsx`):** Menjalankan interval polling setiap 3 detik saat jendela chat sedang terbuka (`isOpen = true`) untuk menarik pesan balasan terbaru dari florist admin.
 
+---
+
+## 37. Peningkatan Kualitas CS Webchat Hub — Real-Time Admin Notification, Unread Badge System & Bot Sapaan Tunggal — v4.0
+
+### 37.1. Latar Belakang & Motivasi Perubahan
+1. **Respons Admin Tidak Real-Time:** Panel Admin CS Hub memerlukan refresh manual halaman agar pesan pelanggan terbaru dari storefront dapat terlihat. Hal ini menyebabkan waktu respons lambat dan pelayanan tidak optimal.
+2. **Ketiadaan Indikator Pesan Belum Dibalas:** Admin staf tidak memiliki sinyal visual untuk memprioritaskan sesi percakapan mana yang memerlukan perhatian segera (*unread badge*).
+3. **Bot AI Merespons Berulang Kali:** Setiap pesan pelanggan secara otomatis dijawab oleh bot AI dengan balasan berbasis kata kunci, memberikan kesan pelayanan dilakukan mesin, bukan manusia. Staf tidak selalu memonitoring sistem sehingga ekspektasi pelanggan harus dikelola sejak awal.
+
+---
+
+### 37.2. Kebijakan Bot Sapaan Tunggal (*Single-Shot Welcome Bot Policy*)
+1. **Aturan 1× Balasan Bot Per Sesi:**
+   - Bot AI hanya membalas **satu kali** dalam satu sesi percakapan, yaitu saat pelanggan mengirimkan **pesan pertamanya**.
+   - Setelah bot sapaan terkirim, semua pesan berikutnya dari pelanggan masuk ke antrian staf manusia **tanpa** balasan bot otomatis tambahan.
+2. **Isi Sapaan Tunggal Bot:**
+   > _"Halo kak! Pesan Anda sudah kami terima 🌸_
+   > _Staf Florist Atelier kami akan merespons pesan Anda dalam waktu 1×24 jam kerja._
+   > _Jika Anda membutuhkan respons lebih cepat atau ingin langsung memesan, silakan klik tombol "Buka WhatsApp" di atas untuk terhubung langsung via WhatsApp._
+   > _Terima kasih telah menghubungi Chenille Flowers! 💐"_
+3. **Mekanisme Teknis Pencegahan Duplikasi Bot:**
+   - Backend `POST /api/v1/chat/message` melakukan query `SELECT id FROM chat_messages WHERE session_id = $1 AND sender = 'BOT' LIMIT 1` sebelum mengirim sapaan.
+   - Jika sudah ada ≥ 1 pesan bot pada sesi tersebut, blok auto-reply dilewati sepenuhnya (*skip*).
+4. **Penghapusan Fallback Bot Client-Side:**
+   - Logika fallback bot offline di `useChatStore.ts` (yang merespons ketika API gagal) telah dihapus untuk konsistensi kebijakan 1× balasan.
+
+---
+
+### 37.3. Sistem Notifikasi Pesan Belum Dibalas (*Unread Badge System*)
+1. **Kalkulasi `unread_count` di Backend:**
+   - Query `GET /api/v1/chat/sessions` menyertakan subquery yang menghitung semua pesan `CUSTOMER` yang terkirim setelah pesan `FLORIST` terakhir.
+   - Jika staf belum pernah membalas, semua pesan pelanggan dianggap belum dibaca (*unread*).
+2. **Tampilan Badge Visual pada Panel Admin (`CSHubModal.tsx`):**
+   - **Badge pada Kartu Sesi:** Lingkaran merah kecil berisi angka pada setiap kartu sesi di sidebar kiri jika `unread_count > 0`.
+   - **Kartu Sesi Berubah Warna:** Sesi dengan pesan belum dibalas mendapat latar belakang `bg-red-50/60` dan border `border-red-200`.
+   - **Label "Menunggu Balasan":** Menggantikan label "Live Sesi" pada kartu sesi yang memiliki pesan belum dibalas.
+   - **Header Total Unread:** Header CS Hub menampilkan total pesan belum dibalas di semua sesi.
+   - **Badge pada Avatar Pelanggan:** Titik merah pada avatar pengguna aktif jika sesi tersebut memiliki pesan belum dibalas.
+3. **Notifikasi Suara:**
+   - Saat total `unread_count` bertambah dibandingkan polling sebelumnya, sistem memutar suara notifikasi halus (volume 30%) menggunakan `Audio` API browser.
+
+---
+
+### 37.4. Pemantapan Real-Time Polling Engine
+1. **Admin CS Hub (`CSHubModal.tsx`):**
+   - Interval polling 3 detik memperbarui daftar sesi **dan** histori pesan sesi aktif secara otomatis.
+   - Saat staf membalas pesan, `fetchAdminSessions(true)` dipanggil untuk memperbarui `unread_count` secara instan.
+2. **Auto-Scroll pada Pesan Baru:**
+   - Ref `messagesEndRef` memantau perubahan jumlah pesan. Jika bertambah, jendela percakapan otomatis menggulir ke pesan terbaru.
+3. **Subtitle Chat Storefront:**
+   - Teks subtitle widget chat pelanggan di tema default diubah dari _"Balas Otomatis Cepat"_ menjadi _"Staf merespons 1×24 jam"_ untuk mengatur ekspektasi pelanggan sesuai kebijakan SLA.
+
+---
+
+### 37.5. Daftar File yang Diubah
+| File | Perubahan |
+|------|-----------|
+| `apps/api/src/routes/chat.routes.ts` | Subquery `unread_count`, logika bot sapaan tunggal |
+| `apps/web/src/stores/useChatStore.ts` | Field `unread_count` pada `ChatSessionSummary`, hapus fallback bot |
+| `apps/web/src/components/admin/CSHubModal.tsx` | Badge unread, notifikasi suara, auto-scroll, header total unread |
+| `apps/web/src/components/storefront/LiveChatWidget.tsx` | Subtitle SLA "Staf merespons 1×24 jam" |
+
+
+
 
 
 

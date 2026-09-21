@@ -103,7 +103,7 @@ export const LiveChatWidget: React.FC = () => {
   const getChatSubtitle = () => {
     if (theme === 'tema-b') return 'Online • Rania Azzahra & Atelier Privé';
     if (theme === 'tema-c') return 'Online • Siap Bantu Kamu!';
-    return 'Online • Balas Otomatis Cepat';
+    return 'Online • Staf merespons 1×24 jam';
   };
 
   const getChatAvatar = () => {

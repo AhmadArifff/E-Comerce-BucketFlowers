@@ -28,7 +28,17 @@ router.get('/sessions', async (req, res) => {
           WHERE cm.session_id = cs.id 
           ORDER BY cm.sent_at DESC 
           LIMIT 1
-        ) AS last_message_at
+        ) AS last_message_at,
+        (
+          SELECT COUNT(*)::int 
+          FROM chat_messages cm 
+          WHERE cm.session_id = cs.id 
+            AND cm.sender = 'CUSTOMER'
+            AND cm.sent_at > COALESCE(
+              (SELECT MAX(cm2.sent_at) FROM chat_messages cm2 WHERE cm2.session_id = cs.id AND cm2.sender = 'FLORIST'),
+              '1970-01-01'::timestamptz
+            )
+        ) AS unread_count
       FROM chat_sessions cs
       ORDER BY cs.updated_at DESC;
     `);
@@ -164,30 +174,32 @@ router.post('/message', async (req, res) => {
     // Update chat_sessions updated_at
     await pool.query(`UPDATE chat_sessions SET updated_at = NOW() WHERE id = $1;`, [session_id]);
 
-    // Auto-responder only if message is from CUSTOMER
+    // Single-Shot Bot Welcome: Only auto-reply ONCE per session (first CUSTOMER message)
     let botReply = null;
     const upperSender = (sender || '').toUpperCase();
     if (upperSender === 'CUSTOMER' || upperSender === 'USER') {
-      const lower = text.toLowerCase();
-      let replyText = '';
-      if (lower.includes('wisuda') || lower.includes('toga')) {
-        replyText = 'Untuk buket wisuda bertoga, kami menyediakan opsi Ready Stock dan Pre-Order 1-2 hari. Silakan jelajahi katalog kategori Wisuda ya! 🎓';
-      } else if (lower.includes('cod') || lower.includes('alamat') || lower.includes('temu')) {
-        replyText = 'Titik COD kami mencakup Gerbatama UI, Gunadarma Margonda, Stasiun Pondok Cina, dan Margo City Mall. Gratis ongkir dalam radius 5 KM! 📍';
-      } else if (lower.includes('garansi') || lower.includes('patah') || lower.includes('rusak')) {
-        replyText = 'Semua buket kami dilindungi Garansi 100% Ganti Baru Gratis Ongkir jika ada kerusakan saat pengiriman, cukup lampirkan video unboxing 1x24 jam. 🛡️';
-      } else if (lower.includes('harga') || lower.includes('biaya') || lower.includes('diskon')) {
-        replyText = 'Harga buket mulai dari Rp 45.000 hingga Rp 195.000. Gunakan kode promo WISUDA10K di keranjang belanja untuk diskon Rp 10.000! 🎟️';
-      } else {
-        replyText = 'Pesan Anda telah kami terima! Florist atelier kami siap membantu. Jika membutuhkan konsultasi almamater lebih cepat, Anda juga bisa menekan tombol Alihkan ke WA 🌸.';
-      }
-
-      const botMsgId = `msg-${Date.now() + 1}`;
-      const botRes = await pool.query(
-        `INSERT INTO chat_messages (id, session_id, sender, text, sent_at) VALUES ($1, $2, 'BOT', $3, NOW()) RETURNING *;`,
-        [botMsgId, session_id, replyText]
+      // Check if bot has already replied in this session
+      const existingBotMsg = await pool.query(
+        `SELECT id FROM chat_messages WHERE session_id = $1 AND sender = 'BOT' LIMIT 1;`,
+        [session_id]
       );
-      botReply = botRes.rows[0];
+
+      if (existingBotMsg.rows.length === 0) {
+        // First customer message — send single informative welcome
+        const welcomeText =
+          'Halo kak! Pesan Anda sudah kami terima 🌸\n\n' +
+          'Staf Florist Atelier kami akan merespons pesan Anda dalam waktu 1×24 jam kerja.\n\n' +
+          'Jika Anda membutuhkan respons lebih cepat atau ingin langsung memesan, silakan klik tombol "Buka WhatsApp" di atas untuk terhubung langsung via WhatsApp.\n\n' +
+          'Terima kasih telah menghubungi Chenille Flowers! 💐';
+
+        const botMsgId = `msg-${Date.now() + 1}`;
+        const botRes = await pool.query(
+          `INSERT INTO chat_messages (id, session_id, sender, text, sent_at) VALUES ($1, $2, 'BOT', $3, NOW()) RETURNING *;`,
+          [botMsgId, session_id, welcomeText]
+        );
+        botReply = botRes.rows[0];
+      }
+      // If bot already replied before, do NOT send another auto-reply — wait for human staff
     }
 
     return res.json({

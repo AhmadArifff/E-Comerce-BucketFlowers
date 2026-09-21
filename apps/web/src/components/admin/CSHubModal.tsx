@@ -1,8 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { MessageSquare, Send, Phone, User, Bot, Sparkles, RefreshCw, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { MessageSquare, Send, Phone, RefreshCw, CheckCircle2, BellRing } from 'lucide-react';
 import { useChatStore } from '@/stores/useChatStore';
+
+// Tiny inline notification sound (base64-encoded short beep)
+const playNotificationSound = () => {
+  try {
+    const audio = new Audio('data:audio/wav;base64,UklGRl9vT19teleVBRgAAABEYXRhAQACABAAZGF0YUFvT19AAIA/AACAP2FvT19AAIA/AACAP2FvT19AAIA/');
+    audio.volume = 0.3;
+    audio.play().catch(() => {});
+  } catch {
+    // Ignore audio errors in SSR or restricted environments
+  }
+};
 
 export const CSHubModal: React.FC = () => {
   const { 
@@ -18,7 +29,11 @@ export const CSHubModal: React.FC = () => {
 
   const [replyText, setReplyText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevTotalUnreadRef = useRef(0);
+  const prevMsgCountRef = useRef(0);
 
+  // Poll for real-time updates
   useEffect(() => {
     fetchAdminSessions();
 
@@ -33,6 +48,25 @@ export const CSHubModal: React.FC = () => {
     return () => clearInterval(interval);
   }, [fetchAdminSessions, selectAdminSession]);
 
+  // Compute total unread count
+  const totalUnread = adminSessions.reduce((sum, s) => sum + (s.unread_count || 0), 0);
+
+  // Play notification sound when new unread messages arrive
+  useEffect(() => {
+    if (totalUnread > prevTotalUnreadRef.current && prevTotalUnreadRef.current >= 0) {
+      playNotificationSound();
+    }
+    prevTotalUnreadRef.current = totalUnread;
+  }, [totalUnread]);
+
+  // Auto-scroll to bottom when new messages appear in active conversation
+  useEffect(() => {
+    if (adminSessionMessages.length > prevMsgCountRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+    prevMsgCountRef.current = adminSessionMessages.length;
+  }, [adminSessionMessages.length]);
+
   const activeSession = adminSessions.find((s) => s.id === activeAdminSessionId) || (adminSessions.length > 0 ? adminSessions[0] : null);
 
   const handleReply = async (e: React.FormEvent) => {
@@ -44,8 +78,9 @@ export const CSHubModal: React.FC = () => {
     try {
       await sendMessage(replyText.trim(), 'FLORIST', targetId);
       setReplyText('');
-      // Refresh messages
       await selectAdminSession(targetId);
+      // Refresh sessions to update unread count after staff reply
+      await fetchAdminSessions(true);
     } catch (err) {
       console.error('Failed to send florist reply:', err);
     } finally {
@@ -57,15 +92,28 @@ export const CSHubModal: React.FC = () => {
     <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-sm space-y-6 mb-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-rose-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm">
+          <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm relative">
             <MessageSquare className="w-5 h-5" />
+            {totalUnread > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center px-1 shadow-sm animate-pulse">
+                {totalUnread}
+              </span>
+            )}
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-black text-stone-800 tracking-tight">
               In-System Customer Service Webchat Hub
             </h2>
             <p className="text-xs text-stone-500">
-              Menjawab pesan konsultasi buket langsung di dalam web dengan database live (mencegah ketergantungan langsung chat WA).
+              {totalUnread > 0 ? (
+                <>
+                  <span className="text-red-600 font-bold">{totalUnread} pesan pelanggan belum dibalas</span>
+                  {' • '}
+                  <span>{adminSessions.length} percakapan aktif</span>
+                </>
+              ) : (
+                <>Menjawab pesan konsultasi buket langsung di dalam web • {adminSessions.length} percakapan aktif</>
+              )}
             </p>
           </div>
         </div>
@@ -96,6 +144,12 @@ export const CSHubModal: React.FC = () => {
             <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider">
               Percakapan Aktif ({adminSessions.length})
             </span>
+            {totalUnread > 0 && (
+              <span className="flex items-center gap-1 text-[10px] font-bold text-red-600">
+                <BellRing className="w-3 h-3 animate-bounce" />
+                {totalUnread} belum dibalas
+              </span>
+            )}
           </div>
 
           {adminSessions.length === 0 ? (
@@ -105,6 +159,7 @@ export const CSHubModal: React.FC = () => {
           ) : (
             adminSessions.map((session) => {
               const isSelected = session.id === (activeAdminSessionId || activeSession?.id);
+              const hasUnread = (session.unread_count || 0) > 0;
 
               return (
                 <div
@@ -113,24 +168,39 @@ export const CSHubModal: React.FC = () => {
                   className={`p-3 rounded-xl border transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-white border-rose-300 shadow-xs ring-1 ring-rose-200'
+                      : hasUnread
+                      ? 'bg-red-50/60 border-red-200 hover:bg-red-50 hover:border-red-300'
                       : 'bg-white/70 border-stone-200 hover:bg-white hover:border-stone-300'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-stone-800 truncate max-w-[170px]">
-                      {session.customer_name}
-                    </span>
-                    <span className="text-[10px] text-stone-400">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`font-bold text-xs truncate max-w-[130px] ${hasUnread ? 'text-stone-900' : 'text-stone-800'}`}>
+                        {session.customer_name}
+                      </span>
+                      {hasUnread && (
+                        <span className="min-w-[20px] h-[20px] rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center px-1 flex-shrink-0 shadow-sm">
+                          {session.unread_count}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-stone-400 flex-shrink-0">
                       {session.updated_at ? new Date(session.updated_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : ''}
                     </span>
                   </div>
-                  <p className="text-[11px] text-stone-500 truncate mt-1">
+                  <p className={`text-[11px] truncate mt-1 ${hasUnread ? 'text-stone-700 font-semibold' : 'text-stone-500'}`}>
                     {session.last_message ? `"${session.last_message}"` : 'Sesi konsultasi baru'}
                   </p>
                   <div className="flex items-center gap-1.5 mt-2">
-                    <span className="text-[9px] bg-rose-100 text-rose-700 font-extrabold px-2 py-0.5 rounded-full">
-                      Live Sesi
-                    </span>
+                    {hasUnread ? (
+                      <span className="text-[9px] bg-red-100 text-red-700 font-extrabold px-2 py-0.5 rounded-full animate-pulse">
+                        Menunggu Balasan
+                      </span>
+                    ) : (
+                      <span className="text-[9px] bg-rose-100 text-rose-700 font-extrabold px-2 py-0.5 rounded-full">
+                        Live Sesi
+                      </span>
+                    )}
                     {session.is_escalated_wa && (
                       <span className="text-[9px] bg-emerald-100 text-emerald-700 font-extrabold px-2 py-0.5 rounded-full flex items-center gap-0.5">
                         <CheckCircle2 className="w-2.5 h-2.5" />
@@ -160,8 +230,11 @@ export const CSHubModal: React.FC = () => {
             <>
               <div className="p-3.5 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center text-xs font-bold relative">
                     {activeSession.customer_name?.slice(0, 2).toUpperCase() || 'CU'}
+                    {(activeSession.unread_count || 0) > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-red-500 border-2 border-white" />
+                    )}
                   </div>
                   <div>
                     <span className="text-xs font-bold text-stone-800">
@@ -172,9 +245,16 @@ export const CSHubModal: React.FC = () => {
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] text-stone-400 font-mono">
-                  ID: {activeSession.id}
-                </span>
+                <div className="flex items-center gap-2">
+                  {(activeSession.unread_count || 0) > 0 && (
+                    <span className="text-[10px] bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full">
+                      {activeSession.unread_count} belum dibalas
+                    </span>
+                  )}
+                  <span className="text-[10px] text-stone-400 font-mono">
+                    ID: {activeSession.id}
+                  </span>
+                </div>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-stone-50/30 text-xs">
@@ -204,12 +284,13 @@ export const CSHubModal: React.FC = () => {
                           <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                         </div>
                         <span className="text-[10px] text-stone-400 mt-1 px-1">
-                          {isBot ? '🤖 Bot Otomatis' : isCustomer ? '👤 Pembeli' : '🌸 Florist Staff (Anda)'} • {msg.sentAt}
+                          {isBot ? '🤖 Bot Sapaan' : isCustomer ? '👤 Pembeli' : '🌸 Florist Staff (Anda)'} • {msg.sentAt}
                         </span>
                       </div>
                     );
                   })
                 )}
+                <div ref={messagesEndRef} />
               </div>
 
               <form onSubmit={handleReply} className="p-3 border-t border-stone-200 flex gap-2">

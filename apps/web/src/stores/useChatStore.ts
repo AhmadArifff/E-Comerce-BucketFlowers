@@ -14,6 +14,7 @@ export interface ChatSessionSummary {
   is_active: boolean;
   last_message?: string;
   last_message_at?: string;
+  unread_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -220,32 +221,7 @@ export const useChatStore = create<ChatState>()(
             get().fetchAdminSessions();
           }
         } catch (e) {
-          console.warn('Chat API message failed, using client fallback bot:', e);
-
-          // Fallback client auto-responder if offline
-          if (sender === 'CUSTOMER') {
-            setTimeout(() => {
-              let botReplyText = 'Terima kasih telah bertanya! Florist kami siap merangkai pesanan buket kustom Anda. Silakan klik tombol "Buka WhatsApp" untuk respon kilat 🌸.';
-              const lower = clean.toLowerCase();
-              if (lower.includes('cod') || lower.includes('titik temu')) {
-                botReplyText = 'Untuk COD gratis ongkir bisa di Gerbatama UI, Kampus D Gunadarma, Stasiun Pondok Cina, dan Margo City 📍';
-              } else if (lower.includes('harga') || lower.includes('diskon')) {
-                botReplyText = 'Harga mulai Rp 45.000. Gunakan kode promo WISUDA10K di keranjang untuk diskon Rp 10.000! 🎟️';
-              } else if (lower.includes('garansi') || lower.includes('patah')) {
-                botReplyText = 'Semua buket dilindungi Garansi 100% Anti-Patah & Ganti Baru Gratis Ongkir jika rusak di perjalanan ekspedisi 🛡️';
-              }
-
-              const botMsg: LiveChatMessage = {
-                id: `msg-bot-${Date.now()}`,
-                sessionId: activeSession,
-                sender: 'BOT',
-                text: botReplyText,
-                sentAt: `${now.getHours().toString().padStart(2, '0')}:${(now.getMinutes() + 1).toString().padStart(2, '0')}`,
-              };
-
-              set((state) => ({ messages: [...state.messages, botMsg] }));
-            }, 600);
-          }
+          console.warn('Chat API message failed:', e);
         }
       },
 
