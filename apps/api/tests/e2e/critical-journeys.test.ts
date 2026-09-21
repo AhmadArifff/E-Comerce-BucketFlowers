@@ -29,6 +29,8 @@ describe('PRD Section 14.3: 5 Critical User Journeys (End-to-End)', () => {
         await pool.query('UPDATE products SET stock = 25 WHERE id = $1', [sampleProductId]);
       }
     }
+    // Ensure test coupon has sufficient quota
+    await pool.query("UPDATE coupons SET used_count = 0, quota = 9999 WHERE code = 'WISUDAHEMAT';");
   });
 
   // =========================================================================

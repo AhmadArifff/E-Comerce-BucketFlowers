@@ -111,6 +111,29 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
   } | null>(null);
   const [isSyncingStorage, setIsSyncingStorage] = useState(false);
 
+  const TABLE_HUMAN_LABELS: Record<string, string> = {
+    orders: 'Pesanan Masuk',
+    order_items: 'Rincian Buket Belanja',
+    payment_transactions: 'Bukti Pembayaran Pelanggan',
+    order_status_history: 'Histori Status Pesanan',
+    shipping_orders: 'Pengiriman & Resi Ekspedisi',
+    customer_complaints: 'Komplain Pelanggan',
+    complaint_resolutions: 'Penyelesaian Komplain',
+    warranty_claims: 'Klaim Garansi 30 Hari',
+    user_attendance_logs: 'Absensi Harian Member',
+    user_stamp_cards: 'Kartu Stempel Belanja',
+    user_stamp_card_history: 'Histori Stempel Member',
+    customer_occasions: 'Pengingat Momen Spesial',
+    users: 'Akun Member Pelanggan',
+    products: 'Katalog Buket Bunga',
+    raw_materials: 'Bahan Baku Kawat Bulu',
+    product_recipes: 'Resep Modal Bahan Baku (HPP)',
+    custom_studio_requests: 'Konsultasi Custom Studio',
+    'complaints-proof': 'Foto Bukti Komplain (Penyimpanan Online)',
+    'warranty-proof': 'Foto Bukti Garansi (Penyimpanan Online)',
+    'custom-studio': 'Foto Referensi Studio (Penyimpanan Online)',
+  };
+
   const TOGGLE_METADATA: Record<
     keyof GranularResetOptions,
     {
@@ -120,57 +143,57 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
     }
   > = {
     delete_transactions: {
-      title: 'Hapus Riwayat Transaksi & Finansial Midtrans',
+      title: 'Riwayat Pesanan & Transaksi Pembayaran Toko',
       description:
-        'Mengaktifkan opsi ini akan menghapus seluruh data pesanan (orders), rincian buket (order_items), transaksi pembayaran (payment_transactions), dan log riwayat status pesanan secara permanen.',
+        'Mengaktifkan opsi ini akan menghapus seluruh catatan pesanan masuk, rincian produk yang dibeli, serta bukti pembayaran pelanggan. Dampak: Laporan omzet dan pembukuan bulanan toko akan di-reset ke nol.',
       countWarning: (s) =>
-        `${s?.transactions.total ?? 0} baris data transaksi akan dihapus. Laporan omzet dan audit finansial akan terdampak!`,
+        `${s?.transactions.total ?? 0} catatan pesanan akan dibersihkan. Laporan omzet dan pembukuan toko akan kembali kosong!`,
     },
     delete_logistics: {
-      title: 'Hapus Riwayat Logistik & Resi Ekspedisi',
+      title: 'Riwayat Pengiriman & Resi Kurir Ekspedisi',
       description:
-        'Mengaktifkan opsi ini akan menghapus data pengiriman pesanan (shipping_orders), nomor resi kurir, dan catatan pengantaran barang.',
-      countWarning: () => 'Bukti serah terima ekspedisi dan riwayat resi pengiriman akan dibersihkan.',
+        'Mengaktifkan opsi ini akan menghapus nomor resi paket kurir (seperti JNE, SiCepat, J&T) dan histori pengiriman barang. Dampak: Pembeli tidak dapat lagi melacak status paket lama dari website.',
+      countWarning: () => 'Nomor resi dan riwayat serah terima kurir ekspedisi akan dibersihkan.',
     },
     delete_complaints: {
-      title: 'Hapus Data Komplain Pelanggan & Klaim Garansi',
+      title: 'Catatan Komplain Pelanggan & Klaim Garansi',
       description:
-        'Mengaktifkan opsi ini akan menghapus seluruh tiket keluhan kualitas buket (customer_complaints) dan riwayat klaim garansi 30 hari (warranty_claims).',
-      countWarning: (s) => `${s?.complaints.total ?? 0} data evaluasi kualitas atelier akan dihapus.`,
+        'Mengaktifkan opsi ini akan menghapus rekaman keluhan pembeli terkait kondisi bunga dan pengajuan klaim garansi 30 hari. Dampak: Riwayat evaluasi kualitas layanan toko akan dibersihkan.',
+      countWarning: (s) => `${s?.complaints.total ?? 0} tiket keluhan dan klaim garansi pelanggan akan dihapus.`,
     },
     delete_loyalty_data: {
-      title: 'Hapus Data Loyalitas Pelanggan (Absensi & Stamp Cards)',
+      title: 'Poin Hadiah, Kartu Stempel & Pengingat Momen Spesial',
       description:
-        'Mengaktifkan opsi ini akan menghapus seluruh log absensi harian (user_attendance_logs), kartu stempel digital (user_stamp_cards), dan pengingat momen hari spesial (customer_occasions).',
-      countWarning: (s) => `${s?.loyalty.total ?? 0} baris data loyalitas member akan di-reset ke nol.`,
+        'Mengaktifkan opsi ini akan menghapus saldo poin reward, kartu stempel belanja, dan catatan tanggal ulang tahun/wisuda pelanggan. Dampak: Seluruh poin dan stempel belanja pelanggan akan kembali ke nol.',
+      countWarning: (s) => `${s?.loyalty.total ?? 0} data poin dan kartu stempel pelanggan akan di-reset ke nol.`,
     },
     delete_customer_accounts: {
-      title: 'Hapus Akun Pelanggan (*Customer Members*)',
+      title: 'Daftar Akun Member Pelanggan Terdaftar',
       description:
-        'Mengaktifkan opsi ini akan menghapus seluruh akun pengguna pelanggan (role: CUSTOMER_MEMBER). Akun Super Admin Anda tetap terkunci dan dilindungi.',
-      countWarning: (s) => `${s?.customers.customer_members ?? 0} akun pelanggan terdaftar akan dihapus permanen.`,
+        'Mengaktifkan opsi ini akan menghapus akun login para pembeli toko. Dampak: Pembeli harus mendaftar akun baru jika ingin belanja kembali di website. (Akun Admin Anda tetap aman & terlindungi).',
+      countWarning: (s) => `${s?.customers.customer_members ?? 0} akun member pembeli akan dihapus permanen.`,
     },
     reset_master_catalog: {
-      title: 'Reset & Re-seed Master Katalog Produk & BOM',
+      title: 'Kembalikan Katalog Produk & Perhitungan Modal ke Standar Awal',
       description:
-        'Mengaktifkan opsi ini akan mengatur ulang katalog 8 buket kanonikal, 9 bahan baku kawat bulu, dan resep HPP ke standar kanonikal awal atelier.',
+        'Mengaktifkan opsi ini akan mengatur ulang daftar buket bunga, harga jual, stok, dan resep modal bahan baku ke 8 model buket resmi Atelier Chenille.',
       countWarning: (s) =>
-        `${(s?.catalog.products ?? 0) + (s?.catalog.raw_materials ?? 0)} entitas katalog akan diinisialisasi ulang ke standar kanonikal.`,
+        `${(s?.catalog.products ?? 0) + (s?.catalog.raw_materials ?? 0)} produk buket dan bahan baku akan dikembalikan ke data katalog standar atelier.`,
     },
     delete_complaint_asset_files: {
-      title: 'Hapus Berkas Foto Bukti Komplain Pelanggan',
+      title: 'Foto Bukti Kendala & Kerusakan dari Pembeli',
       description:
-        'Mengaktifkan opsi ini akan menghapus seluruh berkas foto fisik bukti komplain yang tersimpan di bucket Supabase Storage "complaints-proof".',
+        'Mengaktifkan opsi ini akan menghapus file foto buket rusak atau kemasan penyok yang dikirimkan pembeli saat menyampaikan keluhan dari penyimpanan online.',
     },
     delete_warranty_asset_files: {
-      title: 'Hapus Berkas Foto Bukti Klaim Garansi 30 Hari',
+      title: 'Foto Bukti Unboxing Klaim Garansi 30 Hari',
       description:
-        'Mengaktifkan opsi ini akan menghapus seluruh foto bukti fisik unboxing dan kerusakan buket di bucket Supabase Storage "warranty-proof".',
+        'Mengaktifkan opsi ini akan menghapus file foto unboxing yang diunggah pembeli saat mengajukan klaim garansi buket baru dari penyimpanan online.',
     },
     delete_custom_studio_asset_files: {
-      title: 'Hapus Berkas Aset Gambar Custom Studio',
+      title: 'Foto Referensi Desain Buket dari Pelanggan',
       description:
-        'Mengaktifkan opsi ini akan menghapus berkas gambar referensi buket kustom yang diunggah pelanggan saat konsultasi studio.',
+        'Mengaktifkan opsi ini akan menghapus file gambar bunga referensi yang diunggah pelanggan saat berkonsultasi untuk buket kustom dari penyimpanan online.',
     },
   };
 
@@ -643,17 +666,17 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
             <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 space-y-3 text-xs text-amber-900">
               <div className="flex items-center gap-2 font-bold text-amber-950">
                 <Info className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                <span>Konsekuensi Penghapusan Data:</span>
+                <span>Konsekuensi Pembersihan Data Toko:</span>
               </div>
               <ul className="list-disc pl-4 space-y-1.5 text-amber-900/90 text-[11px] leading-relaxed">
                 <li>
-                  Data yang dipilih akan <strong>dihapus secara permanen</strong> dari server PostgreSQL Supabase dan tidak dapat dipulihkan.
+                  Data yang dipilih akan <strong>dihapus secara permanen</strong> dari sistem toko online dan tidak dapat dibatalkan atau dipulihkan kembali.
                 </li>
                 <li>
-                  Data pesanan transaksional yang sudah terhubung dengan <strong>Midtrans Snap QRIS</strong> dan nomor resi ekspedisi kurir bernilai tinggi untuk laporan omzet, audit keuangan, serta klaim asuransi barang rusak.
+                  Data pesanan pembeli yang sudah terhubung dengan <strong>pembayaran QRIS</strong> dan nomor resi kurir sangat berguna untuk laporan omzet bulanan, pembukuan keuangan toko, serta bukti klaim asuransi paket.
                 </li>
                 <li>
-                  Pada tahap berikutnya, Anda dapat memilih secara mandiri data apa saja yang ingin dihapus atau dipertahankan menggunakan sakelar (*toggles*).
+                  Pada tahap berikutnya, Anda dapat memilih secara mandiri data apa saja yang ingin dibersihkan atau dipertahankan menggunakan sakelar (*toggle*).
                 </li>
               </ul>
             </div>
@@ -664,11 +687,11 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div className="space-y-0.5 min-w-0 flex-1">
-                <div className="font-bold text-emerald-950">Jaminan Keamanan Akun Admin Aktif:</div>
+                <div className="font-bold text-emerald-950">Jaminan Keamanan Akun Admin Anda:</div>
                 <p className="text-[11px] text-emerald-800 leading-relaxed">
-                  Sistem menerapkan <strong>Admin Self-Preservation Policy</strong>. Akun Anda saat ini (
+                  Sistem otomatis mengamankan akun admin Anda saat ini (
                   <span className="font-mono font-bold text-emerald-900">{currentAdminEmail}</span>
-                  ) terkunci otomatis dan <strong>dilarang keras untuk dihapus</strong>, sehingga Anda tidak akan pernah terkunci keluar dari panel admin.
+                  ). Akun ini <strong>terkunci dan tidak akan pernah terhapus</strong>, sehingga Anda selalu dapat masuk dan mengelola toko ini dengan aman setelah proses pembersihan selesai.
                 </p>
               </div>
             </div>
@@ -686,7 +709,7 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                 onClick={() => setCurrentStage(2)}
                 className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-rose-600 text-white text-xs font-black transition-all shadow-md shadow-stone-900/20 active:scale-95 cursor-pointer flex items-center gap-2"
               >
-                <span>Buka Menu Seleksi Data</span>
+                <span>Buka Pilihan Data</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -704,10 +727,10 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                   Tahap 2 / 3: Seleksi Data Granular
                 </div>
                 <h3 className="text-lg sm:text-xl font-black text-stone-900">
-                  Pilih Data yang Ingin Dihapus
+                  Pilih Data Aktivitas Toko yang Ingin Dibersihkan
                 </h3>
                 <p className="text-xs text-stone-500">
-                  Aktifkan sakelar (*toggle*) hanya untuk data yang benar-benar ingin Anda bersihkan.
+                  Aktifkan sakelar (*toggle*) hanya untuk data yang benar-benar ingin Anda kosongkan dari sistem toko.
                 </p>
               </div>
               <button
@@ -719,11 +742,11 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
               </button>
             </div>
 
-            {/* SECTION A: DATA TEKS / TABEL DATABASE */}
+            {/* SECTION A: DATA AKTIVITAS TOKO */}
             <div className="space-y-3">
               <div className="text-xs font-bold text-stone-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Database className="w-3.5 h-3.5" />
-                <span>Kelompok Tabel Database (Data Teks)</span>
+                <span>Pilihan Data Aktivitas Toko yang Ingin Dibersihkan</span>
               </div>
 
               <div className="space-y-2">
@@ -731,10 +754,10 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
                   <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
-                      Riwayat Transaksi &amp; Finansial Midtrans
+                      Riwayat Pesanan &amp; Transaksi Pembayaran Toko
                     </div>
                     <div className="text-[11px] text-stone-500 leading-relaxed">
-                      Tabel <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">orders</code>, <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">payment_transactions</code>, <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">order_items</code> ({stats?.transactions.total ?? 0} baris)
+                      Menghapus catatan pesanan masuk, rincian produk buket yang dibeli, serta bukti pembayaran ({stats?.transactions.total ?? 0} pesanan terdata). <strong className="text-stone-700">Dampak:</strong> Laporan omzet dan pembukuan bulanan toko akan di-reset ke nol.
                     </div>
                   </div>
                   <button
@@ -754,10 +777,10 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
                   <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
-                      Riwayat Logistik &amp; Resi Ekspedisi
+                      Riwayat Pengiriman &amp; Resi Kurir Ekspedisi
                     </div>
                     <div className="text-[11px] text-stone-500 leading-relaxed">
-                      Tabel <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">shipping_orders</code> dan log resi kurir
+                      Menghapus nomor resi pengiriman kurir (seperti JNE, SiCepat, J&amp;T) dan histori antar paket. <strong className="text-stone-700">Dampak:</strong> Pembeli tidak dapat lagi melacak status paket lama dari website toko.
                     </div>
                   </div>
                   <button
@@ -777,10 +800,10 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
                   <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
-                      Data Komplain Pelanggan &amp; Klaim Garansi
+                      Catatan Komplain Pelanggan &amp; Klaim Garansi
                     </div>
                     <div className="text-[11px] text-stone-500 leading-relaxed">
-                      Tabel <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">customer_complaints</code>, <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">warranty_claims</code> ({stats?.complaints.total ?? 0} baris)
+                      Menghapus rekaman keluhan pembeli terkait kondisi bunga dan pengajuan klaim garansi 30 hari ({stats?.complaints.total ?? 0} catatan terdata). <strong className="text-stone-700">Dampak:</strong> Riwayat keluhan kualitas layanan toko akan dibersihkan.
                     </div>
                   </div>
                   <button
@@ -800,10 +823,10 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
                   <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
-                      Loyalitas Pelanggan (Absensi, Poin, &amp; Momen)
+                      Poin Hadiah, Kartu Stempel &amp; Pengingat Momen Spesial
                     </div>
                     <div className="text-[11px] text-stone-500 leading-relaxed">
-                      Tabel <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">user_attendance_logs</code>, <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">user_stamp_cards</code> ({stats?.loyalty.total ?? 0} baris)
+                      Menghapus saldo poin reward pelanggan, kartu stempel belanja, dan catatan tanggal ulang tahun/wisuda ({stats?.loyalty.total ?? 0} catatan terdata). <strong className="text-stone-700">Dampak:</strong> Saldo poin seluruh member pembeli akan kembali ke nol.
                     </div>
                   </div>
                   <button
@@ -823,10 +846,10 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
                   <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
-                      Akun Pelanggan (*Customer Members*)
+                      Daftar Akun Member Pelanggan Terdaftar
                     </div>
                     <div className="text-[11px] text-stone-500 leading-relaxed">
-                      Tabel <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">users</code> dengan role CUSTOMER_MEMBER ({stats?.customers.customer_members ?? 0} akun)
+                      Menghapus akun login para pembeli ({stats?.customers.customer_members ?? 0} akun member terdaftar). <strong className="text-stone-700">Dampak:</strong> Pembeli harus mendaftar akun baru jika ingin belanja kembali. (Akun Admin Anda tetap aman &amp; terlindungi).
                     </div>
                   </div>
                   <button
@@ -846,10 +869,10 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
                   <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
-                      Reset &amp; Re-seed Master Katalog Produk &amp; BOM
+                      Kembalikan Katalog Produk &amp; Perhitungan Modal ke Standar Awal
                     </div>
                     <div className="text-[11px] text-stone-500 leading-relaxed">
-                      Mengembalikan 8 buket kanonikal, 9 bahan baku, dan resep HPP ke standar atelier
+                      Mengatur ulang daftar buket bunga, harga jual, stok, dan resep modal bahan baku ke 8 model buket resmi Atelier Chenille.
                     </div>
                   </div>
                   <button
@@ -871,13 +894,13 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                     <Lock className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5 sm:mt-0" />
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-bold text-emerald-950 flex flex-wrap items-center gap-1.5">
-                        <span className="truncate">Akun Admin Anda ({currentAdminEmail})</span>
+                        <span className="truncate">Akun Admin Utama Toko Anda ({currentAdminEmail})</span>
                         <span className="px-1.5 py-0.5 rounded-md bg-emerald-200 text-emerald-800 text-[9px] font-black uppercase shrink-0">
-                          Terkunci / Dilindungi
+                          AMAN / DILINDUNGI
                         </span>
                       </div>
                       <div className="text-[10px] text-emerald-700 leading-tight mt-0.5">
-                        Admin Self-Preservation Policy: Dilarang dihapus demi stabilitas akses
+                        Akun login Anda dikunci otomatis agar Anda selalu dapat mengakses dan mengelola toko ini setelah proses pembersihan selesai.
                       </div>
                     </div>
                   </div>
@@ -888,11 +911,11 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
               </div>
             </div>
 
-            {/* SECTION B: BERKAS FISIK & ASET STORAGE */}
+            {/* SECTION B: BERKAS FOTO & LAMPIRAN PEMBELI DI PENYIMPANAN ONLINE */}
             <div className="space-y-3 pt-2">
               <div className="text-xs font-bold text-stone-400 uppercase tracking-wider flex items-center gap-1.5">
                 <ImageIcon className="w-3.5 h-3.5" />
-                <span>Kelompok Berkas Fisik &amp; Aset Gambar (Supabase Storage)</span>
+                <span>Berkas Foto &amp; Lampiran Pembeli di Penyimpanan Online</span>
               </div>
 
               {/* STORAGE SYNC STATUS & ACTION BAR */}
@@ -900,10 +923,10 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                 <div className="space-y-0.5 min-w-0 flex-1">
                   <div className="font-bold flex items-center gap-1.5">
                     <Server className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-                    <span>Status Bucket: product-images (Supabase Storage)</span>
+                    <span>Penyimpanan Foto Produk di Server Cloud (Online)</span>
                   </div>
                   <div className="text-[11px] text-indigo-800/80 leading-relaxed">
-                    Jika bucket di dashboard Supabase masih kosong, klik tombol untuk menyinkronkan 8 gambar buket kanonikal secara langsung.
+                    Menyimpan foto katalog buket di server internet agar website toko online dapat menampilkan foto bunga secara cepat dan jernih kepada calon pembeli.
                   </div>
                 </div>
                 <button
@@ -915,12 +938,12 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                   {isSyncingStorage ? (
                     <>
                       <RefreshCw className="w-3 h-3 animate-spin" />
-                      <span>Mengunggah ke Storage...</span>
+                      <span>Mengunggah Foto ke Server Cloud...</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-3 h-3" />
-                      <span>Sinkronkan ke Supabase Storage</span>
+                      <span>Sinkronkan Foto Produk ke Server Cloud</span>
                     </>
                   )}
                 </button>
@@ -930,10 +953,10 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
                   <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
-                      Berkas Foto Bukti Komplain Pelanggan
+                      Foto Bukti Kendala &amp; Kerusakan dari Pembeli
                     </div>
                     <div className="text-[11px] text-stone-500 leading-relaxed">
-                      Bucket <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">complaints-proof</code>
+                      Menghapus file foto buket rusak atau kemasan penyok yang dikirimkan pembeli saat menyampaikan keluhan dari penyimpanan online toko.
                     </div>
                   </div>
                   <button
@@ -952,10 +975,10 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
                 <div className="p-3.5 rounded-2xl border border-stone-200 hover:border-stone-300 transition-colors flex items-center justify-between gap-3 bg-white">
                   <div className="space-y-0.5 min-w-0 flex-1">
                     <div className="text-xs font-bold text-stone-800">
-                      Berkas Foto Bukti Klaim Garansi 30 Hari
+                      Foto Bukti Unboxing Klaim Garansi 30 Hari
                     </div>
                     <div className="text-[11px] text-stone-500 leading-relaxed">
-                      Bucket <code className="font-mono text-[10px] bg-stone-100 px-1 py-0.2 rounded">warranty-proof</code>
+                      Menghapus file foto unboxing yang diunggah pembeli saat mengajukan klaim garansi buket baru dari penyimpanan online toko.
                     </div>
                   </div>
                   <button
@@ -978,12 +1001,12 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
               <div className="space-y-0.5">
                 <div className="font-bold flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-rose-400" />
-                  <span>Ringkasan Dampak Eksekusi:</span>
+                  <span>Ringkasan Dampak Pembersihan:</span>
                 </div>
                 <div className="text-[11px] text-stone-300">
-                  Data yang akan dihapus:{' '}
-                  <strong className="text-rose-400 font-mono text-xs">{impact.rows} baris tabel</strong>,{' '}
-                  <strong className="text-rose-400 font-mono text-xs">{impact.files} berkas storage</strong>.
+                  Data yang akan dibersihkan:{' '}
+                  <strong className="text-rose-400 font-mono text-xs">{impact.rows} catatan data toko</strong>,{' '}
+                  <strong className="text-rose-400 font-mono text-xs">{impact.files} berkas foto pembeli</strong>.
                 </div>
               </div>
             </div>
@@ -1297,21 +1320,21 @@ export const DatabaseResetManager: React.FC<DatabaseResetManagerProps> = ({
             {executionResult && (
               <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-2.5 text-xs text-stone-700">
                 <div className="font-bold text-stone-900 border-b border-stone-200 pb-1.5 flex items-center justify-between">
-                  <span>Tabel &amp; Aset yang Diproses:</span>
+                  <span>Ringkasan Data yang Diproses:</span>
                   <span className="text-[10px] text-stone-400 font-mono">
                     {new Date(executionResult.executed_at).toLocaleTimeString('id-ID')}
                   </span>
                 </div>
-                <div className="space-y-1 text-[11px] font-mono">
+                <div className="space-y-1.5 text-[11px]">
                   {Object.entries(executionResult.tables_affected).map(([tbl, status]) => (
-                    <div key={tbl} className="flex justify-between py-0.5">
-                      <span className="text-stone-500">{tbl}:</span>
-                      <span className="font-bold text-stone-800">{status}</span>
+                    <div key={tbl} className="flex justify-between items-center py-0.5">
+                      <span className="text-stone-600 font-medium">{TABLE_HUMAN_LABELS[tbl] || tbl}:</span>
+                      <span className="font-bold text-stone-900 font-mono text-[10px] bg-stone-100 px-1.5 py-0.5 rounded">{status}</span>
                     </div>
                   ))}
                 </div>
                 <div className="pt-2 border-t border-stone-200 flex justify-between text-emerald-700 font-bold">
-                  <span>Akun Admin Terlindungi:</span>
+                  <span>Akun Admin Anda Tetap Aman:</span>
                   <span>{executionResult.admin_account_preserved}</span>
                 </div>
               </div>

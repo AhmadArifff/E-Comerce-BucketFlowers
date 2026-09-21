@@ -1,8 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import app from '../../src/app.js';
+import { pool } from '../../src/config/database.js';
 
 describe('Coupons API Integration Tests (PRD 7.17 & 14.2)', () => {
+  beforeAll(async () => {
+    await pool.query("UPDATE coupons SET used_count = 0, quota = 9999 WHERE code = 'WISUDAHEMAT';");
+  });
   it('GET /api/v1/coupons should return active coupons', async () => {
     const res = await request(app).get('/api/v1/coupons');
 

@@ -5010,5 +5010,50 @@ Untuk memberikan perlindungan berlapis dan meminimalisir kekeliruan klik (*accid
    - Menambahkan tombol utilitas pada antarmuka admin: *"⚡ Unggah & Sinkronkan Semua Gambar ke Supabase Storage Sekarang"*.
    - Tombol ini memanggil endpoint `POST /api/v1/admin/database/sync-storage` untuk langsung mengunggah 8 gambar kanonikal ke bucket `product-images` dan memverifikasi keberadaan berkas secara *real-time*.
 
+---
+
+## 34. Transformasi Copywriting Human-Centric & Non-Teknis pada Granular Database Reset Suite — v3.7
+
+### 34.1. Latar Belakang & Filosofi User Experience (Florist-Friendly Operations)
+1. **Persona Pengguna Admin:**
+   - Pengguna panel admin harian adalah florist, perangkai buket, manajer operasional toko, atau staf *customer care*—**bukan software engineer atau database administrator**.
+   - Penyebutan istilah teknis internal seperti `tabel orders`, `foreign keys`, `payment_transactions`, `storage bucket complaints-proof`, `Admin Self-Preservation Policy`, atau `PID 48921` menimbulkan kebingungan, kecemasan (*anxiety*), dan beban kognitif (*cognitive overload*).
+2. **Prinsip Copywriting Baru (*Outcome & Impact-Driven*):**
+   - **Fokus pada Dampak Bisnis Nyata:** Jelaskan apa arti data tersebut bagi kegiatan operasional toko dan apa yang terjadi jika data tersebut dihapus.
+   - **Bahasa Indonesia Lugas & Bersahabat:** Mengganti jargon pemrograman dengan istilah bisnis e-commerce yang umum dipahami (contoh: *"Riwayat Pesanan & Transaksi Pembayaran"*, *"Poin Belanja & Kartu Stempel Member"*, *"Foto Bukti Keluhan Pembeli"*).
+   - **Penegasan Proteksi:** Menjelaskan secara menenangkan bahwa akun admin dan sistem inti toko tetap aman terlindungi.
+
+---
+
+### 34.2. Matriks Transformasi Istilah Teknis ke Bahasa Bisnis Human-Centric
+
+| Bagian / Opsi | Istilah Teknis Lama (Developer Jargon) | Istilah & Penjelasan Baru (Human-Centric & Impact-Driven) |
+| :--- | :--- | :--- |
+| **Judul Menu Tahap 2** | `Kelompok Tabel Database (Data Teks)` | **Pilihan Data Toko yang Ingin Dibersihkan**<br>*Pilih data aktivitas toko mana saja yang ingin Anda hapus.* |
+| **Opsi 1: Transaksi** | `Riwayat Transaksi & Finansial Midtrans`<br>Tabel `orders`, `payment_transactions`, `order_items` (47 baris) | **Riwayat Pesanan & Transaksi Pembayaran Toko**<br>*Menghapus seluruh catatan pesanan masuk, bukti pembayaran Midtrans/QRIS, dan histori pesanan. Dampak: Laporan omzet dan pembukuan bulanan toko akan di-reset.* |
+| **Opsi 2: Logistik** | `Riwayat Logistik & Resi Ekspedisi`<br>Tabel `shipping_orders` dan log resi kurir | **Riwayat Pengiriman & Resi Kurir Ekspedisi**<br>*Menghapus nomor resi paket (JNE, SiCepat, J&T) dan catatan kurir. Dampak: Pembeli tidak dapat lagi melacak status paket lama.* |
+| **Opsi 3: Komplain** | `Data Komplain Pelanggan & Klaim Garansi`<br>Tabel `customer_complaints`, `warranty_claims` (5 baris) | **Catatan Komplain Pelanggan & Klaim Garansi**<br>*Menghapus rekaman keluhan pembeli dan klaim garansi buket baru. Dampak: Riwayat evaluasi kualitas layanan toko akan dibersihkan.* |
+| **Opsi 4: Loyalitas** | `Loyalitas Pelanggan (Absensi, Poin, & Momen)`<br>Tabel `user_attendance_logs`, `user_stamp_cards` | **Poin Hadiah, Kartu Stempel & Pengingat Momen Spesial**<br>*Menghapus poin reward pelanggan, stempel belanja, dan pengingat ulang tahun/wisuda. Dampak: Saldo poin seluruh member kembali ke nol.* |
+| **Opsi 5: Member** | `Akun Pelanggan (*Customer Members*)`<br>Tabel `users` dengan role CUSTOMER_MEMBER | **Daftar Akun Member Pelanggan Terdaftar**<br>*Menghapus akun login para pembeli. Dampak: Pembeli harus mendaftar akun baru jika ingin login kembali. (Akun Admin Anda tetap aman & terlindungi).* |
+| **Opsi 6: Katalog** | `Reset & Re-seed Master Katalog Produk & BOM`<br>Mengembalikan 8 buket kanonikal, 9 bahan baku, dan resep HPP | **Kembalikan Katalog Produk & Perhitungan Modal ke Standar Awal**<br>*Mengatur ulang daftar buket bunga, harga jual, stok, dan resep modal bahan baku ke 8 model buket resmi Atelier Chenille.* |
+| **Opsi 7: Admin** | `Akun Admin Anda (email)`<br>Admin Self-Preservation Policy: Dilarang dihapus demi stabilitas akses | **Akun Admin Utama Toko Anda (email)**<br>*Badge: AMAN / DILINDUNGI. Akun utama Anda dikunci otomatis agar Anda tetap bisa mengelola toko ini setelah proses pembersihan selesai.* |
+| **Judul Bagian Berkas**| `Kelompok Berkas Fisik & Aset Gambar (Supabase Storage)` | **Berkas Foto & Lampiran Pembeli di Penyimpanan Online**<br>*Kelola file foto yang diunggah oleh pelanggan saat belanja atau mengajukan komplain.* |
+| **Berkas Komplain** | `Berkas Foto Bukti Komplain Pelanggan`<br>Bucket `complaints-proof` | **Foto Bukti Kendala & Kerusakan dari Pembeli**<br>*Menghapus file foto buket rusak atau kemasan penyok yang dikirimkan pembeli saat menyampaikan keluhan.* |
+| **Berkas Garansi** | `Berkas Foto Bukti Klaim Garansi 30 Hari`<br>Bucket `warranty-proof` | **Foto Bukti Unboxing Klaim Garansi 30 Hari**<br>*Menghapus file foto unboxing yang diunggah pembeli saat mengajukan klaim garansi buket baru.* |
+| **Banner Storage** | `Status Bucket: product-images (Supabase Storage)` | **Penyimpanan Foto Produk di Server Cloud (Online)**<br>*Menyimpan foto katalog buket di server internet agar website toko online dapat menampilkan foto bunga secara cepat dan jernih kepada calon pembeli.* |
+
+---
+
+### 34.3. Penyempurnaan Dialog Pre-Activation & Panduan Bahasa
+1. **Pre-Activation Confirmation Modal:**
+   - Judul: *"Konfirmasi Pilihan: [Nama Opsi]"*
+   - Penjelasan dampak bisnis yang mudah dimengerti, tanpa menampilkan nama tabel teknis SQL.
+   - Peringatan jumlah data: *"Ada X catatan transaksi yang akan terhapus jika Anda mengaktifkan opsi ini."*
+   - Tombol: `Batal / Tetap Simpan Data Ini` vs `Ya, Saya Paham & Ingin Menghapus`.
+2. **Tahap 3 & 4 (Konfirmasi & Ringkasan Hasil):**
+   - Menggunakan bahasa operasional toko yang profesional dan menenangkan.
+   - Menyajikan hasil pembersihan dalam format label yang bersahabat (misal: *"Riwayat Pesanan: Berhasil Dibersihkan"*, *"Katalog Produk: Berhasil Dipulihkan ke Standar Awal"*).
+
+
 
 
