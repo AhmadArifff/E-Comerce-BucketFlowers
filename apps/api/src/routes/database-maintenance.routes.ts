@@ -242,7 +242,27 @@ router.post('/granular-reset', requireAdmin, async (req: AuthenticatedRequest, r
         `DELETE FROM users WHERE id::text != $1::text AND role = 'CUSTOMER_MEMBER';`,
         [currentAdminId]
       );
-      tablesAffected['users_customers'] = `${usrDel.rowCount} akun pelanggan dihapus (Akun admin ${currentAdmin.email} aman)`;
+
+      // Re-seed 2 Akun Pelanggan Kanonikal Atelier (Annisa & Fajar) agar login portal pelanggan selalu aktif
+      await client.query(`
+        INSERT INTO users (id, name, email, phone, password_hash, role, avatar_emoji, flower_points, status, is_online, last_active_at, created_at, updated_at)
+        VALUES 
+          ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', 'Annisa Larasati (Member Mahasiswi UI)', 'nisa.mahasiswi@gmail.com', '081938851834', 'password123', 'CUSTOMER_MEMBER', '🌸', 350, 'ACTIVE', true, NOW(), NOW(), NOW()),
+          ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16', 'Fajar Nugraha (Alumni FTUI)', 'fajar.alumni@yahoo.com', '081298317721', 'password123', 'CUSTOMER_MEMBER', '🎓', 200, 'ACTIVE', true, NOW(), NOW(), NOW())
+        ON CONFLICT (id) DO UPDATE SET is_online = true, status = 'ACTIVE', last_active_at = NOW();
+      `);
+
+      if (await tableExists(client, 'profiles')) {
+        await client.query(`
+          INSERT INTO profiles (id, full_name, flower_points, preferred_theme, created_at, updated_at)
+          VALUES 
+            ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', 'Annisa Larasati', 350, 'TEMA_A_KOREAN_PASTEL', NOW(), NOW()),
+            ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16', 'Fajar Nugraha', 200, 'TEMA_A_KOREAN_PASTEL', NOW(), NOW())
+          ON CONFLICT (id) DO UPDATE SET full_name = EXCLUDED.full_name;
+        `);
+      }
+
+      tablesAffected['users_customers'] = `${usrDel.rowCount} akun pelanggan dihapus (2 Akun member kanonikal Annisa & Fajar direstorasi aktif)`;
     }
 
 

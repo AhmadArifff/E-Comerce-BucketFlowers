@@ -5450,5 +5450,33 @@ PANDUAN AKTIVASI SUPABASE STORAGE CDN:
 | **PostgreSQL Transaction Guard** | Eksekusi `POST /api/v1/admin/database/granular-reset` dengan seluruh opsi reset aktif | Status 200 `[COMMITTED]`, 14 tabel dibersihkan & di-reseed, 0 transaction aborted error | **PASSED** ✅ |
 | **Monorepo Type Checking** | `turbo run type-check` (3 paket: shared, api, web) | 0 error TypeScript (`3 successful, 3 total`) | **PASSED** ✅ |
 | **Zero-Broken-Images Fallback** | Pemeriksaan respons `syncCanonicalBouquetImagesToStorage()` dengan placeholder key | Berkas gambar produk kanonikal disajikan rapi via `/images/products/` tanpa 404 | **PASSED** ✅ |
+| **Customer Session Preservation** | Pengujian `session-status` & login member setelah `granular-reset` (delete customer) | ID member kanonikal otomatis direstorasi aktif, 0 false-positive force logout | **PASSED** ✅ |
+
+---
+
+### 39.6. Preservasi Akun Kanonikal Pelanggan pada Database Reset & Eliminasi False-Positive Force Logout
+
+#### 1. Latar Belakang & Akar Masalah
+Saat modul Granular Reset Database dijalankan dengan opsi `delete_customer_accounts: true`, seluruh akun dengan `role = 'CUSTOMER_MEMBER'` dihapus dari tabel PostgreSQL `users`, termasuk akun kanonikal demo pelanggan:
+- `Annisa Larasati (Member Mahasiswi UI)` (`a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15`, `nisa.mahasiswi@gmail.com`)
+- `Fajar Nugraha (Alumni FTUI)` (`a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16`, `fajar.alumni@yahoo.com`)
+
+Akibatnya, ketika pengguna melakukan login pelanggan (melalui antarmuka `login/page.tsx` atau fitur quick-fill):
+1. Akun disetel ke `DEFAULT_MEMBER` (`a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15`).
+2. Komponen frontend `SessionTimeoutWatcher.tsx` secara berkala (setiap 4 detik) memanggil endpoint pemeriksaan sesi: `GET /api/v1/auth/session-status?userId=a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15`.
+3. Karena ID pengguna telah terhapus dari database PostgreSQL (atau kolom `is_online` bernilai `false`), backend merespons dengan `{ isValid: false, reason: 'USER_NOT_FOUND' | 'FORCE_LOGOUT' }`.
+4. Komponen `SessionTimeoutWatcher` mendeteksi `!isValid`, seketika memicu pemutusan sesi otomatis (`logout('FORCE_LOGOUT_ADMIN')`), dan me-redirect pengguna ke halaman `/login?reason=force_logout`.
+5. Halaman login menampilkan pesan peringatan:
+   *"Sesi Diputus oleh Admin 🛑 Sesi akun Anda telah di-revoke demi keamanan data. Silakan login kembali untuk memperbarui sesi."*
+
+#### 2. Solusi Arsitektur yang Diterapkan
+1. **Preservasi & Restorasi Otomatis pada Granular Reset (`database-maintenance.routes.ts`):**
+   - Saat pembersihan akun pelanggan (`delete_customer_accounts`), sistem segera melakukan restorasi ulang (*canonical re-seeding*) untuk 2 akun member demo utama (`Annisa Larasati` & `Fajar Nugraha`) dengan status `is_online = true` dan `status = 'ACTIVE'`.
+2. **Defensive Auto-Recovery pada Auth Route (`auth.routes.ts`):**
+   - Pada `GET /api/v1/auth/session-status` dan `POST /api/v1/auth/login-activity`, jika `userId` pelanggan kanonikal belum terdaftar di PostgreSQL, sistem secara otomatis melakukan *upsert/insert* instan dengan status `is_online: true` dan mengembalikan `isValid: true`.
+   - Pada `POST /api/v1/auth/login`, sistem kini secara eksplisit mengeksekusi `UPDATE users SET is_online = true, last_active_at = NOW() WHERE id = $1` pada database saat otentikasi berhasil.
+   - Pada `POST /api/v1/auth/register`, baris baru diinsert dengan default `is_online = true` dan `status = 'ACTIVE'`.
+3. **Sinkronisasi Sesi pada Beralih Peran (`useAuthStore.ts`):**
+   - Fungsi `switchRole()` kini memicu `POST /api/v1/auth/login-activity` secara real-time ke backend untuk menjamin sinkronisasi flag `is_online` di PostgreSQL.
 
 ---

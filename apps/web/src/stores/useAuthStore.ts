@@ -80,6 +80,15 @@ export const useAuthStore = create<AuthState>()(
         set({ user: targetUser, isAuthenticated: true, lastActivity: now, lastLogoutReason: null });
         if (typeof window !== 'undefined') {
           localStorage.setItem('chenille_last_activity', now.toString());
+          try {
+            localStorage.setItem('chenille_user_session_sync', now.toString());
+          } catch (e) {}
+
+          fetch(getApiUrl('/api/v1/auth/login-activity'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: targetUser.id }),
+          }).catch(() => {});
         }
 
         useUserAuditStore.getState().updateUserOnlineStatus(targetUser.id, true);
