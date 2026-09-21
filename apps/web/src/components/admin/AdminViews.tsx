@@ -57,19 +57,21 @@ import {
   Navigation,
   Crosshair,
 } from 'lucide-react';
-import { MOCK_PRODUCTS, type ExtendedProduct as Product } from '@chenille/shared';
+import type { ExtendedProduct as Product } from '@chenille/shared';
 import { DatabaseResetManager } from './DatabaseResetManager';
 import { useThemeStore, type ThemeId } from '@/stores/useThemeStore';
 import { useSettingsStore, type WasteMaterialItem } from '@/stores/useSettingsStore';
 import { useOrderStore } from '@/stores/useOrderStore';
 import { showMagicToast } from '@/lib/magic-motion';
 import { getApiUrl } from '@/lib/api-client';
+import { exportOrdersToCsv, exportMonthlySummaryToCsv } from '@/lib/export-excel';
 import InteractiveMapPicker from './InteractiveMapPicker';
 
 // ============================================================================
 // 1. FINANCIAL MULTI-LINE SVG CHART CARD
 // ============================================================================
 export const FinancialChartCard: React.FC = () => {
+  const { orders } = useOrderStore();
   const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>({
     startDate: '',
@@ -83,29 +85,66 @@ export const FinancialChartCard: React.FC = () => {
 
   const chartData = useMemo(() => {
     if (is7Days) {
-      return [
-        { label: 'Sen', sub: '1 Sep', omzet: 1200000, hpp: 510000, laba: 690000, x: 80, yOmzet: 120, yHpp: 155, yLaba: 145 },
-        { label: 'Sel', sub: '2 Sep', omzet: 1450000, hpp: 620000, laba: 830000, x: 175, yOmzet: 105, yHpp: 148, yLaba: 135 },
-        { label: 'Rab', sub: '3 Sep', omzet: 1800000, hpp: 750000, laba: 1050000, x: 270, yOmzet: 85, yHpp: 140, yLaba: 120 },
-        { label: 'Kam', sub: '4 Sep', omzet: 1600000, hpp: 680000, laba: 920000, x: 365, yOmzet: 95, yHpp: 144, yLaba: 128 },
-        { label: 'Jum', sub: '5 Sep', omzet: 2200000, hpp: 900000, laba: 1300000, x: 460, yOmzet: 65, yHpp: 130, yLaba: 105 },
-        { label: 'Sab', sub: '6 Sep', omzet: 2800000, hpp: 1150000, laba: 1650000, x: 555, yOmzet: 40, yHpp: 118, yLaba: 85 },
-        { label: 'Min', sub: '7 Sep', omzet: 2100000, hpp: 880000, laba: 1220000, x: 640, yOmzet: 70, yHpp: 132, yLaba: 110 },
-      ];
+      const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+      const rawPoints: { label: string; sub: string; omzet: number; hpp: number; laba: number }[] = [];
+      const now = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now.getTime() - i * 86400000);
+        const dayName = days[d.getDay()];
+        const sub = `${d.getDate()} ${d.toLocaleDateString('id-ID', { month: 'short' })}`;
+        const dateStr = d.toISOString().split('T')[0];
+        const dayOrders = orders.filter((o) => (o.createdAt || '').startsWith(dateStr));
+        const omzet = dayOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+        const hpp = dayOrders.reduce((sum, o) => sum + Math.round((o.totalAmount || 0) * 0.42), 0);
+        const laba = Math.max(0, omzet - hpp);
+        rawPoints.push({ label: dayName, sub, omzet, hpp, laba });
+      }
+
+      const maxOmzet = Math.max(...rawPoints.map((p) => p.omzet), 1);
+      return rawPoints.map((pt, idx) => {
+        const x = 80 + idx * 93;
+        const yOmzet = pt.omzet > 0 ? Math.round(180 - (pt.omzet / maxOmzet) * 140) : 180;
+        const yHpp = pt.hpp > 0 ? Math.round(180 - (pt.hpp / maxOmzet) * 140) : 180;
+        const yLaba = pt.laba > 0 ? Math.round(180 - (pt.laba / maxOmzet) * 140) : 180;
+        return { ...pt, x, yOmzet, yHpp, yLaba };
+      });
     }
-    return [
-      { label: 'Minggu 1', sub: '1 - 7 Sep', omzet: 8750000, hpp: 3650000, laba: 5100000, x: 100, yOmzet: 97.5, yHpp: 146, yLaba: 131.5 },
-      { label: 'Minggu 2', sub: '8 - 14 Sep', omzet: 11200000, hpp: 4700000, laba: 6500000, x: 280, yOmzet: 57.5, yHpp: 129, yLaba: 108.5 },
-      { label: 'Minggu 3 (Puncak)', sub: '15 - 21 Sep', omzet: 14800000, hpp: 6100000, laba: 8700000, x: 460, yOmzet: 32.5, yHpp: 117.5, yLaba: 95 },
-      { label: 'Minggu 4', sub: '22 - 30 Sep', omzet: 9400000, hpp: 3950000, laba: 5450000, x: 640, yOmzet: 95, yHpp: 145, yLaba: 130 },
+
+    const weekPoints = [
+      { label: 'Minggu 1', sub: 'Pekan Awal', omzet: 0, hpp: 0, laba: 0 },
+      { label: 'Minggu 2', sub: 'Pekan Ke-2', omzet: 0, hpp: 0, laba: 0 },
+      { label: 'Minggu 3', sub: 'Pekan Ke-3', omzet: 0, hpp: 0, laba: 0 },
+      { label: 'Minggu 4', sub: 'Pekan Berjalan', omzet: 0, hpp: 0, laba: 0 },
     ];
-  }, [is7Days]);
+
+    orders.forEach((o) => {
+      const d = new Date(o.createdAt || Date.now());
+      const weekIdx = Math.min(3, Math.floor((d.getDate() - 1) / 7));
+      weekPoints[weekIdx].omzet += (o.totalAmount || 0);
+      weekPoints[weekIdx].hpp += Math.round((o.totalAmount || 0) * 0.42);
+      weekPoints[weekIdx].laba += Math.max(0, (o.totalAmount || 0) - Math.round((o.totalAmount || 0) * 0.42));
+    });
+
+    const maxOmzet = Math.max(...weekPoints.map((p) => p.omzet), 1);
+    return weekPoints.map((pt, idx) => {
+      const x = 100 + idx * 180;
+      const yOmzet = pt.omzet > 0 ? Math.round(180 - (pt.omzet / maxOmzet) * 140) : 180;
+      const yHpp = pt.hpp > 0 ? Math.round(180 - (pt.hpp / maxOmzet) * 140) : 180;
+      const yLaba = pt.laba > 0 ? Math.round(180 - (pt.laba / maxOmzet) * 140) : 180;
+      return { ...pt, x, yOmzet, yHpp, yLaba };
+    });
+  }, [is7Days, orders]);
 
   const totalOmzetPeriod = chartData.reduce((a, b) => a + b.omzet, 0);
   const totalLabaPeriod = chartData.reduce((a, b) => a + b.laba, 0);
 
   const handleExportExcel = () => {
-    showMagicToast('Laporan Diunduh 📊', `Berkas Laporan_Finansial_${(dateRange.presetLabel || 'Custom').replace(/\s+/g, '_')}.xlsx telah di-generate.`, '📥');
+    const success = exportOrdersToCsv(orders, (dateRange.presetLabel || 'Finansial').replace(/\s+/g, '_'));
+    if (success) {
+      showMagicToast('Laporan Diunduh 📊', `Berkas Laporan_Pesanan_Chenille_${(dateRange.presetLabel || 'Custom').replace(/\s+/g, '_')}.csv berhasil diunduh.`, '📥');
+    } else {
+      showMagicToast('Tidak Ada Transaksi 📋', 'Belum ada pesanan terdaftar di database untuk diekspor.', 'ℹ️');
+    }
   };
 
   const omzetPath = useMemo(() => {
@@ -272,6 +311,62 @@ export const FinancialChartCard: React.FC = () => {
 // 2. PRODUCTION CALENDAR & TOP PROFITABLE PRODUCTS
 // ============================================================================
 export const ProductionCalendarCard: React.FC = () => {
+  const { orders } = useOrderStore();
+  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(getApiUrl('/api/v1/products?limit=20&include_inactive=false'))
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && Array.isArray(res.data?.products)) {
+          const sorted = res.data.products
+            .map((p: any) => {
+              const price = Number(p.price || 0);
+              const hpp = Number(p.raw_cost_hpp || p.rawCostHpp || Math.round(price * 0.42));
+              const marginAmt = price - hpp;
+              const marginPct = price > 0 ? ((marginAmt / price) * 100).toFixed(1) : '0.0';
+              return {
+                id: p.id,
+                name: p.name,
+                price,
+                hpp,
+                marginAmt,
+                marginPct,
+              };
+            })
+            .sort((a: any, b: any) => b.marginAmt - a.marginAmt)
+            .slice(0, 3);
+          setTopProducts(sorted);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const now = new Date();
+  const monthName = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+  const dayOfWeekIndex = now.getDay();
+
+  const weekDays = dayNames.map((dName, idx) => {
+    const diff = idx - dayOfWeekIndex;
+    const d = new Date(now.getTime() + diff * 86400000);
+    const dateNum = d.getDate();
+    const isToday = diff === 0;
+    const dateStr = d.toISOString().split('T')[0];
+    const dayOrders = orders.filter((o) => (o.createdAt || '').startsWith(dateStr));
+    return {
+      dayName: dName,
+      dateNum,
+      isToday,
+      ordersCount: dayOrders.length,
+      hasCrafting: dayOrders.some((o) => o.currentStep === 2),
+      hasExpedition: dayOrders.some((o) => o.fulfillmentType === 'COURIER_EXPEDITION'),
+      hasCod: dayOrders.some((o) => o.fulfillmentType === 'COD_MEETUP_POINT'),
+    };
+  });
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Calendar */}
@@ -279,44 +374,50 @@ export const ProductionCalendarCard: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 font-extrabold text-stone-800 text-sm">
             <Calendar className="w-4 h-4 text-rose-600" />
-            <span>Kalender Produksi Atelier (September 2026)</span>
+            <span>Kalender Produksi Atelier ({monthName})</span>
           </div>
           <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
-            Aktif
+            Pekan Berjalan
           </span>
         </div>
 
         <div className="flex gap-2 text-[10px] text-stone-500 font-bold">
           <span className="inline-flex items-center gap-1 text-rose-600">● Rangkai</span>
-          <span className="inline-flex items-center gap-1 text-blue-600">● Biteship J&T</span>
-          <span className="inline-flex items-center gap-1 text-amber-600">● COD Kampus</span>
+          <span className="inline-flex items-center gap-1 text-blue-600">● Ekspedisi</span>
+          <span className="inline-flex items-center gap-1 text-amber-600">● COD Meetup</span>
         </div>
 
         <div className="grid grid-cols-7 gap-1.5 text-center text-xs pt-1">
-          {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map((d, i) => (
+          {weekDays.map((d, i) => (
             <div key={i} className="text-[10px] font-black text-stone-400 uppercase py-1">
-              {d}
+              {d.dayName}
             </div>
           ))}
-          <div className="p-2 rounded-xl bg-stone-50 text-stone-700 font-bold">1</div>
-          <div className="p-2 rounded-xl bg-stone-50 text-stone-700 font-bold">2</div>
-          <div className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold">
-            <div>3</div>
-            <div className="text-[8px] bg-rose-600 text-white rounded px-0.5 mt-0.5">2 Buket</div>
-          </div>
-          <div className="p-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 font-bold">
-            <div>4</div>
-            <div className="text-[8px] bg-blue-600 text-white rounded px-0.5 mt-0.5">Pick Up</div>
-          </div>
-          <div className="p-2 rounded-xl bg-stone-50 text-stone-700 font-bold">5</div>
-          <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 font-bold">
-            <div>6</div>
-            <div className="text-[8px] bg-amber-600 text-white rounded px-0.5 mt-0.5">COD UI</div>
-          </div>
-          <div className="p-2 rounded-xl bg-rose-600 text-white font-extrabold shadow-sm">
-            <div>7</div>
-            <div className="text-[8px] bg-white text-rose-700 rounded px-0.5 mt-0.5 font-black">Hari Ini</div>
-          </div>
+          {weekDays.map((d, i) => (
+            <div
+              key={i}
+              className={`p-2 rounded-xl text-xs font-bold transition-all ${
+                d.isToday
+                  ? 'bg-rose-600 text-white shadow-md'
+                  : d.ordersCount > 0
+                  ? 'bg-rose-50 border border-rose-200 text-rose-700'
+                  : 'bg-stone-50 text-stone-700'
+              }`}
+            >
+              <div>{d.dateNum}</div>
+              {d.isToday ? (
+                <div className="text-[8px] bg-white text-rose-700 rounded px-0.5 mt-0.5 font-black">
+                  Hari Ini
+                </div>
+              ) : d.ordersCount > 0 ? (
+                <div className="text-[8px] bg-rose-600 text-white rounded px-0.5 mt-0.5">
+                  {d.ordersCount} Buket
+                </div>
+              ) : (
+                <div className="text-[8px] text-stone-300 mt-0.5">-</div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -324,48 +425,37 @@ export const ProductionCalendarCard: React.FC = () => {
       <div className="bg-white rounded-3xl border border-rose-100 p-5 sm:p-6 shadow-xs space-y-3">
         <div className="flex items-center gap-2 font-extrabold text-stone-800 text-sm">
           <Sparkles className="w-4 h-4 text-amber-500" />
-          <span>Top Produk Paling Menguntungkan</span>
+          <span>Top Produk Paling Menguntungkan (Supabase)</span>
         </div>
 
         <div className="space-y-2 text-xs">
-          <div className="p-3 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-between">
-            <div>
-              <div className="font-extrabold text-stone-800">Sunshine Daisy Bear Toga</div>
-              <div className="text-[11px] text-stone-400">HPP: Rp 52.600 • Jual: Rp 175.000</div>
-            </div>
-            <div className="text-right">
-              <span className="text-emerald-600 font-extrabold text-sm block">+Rp 122.400</span>
-              <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                Margin 70.0%
-              </span>
-            </div>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-between">
-            <div>
-              <div className="font-extrabold text-stone-800">Pink Tulip Bliss Trio + LED</div>
-              <div className="text-[11px] text-stone-400">HPP: Rp 46.800 • Jual: Rp 150.000</div>
-            </div>
-            <div className="text-right">
-              <span className="text-emerald-600 font-extrabold text-sm block">+Rp 103.200</span>
-              <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                Margin 68.8%
-              </span>
-            </div>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-between">
-            <div>
-              <div className="font-extrabold text-stone-800">Royal Amethyst Lavender Crown</div>
-              <div className="text-[11px] text-stone-400">HPP: Rp 78.400 • Jual: Rp 230.000</div>
-            </div>
-            <div className="text-right">
-              <span className="text-emerald-600 font-extrabold text-sm block">+Rp 151.600</span>
-              <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                Margin 65.9%
-              </span>
-            </div>
-          </div>
+          {isLoading ? (
+            <div className="py-6 text-center text-stone-400">Memuat data produk...</div>
+          ) : topProducts.length === 0 ? (
+            <div className="py-6 text-center text-stone-400">Belum ada produk terdaftar.</div>
+          ) : (
+            topProducts.map((p) => (
+              <div
+                key={p.id}
+                className="p-3 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-between"
+              >
+                <div>
+                  <div className="font-extrabold text-stone-800">{p.name}</div>
+                  <div className="text-[11px] text-stone-400">
+                    HPP: Rp {p.hpp.toLocaleString('id-ID')} • Jual: Rp {p.price.toLocaleString('id-ID')}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-emerald-600 font-extrabold text-sm block">
+                    +Rp {p.marginAmt.toLocaleString('id-ID')}
+                  </span>
+                  <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    Margin {p.marginPct}%
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -376,6 +466,7 @@ export const ProductionCalendarCard: React.FC = () => {
 // 3. REPORTS & EXCEL EXPORT VIEW
 // ============================================================================
 export const ReportsView: React.FC = () => {
+  const { orders } = useOrderStore();
   const { wasteMaterials, getTotalWasteLoss } = useSettingsStore();
   const totalWasteLoss = getTotalWasteLoss();
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -385,7 +476,35 @@ export const ReportsView: React.FC = () => {
   });
 
   const handleDownload = (format: string) => {
-    showMagicToast(`Laporan ${format} Siap! 📈`, `File Laporan_Atelier_${(dateRange.presetLabel || 'Custom').replace(/\s+/g, '_')}.${format.toLowerCase()} berhasil diekspor.`, '📄');
+    if (format === 'CSV') {
+      const success = exportOrdersToCsv(orders, (dateRange.presetLabel || 'Custom').replace(/\s+/g, '_'));
+      if (success) {
+        showMagicToast('Laporan CSV Siap! 📈', 'File pesanan transaksi berhasil diekspor berstandar UTF-8 BOM.', '📄');
+      } else {
+        showMagicToast('Tidak Ada Data 📋', 'Belum ada data transaksi pesanan untuk diekspor.', 'ℹ️');
+      }
+    } else {
+      const success = exportMonthlySummaryToCsv(filteredReportsData, (dateRange.presetLabel || 'Custom').replace(/\s+/g, '_'));
+      if (success) {
+        showMagicToast('Laporan Finansial Siap! 📈', 'File rekapitulasi finansial bulanan (.csv UTF-8 BOM) berhasil diunduh.', '📊');
+      } else {
+        showMagicToast('Tidak Ada Data 📋', 'Belum ada data laporan bulanan pada rentang tanggal ini.', 'ℹ️');
+      }
+    }
+  };
+
+  const handleDownloadMonth = (isoMonth: string, periodLabel: string) => {
+    const monthOrders = orders.filter((o) => {
+      const d = new Date(o.createdAt || Date.now());
+      const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      return m === isoMonth;
+    });
+    const success = exportOrdersToCsv(monthOrders, periodLabel.replace(/\s+/g, '_'));
+    if (success) {
+      showMagicToast(`Laporan ${periodLabel} 📈`, `File transaksi bulan ${periodLabel} berhasil diekspor.`, '📄');
+    } else {
+      showMagicToast('Tidak Ada Data 📋', `Tidak ada transaksi pada bulan ${periodLabel}.`, 'ℹ️');
+    }
   };
 
   type ReportSortField = 'period' | 'orders' | 'omzet' | 'hpp' | 'net' | 'margin';
@@ -405,13 +524,46 @@ export const ReportsView: React.FC = () => {
     }
   };
 
-  const rawReportsData = [
-    { period: 'September 2026 (Berjalan)', isoMonth: '2026-09', startDate: '2026-09-01', endDate: '2026-09-30', monthOrder: 9, orders: 58, omzetNum: 8750000, omzet: 'Rp 8.750.000', hppNum: 3650000, hpp: 'Rp 3.650.000', netNum: 5100000, net: 'Rp 5.100.000', marginNum: 58.2, margin: '58.2%' },
-    { period: 'Agustus 2026', isoMonth: '2026-08', startDate: '2026-08-01', endDate: '2026-08-31', monthOrder: 8, orders: 74, omzetNum: 11200000, omzet: 'Rp 11.200.000', hppNum: 4700000, hpp: 'Rp 4.700.000', netNum: 6500000, net: 'Rp 6.500.000', marginNum: 58.0, margin: '58.0%' },
-    { period: 'Juli 2026', isoMonth: '2026-07', startDate: '2026-07-01', endDate: '2026-07-31', monthOrder: 7, orders: 62, omzetNum: 9400000, omzet: 'Rp 9.400.000', hppNum: 3950000, hpp: 'Rp 3.950.000', netNum: 5450000, net: 'Rp 5.450.000', marginNum: 57.9, margin: '57.9%' },
-    { period: 'Juni 2026 (Wisuda Raya)', isoMonth: '2026-06', startDate: '2026-06-01', endDate: '2026-06-30', monthOrder: 6, orders: 95, omzetNum: 14800000, omzet: 'Rp 14.800.000', hppNum: 6100000, hpp: 'Rp 6.100.000', netNum: 8700000, net: 'Rp 8.700.000', marginNum: 58.7, margin: '58.7%' },
-    { period: 'Mei 2026', isoMonth: '2026-05', startDate: '2026-05-01', endDate: '2026-05-31', monthOrder: 5, orders: 50, omzetNum: 7900000, omzet: 'Rp 7.900.000', hppNum: 3300000, hpp: 'Rp 3.300.000', netNum: 4600000, net: 'Rp 4.600.000', marginNum: 58.2, margin: '58.2%' },
-  ];
+  const rawReportsData = useMemo(() => {
+    if (!orders || orders.length === 0) return [];
+    const grouped: Record<string, { period: string; isoMonth: string; startDate: string; endDate: string; monthOrder: number; orders: number; omzetNum: number; hppNum: number }> = {};
+    orders.forEach((o) => {
+      const d = new Date(o.createdAt || Date.now());
+      const year = d.getFullYear();
+      const month = d.getMonth() + 1;
+      const isoMonth = `${year}-${String(month).padStart(2, '0')}`;
+      const period = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+      if (!grouped[isoMonth]) {
+        grouped[isoMonth] = {
+          period,
+          isoMonth,
+          startDate: `${isoMonth}-01`,
+          endDate: `${isoMonth}-31`,
+          monthOrder: month,
+          orders: 0,
+          omzetNum: 0,
+          hppNum: 0,
+        };
+      }
+      grouped[isoMonth].orders += 1;
+      grouped[isoMonth].omzetNum += (o.totalAmount || 0);
+      grouped[isoMonth].hppNum += Math.round((o.totalAmount || 0) * 0.42);
+    });
+
+    return Object.values(grouped).map((g) => {
+      const netNum = Math.max(0, g.omzetNum - g.hppNum);
+      const marginNum = g.omzetNum > 0 ? Number(((netNum / g.omzetNum) * 100).toFixed(1)) : 0;
+      return {
+        ...g,
+        omzet: `Rp ${g.omzetNum.toLocaleString('id-ID')}`,
+        hpp: `Rp ${g.hppNum.toLocaleString('id-ID')}`,
+        netNum,
+        net: `Rp ${netNum.toLocaleString('id-ID')}`,
+        marginNum,
+        margin: `${marginNum}%`,
+      };
+    });
+  }, [orders]);
 
   const filteredReportsData = useMemo(() => {
     return rawReportsData.filter((r) => {
@@ -608,10 +760,11 @@ export const ReportsView: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-4 text-center">
                       <button
-                        onClick={() => handleDownload('XLSX')}
+                        onClick={() => handleDownloadMonth(row.isoMonth, row.period)}
                         className="px-2.5 py-1 rounded-lg border border-stone-200 hover:border-rose-300 text-stone-600 hover:text-rose-600 text-[11px] font-bold transition-all shadow-2xs cursor-pointer"
+                        title={`Unduh seluruh transaksi buket bulan ${row.period}`}
                       >
-                        Unduh
+                        Unduh CSV
                       </button>
                     </td>
                   </tr>
@@ -685,8 +838,37 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCat, setSelectedCat] = useState('ALL');
   const [selectedProdBom, setSelectedProdBom] = useState<Product | null>(null);
+  const [liveBomItems, setLiveBomItems] = useState<Array<{
+    id: string;
+    raw_material_id: string;
+    material_name: string;
+    unit: string;
+    quantity_needed: number;
+    subtotal_cost: number;
+  }> | null>(null);
+  const [isLoadingBom, setIsLoadingBom] = useState(false);
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+
+  // Fetch live BOM recipe directly from Supabase API when product BOM modal is opened
+  useEffect(() => {
+    if (!selectedProdBom) {
+      setLiveBomItems(null);
+      return;
+    }
+    setIsLoadingBom(true);
+    fetch(getApiUrl(`/api/v1/products/${selectedProdBom.id}`))
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && Array.isArray(res.data?.bom)) {
+          setLiveBomItems(res.data.bom);
+        } else {
+          setLiveBomItems([]);
+        }
+      })
+      .catch(() => setLiveBomItems([]))
+      .finally(() => setIsLoadingBom(false));
+  }, [selectedProdBom]);
 
   type ProductSortField = 'name' | 'category' | 'recipe' | 'rawCostHpp' | 'price' | 'margin' | 'clicks' | 'status' | 'isActive';
   const [sortField, setSortField] = useState<ProductSortField | null>('clicks');
@@ -783,19 +965,8 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
     }
   };
 
-  // Mock recipe ingredients generator based on product ID
-  const getProductRecipe = (prod: Product) => {
-    return [
-      { name: 'Batang Kawat Bulu Utama (6mm)', qty: 32, unit: 'Batang', cost: 350, subtotal: 11200 },
-      { name: 'Kawat Batang Penyangga Hijau No. 18', qty: 12, unit: 'Batang', cost: 500, subtotal: 6000 },
-      { name: 'Kertas Cellophane Korean Matte Waterproof', qty: 2, unit: 'Lembar', cost: 4500, subtotal: 9000 },
-      { name: 'Pita Satin Burgundy Mewah 2.5cm', qty: 1.5, unit: 'Meter', cost: 2200, subtotal: 3300 },
-      { name: 'Aksesoris / Kartu Ucapan / Box Kemas', qty: 1, unit: 'Pcs', cost: prod.rawCostHpp - 29500 > 0 ? prod.rawCostHpp - 29500 : 5000, subtotal: prod.rawCostHpp - 29500 > 0 ? prod.rawCostHpp - 29500 : 5000 },
-    ];
-  };
-
   const sortedProducts = useMemo(() => {
-    const sourceList = productsList.length > 0 ? productsList : MOCK_PRODUCTS;
+    const sourceList = productsList;
     const list = sourceList.filter((prod) => {
       const matchName = prod.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchCat = selectedCat === 'ALL' || prod.category.toLowerCase() === selectedCat.toLowerCase();
@@ -830,8 +1001,8 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
           valA = a.isActive !== false ? 1 : 0;
           valB = b.isActive !== false ? 1 : 0;
         } else if (sortField === 'recipe') {
-          valA = getProductRecipe(a).length;
-          valB = getProductRecipe(b).length;
+          valA = a.rawCostHpp;
+          valB = b.rawCostHpp;
         }
 
         if (typeof valA === 'string' && typeof valB === 'string') {
@@ -1118,17 +1289,32 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100 text-[11px]">
-                    {getProductRecipe(selectedProdBom).map((ing, i) => (
-                      <tr key={i} className="hover:bg-stone-50/50">
-                        <td className="py-2 px-3 font-semibold text-stone-800">{ing.name}</td>
-                        <td className="py-2 px-3 text-stone-600">
-                          {ing.qty} {ing.unit}
-                        </td>
-                        <td className="py-2 px-3 font-bold text-rose-600">
-                          Rp {ing.subtotal.toLocaleString('id-ID')}
+                    {isLoadingBom ? (
+                      <tr>
+                        <td colSpan={3} className="py-6 text-center text-stone-400 font-medium">
+                          <RefreshCw className="w-4 h-4 animate-spin inline-block mr-1 text-rose-500" />
+                          Memuat resep bahan baku dari database Supabase...
                         </td>
                       </tr>
-                    ))}
+                    ) : !liveBomItems || liveBomItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="py-6 text-center text-stone-400 font-medium">
+                          Belum ada rincian bahan baku tersimpan di tabel bill_of_materials untuk buket ini.
+                        </td>
+                      </tr>
+                    ) : (
+                      liveBomItems.map((ing) => (
+                        <tr key={ing.id || ing.raw_material_id} className="hover:bg-stone-50/50">
+                          <td className="py-2 px-3 font-semibold text-stone-800">{ing.material_name}</td>
+                          <td className="py-2 px-3 text-stone-600">
+                            {ing.quantity_needed} {ing.unit}
+                          </td>
+                          <td className="py-2 px-3 font-bold text-rose-600">
+                            Rp {Number(ing.subtotal_cost).toLocaleString('id-ID')}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

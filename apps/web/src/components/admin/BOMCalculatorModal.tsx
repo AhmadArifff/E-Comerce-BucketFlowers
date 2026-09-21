@@ -31,7 +31,7 @@ import {
   TrendingDown,
   ShoppingBag,
 } from 'lucide-react';
-import { MOCK_PRODUCTS } from '@chenille/shared';
+import type { ExtendedProduct as Product } from '@chenille/shared';
 import {
   useSettingsStore,
   type WasteMaterialItem,
@@ -40,6 +40,7 @@ import {
 } from '@/stores/useSettingsStore';
 import { showMagicToast } from '@/lib/magic-motion';
 import { TableSortHeader, type SortDirection } from './TableSortHeader';
+import { getApiUrl } from '@/lib/api-client';
 
 interface BomRow {
   id: string;
@@ -49,29 +50,58 @@ interface BomRow {
   pricePerUnit: number;
 }
 
-// Default recipes for bouquets
+// Canonical recipes matching Supabase database products (PRD Seksi 29)
 const PRODUCT_RECIPES: Record<string, BomRow[]> = {
-  'prod-01': [
-    { id: '1', material: 'Batang Kawat Bulu Burgundy (6mm)', qty: 36, unit: 'Batang', pricePerUnit: 350 },
-    { id: '2', material: 'Batang Kawat Bulu Hijau Zaitun (6mm)', qty: 12, unit: 'Batang', pricePerUnit: 350 },
+  'prod-001': [
+    { id: '1', material: 'Batang Kawat Bulu Burgundy (6mm)', qty: 60, unit: 'Batang', pricePerUnit: 350 },
+    { id: '2', material: 'Batang Kawat Bulu Hijau Zaitun (6mm)', qty: 20, unit: 'Batang', pricePerUnit: 350 },
     { id: '3', material: 'Kawat Batang Penyangga Hijau No. 18', qty: 12, unit: 'Batang', pricePerUnit: 500 },
-    { id: '4', material: 'Cellophane Korean Matte Maroon Gold', qty: 2, unit: 'Lembar', pricePerUnit: 4500 },
-    { id: '5', material: 'Pita Satin Burgundy Mewah 2.5cm', qty: 1.5, unit: 'Meter', pricePerUnit: 2200 },
-    { id: '6', material: 'Boneka Wisuda Ber-toga 10cm', qty: 1, unit: 'Pcs', pricePerUnit: 7400 },
+    { id: '4', material: 'Cellophane Korean Matte Maroon Gold', qty: 1, unit: 'Lembar', pricePerUnit: 4500 },
+    { id: '5', material: 'Pita Satin Premium Burgundy Lis Emas 2.5cm', qty: 1, unit: 'Meter', pricePerUnit: 2200 },
+    { id: '6', material: 'Boneka Wisuda Ber-toga Mini 10cm', qty: 1, unit: 'Pcs', pricePerUnit: 7400 },
   ],
-  'prod-02': [
-    { id: '1', material: 'Batang Kawat Bulu Pastel Pink (6mm)', qty: 28, unit: 'Batang', pricePerUnit: 350 },
-    { id: '2', material: 'Batang Kawat Bulu Pastel Lilac (6mm)', qty: 16, unit: 'Batang', pricePerUnit: 350 },
-    { id: '3', material: 'Kawat Batang Penyangga Hijau No. 18', qty: 10, unit: 'Batang', pricePerUnit: 500 },
+  'prod-002': [
+    { id: '1', material: 'Batang Kawat Bulu Pastel Pink (6mm)', qty: 45, unit: 'Batang', pricePerUnit: 350 },
+    { id: '2', material: 'Batang Kawat Bulu Matcha Sage (6mm)', qty: 18, unit: 'Batang', pricePerUnit: 350 },
+    { id: '3', material: 'Kawat Batang Penyangga Hijau No. 18', qty: 7, unit: 'Batang', pricePerUnit: 500 },
     { id: '4', material: 'Cellophane Korean Pastel Frosted', qty: 2, unit: 'Lembar', pricePerUnit: 4500 },
-    { id: '5', material: 'Pita Organza Korea Glossy', qty: 2, unit: 'Meter', pricePerUnit: 2500 },
+    { id: '5', material: 'Pita Organza Transparan Korea', qty: 2, unit: 'Meter', pricePerUnit: 2500 },
   ],
-  'prod-03': [
-    { id: '1', material: 'Batang Kawat Bulu Kuning Sunflower (6mm)', qty: 32, unit: 'Batang', pricePerUnit: 350 },
-    { id: '2', material: 'Batang Kawat Bulu Cokelat Pusat (6mm)', qty: 14, unit: 'Batang', pricePerUnit: 350 },
-    { id: '3', material: 'Kawat Batang Penyangga Hijau No. 18', qty: 10, unit: 'Batang', pricePerUnit: 500 },
-    { id: '4', material: 'Cellophane Kraft Yellow Gold', qty: 2, unit: 'Lembar', pricePerUnit: 4500 },
-    { id: '5', material: 'Pita Satin Gold Premium', qty: 1.5, unit: 'Meter', pricePerUnit: 2200 },
+  'prod-003': [
+    { id: '1', material: 'Batang Kawat Bulu Kuning Emas Sunflower (6mm)', qty: 40, unit: 'Batang', pricePerUnit: 350 },
+    { id: '2', material: 'Batang Kawat Bulu Cokelat Gelap (6mm)', qty: 15, unit: 'Batang', pricePerUnit: 350 },
+    { id: '3', material: 'Batang Kawat Bulu Hijau Zaitun (6mm)', qty: 15, unit: 'Batang', pricePerUnit: 350 },
+    { id: '4', material: 'Kawat Batang Penyangga Hijau No. 18', qty: 5, unit: 'Batang', pricePerUnit: 500 },
+    { id: '5', material: 'Cellophane Korean Matte Waterproof', qty: 1, unit: 'Lembar', pricePerUnit: 4500 },
+    { id: '6', material: 'Pita Satin Gold Premium', qty: 1, unit: 'Meter', pricePerUnit: 2200 },
+  ],
+  'prod-004': [
+    { id: '1', material: 'Batang Kawat Bulu Lavender Lilac (6mm)', qty: 48, unit: 'Batang', pricePerUnit: 350 },
+    { id: '2', material: 'Batang Kawat Bulu Hijau Zaitun (6mm)', qty: 12, unit: 'Batang', pricePerUnit: 350 },
+    { id: '3', material: 'Cellophane Korean Matte Lilac', qty: 2, unit: 'Lembar', pricePerUnit: 4500 },
+    { id: '4', material: 'Pita Satin Ungu Lilac 2.5cm', qty: 1.5, unit: 'Meter', pricePerUnit: 2200 },
+  ],
+  'prod-005': [
+    { id: '1', material: 'Batang Kawat Bulu Sky Blue & Kuning (6mm)', qty: 50, unit: 'Batang', pricePerUnit: 350 },
+    { id: '2', material: 'Boneka Wisuda Karakter Ber-toga Mini', qty: 1, unit: 'Pcs', pricePerUnit: 15000 },
+    { id: '3', material: 'Selempang Nama Custom Wisudawan', qty: 1, unit: 'Pcs', pricePerUnit: 5000 },
+    { id: '4', material: 'Cellophane Korean Two-Tone Blue', qty: 2, unit: 'Lembar', pricePerUnit: 4500 },
+  ],
+  'prod-006': [
+    { id: '1', material: 'Batang Kawat Bulu Daisy Kuning & Putih (6mm)', qty: 20, unit: 'Batang', pricePerUnit: 350 },
+    { id: '2', material: 'Pot Gerabah Mini Meja Belajar', qty: 1, unit: 'Pcs', pricePerUnit: 5500 },
+    { id: '3', material: 'Busa Bunga Kering Oasis Mini', qty: 1, unit: 'Pcs', pricePerUnit: 1500 },
+  ],
+  'prod-007': [
+    { id: '1', material: 'Batang Kawat Bulu Burgundy Velvet Tebal', qty: 70, unit: 'Batang', pricePerUnit: 400 },
+    { id: '2', material: 'Dedaunan Emas Hotprint Aksesoris', qty: 6, unit: 'Pcs', pricePerUnit: 2500 },
+    { id: '3', material: 'Cellophane Hitam Doff Luxury', qty: 2, unit: 'Lembar', pricePerUnit: 5000 },
+    { id: '4', material: 'Pita Satin Merah Anggur Lis Emas', qty: 2, unit: 'Meter', pricePerUnit: 2500 },
+  ],
+  'prod-008': [
+    { id: '1', material: 'Batang Kawat Bulu Sunflower Kuning & Oranye', qty: 30, unit: 'Batang', pricePerUnit: 350 },
+    { id: '2', material: 'Aksesoris Ornamen Wajah Kawaii Smile', qty: 3, unit: 'Pcs', pricePerUnit: 3000 },
+    { id: '3', material: 'Cellophane Polkadot Kuning Ceria', qty: 1, unit: 'Lembar', pricePerUnit: 4500 },
   ],
 };
 
@@ -79,6 +109,7 @@ const COMMON_UNITS = ['Batang', 'Lembar', 'Meter', 'Pcs', 'Roll', 'Pack', 'Box',
 
 export const BOMCalculatorModal: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'RAW_MATERIALS' | 'PROCUREMENT' | 'RECIPES' | 'WASTE_LOSS'>('RAW_MATERIALS');
+  const [products, setProducts] = useState<Product[]>([]);
 
   // Store hooks
   const {
@@ -99,9 +130,48 @@ export const BOMCalculatorModal: React.FC = () => {
   // ==========================================
   // TAB 1: KOMPOSISI BAHAN BUKET & HPP
   // ==========================================
-  const [selectedProductId, setSelectedProductId] = useState<string>('prod-01');
-  const [rows, setRows] = useState<BomRow[]>(PRODUCT_RECIPES['prod-01'] || []);
-  const [sellingPrice, setSellingPrice] = useState(119000);
+  const [selectedProductId, setSelectedProductId] = useState<string>('prod-001');
+  const [rows, setRows] = useState<BomRow[]>(PRODUCT_RECIPES['prod-001'] || []);
+  const [sellingPrice, setSellingPrice] = useState(165000);
+
+  // Fetch live products from Supabase API
+  React.useEffect(() => {
+    fetch(getApiUrl('/api/v1/products?limit=100&include_inactive=true'))
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && Array.isArray(res.data?.products)) {
+          const mapped: Product[] = res.data.products.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            category: p.category_name || p.category_id?.replace('cat-', '') || p.category || 'Bouquet',
+            price: Number(p.price),
+            discountPrice: p.discount_price !== undefined && p.discount_price !== null ? Number(p.discount_price) : undefined,
+            rawCostHpp: p.raw_cost_hpp !== undefined && p.raw_cost_hpp !== null ? Number(p.raw_cost_hpp) : Math.round(Number(p.price) * 0.42),
+            image: p.image_url || p.image || '/images/products/buket-mawar-merah-velvet.jpg',
+            description: p.description || '',
+            isReadyStock: Boolean(p.is_ready_stock ?? p.isReadyStock),
+            isActive: p.is_active !== undefined ? Boolean(p.is_active) : (p.isActive !== undefined ? Boolean(p.isActive) : true),
+            leadTimeDays: p.po_lead_days || p.lead_time_days || 1,
+            clicks: Number(p.click_count ?? p.clickCount ?? 0),
+            clickCount: Number(p.click_count ?? p.clickCount ?? 0),
+            clickCountGuest: Number(p.click_count_guest ?? p.clickCountGuest ?? 0),
+            clickCountAuth: Number(p.click_count_auth ?? p.clickCountAuth ?? 0),
+            views: Number(p.view_count ?? p.viewCount ?? 1),
+          }));
+          setProducts(mapped);
+          if (mapped.length > 0) {
+            const first = mapped[0];
+            setSelectedProductId(first.id);
+            setSellingPrice(first.discountPrice ?? first.price);
+            if (PRODUCT_RECIPES[first.id]) {
+              setRows(PRODUCT_RECIPES[first.id]);
+            }
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   type BomSortField = 'material' | 'qty' | 'unit' | 'pricePerUnit' | 'subtotal';
   const [bomSortField, setBomSortField] = useState<BomSortField | null>(null);
@@ -152,7 +222,7 @@ export const BOMCalculatorModal: React.FC = () => {
       { id: '3', material: 'Pita Satin Mewah', qty: 1.5, unit: 'Meter', pricePerUnit: 2200 },
     ];
     setRows(recipe);
-    const prod = MOCK_PRODUCTS.find((p) => p.id === prodId);
+    const prod = products.find((p) => p.id === prodId);
     if (prod) {
       setSellingPrice(prod.discountPrice ?? prod.price);
     }
@@ -936,11 +1006,15 @@ export const BOMCalculatorModal: React.FC = () => {
                 onChange={(e) => handleSelectProduct(e.target.value)}
                 className="text-xs font-bold p-2 bg-white border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 text-stone-800"
               >
-                {MOCK_PRODUCTS.map((prod) => (
-                  <option key={prod.id} value={prod.id}>
-                    {prod.name} (Harga: Rp {(prod.discountPrice ?? prod.price).toLocaleString('id-ID')})
-                  </option>
-                ))}
+                {products.length === 0 ? (
+                  <option value="">Memuat produk dari database...</option>
+                ) : (
+                  products.map((prod) => (
+                    <option key={prod.id} value={prod.id}>
+                      {prod.name} (Harga: Rp {(prod.discountPrice ?? prod.price).toLocaleString('id-ID')})
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 

@@ -18,7 +18,6 @@ import { LiveChatWidget } from '@/components/storefront/LiveChatWidget';
 import { Footer } from '@/components/storefront/Footer';
 import { MaintenanceOverlay } from '@/components/storefront/MaintenanceOverlay';
 import type { ExtendedProduct } from '@chenille/shared';
-import { MOCK_PRODUCTS } from '@chenille/shared';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { getThemeCopy } from '@/lib/theme-copy';
@@ -42,7 +41,8 @@ export default function StorefrontPage() {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<ExtendedProduct | null>(null);
-  const [productsList, setProductsList] = useState<ExtendedProduct[]>(MOCK_PRODUCTS);
+  const [productsList, setProductsList] = useState<ExtendedProduct[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
   // Multi-criteria filter state (PRD 7.18)
   const [filterState, setFilterState] = useState<FilterState>({
@@ -118,7 +118,8 @@ export default function StorefrontPage() {
           }
         }
       })
-      .catch((err) => console.warn('Could not load products from Supabase API, using fallback:', err));
+      .catch((err) => console.warn('Could not load products from Supabase API:', err))
+      .finally(() => setIsLoadingProducts(false));
 
     return () => {
       unsubTheme();
@@ -404,6 +405,7 @@ export default function StorefrontPage() {
           {/* Product Grid with Pagination */}
           <ProductGrid
             products={paginatedProducts}
+            isLoading={isLoadingProducts}
             page={currentPage}
             totalPages={totalPages}
             totalProducts={filteredProducts.length}

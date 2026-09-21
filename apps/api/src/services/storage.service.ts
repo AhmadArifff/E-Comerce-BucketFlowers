@@ -8,13 +8,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wpdfxuwhqwvglqoiubfq.supabase.co';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
 const DEFAULT_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'product-images';
 
-const isPlaceholderKey = !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('xxxx');
+const effectiveKey = (SUPABASE_SERVICE_ROLE_KEY && !SUPABASE_SERVICE_ROLE_KEY.includes('xxxx'))
+  ? SUPABASE_SERVICE_ROLE_KEY
+  : (SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('xxxx'))
+  ? SUPABASE_ANON_KEY
+  : '';
 
-const supabase = !isPlaceholderKey
-  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const supabase = effectiveKey
+  ? createClient(SUPABASE_URL, effectiveKey)
   : null;
 
 // Local fallback uploads directory: apps/web/public/images/uploads

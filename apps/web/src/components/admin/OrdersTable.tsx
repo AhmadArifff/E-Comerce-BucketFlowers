@@ -7,6 +7,7 @@ import { showMagicToast } from '@/lib/magic-motion';
 import { getApiUrl } from '@/lib/api-client';
 import { TableSortHeader, type SortDirection } from './TableSortHeader';
 import { DateRangeFilter, type DateRange } from './DateRangeFilter';
+import { exportOrdersToCsv } from '@/lib/export-excel';
 
 interface OrdersTableProps {
   searchQuery?: string;
@@ -32,7 +33,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
     fetch(getApiUrl('/api/v1/orders'))
       .then((r) => r.json())
       .then((res) => {
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (res.success && Array.isArray(res.data)) {
           const mapped: Order[] = res.data.map((o: any) => ({
             id: o.id,
             invoiceNumber: o.id,
@@ -61,7 +62,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
             items: (o.items || []).map((it: any) => ({
               productId: it.product_id,
               productName: it.product_name || 'Buket Chenille',
-              productImage: '/images/products/buket-mawar-merah-velvet.jpg',
+              productImage: it.product_image || '/images/products/buket-mawar-merah-velvet.jpg',
               quantity: it.quantity,
               unitPrice: it.price,
               subtotal: it.subtotal,
@@ -178,7 +179,20 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
   }, [orders, statusFilter, activeSearch, dateRange, sortField, sortDirection]);
 
   const handleExportOrdersCsv = () => {
-    showMagicToast('Ekspor Pesanan Berhasil! 📦', 'File Pesanan_Chenille_Atelier.csv berhasil diunduh.', '📄');
+    const success = exportOrdersToCsv(filteredOrders, (dateRange.presetLabel || 'Semua').replace(/\s+/g, '_'));
+    if (success) {
+      showMagicToast(
+        'Ekspor Pesanan Berhasil! 📦',
+        `File ${filteredOrders.length} transaksi pesanan (.csv) berstandar UTF-8 BOM berhasil diunduh.`,
+        '📄'
+      );
+    } else {
+      showMagicToast(
+        'Tidak Ada Pesanan 📋',
+        'Belum ada transaksi pesanan yang cocok dengan filter aktif untuk diekspor.',
+        'ℹ️'
+      );
+    }
   };
 
   return (
@@ -331,8 +345,12 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
           <tbody className="divide-y divide-stone-100">
             {filteredOrders.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-8 text-center text-stone-400 font-medium text-xs">
-                  Tidak ada pesanan yang sesuai dengan filter tanggal atau status.
+                <td colSpan={8} className="py-12 text-center text-stone-400 font-medium text-xs">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <ShoppingBag className="w-8 h-8 text-stone-300" />
+                    <span className="font-extrabold text-stone-700 text-sm">Belum Ada Pesanan Masuk di Atelier</span>
+                    <span className="text-stone-400 text-xs max-w-md">Database Supabase saat ini bersih (0 pesanan aktif). Setiap pesanan checkout baru dari pelanggan akan otomatis tersinkronisasi di sini.</span>
+                  </div>
                 </td>
               </tr>
             ) : (

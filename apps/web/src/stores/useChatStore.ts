@@ -3,7 +3,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { LiveChatMessage } from '@chenille/shared';
-import { MOCK_CHAT_HISTORY } from '@chenille/shared';
 import { getApiUrl } from '@/lib/api-client';
 
 export interface ChatSessionSummary {
@@ -48,7 +47,7 @@ export const useChatStore = create<ChatState>()(
       sessionId: null,
       customerName: 'Tamu Chenille',
       customerPhone: undefined,
-      messages: MOCK_CHAT_HISTORY,
+      messages: [],
       adminSessions: [],
       activeAdminSessionId: null,
       adminSessionMessages: [],
@@ -303,7 +302,7 @@ export const useChatStore = create<ChatState>()(
         }
       },
 
-      clearChat: () => set({ messages: MOCK_CHAT_HISTORY }),
+      clearChat: () => set({ messages: [] }),
     }),
     {
       name: 'chenille_chat_storage',

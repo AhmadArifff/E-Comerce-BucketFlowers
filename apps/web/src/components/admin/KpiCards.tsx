@@ -32,12 +32,12 @@ export const KpiCards: React.FC = () => {
 
   const activeOrdersCount = orders.filter((o) => o.currentStep < 4).length;
 
-  const totalRev = dashboardData ? dashboardData.totalRevenue : 4850000;
-  const netProf = dashboardData ? dashboardData.netProfit : 3250000;
-  const margin = dashboardData ? dashboardData.profitMargin : 67.0;
-  const poRemain = dashboardData ? dashboardData.poSlotsRemaining : 13;
+  const totalRev = dashboardData ? dashboardData.totalRevenue : orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const netProf = dashboardData ? dashboardData.netProfit : Math.round(totalRev * 0.58);
+  const margin = dashboardData ? dashboardData.profitMargin : (totalRev > 0 ? 58.0 : 0);
+  const poRemain = dashboardData ? dashboardData.poSlotsRemaining : 25;
   const poLimit = dashboardData ? dashboardData.dailyLimit : 25;
-  const lowStock = dashboardData ? dashboardData.lowStockCount : 1;
+  const lowStock = dashboardData ? dashboardData.lowStockCount : 0;
 
   const cards = [
     {

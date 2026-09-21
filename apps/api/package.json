@@ -13,6 +13,8 @@
     "prisma:push": "prisma db push",
     "prisma:seed": "tsx src/scripts/seed.ts",
     "db:seed": "tsx src/scripts/seed.ts",
+    "db:rls": "tsx src/scripts/apply_rls_security_fix.ts",
+    "storage:sync": "tsx src/scripts/sync_storage.ts",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",

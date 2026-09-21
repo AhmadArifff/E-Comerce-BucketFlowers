@@ -497,6 +497,39 @@ ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bill_of_materials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE campaign_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE canned_responses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customer_complaints ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customer_occasions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE feature_toggles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flower_point_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE logistics_configs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_configs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE order_status_histories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payment_gateway_configs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payment_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE procurement_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_images ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE raw_materials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE saved_custom_designs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE search_keyword_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE session_audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shipping_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE store_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE supplier_directories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_addresses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_attendance_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_event_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_stamp_cards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE warranty_claims ENABLE ROW LEVEL SECURITY;
+ALTER TABLE waste_material_logs ENABLE ROW LEVEL SECURITY;
 
 -- Public can read active catalog items
 DO $$ BEGIN
@@ -536,8 +569,29 @@ DO $$ BEGIN
   CREATE POLICY "Order items insertable" ON order_items FOR INSERT WITH CHECK (true);
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
+-- Policies for other tables (ensuring zero linter warnings while supporting app APIs)
+DO $$ BEGIN
+  CREATE POLICY "Public product images are viewable" ON product_images FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Store settings viewable" ON store_settings FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Feature toggles viewable" ON feature_toggles FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Active coupons viewable" ON coupons FOR SELECT USING (is_active = true);
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Campaign settings viewable" ON campaign_settings FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
 -- ==============================================================================
--- 5. SUPABASE STORAGE BUCKETS
+-- 5. SUPABASE STORAGE BUCKETS & POLICIES
 -- ==============================================================================
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -553,6 +607,27 @@ ON CONFLICT (id) DO UPDATE SET
   public = EXCLUDED.public,
   file_size_limit = EXCLUDED.file_size_limit,
   allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+-- Storage Policies for storage.objects
+DO $$ BEGIN
+  CREATE POLICY "Public Access to Public Buckets" ON storage.objects
+  FOR SELECT USING (bucket_id IN ('product-images', 'raw-material-images', 'lookbook-reviews', 'avatars', 'chat-attachments'));
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Allow Upload to Atelier Buckets" ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id IN ('product-images', 'raw-material-images', 'lookbook-reviews', 'avatars', 'chat-attachments', 'payment-receipts', 'warranty-proofs'));
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Allow Update in Atelier Buckets" ON storage.objects
+  FOR UPDATE USING (bucket_id IN ('product-images', 'raw-material-images', 'lookbook-reviews', 'avatars', 'chat-attachments', 'payment-receipts', 'warranty-proofs'));
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Allow Delete in Atelier Buckets" ON storage.objects
+  FOR DELETE USING (bucket_id IN ('product-images', 'raw-material-images', 'lookbook-reviews', 'avatars', 'chat-attachments', 'payment-receipts', 'warranty-proofs'));
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- ==============================================================================
 -- 6. INITIAL SEED DATA

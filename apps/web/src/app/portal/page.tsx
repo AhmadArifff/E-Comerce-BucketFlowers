@@ -21,7 +21,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { showMagicToast } from '@/lib/magic-motion';
 import { getApiUrl } from '@/lib/api-client';
-import { MOCK_PRODUCTS, MOCK_MEETUP_POINTS, type MockOrder } from '@chenille/shared';
+import type { MockOrder } from '@chenille/shared';
 import {
   Package,
   Clock,
@@ -62,7 +62,7 @@ export default function CustomerPortalPage() {
     fetch(getApiUrl('/api/v1/orders'))
       .then((r) => r.json())
       .then((res) => {
-        if (res.success && res.data?.length > 0) {
+        if (res.success && Array.isArray(res.data)) {
           const mappedOrders: MockOrder[] = res.data.map((o: any) => ({
             id: o.id,
             invoiceNumber: o.id,
@@ -98,7 +98,7 @@ export default function CustomerPortalPage() {
             items: (o.items || []).map((it: any) => ({
               productId: it.product_id,
               productName: it.product_name,
-              productImage: '/images/products/buket-mawar-merah-velvet.jpg',
+              productImage: it.product_image || '/images/products/buket-mawar-merah-velvet.jpg',
               quantity: it.quantity,
               unitPrice: it.price,
               subtotal: it.subtotal,
@@ -235,47 +235,68 @@ export default function CustomerPortalPage() {
             {/* Member Profile Header */}
             <MemberHeader />
 
-            {/* ORDER SWITCHER PILL BAR FOR TESTING */}
-            <div className="bg-white rounded-2xl p-3.5 border border-rose-100 shadow-2xs space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-extrabold text-stone-700 flex items-center gap-1.5">
-                  <Package className="w-3.5 h-3.5 text-rose-600" />
-                  <span>Pilih Pesanan untuk Dipantau / Diuji:</span>
-                </span>
-                <span className="text-[11px] text-stone-400 font-medium">
-                  {orders.length} Pesanan Tersedia
-                </span>
+            {/* ORDER SWITCHER PILL BAR & EMPTY STATE */}
+            {dedupedOrders.length === 0 ? (
+              <div className="bg-white rounded-3xl p-8 border border-rose-100 shadow-sm text-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto shadow-inner">
+                  <Package className="w-7 h-7" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-extrabold text-stone-800">Belum Ada Pesanan Aktif</h3>
+                  <p className="text-xs text-stone-500 max-w-md mx-auto">
+                    Anda belum memiliki pesanan aktif di atelier. Silakan kunjungi katalog buket kawat bulu kami untuk memilih buket wisuda atau hadiah estetik favorit Anda.
+                  </p>
+                </div>
+                <a
+                  href="/#katalog"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all active:scale-95 cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Jelajahi Katalog Buket</span>
+                </a>
               </div>
+            ) : (
+              <div className="bg-white rounded-2xl p-3.5 border border-rose-100 shadow-2xs space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-extrabold text-stone-700 flex items-center gap-1.5">
+                    <Package className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Pilih Pesanan untuk Dipantau / Diuji:</span>
+                  </span>
+                  <span className="text-[11px] text-stone-400 font-medium">
+                    {orders.length} Pesanan Tersedia
+                  </span>
+                </div>
 
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {dedupedOrders.map((ord, idx) => {
-                  const isSelected = activeOrderId === ord.id || (!activeOrderId && idx === 0);
-                  return (
-                    <button
-                      key={ord.id || ord.invoiceNumber || `ord-pill-${idx}`}
-                      onClick={() => setActiveOrderId(ord.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
-                        isSelected
-                          ? 'bg-rose-600 text-white shadow-xs scale-102'
-                          : 'bg-stone-50 border border-stone-200 text-stone-600 hover:bg-rose-50 hover:border-rose-200'
-                      }`}
-                    >
-                      <span>{ord.invoiceNumber}</span>
-                      <span
-                        className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${
-                          isSelected ? 'bg-white text-rose-700' : 'bg-stone-200 text-stone-700'
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                  {dedupedOrders.map((ord, idx) => {
+                    const isSelected = activeOrderId === ord.id || (!activeOrderId && idx === 0);
+                    return (
+                      <button
+                        key={ord.id || ord.invoiceNumber || `ord-pill-${idx}`}
+                        onClick={() => setActiveOrderId(ord.id)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-rose-600 text-white shadow-xs scale-102'
+                            : 'bg-stone-50 border border-stone-200 text-stone-600 hover:bg-rose-50 hover:border-rose-200'
                         }`}
                       >
-                        Langkah {ord.currentStep}/4
-                      </span>
-                    </button>
-                  );
-                })}
+                        <span>{ord.invoiceNumber}</span>
+                        <span
+                          className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${
+                            isSelected ? 'bg-white text-rose-700' : 'bg-stone-200 text-stone-700'
+                          }`}
+                        >
+                          Langkah {ord.currentStep}/4
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Active Order Stepper Card */}
-            {activeOrder && (
+            {dedupedOrders.length > 0 && activeOrder && (
               <div id="portal-order-tracker" className="bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-sm space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-rose-100">
                   <div>

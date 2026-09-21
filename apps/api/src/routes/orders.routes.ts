@@ -793,4 +793,32 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/v1/orders/:id
+// Delete order and cascade associated items and history records
+router.delete('/:id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    await client.query('BEGIN');
+
+    await client.query('DELETE FROM order_items WHERE order_id = $1;', [id]);
+    await client.query('DELETE FROM order_status_histories WHERE order_id = $1;', [id]);
+    const deleteRes = await client.query('DELETE FROM orders WHERE id = $1 RETURNING id;', [id]);
+
+    if (deleteRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ success: false, error: 'Pesanan tidak ditemukan.' });
+    }
+
+    await client.query('COMMIT');
+    return res.json({ success: true, message: `Pesanan ${id} berhasil dihapus dari database.` });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting order:', error);
+    return res.status(500).json({ success: false, error: error.message || 'Gagal menghapus pesanan.' });
+  } finally {
+    client.release();
+  }
+});
+
 export default router;

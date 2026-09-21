@@ -384,6 +384,17 @@ router.patch('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const isHard = req.query.hard === 'true';
+
+    if (isHard) {
+      await pool.query('DELETE FROM product_images WHERE product_id = $1;', [id]);
+      const result = await pool.query(`DELETE FROM products WHERE id = $1 RETURNING id;`, [id]);
+      if (result.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'Produk tidak ditemukan.' });
+      }
+      return res.json({ success: true, message: 'Produk berhasil dihapus permanen dari database.' });
+    }
+
     const result = await pool.query(`UPDATE products SET is_active = false WHERE id = $1 RETURNING id;`, [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Produk tidak ditemukan.' });
@@ -443,6 +454,8 @@ router.post('/:id/click', async (req, res) => {
     const isAuth = Boolean(
       req.body?.is_auth || 
       req.body?.isAuthenticated || 
+      (req.body?.user_id && req.body.user_id !== 'guest') ||
+      (req.body?.role && req.body.role !== 'GUEST') ||
       (req.headers.authorization && req.headers.authorization.startsWith('Bearer'))
     );
 
@@ -595,6 +608,83 @@ router.delete('/:id/images/:imageId', async (req: Request, res: Response) => {
     return res.json({ success: true, message: 'Gambar berhasil dihapus dari galeri dan storage.' });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// PUT /api/v1/products/:id/bom
+// Simpan komposisi resep bahan buket & sinkronisasi HPP produk di Supabase
+router.put('/:id/bom', async (req: Request, res: Response) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const { items } = req.body;
+
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ success: false, error: 'Daftar bahan komposisi (items) wajib berupa array.' });
+    }
+
+    await client.query('BEGIN');
+
+    // Pastikan produk ada
+    const prodRes = await client.query('SELECT id, name, price FROM products WHERE id = $1 LIMIT 1;', [id]);
+    if (prodRes.rows.length === 0) {
+      throw new Error('Produk tidak ditemukan.');
+    }
+
+    // Hapus resep lama
+    await client.query('DELETE FROM bill_of_materials WHERE product_id = $1;', [id]);
+
+    let totalHpp = 0;
+
+    for (const item of items) {
+      let rawMatId = item.raw_material_id || item.id;
+      let qty = Number(item.quantity_needed ?? item.qty) || 1;
+      let subtotal = Number(item.subtotal_cost);
+      if (isNaN(subtotal) || subtotal === 0) {
+        const unitCost = Number(item.pricePerUnit ?? item.cost_per_unit) || 0;
+        subtotal = qty * unitCost;
+      }
+
+      // Pastikan rawMatId ada di raw_materials, atau cari by name
+      const matCheck = await client.query('SELECT id, cost_per_unit FROM raw_materials WHERE id = $1 LIMIT 1;', [rawMatId]);
+      if (matCheck.rows.length === 0) {
+        const matName = item.material || item.material_name || '';
+        const nameCheck = await client.query('SELECT id, cost_per_unit FROM raw_materials WHERE name ILIKE $1 LIMIT 1;', [`%${matName}%`]);
+        if (nameCheck.rows.length > 0) {
+          rawMatId = nameCheck.rows[0].id;
+        } else {
+          rawMatId = 'mat-1';
+        }
+      }
+
+      await client.query(
+        `INSERT INTO bill_of_materials (id, product_id, raw_material_id, quantity_needed, subtotal_cost)
+         VALUES (gen_random_uuid(), $1, $2, $3, $4);`,
+        [id, rawMatId, Math.round(qty), subtotal]
+      );
+
+      totalHpp += subtotal;
+    }
+
+    // Perbarui raw_cost_hpp produk secara otomatis
+    await client.query('UPDATE products SET raw_cost_hpp = $1, updated_at = NOW() WHERE id = $2;', [totalHpp, id]);
+
+    await client.query('COMMIT');
+
+    return res.json({
+      success: true,
+      message: 'Komposisi bahan buket dan HPP berhasil diperbarui di database.',
+      data: {
+        product_id: id,
+        total_hpp: totalHpp,
+        items_count: items.length,
+      },
+    });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    return res.status(500).json({ success: false, error: error.message });
+  } finally {
+    client.release();
   }
 });
 

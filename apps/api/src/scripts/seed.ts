@@ -1,5 +1,20 @@
 import 'dotenv/config';
 import { pool } from '../config/database.js';
+import { syncCanonicalBouquetImagesToStorage } from '../services/storage.service.js';
+
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wpdfxuwhqwvglqoiubfq.supabase.co';
+const DEFAULT_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'product-images';
+const hasValidStorageKey = Boolean(
+  (process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_SERVICE_ROLE_KEY.includes('xxxx')) ||
+  (process.env.SUPABASE_ANON_KEY && !process.env.SUPABASE_ANON_KEY.includes('xxxx'))
+);
+
+function getProductImageUrl(filename: string) {
+  if (hasValidStorageKey || process.env.FORCE_SUPABASE_STORAGE_URL === 'true') {
+    return `${SUPABASE_URL}/storage/v1/object/public/${DEFAULT_BUCKET}/${filename}`;
+  }
+  return `/images/products/${filename}`;
+}
 
 /**
  * Chenille Flowers Atelier - Canonical Database Seed & Migration Script
@@ -89,7 +104,7 @@ async function runSeed() {
         rating: 4.9,
         review_count: 184,
         description: 'Buket bunga mawar kawat bulu halus premium 12 tangkai berpadu dengan boneka wisuda toga mini, dibungkus cellophane Korea matte water-resistant.',
-        image_url: '/images/products/buket-mawar-merah-velvet.jpg',
+        image_url: getProductImageUrl('buket-mawar-merah-velvet.jpg'),
         theme_suitability: ['tema-a', 'tema-b'],
         colors: ['#E11D48', '#FDA4AF', '#FFE4E6'],
       },
@@ -110,7 +125,7 @@ async function runSeed() {
         rating: 4.8,
         review_count: 96,
         description: 'Buket 7 tangkai tulip kawat bulu kelopak mekar lembut bernuansa baby pink dan sage green, sentuhan pita organza transparan mewah.',
-        image_url: '/images/products/buket-tulip-pastel-pink.jpg',
+        image_url: getProductImageUrl('buket-tulip-pastel-pink.jpg'),
         theme_suitability: ['tema-a', 'tema-b'],
         colors: ['#FBCFE8', '#BBF7D0'],
       },
@@ -131,7 +146,7 @@ async function runSeed() {
         rating: 4.9,
         review_count: 112,
         description: 'Buket 5 tangkai bunga matahari kawat bulu ceria dengan kelopak kuning keemasan, dedaunan hijau ribbed, pita satin gold, dan kartu ucapan wisuda elegan.',
-        image_url: '/images/products/buket-matahari-graduation.jpg',
+        image_url: getProductImageUrl('buket-matahari-graduation.jpg'),
         theme_suitability: ['tema-a', 'tema-c'],
         colors: ['#FACC15', '#EA580C', '#FEF08A'],
       },
@@ -152,7 +167,7 @@ async function runSeed() {
         rating: 4.9,
         review_count: 78,
         description: 'Buket paduan tangkai lavender kawat bulu ungu lilac harum berpadu pita satin mewah, cocok untuk hadiah sidang skripsi dan ulang tahun.',
-        image_url: '/images/products/buket-lavender-lilac-dream.jpg',
+        image_url: getProductImageUrl('buket-lavender-lilac-dream.jpg'),
         theme_suitability: ['tema-a', 'tema-b'],
         colors: ['#C084FC', '#E9D5FF', '#F5D0FE'],
       },
@@ -173,7 +188,7 @@ async function runSeed() {
         rating: 5.0,
         review_count: 104,
         description: 'Buket bunga kawat bulu premium dengan boneka wisuda karakter ber-toga mini lengkap dengan selempang sablon nama wisudawan custom.',
-        image_url: '/images/products/buket-karakter-wisuda-toga.jpg',
+        image_url: getProductImageUrl('buket-karakter-wisuda-toga.jpg'),
         theme_suitability: ['tema-c', 'tema-a'],
         colors: ['#38BDF8', '#FDE047', '#1E293B'],
       },
@@ -194,7 +209,7 @@ async function runSeed() {
         rating: 4.7,
         review_count: 54,
         description: 'Pot gerabah mini estetik dengan 5 tangkai bunga daisy kawat bulu warna pastel, cocok untuk penghias meja kerja atau kado sahabat.',
-        image_url: '/images/products/mini-pot-daisy-kawat-bulu.jpg',
+        image_url: getProductImageUrl('mini-pot-daisy-kawat-bulu.jpg'),
         theme_suitability: ['tema-a', 'tema-c'],
         colors: ['#FDE047', '#E0E7FF', '#FBCFE8'],
       },
@@ -215,7 +230,7 @@ async function runSeed() {
         rating: 5.0,
         review_count: 62,
         description: 'Buket mawar merah maroon pekat berbahan kawat bulu bertekstur beludru mewah beraksen dedaunan emas, cellophane hitam doff & pita satin merah anggur.',
-        image_url: '/images/products/midnight-rose-velvet-romance.jpg',
+        image_url: getProductImageUrl('midnight-rose-velvet-romance.jpg'),
         theme_suitability: ['tema-b'],
         colors: ['#881337', '#B45309', '#1E293B'],
       },
@@ -236,7 +251,7 @@ async function runSeed() {
         rating: 4.9,
         review_count: 118,
         description: 'Buket 3 bunga matahari kawat bulu ceria dengan ekspresi wajah kawaii imut, ornamen pita kuning polkadot yang menggemaskan.',
-        image_url: '/images/products/buket-matahari-kawaii-smile.jpg',
+        image_url: getProductImageUrl('buket-matahari-kawaii-smile.jpg'),
         theme_suitability: ['tema-c', 'tema-a'],
         colors: ['#FACC15', '#EA580C', '#4ADE80'],
       },
@@ -335,8 +350,15 @@ async function runSeed() {
       { product_id: 'prod-001', raw_material_id: 'mat-2', quantity_needed: 20, subtotal_cost: 7000 },
       { product_id: 'prod-001', raw_material_id: 'mat-4', quantity_needed: 12, subtotal_cost: 6000 },
       { product_id: 'prod-001', raw_material_id: 'mat-5', quantity_needed: 1, subtotal_cost: 4500 },
-      { product_id: 'prod-001', raw_material_id: 'mat-6', quantity_needed: 1, subtotal_cost: 2200 },
+      { product_id: 'prod-001', raw_material_id: 'mat-6', quantity_needed: 1, subtotal_cost: 2600 },
       { product_id: 'prod-001', raw_material_id: 'mat-7', quantity_needed: 1, subtotal_cost: 7400 },
+
+      // prod-002: Buket Tulip Pastel Pink Korean Style (HPP ~38.000)
+      { product_id: 'prod-002', raw_material_id: 'mat-3', quantity_needed: 45, subtotal_cost: 15750 },
+      { product_id: 'prod-002', raw_material_id: 'mat-2', quantity_needed: 18, subtotal_cost: 6300 },
+      { product_id: 'prod-002', raw_material_id: 'mat-4', quantity_needed: 7, subtotal_cost: 3500 },
+      { product_id: 'prod-002', raw_material_id: 'mat-5', quantity_needed: 2, subtotal_cost: 9000 },
+      { product_id: 'prod-002', raw_material_id: 'mat-6', quantity_needed: 1, subtotal_cost: 3450 },
 
       // prod-003: Buket Bunga Matahari Graduation Ceria (HPP ~35.500)
       { product_id: 'prod-003', raw_material_id: 'mat-8', quantity_needed: 40, subtotal_cost: 14000 },
@@ -344,7 +366,39 @@ async function runSeed() {
       { product_id: 'prod-003', raw_material_id: 'mat-2', quantity_needed: 15, subtotal_cost: 5250 },
       { product_id: 'prod-003', raw_material_id: 'mat-4', quantity_needed: 5, subtotal_cost: 2500 },
       { product_id: 'prod-003', raw_material_id: 'mat-5', quantity_needed: 1, subtotal_cost: 4500 },
-      { product_id: 'prod-003', raw_material_id: 'mat-6', quantity_needed: 1, subtotal_cost: 2200 },
+      { product_id: 'prod-003', raw_material_id: 'mat-6', quantity_needed: 1, subtotal_cost: 4000 },
+
+      // prod-004: Buket Lavender Lilac Dream (HPP ~32.000)
+      { product_id: 'prod-004', raw_material_id: 'mat-3', quantity_needed: 48, subtotal_cost: 16800 },
+      { product_id: 'prod-004', raw_material_id: 'mat-2', quantity_needed: 12, subtotal_cost: 4200 },
+      { product_id: 'prod-004', raw_material_id: 'mat-5', quantity_needed: 2, subtotal_cost: 9000 },
+      { product_id: 'prod-004', raw_material_id: 'mat-6', quantity_needed: 1, subtotal_cost: 2000 },
+
+      // prod-005: Buket Karakter Wisuda Ber-toga (HPP ~54.000)
+      { product_id: 'prod-005', raw_material_id: 'mat-8', quantity_needed: 40, subtotal_cost: 14000 },
+      { product_id: 'prod-005', raw_material_id: 'mat-7', quantity_needed: 2, subtotal_cost: 14800 },
+      { product_id: 'prod-005', raw_material_id: 'mat-4', quantity_needed: 10, subtotal_cost: 5000 },
+      { product_id: 'prod-005', raw_material_id: 'mat-5', quantity_needed: 2, subtotal_cost: 9000 },
+      { product_id: 'prod-005', raw_material_id: 'mat-6', quantity_needed: 2, subtotal_cost: 11200 },
+
+      // prod-006: Mini Pot Bunga Daisy Kawat Bulu Meja Belajar (HPP ~14.000)
+      { product_id: 'prod-006', raw_material_id: 'mat-8', quantity_needed: 20, subtotal_cost: 7000 },
+      { product_id: 'prod-006', raw_material_id: 'mat-2', quantity_needed: 10, subtotal_cost: 3500 },
+      { product_id: 'prod-006', raw_material_id: 'mat-4', quantity_needed: 7, subtotal_cost: 3500 },
+
+      // prod-007: Midnight Rose & Velvet Romance Deluxe (HPP ~58.000)
+      { product_id: 'prod-007', raw_material_id: 'mat-1', quantity_needed: 70, subtotal_cost: 24500 },
+      { product_id: 'prod-007', raw_material_id: 'mat-2', quantity_needed: 20, subtotal_cost: 7000 },
+      { product_id: 'prod-007', raw_material_id: 'mat-4', quantity_needed: 15, subtotal_cost: 7500 },
+      { product_id: 'prod-007', raw_material_id: 'mat-5', quantity_needed: 2, subtotal_cost: 9000 },
+      { product_id: 'prod-007', raw_material_id: 'mat-6', quantity_needed: 2, subtotal_cost: 10000 },
+
+      // prod-008: Buket Bunga Matahari Kawaii Smile Sunflower (HPP ~24.500)
+      { product_id: 'prod-008', raw_material_id: 'mat-8', quantity_needed: 30, subtotal_cost: 10500 },
+      { product_id: 'prod-008', raw_material_id: 'mat-9', quantity_needed: 10, subtotal_cost: 3500 },
+      { product_id: 'prod-008', raw_material_id: 'mat-2', quantity_needed: 10, subtotal_cost: 3500 },
+      { product_id: 'prod-008', raw_material_id: 'mat-4', quantity_needed: 5, subtotal_cost: 2500 },
+      { product_id: 'prod-008', raw_material_id: 'mat-5', quantity_needed: 1, subtotal_cost: 4500 },
     ];
 
     for (const b of bomRecipes) {
@@ -525,6 +579,19 @@ async function runSeed() {
 
     await client.query('COMMIT');
     console.log('✅ [Chenille Seed] Seluruh Master Data Katalog & Pabrikasi Atelier BERHASIL Diinisialisasi!');
+
+    // Post-seed: Sync images to Supabase Storage if credentials are valid
+    try {
+      console.log('🖼️  Memeriksa sinkronisasi aset gambar ke Supabase Storage...');
+      const storageSync = await syncCanonicalBouquetImagesToStorage();
+      if (storageSync.syncedCount > 0) {
+        console.log(`🚀 [Storage] Berhasil mengunggah ${storageSync.syncedCount} gambar ke Supabase Storage CDN!`);
+      } else {
+        console.log('ℹ️  [Storage] Supabase Storage key masih placeholder. Gambar disajikan dari jalur statis lokal (/images/products/).');
+      }
+    } catch (sErr) {
+      console.warn('⚠️  [Storage] Sinkronisasi storage dilewati:', sErr);
+    }
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('❌ [Chenille Seed] Gagal menginisialisasi database:', error);

@@ -17,6 +17,8 @@
     "prisma:generate": "npm run prisma:generate --workspace=@chenille/api",
     "prisma:push": "npm run prisma:push --workspace=@chenille/api",
     "db:seed": "npm run db:seed --workspace=@chenille/api",
+    "db:rls": "npm run db:rls --workspace=@chenille/api",
+    "storage:sync": "npm run storage:sync --workspace=@chenille/api",
     "test": "npm run test --workspace=@chenille/api",
     "test:unit": "npm run test:unit --workspace=@chenille/api",
     "test:integration": "npm run test:integration --workspace=@chenille/api",

@@ -25,6 +25,7 @@ import {
   Gift,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useOrderStore } from '@/stores/useOrderStore';
 import { showMagicToast } from '@/lib/magic-motion';
 
 export type AdminTab =
@@ -71,12 +72,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   isMobileOpen,
   setIsMobileOpen,
 }) => {
+  const { orders } = useOrderStore();
+  const orderCountBadge = orders.length > 0 ? String(orders.length) : undefined;
+
   const sections: NavSection[] = [
     {
       title: 'Menu Utama',
       items: [
         { id: 'DASHBOARD', label: 'Dashboard & Analitik', icon: LayoutDashboard },
-        { id: 'ORDERS', label: 'Manajemen Pesanan', icon: ShoppingBag, badge: '4', badgeColor: 'bg-rose-500 text-white' },
+        { id: 'ORDERS', label: 'Manajemen Pesanan', icon: ShoppingBag, badge: orderCountBadge, badgeColor: 'bg-rose-500 text-white' },
         { id: 'REPORTS', label: 'Laporan & Ekspor Excel', icon: FileSpreadsheet },
         { id: 'PRODUCTS', label: 'Produk & Klik Pelanggan', icon: Package },
         { id: 'STUDIO', label: 'Custom Studio Builder', icon: Sparkles, badge: 'Live', badgeColor: 'bg-gradient-to-r from-rose-500 to-pink-500 text-white' },
