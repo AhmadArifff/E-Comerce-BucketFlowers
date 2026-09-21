@@ -22,14 +22,15 @@ export const globalLimiter = rateLimit({
 
 /**
  * Auth & Login Rate Limiter (Brute Force / Credential Stuffing Guard)
- * Membatasi 10 percobaan per 15 menit per IP (100 di development)
+ * Membatasi 25 percobaan POST per 15 menit per IP di production (5000 di development)
+ * Pengecualian mutlak untuk metode GET (seperti GET /auth/me) agar auto-polling dan verifikasi sesi frontend tidak terblokir
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: isDev ? 100 : 10,
+  max: isDev ? 5000 : 25,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => isTest || req.method === 'OPTIONS',
+  skip: (req) => isTest || req.method === 'OPTIONS' || req.method === 'GET',
   message: {
     success: false,
     error: 'Terlalu banyak percobaan login/registrasi. Demi keamanan data, silakan coba lagi dalam 15 menit.',

@@ -16,6 +16,22 @@ async function safeCount(client: any, query: string): Promise<number> {
 }
 
 /**
+ * Memeriksa keberadaan tabel di schema public sebelum mengeksekusi DDL/DML.
+ * Mencegah terjadinya error relation does not exist yang seketika meng-abort PostgreSQL transaction block.
+ */
+async function tableExists(client: any, tableName: string): Promise<boolean> {
+  try {
+    const res = await client.query(
+      `SELECT to_regclass($1) IS NOT NULL AS exists;`,
+      [`public.${tableName}`]
+    );
+    return Boolean(res.rows[0]?.exists);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * GET /api/v1/admin/database/stats
  * Mengambil ringkasan jumlah baris data per kelompok tabel untuk Impact Counter di Admin Panel.
  */
@@ -148,55 +164,78 @@ router.post('/granular-reset', requireAdmin, async (req: AuthenticatedRequest, r
 
     // 2. Transaksi & Finansial
     if (reset_options.delete_transactions) {
-      const pmtDel = await client.query(`DELETE FROM payment_transactions;`);
-      const oshDel = await client.query(`DELETE FROM order_status_histories;`);
-      const oiDel = await client.query(`DELETE FROM order_items;`);
-      const ordDel = await client.query(`DELETE FROM orders;`);
-      tablesAffected['payment_transactions'] = `${pmtDel.rowCount} baris dihapus`;
-      tablesAffected['order_status_histories'] = `${oshDel.rowCount} baris dihapus`;
-      tablesAffected['order_items'] = `${oiDel.rowCount} baris dihapus`;
-      tablesAffected['orders'] = `${ordDel.rowCount} baris dihapus`;
+      if (await tableExists(client, 'payment_transactions')) {
+        const pmtDel = await client.query(`DELETE FROM payment_transactions;`);
+        tablesAffected['payment_transactions'] = `${pmtDel.rowCount} baris dihapus`;
+      }
+      if (await tableExists(client, 'order_status_histories')) {
+        const oshDel = await client.query(`DELETE FROM order_status_histories;`);
+        tablesAffected['order_status_histories'] = `${oshDel.rowCount} baris dihapus`;
+      }
+      if (await tableExists(client, 'order_items')) {
+        const oiDel = await client.query(`DELETE FROM order_items;`);
+        tablesAffected['order_items'] = `${oiDel.rowCount} baris dihapus`;
+      }
+      if (await tableExists(client, 'orders')) {
+        const ordDel = await client.query(`DELETE FROM orders;`);
+        tablesAffected['orders'] = `${ordDel.rowCount} baris dihapus`;
+      }
     }
 
     // 3. Logistik & Ekspedisi
     if (reset_options.delete_logistics) {
-      try {
+      if (await tableExists(client, 'shipping_orders')) {
         const shpDel = await client.query(`DELETE FROM shipping_orders;`);
         tablesAffected['shipping_orders'] = `${shpDel.rowCount} baris dihapus`;
-      } catch (err) {
-        // Abaikan jika tabel shipping_orders belum dibuat terpisah
       }
     }
 
     // 4. Komplain & Garansi
     if (reset_options.delete_complaints) {
-      try {
+      if (await tableExists(client, 'customer_complaints')) {
         const ccDel = await client.query(`DELETE FROM customer_complaints;`);
         tablesAffected['customer_complaints'] = `${ccDel.rowCount} baris dihapus`;
-      } catch (err) {}
-      try {
+      }
+      if (await tableExists(client, 'warranty_claims')) {
         const wcDel = await client.query(`DELETE FROM warranty_claims;`);
         tablesAffected['warranty_claims'] = `${wcDel.rowCount} baris dihapus`;
-      } catch (err) {}
+      }
     }
 
     // 5. Loyalitas & CRM Momen
     if (reset_options.delete_loyalty_data) {
-      const attDel = await client.query(`DELETE FROM user_attendance_logs;`);
-      const scDel = await client.query(`DELETE FROM user_stamp_cards;`);
-      const occDel = await client.query(`DELETE FROM customer_occasions;`);
-      tablesAffected['user_attendance_logs'] = `${attDel.rowCount} baris dihapus`;
-      tablesAffected['user_stamp_cards'] = `${scDel.rowCount} baris dihapus`;
-      tablesAffected['customer_occasions'] = `${occDel.rowCount} baris dihapus`;
+      if (await tableExists(client, 'user_attendance_logs')) {
+        const attDel = await client.query(`DELETE FROM user_attendance_logs;`);
+        tablesAffected['user_attendance_logs'] = `${attDel.rowCount} baris dihapus`;
+      }
+      if (await tableExists(client, 'user_stamp_cards')) {
+        const scDel = await client.query(`DELETE FROM user_stamp_cards;`);
+        tablesAffected['user_stamp_cards'] = `${scDel.rowCount} baris dihapus`;
+      }
+      if (await tableExists(client, 'customer_occasions')) {
+        const occDel = await client.query(`DELETE FROM customer_occasions;`);
+        tablesAffected['customer_occasions'] = `${occDel.rowCount} baris dihapus`;
+      }
     }
 
     // 6. Akun Pelanggan (Admin Self-Preservation Guard)
     if (reset_options.delete_customer_accounts) {
-      // Hapus data turunan customer terlebih dahulu
-      await client.query(`DELETE FROM user_addresses WHERE user_id::text != $1::text;`, [currentAdminId]);
-      await client.query(`DELETE FROM profiles WHERE id::text != $1::text;`, [currentAdminId]);
-      await client.query(`DELETE FROM saved_custom_designs WHERE user_id::text != $1::text;`, [currentAdminId]);
-      await client.query(`DELETE FROM product_reviews WHERE user_id::text != $1::text;`, [currentAdminId]);
+      // Hapus data turunan customer terlebih dahulu jika tabel tersedia
+      if (await tableExists(client, 'user_addresses')) {
+        await client.query(`DELETE FROM user_addresses WHERE user_id::text != $1::text;`, [currentAdminId]);
+      }
+      if (await tableExists(client, 'profiles')) {
+        await client.query(`DELETE FROM profiles WHERE id::text != $1::text;`, [currentAdminId]);
+      }
+      if (await tableExists(client, 'saved_custom_designs')) {
+        await client.query(`DELETE FROM saved_custom_designs WHERE user_id::text != $1::text;`, [currentAdminId]);
+      }
+      if (await tableExists(client, 'reviews')) {
+        await client.query(`DELETE FROM reviews WHERE user_id::text != $1::text;`, [currentAdminId]);
+      }
+      if (await tableExists(client, 'product_reviews')) {
+        await client.query(`DELETE FROM product_reviews WHERE user_id::text != $1::text;`, [currentAdminId]);
+      }
 
       // Hapus user dengan role CUSTOMER_MEMBER dan pastikan BUKAN akun admin aktif
       const usrDel = await client.query(
@@ -210,10 +249,18 @@ router.post('/granular-reset', requireAdmin, async (req: AuthenticatedRequest, r
     // 7. Reset Master Katalog ke Standar Kanonikal Atelier
     if (reset_options.reset_master_catalog) {
       // Bersihkan tabel relasional katalog
-      await client.query(`DELETE FROM bill_of_materials;`);
-      await client.query(`DELETE FROM product_images;`);
-      await client.query(`DELETE FROM products;`);
-      await client.query(`DELETE FROM raw_materials;`);
+      if (await tableExists(client, 'bill_of_materials')) {
+        await client.query(`DELETE FROM bill_of_materials;`);
+      }
+      if (await tableExists(client, 'product_images')) {
+        await client.query(`DELETE FROM product_images;`);
+      }
+      if (await tableExists(client, 'products')) {
+        await client.query(`DELETE FROM products;`);
+      }
+      if (await tableExists(client, 'raw_materials')) {
+        await client.query(`DELETE FROM raw_materials;`);
+      }
 
       // Re-seed 5 Kategori Kanonikal
       const categories = [
@@ -298,18 +345,6 @@ router.post('/granular-reset', requireAdmin, async (req: AuthenticatedRequest, r
       tablesAffected['raw_materials'] = '9 bahan baku kanonikal diinisialisasi';
       tablesAffected['products'] = '8 produk kanonikal diinisialisasi';
       tablesAffected['bill_of_materials'] = 'Resep BOM kanonikal diinisialisasi';
-
-      // Sinkronisasi foto buket kawat bulu ke Supabase Storage
-      try {
-        const syncResult = await syncCanonicalBouquetImagesToStorage();
-        if (syncResult.syncedCount > 0) {
-          tablesAffected['supabase_storage_sync'] = `${syncResult.syncedCount} foto buket kawat bulu berhasil diunggah ke Supabase Storage (bucket: product-images)`;
-        } else {
-          tablesAffected['supabase_storage_sync'] = '8 foto buket kawat bulu siap menggunakan cadangan lokal (public/images/products/)';
-        }
-      } catch (storageErr) {
-        tablesAffected['supabase_storage_sync'] = 'Fallback ke aset gambar lokal public/images/products/';
-      }
     }
 
     // 8. Berkas Aset Fisik & Storage
@@ -324,16 +359,29 @@ router.post('/granular-reset', requireAdmin, async (req: AuthenticatedRequest, r
     }
 
     // 9. Catat Audit Log
-    try {
+    if (await tableExists(client, 'admin_audit_logs')) {
       await client.query(`
         INSERT INTO admin_audit_logs (admin_id, action_name, details_json, created_at)
         VALUES ($1, 'GRANULAR_DATABASE_RESET', $2, NOW());
       `, [currentAdminId, JSON.stringify({ tablesAffected, storageFilesDeleted, reset_options })]);
-    } catch (auditErr) {
-      // Jika tabel audit log belum ada, abaikan tanpa menggagalkan transaksi
     }
 
     await client.query('COMMIT');
+
+    // 10. Post-Commit: Sinkronisasi berkas gambar fisik kanonikal ke Supabase Storage
+    // Dijalankan di luar blok transaksi database agar tidak memblokir atau meng-abort transaksi PostgreSQL
+    if (reset_options.reset_master_catalog) {
+      try {
+        const syncResult = await syncCanonicalBouquetImagesToStorage();
+        if (syncResult.syncedCount > 0) {
+          tablesAffected['supabase_storage_sync'] = `${syncResult.syncedCount} foto buket kawat bulu berhasil diunggah ke Supabase Storage (bucket: product-images)`;
+        } else {
+          tablesAffected['supabase_storage_sync'] = '8 foto buket kawat bulu siap menggunakan cadangan lokal (public/images/products/)';
+        }
+      } catch (storageErr: any) {
+        tablesAffected['supabase_storage_sync'] = 'Fallback ke aset gambar lokal public/images/products/';
+      }
+    }
 
     return res.json({
       success: true,

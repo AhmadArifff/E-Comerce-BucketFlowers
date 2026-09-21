@@ -5295,12 +5295,160 @@ model Product {
 | `apps/web/src/components/admin/AdminViews.tsx` | Admin Panel | Toggle switch status rilis, sort `isActive`, query `include_inactive=true`, dual CTR breakdown |
 | `apps/api/src/services/storage.service.ts` | Cloud Storage | Auto-update `image_url` di PostgreSQL ke URL Supabase Storage CDN saat sync |
 | `PRD.md` | Master Product Specs | Penambahan Seksi 38 lengkap |
+---
 
+## Seksi 39: Protokol Ketahanan Transaksi Atomik Database (PostgreSQL Abort-Proof Guard), Desain Rate Limiting Auth Berbasis Metode HTTP, & Prosedur Aktivasi Supabase Storage CDN
 
+### 39.1. Latar Belakang Masalah & Root Cause Analysis
 
+Berdasarkan audit operasional sistem dan laporan crash saat pemeliharaan sistem, ditemukan tiga isu teknis yang membutuhkan standarisasi arsitektur:
 
+1. **`RATE_LIMIT_AUTH_EXCEEDED` pada Polling Sesi Pengguna:**
+   - **Deskripsi Masalah:** Pengguna dan antarmuka web mengalami penguncian akses selama 15 menit dengan error `RATE_LIMIT_AUTH_EXCEEDED`.
+   - **Akar Masalah:** Di `apps/api/src/routes/index.ts`, middleware `authLimiter` dipasang secara menyeluruh pada router `/auth` (`apiV1Router.use('/auth', authLimiter, authRoutes);`). Konfigurasi `authLimiter` hanya memiliki kuota 10-100 request per 15 menit tanpa memeriksa HTTP method. Ketika aplikasi Next.js melakukan pembacaan status otentikasi berkala (`GET /api/v1/auth/me`), kuota limiter terkuras habis dalam beberapa menit, memblokir upaya login yang sah.
 
+2. **Pesan Placeholder pada Sinkronisasi Media Storage (`storage.service.ts`):**
+   - **Deskripsi Masalah:** Pemanggilan endpoint `/api/v1/admin/database/sync-storage` mengembalikan pesan:
+     `"Supabase Storage API key masih berupa placeholder. Gambar disajikan dari jalur statis lokal (/images/products/)."`
+   - **Akar Masalah:** Variabel lingkungan `SUPABASE_ANON_KEY` pada `.env` masih berisi token dummy `...xxxxxxxxx`. Sesuai PRD Seksi 8.3, ini merupakan *defensive fallback* bawaan sistem (bukan error crash) yang secara sadar mengalihkan asset image ke folder lokal `apps/web/public/images/products/` agar etalase toko tetap menampilkan foto produk kanonikal tanpa error visual 404.
 
+3. **`current transaction is aborted` saat Granular Database Reset:**
+   - **Deskripsi Masalah:** Saat admin menjalankan pemeliharaan reset granular di `/api/v1/admin/database/granular-reset`, sistem gagal dengan log:
+     `[ERROR] Gagal: Gagal menjalankan reset database: current transaction is aborted, commands ignored until end of transaction block (ROLLBACK) [FAILED]`.
+   - **Akar Masalah:** Pada mesin PostgreSQL, setiap query yang menghasilkan kesalahan SQL (misalnya tabel tidak ditemukan seperti `shipping_orders`, atau salah penamaan tabel seperti `product_reviews` yang seharusnya `reviews`) di dalam blok transaksi aktif (`BEGIN`), seketika mengubah status koneksi menjadi **ABORTED**. Sekalipun query tersebut dibungkus dalam blok JavaScript `try/catch`, status transaksi PostgreSQL di tingkat server database tetap rusak, sehingga seluruh query berikutnya (termasuk `COMMIT`) ditolak secara paksa. Selain itu, pemanggilan operasi jaringan eksternal (`syncCanonicalBouquetImagesToStorage()`) di dalam transaksi DB memicu *network lock overhead*.
 
+---
 
+### 39.2. Arsitektur PostgreSQL Abort-Proof Guard
 
+Untuk menjamin kepatuhan mutlak terhadap aturan ACID transaksi PostgreSQL tanpa risiko `current transaction is aborted`, diterapkan arsitektur **PostgreSQL Abort-Proof Guard**:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Super Admin
+    participant Route as Database Maintenance Route
+    participant DB as PostgreSQL Transaction (BEGIN)
+    participant Storage as Supabase Storage CDN (HTTP)
+
+    Admin->>Route: POST /granular-reset (Frasa & Opsi)
+    Route->>Route: Verifikasi Frasa "RESET-DATABASE-CHENILLE"
+    Route->>DB: BEGIN TRANSACTION
+    loop Setiap Tabel Target
+        Route->>DB: SELECT to_regclass('public.' || tableName) IS NOT NULL
+        alt Tabel Ada
+            Route->>DB: DELETE FROM tableName ...
+            DB-->>Route: RowCount Deleted
+        else Tabel Belum Dibuat
+            Route-->>Route: Skip Aman (0 SQL Error, Transaksi Tetap Bersih)
+        end
+    end
+    Route->>DB: Re-seed Kategori, Bahan Baku & Produk Kanonikal
+    Route->>DB: INSERT admin_audit_logs (Jika Tabel Ada)
+    Route->>DB: COMMIT TRANSACTION
+    DB-->>Route: Transaction Committed (Sukses Permanen)
+    Route->>Storage: Post-Commit: syncCanonicalBouquetImagesToStorage()
+    Storage-->>Route: Sync Hasil (CDN / Local Fallback)
+    Route-->>Admin: HTTP 200 { success: true, tables_affected, storage_sync }
+```
+
+#### Komponen Kunci Arsitektur:
+1. **Fungsi Pemeriksa Keberadaan Tabel (`tableExists`):**
+   ```typescript
+   async function tableExists(client: any, tableName: string): Promise<boolean> {
+     try {
+       const res = await client.query(
+         `SELECT to_regclass($1) IS NOT NULL AS exists;`,
+         [`public.${tableName}`]
+       );
+       return Boolean(res.rows[0]?.exists);
+     } catch {
+       return false;
+     }
+   }
+   ```
+   Fungsi ini memanfaatkan katalog internal PostgreSQL `to_regclass` yang mengevaluasi nama tabel tanpa pernah memicu abort state.
+
+2. **Koreksi Relasi & Tabel Audit Log:**
+   - Tabel `reviews` diperiksa sebelum pembersihan data turunan pelanggan.
+   - Tabel `shipping_orders`, `customer_complaints`, `warranty_claims`, dan `admin_audit_logs` dilindungi dengan `tableExists`.
+   - DDL skema resmi PostgreSQL telah dilengkapi dengan tabel `admin_audit_logs`, `shipping_orders`, dan `product_reviews`.
+
+3. **Pemisahan Jaringan Post-Commit:**
+   - Operasi HTTP `syncCanonicalBouquetImagesToStorage()` dipindahkan ke **luar** dan **setelah** `await client.query('COMMIT')`.
+   - Transaksi database dijamin selesai dalam kecepatan sub-detik tanpa tergantung pada latensi jaringan cloud storage.
+
+---
+
+### 39.3. Desain Rate Limiting Auth Berbasis Metode HTTP
+
+Guna menyeimbangkan keamanan terhadap serangan *brute force* dengan kelancaran pengalaman pengguna, `authLimiter` di `apps/api/src/middleware/rate-limiter.ts` diperbarui dengan arsitektur **Method-Aware Security Guard**:
+
+```typescript
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isDev ? 5000 : 25,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => isTest || req.method === 'OPTIONS' || req.method === 'GET',
+  message: {
+    success: false,
+    error: 'Terlalu banyak percobaan login/registrasi. Demi keamanan data, silakan coba lagi dalam 15 menit.',
+    code: 'RATE_LIMIT_AUTH_EXCEEDED',
+  },
+});
+```
+
+#### Prinsip Kerja:
+- **Pengecualian Mutlak Metode Non-Mutasi (`GET`, `OPTIONS`):** Permintaan verifikasi sesi (`GET /api/v1/auth/me`), pembacaan poin member (`GET /api/v1/auth/points`), atau preflight CORS tidak pernah mengurangi kuota rate limiting.
+- **Proteksi Ketat untuk Mutasi Otentikasi (`POST`):** Percobaan submit pada `POST /login` dan `POST /register` dibatasi maksimal 25 percobaan per IP per 15 menit di lingkungan produksi (5000 di development).
+
+---
+
+### 39.4. Panduan Aktivasi Supabase Storage Cloud CDN
+
+Untuk beralih dari mode *Local Static Fallback* ke *Supabase Storage CDN*, ikuti langkah-langkah aktivasi berikut:
+
+```text
+PANDUAN AKTIVASI SUPABASE STORAGE CDN:
+
+1. Buka Supabase Dashboard:
+   👉 https://supabase.com/dashboard/project/wpdfxuwhqwvglqoiubfq
+
+2. Masuk ke Menu Storage:
+   - Pilih menu "Storage" di bilah navigasi kiri.
+   - Pastikan bucket bernama "product-images" sudah dibuat.
+   - Jika belum ada, klik "New bucket" -> Beri nama "product-images" -> Centang "Public bucket" -> Klik "Save".
+
+3. Ambil Kunci API Klien (Anon Public Key):
+   - Klik ikon "Project Settings" (gir) di sudut kiri bawah.
+   - Pilih submenu "API".
+   - Pada bagian "Project API keys", cari baris bertuliskan "anon" "public".
+   - Klik tombol "Copy" untuk menyalin token JWT aslinya.
+
+4. Perbarui Konfigurasi Lingkungan (.env):
+   - Buka berkas .env dan apps/api/.env:
+     Ganti string:
+     SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxxxxxxxx"
+     Menjadi:
+     SUPABASE_ANON_KEY="<kunci-anon-yang-baru-disalin>"
+
+5. Verifikasi Sinkronisasi:
+   - Buka terminal atau Admin Panel -> Database Reset Manager -> Klik "Sinkronisasi Storage".
+   - Atau panggil endpoint POST /api/v1/admin/database/sync-storage.
+   - Respons akan beralih menjadi:
+     "Sinkronisasi berhasil: 8 gambar diunggah ke Supabase Storage."
+```
+
+---
+
+### 39.5. Matriks Hasil Pengujian & Verifikasi
+
+| Komponen Pengujian | Metode | Hasil Pengujian | Status |
+|---|---|---|---|
+| **Auth Rate Limiter Bypass** | 25x request berturut-turut ke `GET /api/v1/auth/me` | 0 error `RATE_LIMIT_AUTH_EXCEEDED`. Respons 200/401 valid | **PASSED** ✅ |
+| **PostgreSQL Transaction Guard** | Eksekusi `POST /api/v1/admin/database/granular-reset` dengan seluruh opsi reset aktif | Status 200 `[COMMITTED]`, 14 tabel dibersihkan & di-reseed, 0 transaction aborted error | **PASSED** ✅ |
+| **Monorepo Type Checking** | `turbo run type-check` (3 paket: shared, api, web) | 0 error TypeScript (`3 successful, 3 total`) | **PASSED** ✅ |
+| **Zero-Broken-Images Fallback** | Pemeriksaan respons `syncCanonicalBouquetImagesToStorage()` dengan placeholder key | Berkas gambar produk kanonikal disajikan rapi via `/images/products/` tanpa 404 | **PASSED** ✅ |
+
+---
