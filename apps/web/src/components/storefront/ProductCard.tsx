@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Star, Eye, MessageCircle, Clock } from 'lucide-react';
 import type { ExtendedProduct } from '@chenille/shared';
 import { useCartStore } from '@/stores/useCartStore';
 import { useChatStore } from '@/stores/useChatStore';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { getApiUrl } from '@/lib/api-client';
 import { getThemeCopy } from '@/lib/theme-copy';
 import { flyToCart, showMagicToast } from '@/lib/magic-motion';
 
@@ -20,6 +22,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
   const { theme } = useThemeStore();
   const copy = getThemeCopy(theme);
   const [isAdding, setIsAdding] = useState(false);
+  const [clickCount, setClickCount] = useState(product.clickCount || 0);
+
+  useEffect(() => {
+    if (product.clickCount !== undefined) {
+      setClickCount(product.clickCount);
+    }
+  }, [product.clickCount]);
 
   const handleAskAboutProduct = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -28,8 +37,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
   };
 
   const handleCardClick = () => {
+    const nextClicks = clickCount + 1;
+    setClickCount(nextClicks);
+
+    try {
+      const { isAuthenticated, user } = useAuthStore.getState();
+      fetch(getApiUrl(`/api/v1/products/${product.id}/click`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          is_auth: isAuthenticated,
+          user_id: user?.id,
+        }),
+      }).catch((err) => console.warn('[ProductCard] Gagal mencatat klik CTR:', err));
+    } catch (e) {
+      // Ignore background analytics error
+    }
+
     if (onSelectProduct) {
-      onSelectProduct(product);
+      onSelectProduct({
+        ...product,
+        clickCount: nextClicks,
+      });
     }
   };
 
@@ -79,10 +108,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
           <MessageCircle className="w-4 h-4" />
         </button>
 
-        {/* Views Counter */}
+        {/* Views / CTR Counter */}
         <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
           <Eye className="w-3 h-3" />
-          <span>{product.clickCount}</span>
+          <span>{clickCount}</span>
         </div>
       </div>
 

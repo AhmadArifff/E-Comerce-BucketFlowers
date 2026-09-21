@@ -92,6 +92,9 @@ export default function StorefrontPage() {
             stock: Number(p.stock ?? 10),
             poLeadDays: Number(p.poLeadDays ?? p.po_lead_days ?? 2),
             clickCount: Number(p.clickCount ?? p.click_count ?? 0),
+            clickCountGuest: Number(p.clickCountGuest ?? p.click_count_guest ?? 0),
+            clickCountAuth: Number(p.clickCountAuth ?? p.click_count_auth ?? 0),
+            viewCount: Number(p.viewCount ?? p.view_count ?? 0),
             isReadyStock: Boolean(p.isReadyStock ?? p.is_ready_stock),
             isActive: p.isActive !== undefined ? Boolean(p.isActive) : (p.is_active !== undefined ? Boolean(p.is_active) : true),
             description: p.description || '',
@@ -103,6 +106,16 @@ export default function StorefrontPage() {
             themeSuitability: p.themeSuitability || p.theme_suitability || ['tema-a', 'tema-b', 'tema-c'],
           }));
           setProductsList(normalized);
+
+          // Batch record catalog impressions (view_count)
+          const productIds = res.data.products.map((p: any) => p.id);
+          if (productIds.length > 0) {
+            fetch(getApiUrl('/api/v1/products/batch-view'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ product_ids: productIds }),
+            }).catch(() => {});
+          }
         }
       })
       .catch((err) => console.warn('Could not load products from Supabase API, using fallback:', err));

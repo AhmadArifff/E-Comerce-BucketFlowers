@@ -30,8 +30,12 @@ router.get('/', async (req, res) => {
     const maxPrice = req.query.max_price ? parseFloat(req.query.max_price as string) : undefined;
     const readyStock = req.query.ready_stock === 'true';
     const discountOnly = req.query.discount_only === 'true';
+    const includeInactive = req.query.include_inactive === 'true' || req.query.all === 'true';
 
-    const conditions: string[] = ['p.is_active = true'];
+    const conditions: string[] = [];
+    if (!includeInactive) {
+      conditions.push('p.is_active = true');
+    }
     const params: any[] = [];
     let paramIndex = 1;
 
@@ -109,6 +113,12 @@ router.get('/', async (req, res) => {
         p.po_lead_days as "poLeadDays",
         p.click_count,
         p.click_count as "clickCount",
+        p.click_count_guest,
+        p.click_count_guest as "clickCountGuest",
+        p.click_count_auth,
+        p.click_count_auth as "clickCountAuth",
+        p.view_count,
+        p.view_count as "viewCount",
         p.is_ready_stock,
         p.is_ready_stock as "isReadyStock",
         p.is_active,
@@ -226,7 +236,10 @@ router.get('/:id', async (req, res) => {
       isActive: rawProduct.isActive ?? rawProduct.is_active,
       rawCostHpp: rawProduct.rawCostHpp ?? (rawProduct.raw_cost_hpp !== undefined ? Number(rawProduct.raw_cost_hpp) : undefined),
       discountPrice: rawProduct.discountPrice ?? (rawProduct.discount_price !== undefined ? Number(rawProduct.discount_price) : undefined),
-      clickCount: rawProduct.clickCount ?? rawProduct.click_count,
+      clickCount: Number(rawProduct.clickCount ?? rawProduct.click_count ?? 0),
+      clickCountGuest: Number(rawProduct.clickCountGuest ?? rawProduct.click_count_guest ?? 0),
+      clickCountAuth: Number(rawProduct.clickCountAuth ?? rawProduct.click_count_auth ?? 0),
+      viewCount: Number(rawProduct.viewCount ?? rawProduct.view_count ?? 0),
       reviewCount: rawProduct.reviewCount ?? rawProduct.review_count,
       themeSuitability: rawProduct.themeSuitability ?? rawProduct.theme_suitability,
     };
@@ -381,12 +394,106 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// PATCH /api/v1/products/:id/toggle-active
+// On/Off aktivasi rilis produk di etalase katalog
+router.patch('/:id/toggle-active', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_active } = req.body;
+
+    let query = `
+      UPDATE products 
+      SET is_active = NOT is_active, updated_at = NOW() 
+      WHERE id = $1 
+      RETURNING id, name, is_active, is_active as "isActive";
+    `;
+    let params: any[] = [id];
+
+    if (typeof is_active === 'boolean') {
+      query = `
+        UPDATE products 
+        SET is_active = $2, updated_at = NOW() 
+        WHERE id = $1 
+        RETURNING id, name, is_active, is_active as "isActive";
+      `;
+      params = [id, is_active];
+    }
+
+    const result = await pool.query(query, params);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Produk tidak ditemukan.' });
+    }
+
+    const updated = result.rows[0];
+    return res.json({
+      success: true,
+      data: updated,
+      message: `Buket "${updated.name}" sekarang ${updated.is_active ? 'Aktif (Tayang di Etalase)' : 'Non-aktif (Draft/Arsip)'}.`,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // POST /api/v1/products/:id/click
+// Increment CTR click count with dual counter (Guest vs Authenticated User)
 router.post('/:id/click', async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query('UPDATE products SET click_count = click_count + 1 WHERE id = $1', [id]);
-    return res.json({ success: true, message: 'Click count incremented' });
+    const isAuth = Boolean(
+      req.body?.is_auth || 
+      req.body?.isAuthenticated || 
+      (req.headers.authorization && req.headers.authorization.startsWith('Bearer'))
+    );
+
+    let updateSql = '';
+    if (isAuth) {
+      updateSql = `
+        UPDATE products 
+        SET click_count = click_count + 1,
+            click_count_auth = click_count_auth + 1,
+            updated_at = NOW()
+        WHERE id = $1
+        RETURNING id, name, click_count as "clickCount", click_count_guest as "clickCountGuest", click_count_auth as "clickCountAuth", view_count as "viewCount";
+      `;
+    } else {
+      updateSql = `
+        UPDATE products 
+        SET click_count = click_count + 1,
+            click_count_guest = click_count_guest + 1,
+            updated_at = NOW()
+        WHERE id = $1
+        RETURNING id, name, click_count as "clickCount", click_count_guest as "clickCountGuest", click_count_auth as "clickCountAuth", view_count as "viewCount";
+      `;
+    }
+
+    const result = await pool.query(updateSql, [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Produk tidak ditemukan.' });
+    }
+
+    return res.json({
+      success: true,
+      data: result.rows[0],
+      message: `CTR click berhasil dicatat (${isAuth ? 'Pelanggan Terdaftar' : 'Pengunjung Tamu'}).`,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/v1/products/batch-view
+// Catat tayangan/impresi saat produk dimuat di etalase
+router.post('/batch-view', async (req, res) => {
+  try {
+    const { product_ids } = req.body;
+    if (Array.isArray(product_ids) && product_ids.length > 0) {
+      await pool.query(
+        'UPDATE products SET view_count = view_count + 1 WHERE id = ANY($1)',
+        [product_ids]
+      );
+    }
+    return res.json({ success: true, message: 'Views incremented' });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
   }

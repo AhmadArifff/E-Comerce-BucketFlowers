@@ -214,6 +214,9 @@ model Product {
   stock             Int               @default(10)
   po_lead_days      Int               @default(0)
   click_count       Int               @default(0)
+  click_count_guest Int               @default(0)
+  click_count_auth  Int               @default(0)
+  view_count        Int               @default(0)
   is_ready_stock    Boolean           @default(true)
   is_active         Boolean           @default(true)
   badge             String?

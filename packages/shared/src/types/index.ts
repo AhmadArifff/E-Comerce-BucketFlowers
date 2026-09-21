@@ -55,6 +55,9 @@ export interface ProductSummary {
   stock: number;
   poLeadDays: number;
   clickCount: number;
+  clickCountGuest?: number;
+  clickCountAuth?: number;
+  viewCount?: number;
   isReadyStock: boolean;
   isActive: boolean;
 }

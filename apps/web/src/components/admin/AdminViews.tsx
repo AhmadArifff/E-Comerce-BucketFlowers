@@ -688,13 +688,14 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
-  type ProductSortField = 'name' | 'category' | 'recipe' | 'rawCostHpp' | 'price' | 'margin' | 'clicks' | 'status';
+  type ProductSortField = 'name' | 'category' | 'recipe' | 'rawCostHpp' | 'price' | 'margin' | 'clicks' | 'status' | 'isActive';
   const [sortField, setSortField] = useState<ProductSortField | null>('clicks');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [isTogglingId, setIsTogglingId] = useState<string | null>(null);
 
   const fetchProducts = useCallback(() => {
     setIsLoadingProducts(true);
-    fetch(getApiUrl('/api/v1/products?limit=100'))
+    fetch(getApiUrl('/api/v1/products?limit=100&include_inactive=true'))
       .then((r) => r.json())
       .then((res) => {
         if (res.success && Array.isArray(res.data?.products) && res.data.products.length > 0) {
@@ -702,16 +703,20 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
             id: p.id,
             name: p.name,
             slug: p.slug,
-            category: p.category_name || p.category_id?.replace('cat-', '') || 'Bouquet',
+            category: p.category_name || p.category_id?.replace('cat-', '') || p.category || 'Bouquet',
             price: Number(p.price),
-            discountPrice: p.discount_price ? Number(p.discount_price) : undefined,
-            rawCostHpp: p.raw_cost_hpp ? Number(p.raw_cost_hpp) : Math.round(Number(p.price) * 0.42),
-            image: p.image_url || '/images/products/buket-mawar-merah-velvet.jpg',
+            discountPrice: p.discount_price !== undefined && p.discount_price !== null ? Number(p.discount_price) : undefined,
+            rawCostHpp: p.raw_cost_hpp !== undefined && p.raw_cost_hpp !== null ? Number(p.raw_cost_hpp) : Math.round(Number(p.price) * 0.42),
+            image: p.image_url || p.image || '/images/products/buket-mawar-merah-velvet.jpg',
             description: p.description || '',
-            isReadyStock: Boolean(p.is_ready_stock),
-            leadTimeDays: p.lead_time_days || 1,
-            clicks: p.click_count || 120,
-            views: p.view_count || 450,
+            isReadyStock: Boolean(p.is_ready_stock ?? p.isReadyStock),
+            isActive: p.is_active !== undefined ? Boolean(p.is_active) : (p.isActive !== undefined ? Boolean(p.isActive) : true),
+            leadTimeDays: p.po_lead_days || p.lead_time_days || 1,
+            clicks: Number(p.click_count ?? p.clickCount ?? 0),
+            clickCount: Number(p.click_count ?? p.clickCount ?? 0),
+            clickCountGuest: Number(p.click_count_guest ?? p.clickCountGuest ?? 0),
+            clickCountAuth: Number(p.click_count_auth ?? p.clickCountAuth ?? 0),
+            views: Number(p.view_count ?? p.viewCount ?? Math.max(Number(p.click_count || 0) * 3, 100)),
           }));
           setProductsList(mapped);
         }
@@ -719,6 +724,47 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
       .catch((err) => console.error('[ProductsClicksView] Gagal load produk dari Supabase:', err))
       .finally(() => setIsLoadingProducts(false));
   }, []);
+
+  const handleToggleActive = async (prod: Product) => {
+    const currentStatus = prod.isActive !== false;
+    const targetStatus = !currentStatus;
+    setIsTogglingId(prod.id);
+
+    // Optimistic UI update
+    setProductsList((prev) =>
+      prev.map((item) => (item.id === prod.id ? { ...item, isActive: targetStatus } : item))
+    );
+
+    try {
+      const res = await fetch(getApiUrl(`/api/v1/products/${prod.id}/toggle-active`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: targetStatus }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showMagicToast(
+          targetStatus ? 'Buket Dirilis ke Etalase! 🌸' : 'Buket Dinonaktifkan ⏸️',
+          `Status buket "${prod.name}" berhasil diubah: ${targetStatus ? 'Aktif (Muncul di Toko)' : 'Draft (Disembunyikan dari Toko)'}.`,
+          targetStatus ? '🌸' : '⏸️'
+        );
+      } else {
+        // Revert on error
+        setProductsList((prev) =>
+          prev.map((item) => (item.id === prod.id ? { ...item, isActive: currentStatus } : item))
+        );
+        showMagicToast('Gagal Mengubah Status ⚠️', json.error || 'Terjadi kendala saat update.', '⚠️');
+      }
+    } catch (err) {
+      // Revert on error
+      setProductsList((prev) =>
+        prev.map((item) => (item.id === prod.id ? { ...item, isActive: currentStatus } : item))
+      );
+      showMagicToast('Gagal Mengubah Status ⚠️', 'Koneksi ke backend API terputus.', '⚠️');
+    } finally {
+      setIsTogglingId(null);
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -780,6 +826,9 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
         } else if (sortField === 'status') {
           valA = a.isReadyStock ? 1 : 0;
           valB = b.isReadyStock ? 1 : 0;
+        } else if (sortField === 'isActive') {
+          valA = a.isActive !== false ? 1 : 0;
+          valB = b.isActive !== false ? 1 : 0;
         } else if (sortField === 'recipe') {
           valA = getProductRecipe(a).length;
           valB = getProductRecipe(b).length;
@@ -879,36 +928,52 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
             <tr>
               <TableSortHeader label="Buket Produk" field="name" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[280px]" />
               <TableSortHeader label="Kategori" field="category" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[120px]" align="center" />
+              <TableSortHeader label="Status Rilis" field="isActive" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[140px]" align="center" />
               <TableSortHeader label="Komposisi Bahan" field="recipe" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[160px]" align="center" />
               <TableSortHeader label="HPP (Modal)" field="rawCostHpp" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" align="right" />
               <TableSortHeader label="Harga Jual" field="price" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" align="right" />
               <TableSortHeader label="Margin" field="margin" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[100px]" align="center" />
-              <TableSortHeader label="Klik (CTR)" field="clicks" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" align="center" />
+              <TableSortHeader label="Klik (CTR)" field="clicks" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[150px]" align="center" />
               <TableSortHeader label="Status Produksi" field="status" currentField={sortField} direction={sortDirection} onSort={handleSort} className="min-w-[130px]" align="center" />
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
-            {sortedProducts.map((prod, idx) => {
+            {sortedProducts.map((prod) => {
               const price = prod.discountPrice ?? prod.price;
               const profit = price - prod.rawCostHpp;
               const margin = Math.round((profit / price) * 100);
-              const mockClicks = [430, 312, 280, 195, 140, 95][idx % 6];
-              const mockCtr = ((mockClicks / 1280) * 100).toFixed(1);
+              const isPublished = prod.isActive !== false;
+
+              // Dual-counter real CTR metrics
+              const realClicks = Number(prod.clickCount ?? (prod as any).clicks ?? 0);
+              const realViews = Number(prod.viewCount ?? (prod as any).views ?? Math.max(realClicks * 3, 100));
+              const realCtr = realViews > 0 ? ((realClicks / realViews) * 100).toFixed(1) : '0.0';
+              const authClicks = Number(prod.clickCountAuth ?? 0);
+              const guestClicks = Number(prod.clickCountGuest ?? 0);
 
               return (
-                <tr key={prod.id} className="hover:bg-rose-50/20 transition-colors">
+                <tr key={prod.id} className={`transition-colors ${isPublished ? 'hover:bg-rose-50/20' : 'bg-stone-50/60 opacity-85 hover:bg-stone-100/50'}`}>
                   <td className="py-3.5 px-4 min-w-[280px]">
                     <div className="flex items-center gap-3">
                       <img
                         src={prod.image || (prod as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg'}
                         alt={prod.name}
-                        className="w-12 h-12 rounded-2xl object-cover border border-rose-100 shadow-2xs shrink-0"
+                        className={`w-12 h-12 rounded-2xl object-cover border shadow-2xs shrink-0 transition-opacity ${
+                          isPublished ? 'border-rose-100' : 'border-stone-200 grayscale-30'
+                        }`}
                         onError={(e) => {
                           e.currentTarget.src = '/images/products/buket-mawar-merah-velvet.jpg';
                         }}
                       />
                       <div className="min-w-0">
-                        <div className="font-extrabold text-stone-800 text-xs leading-snug">{prod.name}</div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-extrabold text-stone-800 text-xs leading-snug">{prod.name}</span>
+                          {!isPublished && (
+                            <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded">
+                              DRAFT
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[10px] text-stone-400 font-mono">ID: {prod.id}</span>
                       </div>
                     </div>
@@ -917,6 +982,43 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
                     <span className="bg-rose-50 text-rose-700 font-bold px-2.5 py-1 rounded-full text-[10px] border border-rose-100">
                       {prod.category}
                     </span>
+                  </td>
+                  {/* TOGGLE STATUS RILIS / AKTIF KATALOG */}
+                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                    <div className="inline-flex flex-col items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={isTogglingId === prod.id}
+                        onClick={() => handleToggleActive(prod)}
+                        className={`w-11 h-6 rounded-full transition-colors duration-200 relative cursor-pointer flex-shrink-0 disabled:opacity-50 ${
+                          isPublished ? 'bg-emerald-600' : 'bg-stone-300'
+                        }`}
+                        title={isPublished ? 'Klik untuk sembunyikan dari etalase toko (Nonaktifkan)' : 'Klik untuk rilis buket ke etalase toko (Aktifkan)'}
+                      >
+                        <div
+                          className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 absolute top-0.5 left-0.5 shadow-xs flex items-center justify-center text-[10px] font-bold ${
+                            isPublished ? 'translate-x-5 text-emerald-600' : 'translate-x-0 text-stone-400'
+                          }`}
+                        >
+                          {isTogglingId === prod.id ? (
+                            <RefreshCw className="w-3 h-3 animate-spin text-stone-600" />
+                          ) : isPublished ? (
+                            '✓'
+                          ) : (
+                            '✕'
+                          )}
+                        </div>
+                      </button>
+                      <span
+                        className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                          isPublished
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-stone-100 text-stone-500 border border-stone-200'
+                        }`}
+                      >
+                        {isPublished ? 'Tayang di Toko' : 'Draft (Nonaktif)'}
+                      </span>
+                    </div>
                   </td>
                   <td className="py-3.5 px-4 text-center whitespace-nowrap">
                     <button
@@ -939,11 +1041,28 @@ export const ProductsClicksView: React.FC<{ onOpenAddModal: () => void }> = ({ o
                       +{margin}%
                     </span>
                   </td>
+                  {/* REAL DUAL-COUNTER CTR COLUMN */}
                   <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                    <div className="inline-flex items-center justify-center gap-1.5 font-mono font-black text-stone-800">
-                      <Eye className="w-3.5 h-3.5 text-blue-500" />
-                      <span>{mockClicks}</span>
-                      <span className="text-[10px] text-stone-400 font-sans font-semibold">({mockCtr}%)</span>
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="inline-flex items-center justify-center gap-1.5 font-mono font-black text-stone-800">
+                        <Eye className="w-3.5 h-3.5 text-blue-500" />
+                        <span>{realClicks.toLocaleString('id-ID')}</span>
+                        <span className="text-[10px] text-stone-400 font-sans font-semibold">({realCtr}%)</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[9px] font-bold">
+                        <span
+                          className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-md border border-blue-100 flex items-center gap-0.5"
+                          title="Klik dari Member yang Login"
+                        >
+                          👤 {authClicks.toLocaleString('id-ID')}
+                        </span>
+                        <span
+                          className="bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-md border border-amber-100 flex items-center gap-0.5"
+                          title="Klik dari Pengunjung Tamu (Guest)"
+                        >
+                          🌐 {guestClicks.toLocaleString('id-ID')}
+                        </span>
+                      </div>
                     </div>
                   </td>
                   <td className="py-3.5 px-4 text-center whitespace-nowrap">

@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { pool } from '../config/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -145,6 +146,18 @@ export async function syncCanonicalBouquetImagesToStorage(): Promise<{
           const { data: pubData } = supabase.storage.from(DEFAULT_BUCKET).getPublicUrl(file);
           urls[file] = pubData.publicUrl;
           syncedCount++;
+
+          // Auto-sync database image_url to Supabase CDN URL
+          try {
+            const baseSlug = file.replace(/\.(jpg|png|webp)$/i, '');
+            await pool.query(
+              `UPDATE products SET image_url = $1, updated_at = NOW() WHERE image_url LIKE $2 OR slug = $3`,
+              [pubData.publicUrl, `%${file}%`, baseSlug]
+            );
+          } catch (dbErr) {
+            console.warn(`Could not update database image_url for ${file}:`, dbErr);
+          }
+
           continue;
         }
       } catch (e) {

@@ -246,14 +246,16 @@ async function runSeed() {
       await client.query(`
         INSERT INTO products (
           id, name, slug, category_id, price, discount_price, raw_cost_hpp,
-          stock, po_lead_days, click_count, is_ready_stock, is_active,
+          stock, po_lead_days, click_count, click_count_guest, click_count_auth, view_count,
+          is_ready_stock, is_active,
           badge, rating, review_count, description, image_url, theme_suitability, colors,
           updated_at
         )
         VALUES (
           $1, $2, $3, $4, $5, $6, $7,
-          $8, $9, $10, $11, $12,
-          $13, $14, $15, $16, $17, $18, $19,
+          $8, $9, $10, $11, $12, $13,
+          $14, $15,
+          $16, $17, $18, $19, $20, $21, $22,
           NOW()
         )
         ON CONFLICT (id) DO UPDATE SET
@@ -266,7 +268,6 @@ async function runSeed() {
           stock = EXCLUDED.stock,
           po_lead_days = EXCLUDED.po_lead_days,
           is_ready_stock = EXCLUDED.is_ready_stock,
-          is_active = EXCLUDED.is_active,
           badge = EXCLUDED.badge,
           rating = EXCLUDED.rating,
           review_count = EXCLUDED.review_count,
@@ -277,7 +278,9 @@ async function runSeed() {
           updated_at = NOW();
       `, [
         prod.id, prod.name, prod.slug, prod.category_id, prod.price, prod.discount_price, prod.raw_cost_hpp,
-        prod.stock, prod.po_lead_days, prod.click_count, prod.is_ready_stock, prod.is_active,
+        prod.stock, prod.po_lead_days, prod.click_count,
+        Math.round(prod.click_count * 0.7), Math.round(prod.click_count * 0.3), Math.max(prod.click_count * 4, 1000),
+        prod.is_ready_stock, prod.is_active,
         prod.badge, prod.rating, prod.review_count, prod.description, prod.image_url, prod.theme_suitability, prod.colors
       ]);
 

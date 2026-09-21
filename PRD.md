@@ -5184,6 +5184,119 @@ Untuk menjaga keindahan estetika (*Rich Aesthetics* & *UI/UX Pro Max*) tanpa mem
 | `apps/web/src/components/admin/CSHubModal.tsx` | Badge unread, notifikasi suara, auto-scroll, header total unread |
 | `apps/web/src/components/storefront/LiveChatWidget.tsx` | Subtitle SLA "Staf merespons 1×24 jam" |
 
+---
+
+## 38. Kontrol Rilis Katalog Produk (Active/Inactive Toggle), Skema Dual-Counter CTR (Auth vs Guest), & Arsitektur Sinkronisasi Supabase Storage CDN — v4.1
+
+### 38.1. Latar Belakang & Kebutuhan Bisnis
+1. **Kontrol Rilis Produk Tanpa Penghapusan Data (Draft vs Live Etalase):**
+   - Florist studio dan admin atelier membutuhkan fleksibilitas untuk menyembunyikan sementara buket yang kehabisan bahan musiman atau belum dirilis ke publik tanpa menghapus (*delete*) data produk, resep bahan baku (BOM), dan riwayat transaksinya.
+   - Diperlukan mekanisme toggle switch langsung pada tabel katalog produk admin untuk mengontrol visibilitas produk di etalase etalase toko secara instan.
+2. **Urgensi Analitik Minat Klik (CTR) Dual-Counter:**
+   - Data klik produk (*Click-Through Rate*) sebelumnya tidak bertambah karena frontend tidak pernah menembak endpoint tracking analitik saat kartu produk diklik.
+   - Membedakan klik antara **Pengunjung Tamu / Guest** (audien penjelajah awal / *top of funnel*) dan **Pelanggan Terdaftar / Member** (audien berulang dengan niat beli tinggi / *high-intent retention*) memberikan wawasan krusial bagi evaluasi produk dan strategi promo studio.
+3. **Klarifikasi Arsitektur Supabase Storage vs Database Refresh:**
+   - Migrasi dan *re-seeding* database PostgreSQL hanya beroperasi pada layer tabel relasional SQL dan mendaftarkan metadata bucket; proses ini tidak mengunggah file biner foto produk ke cloud storage Supabase.
+   - Agar aplikasi tangguh dan tidak mengalami *white-screen / broken images* saat dijalankan secara lokal tanpa kredensial cloud, sistem menerapkan arsitektur *Dual-Layer Media Storage* (Supabase Storage CDN sebagai jalur utama + `/public/images/products/` sebagai jalur *defensive failover*).
+
+---
+
+### 38.2. Spesifikasi Skema Database PostgreSQL & Prisma
+Pada tabel PostgreSQL `products` dan Prisma schema, kolom diperluas dengan field analitik:
+```prisma
+model Product {
+  id                String            @id
+  name              String
+  slug              String            @unique
+  category_id       String?
+  category          Category?         @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  price             Decimal           @db.Decimal(10, 2)
+  discount_price    Decimal?          @db.Decimal(10, 2)
+  raw_cost_hpp      Decimal           @db.Decimal(10, 2)
+  stock             Int               @default(10)
+  po_lead_days      Int               @default(0)
+  click_count       Int               @default(0)
+  click_count_guest Int               @default(0)
+  click_count_auth  Int               @default(0)
+  view_count        Int               @default(0)
+  is_ready_stock    Boolean           @default(true)
+  is_active         Boolean           @default(true)
+  ...
+  @@index([is_active])
+  @@index([slug])
+}
+```
+
+- `click_count`: Total akumulasi klik keseluruhan (`click_count_guest + click_count_auth`).
+- `click_count_guest`: Total klik yang dilakukan oleh pengunjung umum tanpa autentikasi (Guest).
+- `click_count_auth`: Total klik yang dilakukan oleh pengguna dengan sesi login aktif (Member Mahasiswi UI, Admin, Florist).
+- `view_count`: Total impresi tayangan produk saat katalog dimuat di antarmuka toko.
+- Rasio CTR Riil: $\text{CTR (\%)} = \left(\frac{\text{click\_count}}{\max(\text{view\_count}, 1)}\right) \times 100\%$.
+
+---
+
+### 38.3. Spesifikasi Endpoint REST API Backend (`products.routes.ts`)
+
+| HTTP Method | Path | Akses | Deskripsi & Respons |
+|---|---|---|---|
+| `GET` | `/api/v1/products?limit=100&include_inactive=true` | 🔓 Publik / Admin | Mengembalikan seluruh produk. Jika `include_inactive=true`, produk dengan `is_active = false` tetap disertakan (khusus Admin). Jika tanpa parameter, otomatis memfilter `p.is_active = true` (Etalase Toko). |
+| `PATCH` | `/api/v1/products/:id/toggle-active` | 🛡️ Admin / Florist | Mengubah status aktif/nonaktif produk secara aman. Menerima payload opsional `{ is_active: boolean }` atau otomatis *invert boolean*. Mengembalikan produk terbaru. |
+| `POST` | `/api/v1/products/:id/click` | 🔓 Publik | Mencatat klik analitik CTR. Memeriksa status login melalui payload `{ is_auth: boolean }` atau header `Authorization`. Meng-inkremen `click_count_auth` jika terautentikasi, atau `click_count_guest` jika tamu. |
+| `POST` | `/api/v1/products/batch-view` | 🔓 Publik | Menerima array `{ product_ids: string[] }` dan meng-inkremen `view_count` secara massal untuk kalkulasi impresi katalog. |
+
+---
+
+### 38.4. Spesifikasi UI/UX Admin Panel & Storefront
+
+#### 1. Kontrol Toggle Rilis Produk di Admin (`AdminViews.tsx`)
+- Kolom baru **"Status Rilis"** disematkan di tabel data produk admin dengan komponen Switch Toggle modern (warna emerald saat ON, stone saat OFF).
+- Tombol switch dilengkapi proteksi status *loading spinner* (`isTogglingId`) dan *optimistic update* sehingga respons antarmuka seketika tanpa jeda.
+- Menampilkan feedback *Magic Toast*:
+  - Saat diaktifkan: *"Buket Dirilis ke Etalase! 🌸"*
+  - Saat dinonaktifkan: *"Buket Dinonaktifkan ⏸️"*
+- Produk nonaktif diberi penanda visual latar belakang *stone-tinted* dan badge `DRAFT`.
+- Tersedia fitur sorting kolom berdasarkan status aktif/nonaktif (`isActive`).
+
+#### 2. Kolom Klik CTR & Rincian Dual-Counter (`AdminViews.tsx`)
+- Menghapus mock statis modulo array dan menggantikannya dengan angka riil dari Supabase PostgreSQL.
+- Menampilkan total klik riil beserta kalkulasi persentase CTR terhadap impresi tayangan.
+- Dilengkapi sub-badge rincian:
+  - `👤 {clickCountAuth} Member` (Badge Biru)
+  - `🌐 {clickCountGuest} Tamu` (Badge Amber)
+
+#### 3. Tracking Interaksi di Etalase Toko (`ProductCard.tsx`)
+- Setiap kali kartu buket diklik oleh pembeli di etalase, sistem membaca status autentikasi dari `useAuthStore` dan secara asinkron memanggil `POST /api/v1/products/:id/click`.
+- Nilai klik di kartu produk diperbarui secara lokal (*optimistic counter increment*) sehingga pembeli langsung melihat respons interaktif seketika.
+
+---
+
+### 38.5. Solusi Supabase Storage Bucket CDN & Panduan Kredensial
+1. **Sinkronisasi Otomatis Foto Produk (`storage.service.ts`):**
+   - Fungsi `syncCanonicalBouquetImagesToStorage()` diperbarui: saat gambar berhasil diunggah ke bucket `product-images`, sistem secara otomatis mengupdate kolom `image_url` pada tabel `products` di PostgreSQL dengan URL publik CDN Supabase:
+     `https://wpdfxuwhqwvglqoiubfq.supabase.co/storage/v1/object/public/product-images/[nama-file].jpg`
+2. **Kredensial API Key Supabase:**
+   - Untuk mengaktifkan upload cloud ke Supabase Storage, pengguna cukup memasukkan API Key `anon` resmi dari Supabase Dashboard ke variabel `SUPABASE_ANON_KEY` di `apps/api/.env` dan `apps/web/.env.local`.
+   - Selama kunci masih berupa placeholder, sistem secara otomatis mengaktifkan *defensive failover* ke folder lokal `/images/products/` sehingga website dijamin 100% bebas dari gambar rusak (*Zero-Broken-Images*).
+
+---
+
+### 38.6. Daftar File yang Diubah
+| File | Komponen | Perubahan |
+|---|---|---|
+| `apps/api/prisma/schema.prisma` | Backend Database | Penambahan field `click_count_guest`, `click_count_auth`, `view_count` |
+| `prisma/schema.prisma` | Root Database | Sinkronisasi field model `Product` |
+| `supabase/schema.sql` | SQL Schema | Sinkronisasi DDL tabel `products` dan data awal |
+| `apps/web/public/supabase/schema.sql` | Public SQL Schema | Sinkronisasi DDL tabel `products` |
+| `apps/api/src/scripts/seed.ts` | Database Seeder | Seeding dual CTR data & preservasi status rilis admin |
+| `apps/api/src/routes/products.routes.ts` | Backend Router | `include_inactive=true`, `PATCH /toggle-active`, dual `POST /click`, `POST /batch-view` |
+| `packages/shared/src/types/index.ts` | Shared Interface | Properti `clickCountGuest`, `clickCountAuth`, `viewCount` pada `ProductSummary` |
+| `apps/web/src/components/storefront/ProductCard.tsx` | Storefront Card | Tracking klik real-time dengan status login `useAuthStore` & optimistic counter |
+| `apps/web/src/app/page.tsx` | Storefront Page | Mapping dual CTR field & pengiriman impresi `batch-view` |
+| `apps/web/src/components/admin/AdminViews.tsx` | Admin Panel | Toggle switch status rilis, sort `isActive`, query `include_inactive=true`, dual CTR breakdown |
+| `apps/api/src/services/storage.service.ts` | Cloud Storage | Auto-update `image_url` di PostgreSQL ke URL Supabase Storage CDN saat sync |
+| `PRD.md` | Master Product Specs | Penambahan Seksi 38 lengkap |
+
+
 
 
 
