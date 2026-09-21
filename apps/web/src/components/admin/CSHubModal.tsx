@@ -21,20 +21,31 @@ export const CSHubModal: React.FC = () => {
 
   useEffect(() => {
     fetchAdminSessions();
-  }, [fetchAdminSessions]);
 
-  const activeSession = adminSessions.find((s) => s.id === activeAdminSessionId) || adminSessions[0];
+    const interval = setInterval(() => {
+      fetchAdminSessions(true);
+      const currentActive = useChatStore.getState().activeAdminSessionId;
+      if (currentActive) {
+        selectAdminSession(currentActive);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [fetchAdminSessions, selectAdminSession]);
+
+  const activeSession = adminSessions.find((s) => s.id === activeAdminSessionId) || (adminSessions.length > 0 ? adminSessions[0] : null);
 
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!replyText.trim() || !activeAdminSessionId) return;
+    const targetId = activeAdminSessionId || activeSession?.id;
+    if (!replyText.trim() || !targetId) return;
 
     setIsSending(true);
     try {
-      await sendMessage(replyText.trim(), 'FLORIST', activeAdminSessionId);
+      await sendMessage(replyText.trim(), 'FLORIST', targetId);
       setReplyText('');
       // Refresh messages
-      await selectAdminSession(activeAdminSessionId);
+      await selectAdminSession(targetId);
     } catch (err) {
       console.error('Failed to send florist reply:', err);
     } finally {
@@ -69,7 +80,8 @@ export const CSHubModal: React.FC = () => {
           </button>
           <button
             onClick={() => escalateToWhatsApp(activeSession?.customer_name)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 active:scale-95 transition-all self-start sm:self-auto"
+            disabled={!activeSession}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-emerald-600/20 active:scale-95 transition-all self-start sm:self-auto"
           >
             <Phone className="w-3.5 h-3.5" />
             <span>Eskalasi ke WhatsApp</span>
@@ -134,78 +146,92 @@ export const CSHubModal: React.FC = () => {
 
         {/* Conversation View (Right 8 cols) */}
         <div className="lg:col-span-8 border border-stone-200 rounded-2xl flex flex-col overflow-hidden bg-white">
-          <div className="p-3.5 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center text-xs font-bold">
-                {activeSession?.customer_name?.slice(0, 2).toUpperCase() || 'SA'}
+          {!activeSession ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-stone-50/40">
+              <div className="w-16 h-16 rounded-3xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center mb-4 shadow-xs">
+                <MessageSquare className="w-8 h-8" />
               </div>
-              <div>
-                <span className="text-xs font-bold text-stone-800">
-                  {activeSession?.customer_name || 'Siti Anggraini'}
-                </span>
-                <span className="text-[10px] text-emerald-600 font-semibold block">
-                  Online di Storefront • {activeSession?.customer_phone || 'Tanpa No. HP'}
-                </span>
-              </div>
+              <h3 className="text-sm font-bold text-stone-700">Belum Ada Sesi Percakapan Terpilih</h3>
+              <p className="text-xs text-stone-400 max-w-sm mt-1.5 leading-relaxed">
+                Belum ada percakapan aktif dari storefront. Sesi obrolan pelanggan (seperti konsultasi buket atau tanya stok) akan otomatis muncul di sini dan tersinkronisasi secara real-time.
+              </p>
             </div>
-            <span className="text-[10px] text-stone-400 font-mono">
-              ID: {activeSession?.id || 'sess-001'}
-            </span>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-stone-50/30 text-xs">
-            {adminSessionMessages.length === 0 ? (
-              <div className="text-center py-12 text-stone-400 text-xs">
-                Tidak ada riwayat pesan dalam sesi ini.
-              </div>
-            ) : (
-              adminSessionMessages.map((msg) => {
-                const isCustomer = msg.sender === 'CUSTOMER';
-                const isBot = msg.sender === 'BOT';
-
-                return (
-                  <div
-                    key={msg.id}
-                    className={`flex flex-col ${isCustomer ? 'items-start' : isBot ? 'items-start' : 'items-end'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl ${
-                        isCustomer
-                          ? 'bg-stone-100 text-stone-800 rounded-bl-xs'
-                          : isBot
-                          ? 'bg-amber-50 text-amber-900 border border-amber-200/60 rounded-bl-xs'
-                          : 'bg-rose-600 text-white rounded-br-xs shadow-sm'
-                      }`}
-                    >
-                      <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-                    </div>
-                    <span className="text-[10px] text-stone-400 mt-1 px-1">
-                      {isBot ? '🤖 Bot Otomatis' : isCustomer ? '👤 Pembeli' : '🌸 Florist Staff (Anda)'} • {msg.sentAt}
+          ) : (
+            <>
+              <div className="p-3.5 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center text-xs font-bold">
+                    {activeSession.customer_name?.slice(0, 2).toUpperCase() || 'CU'}
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-stone-800">
+                      {activeSession.customer_name}
+                    </span>
+                    <span className="text-[10px] text-emerald-600 font-semibold block">
+                      Online di Storefront • {activeSession.customer_phone || 'Tanpa No. HP'}
                     </span>
                   </div>
-                );
-              })
-            )}
-          </div>
+                </div>
+                <span className="text-[10px] text-stone-400 font-mono">
+                  ID: {activeSession.id}
+                </span>
+              </div>
 
-          <form onSubmit={handleReply} className="p-3 border-t border-stone-200 flex gap-2">
-            <input
-              type="text"
-              placeholder="Balas pesan pelanggan sebagai staf florist atelier..."
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              disabled={isSending || !activeAdminSessionId}
-              className="flex-1 text-xs px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white"
-            />
-            <button
-              type="submit"
-              disabled={isSending || !replyText.trim() || !activeAdminSessionId}
-              className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>{isSending ? 'Mengirim...' : 'Kirim'}</span>
-            </button>
-          </form>
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-stone-50/30 text-xs">
+                {adminSessionMessages.length === 0 ? (
+                  <div className="text-center py-12 text-stone-400 text-xs">
+                    Tidak ada riwayat pesan dalam sesi ini.
+                  </div>
+                ) : (
+                  adminSessionMessages.map((msg) => {
+                    const isCustomer = msg.sender === 'CUSTOMER';
+                    const isBot = msg.sender === 'BOT';
+
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex flex-col ${isCustomer ? 'items-start' : isBot ? 'items-start' : 'items-end'}`}
+                      >
+                        <div
+                          className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl ${
+                            isCustomer
+                              ? 'bg-stone-100 text-stone-800 rounded-bl-xs'
+                              : isBot
+                              ? 'bg-amber-50 text-amber-900 border border-amber-200/60 rounded-bl-xs'
+                              : 'bg-rose-600 text-white rounded-br-xs shadow-sm'
+                          }`}
+                        >
+                          <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                        </div>
+                        <span className="text-[10px] text-stone-400 mt-1 px-1">
+                          {isBot ? '🤖 Bot Otomatis' : isCustomer ? '👤 Pembeli' : '🌸 Florist Staff (Anda)'} • {msg.sentAt}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <form onSubmit={handleReply} className="p-3 border-t border-stone-200 flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Balas pesan pelanggan sebagai staf florist atelier..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  disabled={isSending || !activeSession}
+                  className="flex-1 text-xs px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white"
+                />
+                <button
+                  type="submit"
+                  disabled={isSending || !replyText.trim() || !activeSession}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{isSending ? 'Mengirim...' : 'Kirim'}</span>
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </div>
     </div>

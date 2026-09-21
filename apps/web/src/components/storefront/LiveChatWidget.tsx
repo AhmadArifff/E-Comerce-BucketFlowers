@@ -5,13 +5,54 @@ import { MessageCircle, X, Send, Sparkles, MessageSquare, Phone, Bot, CheckCircl
 import { useChatStore } from '@/stores/useChatStore';
 import { useCartStore } from '@/stores/useCartStore';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export const LiveChatWidget: React.FC = () => {
-  const { isOpen, setIsOpen, messages, sendMessage, escalateToWhatsApp } = useChatStore();
+  const { 
+    isOpen, 
+    setIsOpen, 
+    messages, 
+    sendMessage, 
+    escalateToWhatsApp,
+    syncSessionIdentity,
+    initClientSession,
+    fetchClientMessages,
+    sessionId,
+  } = useChatStore();
   const { isCartOpen } = useCartStore();
   const { theme } = useThemeStore();
+  const { user, isAuthenticated } = useAuthStore();
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Sync user identity when logged in
+  useEffect(() => {
+    if (isAuthenticated && user?.name) {
+      syncSessionIdentity(user.name, user.phone);
+    }
+  }, [isAuthenticated, user?.name, user?.phone, syncSessionIdentity]);
+
+  // Initialize session and poll for florist replies when chat window is open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const initAndFetch = async () => {
+      if (!sessionId) {
+        await initClientSession(user?.name, user?.phone);
+      } else if (user?.name) {
+        await syncSessionIdentity(user.name, user.phone);
+      }
+      await fetchClientMessages();
+    };
+
+    initAndFetch();
+
+    const pollInterval = setInterval(() => {
+      fetchClientMessages();
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [isOpen, sessionId, user?.name, user?.phone, initClientSession, syncSessionIdentity, fetchClientMessages]);
 
   // Close live chat if cart drawer is opened to avoid screen overcrowding
   useEffect(() => {
@@ -158,7 +199,14 @@ export const LiveChatWidget: React.FC = () => {
                   >
                     <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                   </div>
-                  <span className="text-[10px] text-stone-400 mt-1 px-1">{msg.sentAt}</span>
+                  <span className="text-[10px] text-stone-400 mt-1 px-1 flex items-center gap-1">
+                    {!isUser && (
+                      <span className={msg.sender === 'FLORIST_ADMIN' ? 'text-rose-600 font-bold' : 'text-stone-500'}>
+                        {msg.sender === 'FLORIST_ADMIN' ? '🌸 Florist Staff' : '🤖 Asisten AI'} •
+                      </span>
+                    )}
+                    <span>{msg.sentAt}</span>
+                  </span>
                 </div>
               );
             })}

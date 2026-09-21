@@ -71,6 +71,41 @@ router.post('/session', async (req, res) => {
   }
 });
 
+// PUT /api/v1/chat/session/:id
+router.put('/session/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { customer_name, customer_phone } = req.body;
+
+    const result = await pool.query(
+      `UPDATE chat_sessions 
+       SET customer_name = COALESCE($2, customer_name),
+           guest_name = COALESCE($2, guest_name),
+           customer_phone = COALESCE($3, customer_phone),
+           updated_at = NOW()
+       WHERE id = $1
+       RETURNING *;`,
+      [id, customer_name || null, customer_phone || null]
+    );
+
+    if (result.rows.length === 0) {
+      // Auto-create if not exists
+      const sessionToken = `sess-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const insertRes = await pool.query(
+        `INSERT INTO chat_sessions (id, session_token, customer_name, guest_name, customer_phone, is_escalated_wa, is_active, created_at, updated_at)
+         VALUES ($1, $2, $3, $3, $4, false, true, NOW(), NOW())
+         RETURNING *;`,
+        [id, sessionToken, customer_name || 'Tamu Chenille', customer_phone || null]
+      );
+      return res.json({ success: true, data: insertRes.rows[0] });
+    }
+
+    return res.json({ success: true, data: result.rows[0] });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // GET /api/v1/chat/messages/:sessionId
 router.get('/messages/:sessionId', async (req, res) => {
   try {
@@ -91,9 +126,31 @@ router.get('/messages/:sessionId', async (req, res) => {
 // POST /api/v1/chat/message
 router.post('/message', async (req, res) => {
   try {
-    const { session_id, text, sender = 'CUSTOMER' } = req.body;
+    const { session_id, text, sender = 'CUSTOMER', customer_name, customer_phone } = req.body;
     if (!session_id || !text) {
       return res.status(400).json({ success: false, error: 'Session ID dan pesan teks wajib diisi.' });
+    }
+
+    // Defensive self-healing: Ensure chat session exists in database
+    const sessionCheck = await pool.query('SELECT id, customer_name FROM chat_sessions WHERE id = $1', [session_id]);
+    if (sessionCheck.rows.length === 0) {
+      const sessionToken = `sess-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      await pool.query(
+        `INSERT INTO chat_sessions (id, session_token, customer_name, guest_name, customer_phone, is_escalated_wa, is_active, created_at, updated_at)
+         VALUES ($1, $2, $3, $3, $4, false, true, NOW(), NOW())
+         ON CONFLICT (id) DO UPDATE SET
+           customer_name = COALESCE(EXCLUDED.customer_name, chat_sessions.customer_name),
+           updated_at = NOW();`,
+        [session_id, sessionToken, customer_name || 'Tamu Chenille', customer_phone || null]
+      );
+    } else if (customer_name && customer_name !== 'Tamu Chenille' && sessionCheck.rows[0].customer_name !== customer_name) {
+      // Update customer name if provided and changed
+      await pool.query(
+        `UPDATE chat_sessions 
+         SET customer_name = $2, guest_name = $2, customer_phone = COALESCE($3, customer_phone), updated_at = NOW() 
+         WHERE id = $1;`,
+        [session_id, customer_name, customer_phone || null]
+      );
     }
 
     const msgId = `msg-${Date.now()}`;

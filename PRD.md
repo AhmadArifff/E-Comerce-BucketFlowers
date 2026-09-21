@@ -5088,6 +5088,41 @@ Untuk menjaga keindahan estetika (*Rich Aesthetics* & *UI/UX Pro Max*) tanpa mem
    - Total lebar konten di breakpoint `xl` tereduksi dari $1304\text{px}$ menjadi $\sim 1040\text{px}$.
    - Tersedia ruang bernapas (*safety breathing margin*) sebesar $\sim 176\text{px}$ pada layar 1280px, menjamin tombol keranjang tampil utuh $100\%$ di seluruh laptop, monitor, dan tingkat scaling Windows.
 
+---
+
+## 36. Resolusi Sinkronisasi Real-Time CS WhatsApp & In-System Webchat Hub (Admin-Storefront Bi-Directional Sync) — v3.9
+
+### 36.1. Analisis Akar Masalah Chat Desinkronisasi
+1. **Penyebab URL Prefix Duplikasi (`/api/v1/api/v1`):**
+   - File konfigurasi `apps/web/.env.local` menetapkan `NEXT_PUBLIC_API_URL="http://localhost:4000/api/v1"`.
+   - Pada `apps/web/src/stores/useChatStore.ts`, fungsi `getApiBase()` mengembalikan `NEXT_PUBLIC_API_URL`, lalu menambahkan kembali string `/api/v1/chat/...` pada setiap *fetch call*.
+   - Akibatnya, request dari browser memanggil `http://localhost:4000/api/v1/api/v1/chat/...` yang menghasilkan galat HTTP **404 Not Found**.
+   - Di sisi Storefront: Chat fallback ke bot offline lokal, pesan tidak tersimpan ke database PostgreSQL, dan sesi Annisa tidak terbentuk di server.
+   - Di sisi Admin Panel: Panggilan `GET /api/v1/chat/sessions` gagal 404, menyebabkan state `adminSessions` kosong (`PERCAKAPAN AKTIF (0)`).
+2. **Ketiadaan Integrasi Identitas Pelanggan (`useAuthStore`):**
+   - Komponen `LiveChatWidget.tsx` tidak mengonsumsi state `user` dari `useAuthStore`.
+   - Sesi yang diinisialisasi hanya menggunakan nama default (`"Tamu Chenille"`) tanpa menyertakan nama asli pelanggan yang sedang login (`"Annisa"`).
+3. **Ketiadaan Polling Real-Time Berkala:**
+   - Komponen `CSHubModal.tsx` di panel admin hanya memanggil `fetchAdminSessions()` satu kali saat pertama kali dibuka (*mount*). Ketika pelanggan di storefront mengirim pesan baru, antarmuka admin tidak ter-update tanpa refresh manual.
+   - Demikian pula di storefront, pesan balasan dari staf florist admin tidak ter-poll secara berkala ke widget chat pelanggan.
+4. **Resiliensi Foreign Key Database & Sesi Kadaluarsa:**
+   - Jika `sessionId` lokal tersimpan di `localStorage` tetapi tidak terdaftar di tabel `chat_sessions` database (misalnya pasca reset database atau kegagalan inisialisasi awal), query `INSERT INTO chat_messages` di backend akan gagal akibat *foreign key constraint violation*.
+
+---
+
+### 36.2. Arsitektur Rekayasa Solusi Komprehensif
+1. **Standarisasi URL API (`getApiUrl` dari `@/lib/api-client`):**
+   - Menghapus fungsi kustom `getApiBase()` pada `useChatStore.ts` dan menggantinya dengan helper kanonikal `getApiUrl()` yang memiliki sanitasi otomatis terhadap awalan `/api/v1`.
+2. **Integrasi Identitas Pelanggan Terautentikasi:**
+   - `LiveChatWidget.tsx` mengimpor `useAuthStore` dan secara otomatis memanggil `syncSessionIdentity(user.name, user.phone)` saat widget dibuka atau pesan dikirim.
+   - Sesi di backend mencatat nama pembeli asli (misal: `"Annisa"`) dan nomor kontak jika ada.
+3. **Mekanisme Self-Healing Session di Backend (`chat.routes.ts`):**
+   - Pada endpoint `POST /api/v1/chat/message`, sistem memverifikasi keberadaan `session_id` di tabel `chat_sessions`. Jika sesi belum ada, backend secara otomatis membuat baris sesi baru (*auto-upsert session*) sebelum menyimpan pesan. Hal ini menjamin tidak ada pesan yang gagal tersimpan akibat *foreign key mismatch*.
+4. **Bi-Directional Real-Time Polling Engine:**
+   - **Admin CS Hub (`CSHubModal.tsx`):** Menjalankan interval polling setiap 3 detik saat tab CS WhatsApp Hub aktif untuk memperbarui daftar sesi dan histori pesan sesi yang sedang dipilih.
+   - **Storefront Widget (`LiveChatWidget.tsx`):** Menjalankan interval polling setiap 3 detik saat jendela chat sedang terbuka (`isOpen = true`) untuk menarik pesan balasan terbaru dari florist admin.
+
+
 
 
 
