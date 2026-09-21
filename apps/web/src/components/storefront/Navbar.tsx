@@ -218,7 +218,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-theme-border shadow-2xs transition-colors duration-300 w-full max-w-full">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-2 sm:gap-3 lg:gap-4">
+        <div className="flex items-center justify-between h-16 gap-2 sm:gap-3 lg:gap-4 xl:gap-2 2xl:gap-4">
           
           {/* BRAND LOGO */}
           <div
@@ -228,7 +228,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-lg sm:text-xl group-hover:scale-105 transition-transform flex-shrink-0 ${brandInfo.iconClass}`}>
               <span>{brandInfo.icon}</span>
             </div>
-            <div className="min-w-0 max-w-[190px] sm:max-w-[240px] 2xl:max-w-none">
+            <div className="min-w-0 max-w-[170px] sm:max-w-[210px] xl:max-w-[190px] 2xl:max-w-none">
               <span className="text-sm sm:text-base font-black text-theme-text-main tracking-tight block leading-tight truncate">
                 {brandInfo.title}
               </span>
@@ -241,7 +241,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* DESKTOP 6 NAVIGATION MENUS — FLOATING MAGNETIC SLIDING PILL */}
           <nav
             ref={navRef}
-            className="relative hidden xl:flex items-center gap-1 2xl:gap-1.5 flex-shrink-0 p-1 bg-stone-100/70 rounded-full border border-stone-200/60 overflow-hidden"
+            className="relative hidden xl:flex items-center gap-0.5 2xl:gap-1.5 flex-shrink-0 p-1 bg-stone-100/70 rounded-full border border-stone-200/60 overflow-hidden"
           >
             {/* The Magnetic Sliding Pink Pill — Anchored inside capsule */}
             <div
@@ -273,7 +273,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     menuRefs.current[menu.id] = el;
                   }}
                   onClick={() => handleNavClick(menu.id)}
-                  className={`relative z-10 px-3 2xl:px-3.5 py-1.5 text-xs font-black rounded-full transition-colors duration-400 whitespace-nowrap cursor-pointer ${
+                  className={`relative z-10 px-2.5 2xl:px-3.5 py-1 2xl:py-1.5 text-[11px] 2xl:text-xs font-black rounded-full transition-colors duration-400 whitespace-nowrap cursor-pointer ${
                     isActive
                       ? 'text-white drop-shadow-2xs'
                       : 'text-stone-700 hover:text-rose-600'
@@ -302,8 +302,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               title={isSearchOpen ? 'Tutup Pencarian' : 'Cari Buket Bunga'}
               aria-label="Cari Buket Bunga"
             >
-              <Search className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">
+              <Search className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline xl:hidden 2xl:inline">
                 {searchQuery ? `"${searchQuery.slice(0, 8)}..."` : 'Cari'}
               </span>
             </button>
@@ -314,16 +314,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 h-9 rounded-full border border-theme-border bg-white hover:bg-theme-surface-subtle text-theme-text-main text-xs font-bold transition-all shadow-2xs flex-shrink-0 cursor-pointer group"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 h-9 rounded-full border border-theme-border bg-white hover:bg-theme-surface-subtle text-theme-text-main text-xs font-bold transition-all shadow-2xs flex-shrink-0 cursor-pointer group max-w-[135px] 2xl:max-w-[170px]"
                   title="Akun Pelanggan"
                 >
                   <span className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center text-[11px] font-black flex-shrink-0">
                     {user.avatarEmoji || user.name[0] || '🌸'}
                   </span>
-                  <span className="hidden sm:inline font-bold" suppressHydrationWarning>
+                  <span className="hidden sm:inline font-bold truncate max-w-[60px] 2xl:max-w-[100px]" suppressHydrationWarning>
                     {user.name.split(' ')[0]}
                   </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform flex-shrink-0 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isProfileDropdownOpen && (
@@ -416,15 +416,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="navCartBtn"
               onClick={() => setIsCartOpen(true)}
-              className={`btn-nav-cart relative flex items-center justify-center gap-1.5 px-3 sm:px-4 h-9 active:scale-95 transition-all flex-shrink-0 cursor-pointer ${
+              className={`btn-nav-cart relative flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 h-9 active:scale-95 transition-all flex-shrink-0 cursor-pointer ${
                 cartBump ? 'cart-bump' : ''
               }`}
               aria-label="Keranjang Belanja"
             >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline font-bold text-xs">Keranjang</span>
+              <ShoppingBag className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className={`${user ? 'hidden 2xl:inline' : 'hidden sm:inline'} font-bold text-xs`}>
+                Keranjang
+              </span>
               <span
-                className="cart-badge text-[10px] font-black px-1.5 py-0.5 rounded-full"
+                className="cart-badge text-[10px] font-black px-1.5 py-0.5 rounded-full flex-shrink-0"
                 suppressHydrationWarning
               >
                 {mounted ? totalItems : 0}

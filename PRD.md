@@ -5054,6 +5054,41 @@ Untuk memberikan perlindungan berlapis dan meminimalisir kekeliruan klik (*accid
    - Menggunakan bahasa operasional toko yang profesional dan menenangkan.
    - Menyajikan hasil pembersihan dalam format label yang bersahabat (misal: *"Riwayat Pesanan: Berhasil Dibersihkan"*, *"Katalog Produk: Berhasil Dipulihkan ke Standar Awal"*).
 
+---
+
+## 35. Optimasi Responsif Navbar Storefront & Portal untuk Pengguna Terautentikasi (Logged-In User Viewport Resilience) — v3.8
+
+### 35.1. Analisis Masalah & Geometri Viewport
+1. **Gejala Permasalahan:**
+   - Saat pengguna belum masuk (*guest*), elemen navbar (Logo, 6 menu navigasi magnetik, tombol Pencarian, tombol Masuk, dan tombol Keranjang) tampil proporsional tanpa terpotong.
+   - Begitu pengguna berhasil masuk (*logged in*), tombol keranjang belanja di sisi kanan atas terdorong ke luar layar dan **terpotong sebagian di tepi kanan (*horizontal overflow / clipping*)** pada resolusi laptop standar (1280px–1440px) dan laptop 1366px dengan scaling 125%.
+2. **Akar Penyebab Teknis:**
+   - **Perbedaan Lebar Tombol Auth:** Tombol *Masuk* berukuran ringkas (~70px), sedangkan tombol *Profil Pengguna* memuat avatar emoji (`w-5 h-5`), nama pengguna (`Annisa`), ikon *chevron*, dan *padding* (~125px–145px). Terjadi penambahan lebar ~65px–75px pada sisi kanan.
+   - **Kekakuan Flexbox (*Rigid flex-shrink-0*):** Seluruh elemen kontainer (Logo Atelier, Kapsul 6 Menu Navigasi, dan Aksi Kanan) memiliki kelas `flex-shrink-0` tanpa ada toleransi penyusutan.
+   - **Kepadatan Breakpoint `xl` (1280px):** Di breakpoint `xl`, menu desktop 6 item aktif bersamaan dengan logo dan tombol kanan. Total lebar konten ($280\text{px} + 620\text{px} + 340\text{px} + 64\text{px} \text{ padding} = 1304\text{px}$) melebihi lebar layar laptop 1280px.
+
+---
+
+### 35.2. Perancangan Rekayasa Responsif Adaptif
+Untuk menjaga keindahan estetika (*Rich Aesthetics* & *UI/UX Pro Max*) tanpa memotong tombol keranjang:
+
+1. **Adaptasi Tombol Keranjang Belanja (`#navCartBtn`):**
+   - **Kondisi Guest:** Teks `"Keranjang"` tetap tampil normal di layar `sm` ke atas (`hidden sm:inline`).
+   - **Kondisi Logged-In:** Teks `"Keranjang"` beralih menjadi responsif adaptif:
+     - Pada layar laptop rentang `xl` (1280px–1535px): Hanya menampilkan ikon tas belanja (`ShoppingBag`) dan lencana jumlah item (*badge*), menghemat ruang ~55px.
+     - Pada layar besar `2xl` (1536px+): Teks `"Keranjang"` tampil penuh kembali secara elegan (`hidden 2xl:inline`).
+2. **Adaptasi Tombol Pencarian (`Search`):**
+   - Pada layar laptop rentang `xl`: Menampilkan ikon kaca pembesar secara ramping (`hidden sm:inline xl:hidden 2xl:inline`), menghemat ruang ~40px.
+   - Pada layar `2xl`: Teks `"Cari"` kembali tampil proporsional.
+3. **Penyempurnaan Tombol Profil Pengguna:**
+   - Memberikan pembatasan lebar teks nama pengguna (`truncate max-w-[65px] 2xl:max-w-[100px]`) agar nama pelanggan yang panjang tidak merusak grid navbar.
+4. **Optimalisasi Kapsul 6 Menu Navigasi Desktop:**
+   - Menyesuaikan *padding* horizontal tombol menu di rentang `xl` menjadi `px-2.5 py-1 text-[11px]` (dan `2xl:px-3.5 2xl:py-1.5 2xl:text-xs`), menghemat ~80px pada kapsul menu tanpa mengurangi keterbacaan teks.
+5. **Kalkulasi Toleransi Viewport Akhir:**
+   - Total lebar konten di breakpoint `xl` tereduksi dari $1304\text{px}$ menjadi $\sim 1040\text{px}$.
+   - Tersedia ruang bernapas (*safety breathing margin*) sebesar $\sim 176\text{px}$ pada layar 1280px, menjamin tombol keranjang tampil utuh $100\%$ di seluruh laptop, monitor, dan tingkat scaling Windows.
+
+
 
 
 
