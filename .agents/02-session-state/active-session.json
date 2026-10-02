@@ -1,0 +1,67 @@
+{
+  "session_id": "session-chenille-20261003",
+  "project": "E-Comerce-BucketFlowers",
+  "version": "1.0.0",
+  "active_goal": "Penyelarasan & audit menyeluruh seluruh fungsi sistem sesuai 42 Seksi PRD.md dan aturan RULES.md",
+  "status": "IN_PROGRESS",
+  "completed_milestones": [
+    {
+      "id": "M1_DASHBOARD_ORDERS",
+      "title": "Menu Dashboard & Manajemen Pesanan",
+      "prd_sections": ["Seksi 4", "Seksi 7", "Seksi 8", "Seksi 25"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-09-21"
+    },
+    {
+      "id": "M2_EXCEL_REPORTS",
+      "title": "Ekspor Laporan Excel & CSV UTF-8 BOM",
+      "prd_sections": ["Seksi 5", "Seksi 25"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-09-21"
+    },
+    {
+      "id": "M3_PRODUCTS_CTR",
+      "title": "Katalog Produk, Komposisi Bahan & Dual CTR Klik",
+      "prd_sections": ["Seksi 1", "Seksi 19", "Seksi 27"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-09-21"
+    },
+    {
+      "id": "M4_CUSTOM_STUDIO",
+      "title": "Studio Kustomisasi Buket (Admin & Storefront)",
+      "prd_sections": ["Seksi 2", "Seksi 15"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-09-21"
+    },
+    {
+      "id": "M5_BOM_RAW_MATERIALS",
+      "title": "Bahan Baku, Komposisi Resep HPP & Pengadaan Restock",
+      "prd_sections": ["Seksi 29", "Seksi 30", "Seksi 31"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-09-21"
+    },
+    {
+      "id": "M6_AGENTIC_SYSTEM_SETUP",
+      "title": "Setup Sistem Tata Kelola .agents & AGENTS.md dengan Hub-and-Spoke Sync ke Induk",
+      "prd_sections": ["Governance", "Seksi 1-42"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-10-03"
+    }
+  ],
+  "established_constraints": [
+    "Monorepo path lock: frontend di apps/web, backend di apps/api, tipe bersama di packages/shared",
+    "Zero-Dummy Policy: Seluruh data dinamis membaca dan menyimpan ke Supabase PostgreSQL 42 tabel",
+    "PostgreSQL enum parameter casting: Wajib casting eksplisit $1::enum_name pada query parameterized untuk mencegah error type deduction",
+    "Resep BOM Sinkronisasi: Nilai products.raw_cost_hpp wajib 100% konsisten dengan akumulasi subtotal_cost tabel bill_of_materials",
+    "Kompatibilitas Ekspor Excel: File CSV wajib menyertakan byte UTF-8 BOM (\\uFEFF) di awal buffer",
+    "Zero-Residual Scratch Rule: File uji coba sementara dilarang ditinggalkan di root repo git",
+    "Clean PRD Policy: Fitur baru dicatat di PRD.md & .agents, perbaikan bug hanya dicatat di .agents/ (04-case-bank)",
+    "Autonomous Delivery Protocol: Review -> User Approval -> Dev & Verify -> Direct Git Push to GitHub (khusus proyek E-Comerce-BucketFlowers)",
+    "Hub-and-Spoke Knowledge Sync: Mengadopsi default dari induk C:\\Users\\ASUS\\Documents\\Web Dev\\improving\\agentic AI dan menyinkronkan kembali pola solusi tervalidasi"
+  ],
+  "next_recommended_actions": [
+    "Lakukan commit & push pertama untuk sistem .agents dan AGENTS.md ke GitHub",
+    "Lanjutkan verifikasi modul berikutnya sesuai instruksi pengguna"
+  ],
+  "last_updated": "2026-10-03T04:18:00+07:00"
+}

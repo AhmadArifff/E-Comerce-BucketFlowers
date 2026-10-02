@@ -1,0 +1,32 @@
+case_id: "case-20261002-bom-hpp-database-sync"
+title: "Sinkronisasi Akumulasi Biaya Resep BOM dengan Kolom raw_cost_hpp Produk"
+domain: "database-accounting"
+project: "E-Comerce-BucketFlowers"
+date_verified: "2026-10-02"
+severity: "MEDIUM"
+status: "VERIFIED"
+
+problem:
+  description: >
+    Nilai HPP modal buket pada tabel products (kolom raw_cost_hpp) berpotensi tidak sinkron
+    dengan rincian resep bahan baku pada tabel bill_of_materials jika dihitung secara manual
+    atau disimpan terpisah.
+  root_cause: >
+    Perubahan harga kawat bulu atau penambahan aksesoris pada resep tidak otomatis
+    memperbarui kolom raw_cost_hpp produk jika tidak dibungkus dalam endpoint transaksional.
+
+solution:
+  code_pattern: |
+    // PUT /api/v1/products/:id/bom
+    // 1. BEGIN transaction
+    // 2. DELETE FROM bill_of_materials WHERE product_id = $1
+    // 3. INSERT resep baru dan akumulasikan totalHpp += subtotal_cost
+    // 4. UPDATE products SET raw_cost_hpp = totalHpp, updated_at = NOW() WHERE id = $1
+    // 5. COMMIT transaction
+  rules:
+    - Nilai raw_cost_hpp wajib 100% identik dengan SUM(subtotal_cost) dari bill_of_materials.
+    - Modal BOMCalculatorModal.tsx wajib membaca data live dari GET /api/v1/products/:id saat produk dipilih.
+
+verification:
+  test_command: "node -e \"fetch('http://localhost:4000/api/v1/products/prod-001').then(r=>r.json()).then(d=>console.log(d.data.rawCostHpp, d.data.bom))\""
+  result: "100% konsisten (prod-001 HPP: 48,500 = total subtotal BOM 6 bahan: 48,500)."

@@ -1,0 +1,30 @@
+case_id: "case-20261002-csv-utf8-bom-excel-compatibility"
+title: "Pencegahan Teks Rusak (Mojibake) pada Ekspor CSV saat Dibuka di Microsoft Excel"
+domain: "frontend-export"
+project: "E-Comerce-BucketFlowers"
+date_verified: "2026-10-02"
+severity: "MEDIUM"
+status: "VERIFIED"
+
+problem:
+  description: >
+    File CSV yang diekspor langsung dari browser menggunakan new Blob([csvContent])
+    menghasilkan karakter aneh/rusak saat dibuka di Microsoft Excel desktop pada OS Windows.
+  root_cause: >
+    Microsoft Excel pada sistem Windows berasumsi file CSV tanpa tanda byte pengenal (BOM)
+    menggunakan encoding ANSI lokal, bukan UTF-8 standar web.
+
+solution:
+  code_pattern: |
+    // apps/web/src/lib/export-excel.ts
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    // trigger invisible <a> download click
+  rules:
+    - Selalu sertakan byte '\uFEFF' di awal string CSV sebelum membuat Blob.
+    - Escape field yang mengandung tanda koma atau tanda petik dua dengan membungkusnya dalam tanda petik (\"...\").
+
+verification:
+  test_command: "Klik tombol 'Ekspor CSV' atau 'Unduh Excel' di tab REPORTS admin."
+  result: "Berkas langsung terbuka rapi di Microsoft Excel & Google Sheets tanpa karakter rusak."

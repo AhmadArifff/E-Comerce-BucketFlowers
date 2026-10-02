@@ -1,0 +1,34 @@
+case_id: "case-20261002-postgresql-enum-type-deduction"
+title: "Resolusi Error Parameter Type Deduction pada PostgreSQL Enum di Express"
+domain: "backend-database"
+project: "E-Comerce-BucketFlowers"
+date_verified: "2026-10-02"
+severity: "HIGH"
+status: "VERIFIED"
+
+problem:
+  description: >
+    Saat melakukan query parameterized UPDATE pada kolom bertipe enum PostgreSQL
+    (misalnya status bertipe procurement_status) dengan klausa CASE WHEN $1 = 'ARRIVED',
+    driver node-postgres (pg) dan PostgreSQL melempar error:
+    "inconsistent types deduced for parameter $1".
+  root_cause: >
+    PostgreSQL tidak dapat menyimpulkan apakah $1 bertipe enum atau teks ketika satu
+    parameter yang sama digunakan untuk assignment kolom enum (SET status = $1)
+    sekaligus perbandingan string literal (CASE WHEN $1 = 'ARRIVED').
+
+solution:
+  code_pattern: |
+    UPDATE procurement_orders 
+    SET status = $1::procurement_status, 
+        is_stock_added = $2, 
+        actual_arrival = CASE WHEN $1::text = 'ARRIVED' THEN NOW() ELSE actual_arrival END
+    WHERE id = $3
+    RETURNING *;
+  rules:
+    - Selalu berikan type casting eksplisit ($1::enum_type dan $1::text) pada kueri parameterized yang melibatkan enum.
+    - Lakukan mapping nilai dari frontend (misalnya 'SHIPPED' -> 'ON_SHIPPING') sebelum dikirim ke database.
+
+verification:
+  test_command: "node -e \"fetch('http://localhost:4000/api/v1/procurement', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'PO-TEST', status: 'ARRIVED' }) }).then(r=>r.json()).then(console.log)\""
+  result: "Status berhasil diperbarui menjadi ARRIVED dan stok bertambah atomik."

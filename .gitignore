@@ -33,7 +33,7 @@ coverage/
 *.tsbuildinfo
 
 # Agent skills & configs
-.agents/
+.agents/**/node_modules/
 .claude/
 agent/
 skills-lock.json

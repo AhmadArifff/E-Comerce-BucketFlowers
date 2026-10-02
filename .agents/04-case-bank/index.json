@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0",
+  "project": "E-Comerce-BucketFlowers",
+  "total_cases": 3,
+  "cases": [
+    {
+      "id": "case-20261002-postgresql-enum-type-deduction",
+      "title": "Resolusi Error Parameter Type Deduction pada PostgreSQL Enum di Express",
+      "domain": "backend-database",
+      "severity": "HIGH",
+      "status": "VERIFIED",
+      "file": "cases/case-20261002-postgresql-enum-type-deduction.yaml"
+    },
+    {
+      "id": "case-20261002-bom-hpp-database-sync",
+      "title": "Sinkronisasi Akumulasi Biaya Resep BOM dengan Kolom raw_cost_hpp Produk",
+      "domain": "database-accounting",
+      "severity": "MEDIUM",
+      "status": "VERIFIED",
+      "file": "cases/case-20261002-bom-hpp-database-sync.yaml"
+    },
+    {
+      "id": "case-20261002-csv-utf8-bom-excel-compatibility",
+      "title": "Pencegahan Teks Rusak (Mojibake) pada Ekspor CSV saat Dibuka di Microsoft Excel",
+      "domain": "frontend-export",
+      "severity": "MEDIUM",
+      "status": "VERIFIED",
+      "file": "cases/case-20261002-csv-utf8-bom-excel-compatibility.yaml"
+    }
+  ]
+}
