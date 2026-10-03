@@ -6,6 +6,7 @@ import { ShoppingBag, Search, User, Sparkles, Menu, X, ArrowRight, Zap, Loader2,
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useCartStore } from '@/stores/useCartStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { getApiUrl } from '@/lib/api-client';
 import { showMagicToast } from '@/lib/magic-motion';
 import { CustomerProfileModal } from './CustomerProfileModal';
@@ -25,6 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   setSearchQuery,
 }) => {
   const { theme } = useThemeStore();
+  const { storeName } = useSettingsStore();
   const { getTotalItems, setIsCartOpen } = useCartStore();
   const { user, logout } = useAuthStore();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -172,28 +174,28 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const brandInfo = {
     'tema-a': {
-      title: 'Aesthetic Chenille Flowers',
+      title: storeName || 'Aesthetic Chenille Flowers',
       sub: 'Korean Pastel Atelier',
       icon: '🌸',
       subColor: 'text-[#A8C3A0]',
       iconClass: 'bg-[#FDF2F4] border border-[#F7D1D9] text-[#9C3D52] shadow-sm',
     },
     'tema-b': {
-      title: 'Aesthetic Chenille Atelier',
+      title: storeName || 'Aesthetic Chenille Atelier',
       sub: 'Modern Romantic & Editorial',
       icon: '🌹',
       subColor: 'text-[#D4AF37]',
       iconClass: 'bg-white border border-[#E8D399] text-[#6B2D5C] shadow-sm',
     },
     'tema-c': {
-      title: 'Chenille Kawaii Craft',
+      title: storeName || 'Chenille Kawaii Craft',
       sub: 'Playful Pastel & Kawaii Dream',
       icon: '🍭',
       subColor: 'text-[#7F8C8D]',
       iconClass: 'bg-gradient-to-tr from-[#FFEAA7] to-[#FFB7B2] text-[#2C3E50] shadow-sm',
     },
   }[theme] || {
-    title: 'Aesthetic Chenille Flowers',
+    title: storeName || 'Aesthetic Chenille Flowers',
     sub: 'Korean Pastel Atelier',
     icon: '🌸',
     subColor: 'text-[#A8C3A0]',

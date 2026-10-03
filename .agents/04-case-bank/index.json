@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "E-Comerce-BucketFlowers",
-  "total_cases": 4,
+  "total_cases": 5,
   "cases": [
     {
       "id": "case-20261002-postgresql-enum-type-deduction",
@@ -34,6 +34,14 @@
       "severity": "HIGH",
       "status": "VERIFIED",
       "file": "cases/case-20261003-custom-studio-checkout-and-maintenance-guard.yaml"
+    },
+    {
+      "id": "case-20261003-admin-storefront-data-sync-copywriting",
+      "title": "Sinkronisasi Data Pengaturan Admin Toko ke Storefront & Eliminasi Copywriting AI Slop",
+      "domain": "frontend-state-copywriting-anti-slop",
+      "severity": "HIGH",
+      "status": "VERIFIED",
+      "file": "cases/case-20261003-admin-storefront-data-sync-copywriting.yaml"
     }
   ]
 }

@@ -81,6 +81,7 @@ export const CartDrawer: React.FC = () => {
   const { addNewOrder } = useOrderStore();
   const { paymentGateways, codPoints, logisticsConfig, isMaintenanceMode } = useSettingsStore();
   const [dbCodPoints, setDbCodPoints] = useState<any[]>([]);
+  const [isCodLoaded, setIsCodLoaded] = useState(false);
   const [courierOptions, setCourierOptions] = useState<any[]>([]);
   const [isLoadingCouriers, setIsLoadingCouriers] = useState(false);
 
@@ -96,11 +97,12 @@ export const CartDrawer: React.FC = () => {
     fetch(getApiUrl('/api/v1/cod-points'))
       .then((r) => r.json())
       .then((res) => {
-        if (res.success && res.data?.length > 0) {
+        setIsCodLoaded(true);
+        if (res.success && Array.isArray(res.data)) {
           setDbCodPoints(res.data);
         }
       })
-      .catch(() => {});
+      .catch(() => setIsCodLoaded(true));
 
     // Fetch active campaign rules (COD radius & threshold)
     fetch(getApiUrl('/api/v1/campaigns'))
@@ -149,6 +151,8 @@ export const CartDrawer: React.FC = () => {
   const activeMeetupPoints =
     dbCodPoints.length > 0
       ? dbCodPoints
+      : isCodLoaded
+      ? []
       : codPoints && codPoints.length > 0
       ? codPoints
       : MOCK_MEETUP_POINTS;
@@ -734,17 +738,23 @@ export const CartDrawer: React.FC = () => {
                               Radius ≤ 5 KM Bebas Ongkir
                             </span>
                           </div>
-                          <select
-                            value={selectedCodPointId}
-                            onChange={(e) => setSelectedCodPointId(e.target.value)}
-                            className="w-full text-xs p-2.5 bg-white border border-rose-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
-                          >
-                            {activeMeetupPoints.map((pt) => (
-                              <option key={pt.id} value={pt.id}>
-                                {pt.name} ({pt.distanceKm || pt.distance_km} KM • {Number(pt.distanceKm || pt.distance_km) <= 5 ? 'Gratis Ongkir' : 'Ongkir Rp 10.000'})
-                              </option>
-                            ))}
-                          </select>
+                          {activeMeetupPoints.length === 0 ? (
+                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+                              Belum ada titik temu COD aktif saat ini. Silakan pilih Kurir Ekspedisi atau hubungi WhatsApp Florist.
+                            </div>
+                          ) : (
+                            <select
+                              value={selectedCodPointId}
+                              onChange={(e) => setSelectedCodPointId(e.target.value)}
+                              className="w-full text-xs p-2.5 bg-white border border-rose-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
+                            >
+                              {activeMeetupPoints.map((pt) => (
+                                <option key={pt.id} value={pt.id}>
+                                  {pt.name} ({pt.distanceKm || pt.distance_km} KM • {Number(pt.distanceKm || pt.distance_km) <= 5 ? 'Gratis Ongkir' : 'Ongkir Rp 10.000'})
+                                </option>
+                              ))}
+                            </select>
+                          )}
 
                           {/* Detail & Direct Link Google Maps */}
                           {(() => {

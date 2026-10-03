@@ -386,6 +386,7 @@ export default function StorefrontPage() {
           {/* Category Horizontal Pills Filter */}
           <CategoryFilter
             selectedCategory={selectedCategory}
+            availableCategories={productsList.map((p) => p.category)}
             onSelectCategory={(cat) => {
               setSelectedCategory(cat);
               setCurrentPage(1);

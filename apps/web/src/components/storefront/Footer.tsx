@@ -4,8 +4,17 @@ import React from 'react';
 import Link from 'next/link';
 import { Sparkles, MapPin, Phone, ShieldCheck, Heart } from 'lucide-react';
 import { ATELIER_CONFIG } from '@chenille/shared';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 
 export const Footer: React.FC = () => {
+  const { storeName, tagline, studioAddress, waNumber, dailyQuota, maxCodRadiusKm } = useSettingsStore();
+
+  const activeStoreName = storeName || ATELIER_CONFIG.name;
+  const activeAddress = studioAddress || ATELIER_CONFIG.address;
+  const activePhone = waNumber || ATELIER_CONFIG.phone;
+  const activeDailyLimit = dailyQuota || ATELIER_CONFIG.dailyPoLimit;
+  const activeCodRadius = maxCodRadiusKm || 5;
+
   return (
     <footer className="bg-stone-900 text-stone-300 pt-12 pb-8 border-t border-stone-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -20,15 +29,15 @@ export const Footer: React.FC = () => {
                 <Sparkles className="w-4 h-4" />
               </div>
               <span className="font-extrabold text-base text-white tracking-tight font-heading">
-                {ATELIER_CONFIG.name}
+                {activeStoreName}
               </span>
             </div>
             <p className="text-xs text-stone-400 leading-relaxed">
-              Atelier kerajinan tangan buket bunga berbahan kawat bulu (*pipe cleaner*) estetik di Depok. Melayani pemesanan wisuda kampus, ulang tahun, dan kado spesial.
+              {tagline || 'Atelier kerajinan tangan buket bunga berbahan kawat bulu (pipe cleaner) estetik di Depok. Melayani pemesanan wisuda kampus, sidang skripsi, dan hari spesial.'}
             </p>
             <div className="flex items-center gap-2 text-xs text-theme-primary font-semibold">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Garansi 100% Anti Layu & Ramah Lingkungan</span>
+              <span>Garansi 100% Anti-Layu & Ramah Lingkungan</span>
             </div>
           </div>
 
@@ -38,14 +47,14 @@ export const Footer: React.FC = () => {
             <div className="space-y-2 text-xs text-stone-400">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
-                <span>{ATELIER_CONFIG.address}</span>
+                <span>{activeAddress}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-theme-primary flex-shrink-0" />
-                <span>WhatsApp: {ATELIER_CONFIG.phone}</span>
+                <span>WhatsApp: {activePhone}</span>
               </div>
               <p className="text-[11px] text-stone-500 pt-1">
-                COD Gratis Ongkir Radius 5 KM: Stasiun UI, Gundar Margonda, Margo City, PNJ.
+                COD Gratis Ongkir Radius {activeCodRadius} KM: Stasiun UI, Gundar Margonda, Margo City, PNJ.
               </p>
             </div>
           </div>
@@ -90,7 +99,7 @@ export const Footer: React.FC = () => {
                 <span className="text-stone-200">07.00 - 21.00 WIB</span>
               </div>
               <div className="pt-2 text-[11px] text-stone-500">
-                Pemesanan Pre-Order dibuka setiap hari dengan batasan kapasitas harian {ATELIER_CONFIG.dailyPoLimit} slot.
+                Pemesanan Pre-Order dibuka setiap hari dengan batasan kapasitas harian {activeDailyLimit} slot.
               </div>
             </div>
           </div>
@@ -99,7 +108,7 @@ export const Footer: React.FC = () => {
         {/* Bottom copyright */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-stone-500 gap-2">
           <div>
-            © {new Date().getFullYear()} {ATELIER_CONFIG.name}. Seluruh Hak Cipta Dilindungi.
+            © {new Date().getFullYear()} {activeStoreName}. Seluruh Hak Cipta Dilindungi.
           </div>
           <div className="flex items-center gap-1">
             <span>Dibuat dengan</span>

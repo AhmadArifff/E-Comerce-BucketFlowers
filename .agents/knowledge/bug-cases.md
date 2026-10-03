@@ -47,3 +47,24 @@ Daftar kendala masa lalu dan solusi yang telah diverifikasi pada sistem E-Commer
   2. Di backend `orders.routes.ts`, pisahkan perlakuan buket kustom: bypass pencarian di tabel `products` dan simpan langsung ke `order_items` dengan `product_id: null` serta `custom_specs_json` terisi.
   3. Di `orders.routes.ts`, periksa `is_maintenance_mode` di awal transaksi dan tolak pesanan dengan status `403` jika studio sedang libur.
 
+---
+
+## 5. Bug: Diskoneksi Data Pengaturan Toko ke Storefront & Copywriting AI Slop
+- **Gejala**:
+  1. Perubahan alamat studio, nama toko, WhatsApp, dan kuota PO harian di menu Pengaturan Toko Admin tidak terefleksi di Footer dan Navbar landing page.
+  2. CartDrawer memaksakan titik COD dummy saat admin mengosongkan/menonaktifkan titik temu COD di database.
+  3. Kategori filter di landing page statis hardcoded sehingga produk berkategori baru tidak dapat difilter.
+  4. Teks copywriting pada tema A, B, C terasa kaku, dingin, penuh klise AI slop, dan minim empati mahasiswa kampus Depok.
+- **Akar Masalah**:
+  1. `Footer.tsx` mengimpor objek statis `ATELIER_CONFIG` alih-alih `useSettingsStore`.
+  2. `Navbar.tsx` tidak membaca `storeName` dari pengaturan toko.
+  3. `CartDrawer.tsx` mengeksekusi fallback dummy saat data array COD kosong dari API.
+  4. `CategoryFilter.tsx` mengunci 6 kategori statis tanpa membaca kategori unik produk database.
+  5. `theme-copy.ts` berisi teks template bot dengan kata-kata abstrak tanpa realitas lapangan.
+- **Solusi**:
+  1. Hubungkan `Footer.tsx` dan `Navbar.tsx` ke `useSettingsStore` dengan fallback cerdas.
+  2. Tambahkan `isCodLoaded` pada `CartDrawer.tsx` agar menghormati kondisi array kosong dari database.
+  3. Berikan prop `availableCategories` pada `CategoryFilter.tsx` yang mengekstrak seluruh kategori unik produk.
+  4. Perbarui `THEME_COPY_MATRIX` di `theme-copy.ts` dengan menyuntikkan kehangatan, empati nyata, humor mahasiswa pejuang skripsi/wisuda Depok (UI, Gunadarma, PNJ), dan 100% bebas tanda em dash (R-02).
+
+

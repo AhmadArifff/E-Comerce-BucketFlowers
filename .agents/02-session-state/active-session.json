@@ -53,6 +53,13 @@
       "prd_sections": ["Seksi 2", "Seksi 4", "Seksi 21", "Seksi 32"],
       "status": "VERIFIED_PASS",
       "verified_at": "2026-10-03"
+    },
+    {
+      "id": "M8_STORE_SETTINGS_SYNC_AND_ANTI_SLOP_COPY",
+      "title": "Sinkronisasi Data Pengaturan Admin Toko ke Storefront & Transformasi Copywriting Anti-Slop",
+      "prd_sections": ["Seksi 1", "Seksi 7", "Seksi 20", "Seksi 21", "Seksi 24"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-10-03"
     }
   ],
   "established_constraints": [
@@ -66,11 +73,13 @@
     "Autonomous Delivery Protocol: Review -> User Approval -> Dev & Verify -> Commit -> Git Pull-Rebase & Resolve Conflicts -> Push to GitHub (khusus proyek E-Comerce-BucketFlowers)",
     "Hub-and-Spoke Knowledge Sync: Mengadopsi default dari induk C:\\Users\\ASUS\\Documents\\Web Dev\\improving\\agentic AI dan menyinkronkan kembali pola solusi tervalidasi",
     "Custom Studio Checkout Integrity: Item kustom studio dikirim dengan product_id null dan specs lengkap di custom_specs_json pada order_items",
-    "Store Maintenance Enforce: Endpoint POST /api/v1/orders wajib memvalidasi is_maintenance_mode sebelum transaksi dan mengembalikan HTTP 403 jika toko libur"
+    "Store Maintenance Enforce: Endpoint POST /api/v1/orders wajib memvalidasi is_maintenance_mode sebelum transaksi dan mengembalikan HTTP 403 jika toko libur",
+    "Storefront Live Sync Guard: Footer dan Navbar wajib membaca useSettingsStore agar perubahan profil toko di admin langsung terefleksi di landing page",
+    "Anti-Slop Copywriting Mandate: Seluruh teks tema wajib mencerminkan empati nyata, humor mahasiswa wisuda/skripsi Depok yang relatable, dan 100% bebas tanda em dash (R-02)"
   ],
   "next_recommended_actions": [
-    "SOP Git Pull-Rebase & Conflict Resolution telah dikunci ke dalam AGENTS.md dan rules",
-    "Menunggu instruksi tugas berikutnya dari pengguna"
+    "Audit data dan peremajaan teks humanis telah selesai diimplementasikan",
+    "Lakukan push git otomatis sesuai protokol otonom"
   ],
-  "last_updated": "2026-10-03T21:49:00+07:00"
+  "last_updated": "2026-10-03T22:10:00+07:00"
 }

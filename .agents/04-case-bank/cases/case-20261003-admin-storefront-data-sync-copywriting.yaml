@@ -1,0 +1,29 @@
+id: case-20261003-admin-storefront-data-sync-copywriting
+title: "Sinkronisasi Data Pengaturan Admin Toko ke Storefront & Eliminasi Copywriting AI Slop"
+domain: "frontend-state-copywriting-anti-slop"
+severity: "HIGH"
+status: "VERIFIED"
+date_resolved: "2026-10-03"
+
+symptoms:
+  - "Perubahan alamat studio, nama toko, WhatsApp, dan kuota PO harian di menu Pengaturan Toko Admin tidak terefleksi di Footer dan Navbar landing page."
+  - "Footer mengimpor objek statis ATELIER_CONFIG sehingga data di admin panel terputus (disconnected)."
+  - "CartDrawer memaksakan MOCK_MEETUP_POINTS ketika admin mengosongkan/menonaktifkan titik temu COD di database."
+  - "CategoryFilter meng-hardcode 6 kategori statis, mengabaikan kategori produk dinamis baru yang ditambahkan di admin."
+  - "Teks copywriting pada ketiga tema (tema-a, tema-b, tema-c) bernada AI slop kaku tanpa emosi manusia nyata dan minim konteks lokal mahasiswa Depok/wisuda."
+
+root_cause:
+  - "Komponen Storefront (Footer, Navbar, CategoryFilter) menggunakan fallback statis konstan dan array lokal daripada membaca Zustand useSettingsStore dan produk aktif."
+  - "CartDrawer tidak membedakan state 'sedang memuat' dengan 'database mengembalikan array kosong' sehingga langsung mengeksekusi fallback dummy."
+  - "Copywriting awal dibuat menggunakan template korporat AI generik dengan banyak frasa klise dan tanda baca terlarang."
+
+resolution_pattern:
+  - "Hubungkan Footer.tsx dan Navbar.tsx ke useSettingsStore dengan fallback cerdas ke konfigurasi default."
+  - "Tambahkan state isCodLoaded pada CartDrawer.tsx agar menghormati kondisi array kosong dari database Supabase."
+  - "Dinamisasi CategoryFilter.tsx dengan menerima availableCategories dari produk aktif database."
+  - "Remajakan THEME_COPY_MATRIX di theme-copy.ts: menginjeksi empati hangat, humor mahasiswa pejuang skripsi/wisuda Depok (UI, Gunadarma, PNJ), dan 100% bebas tanda em dash (R-02)."
+
+verification:
+  - "TypeScript compilation: turbo run type-check lolos 100% dengan 0 error."
+  - "Unit & Integration test: vitest run lolos 20 test files, 125 tests (100%)."
+  - "Anti-Slop protocol: R-01 s.d R-38 terpenuhi."
