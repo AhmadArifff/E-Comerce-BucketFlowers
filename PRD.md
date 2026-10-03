@@ -5480,3 +5480,46 @@ Akibatnya, ketika pengguna melakukan login pelanggan (melalui antarmuka `login/p
    - Fungsi `switchRole()` kini memicu `POST /api/v1/auth/login-activity` secara real-time ke backend untuk menjamin sinkronisasi flag `is_online` di PostgreSQL.
 
 ---
+
+## 40. CS WhatsApp Hub Gemini AI Copilot dengan Database Grounding & Human-in-the-Loop Review — v4.2
+
+### 40.1. Latar Belakang & Filosofi Human-in-the-Loop (No Auto-Send)
+1. **Risiko Respon AI Otomatis Penuh (*The Risk of Auto-Send*):**
+   - Dalam bisnis kriya bunga kawat bulu kustom (*bespoke chenille atelier*), pesan otomatis dari AI secara langsung kepada pembeli berisiko tinggi memicu halusinasi, janji palsu estimasi PO, atau kesalahpahaman spesifikasi buket.
+2. **Filosofi AI Copilot untuk Staf Florist:**
+   - AI bertindak sebagai asisten cerdas (*copilot*) staf CS florist, bukan pengganti interaksi manusia.
+   - AI meracik draf jawaban berstruktur yang akurat, santun, dan empatik berdasarkan fakta data nyata.
+   - Staf florist wajib meninjau (*review*), mengoreksi, atau menambahkan sentuhan kehangatan personal sebelum menekan tombol "Kirim" manual (*Human-in-the-Loop*).
+
+### 40.2. Database Grounding Engine (RAG Terarah)
+Sistem secara otomatis mengekstraksi konteks percakapan dan melakukan query grounding ke database PostgreSQL:
+1. **Ekstraksi Pesanan & Status Pengerjaan:**
+   - Deteksi otomatis nomor invoice (pola `INV-YYYYMMDD-XXX`) atau nomor kontak pembeli.
+   - Mengambil data dari tabel `orders`, `order_items`, dan `order_status_histories` (tahap pengerjaan 0 s/d 4, no resi kurir, titik COD kampus terpilih, dan catatan khusus).
+2. **Katalog Produk & Ketersediaan Stok:**
+   - Deteksi pertanyaan seputar buket, harga, atau ketersediaan untuk memuat ringkasan produk aktif dari tabel `products` (status Ready Stock vs PO).
+3. **Titik Temu COD Kampus Depok:**
+   - Deteksi pertanyaan seputar COD/lokasi untuk memuat 6 titik temu resmi gratis ongkir dari tabel `cod_meetup_points`.
+4. **Profil & Status Operasional Toko:**
+   - Membaca jam operasional dan status maintenance dari tabel `store_settings`.
+
+### 40.3. Arsitektur Keamanan AI (AI Security & Guardrails)
+1. **Pembatasan Domain Ketat (*Strict Domain Bounds*):** AI hanya melayani topik buket kawat bulu, status pesanan, kustomisasi, COD kampus Depok, dan garansi anti-patah 100%.
+2. **Pertahanan Anti-Jailbreak & Anti-Prompt-Injection:** Menolak dengan sopan segala perintah pelanggan yang mencoba mengubah kepribadian bot atau menanyakan topik di luar bisnis atelier.
+3. **Zero-Hallucination Rule:** HANYA menyebutkan status pesanan atau nomor resi yang terverifikasi di database. Jika nomor invoice tidak ada di sistem, AI wajib menyatakan belum ditemukan dan meminta konfirmasi ulang.
+4. **Data Redaction:** Dilarang keras membocorkan harga modal HPP bahan baku, nama supplier grosir, kata sandi, atau token rahasia sistem.
+
+### 40.4. Google AI Studio API Key & Resiliensi Mode Simulasi
+- Mendukung API key langsung dari Google AI Studio (berlangganan AI Pro / Gemini Advanced).
+- Menggunakan model `gemini-1.5-flash` dengan parameter temperatur rendah (`0.3`) untuk respons kilat (<2 detik).
+- **Mode Simulasi Cerdas Terbimbing:** Jika API key belum dikonfigurasi di `.env`, backend secara otomatis beralih ke generator draf deterministik berbasis fakta database sehingga pengujian unit, CI/CD, dan operasional staf tetap berjalan 100% mulus.
+
+### 40.5. Komponen Teknis
+| File | Peran & Modifikasi |
+|---|---|
+| `apps/api/src/services/ai-chat-assistant.service.ts` | Retrieval grounding database, Gemini REST API client, guardrails prompt, deterministic fallback |
+| `apps/api/src/routes/chat.routes.ts` | Endpoint `POST /api/v1/chat/sessions/:id/ai-draft` & `POST /api/v1/chat/ai-draft` |
+| `apps/web/src/stores/useChatStore.ts` | Aksi `generateAiDraft(sessionId)`, state `isGeneratingAiDraft` & `lastAiDraftResult` |
+| `apps/web/src/components/admin/CSHubModal.tsx` | Tombol `✨ Draf Balasan AI (Gemini)`, badge sumber grounding, textarea multi-baris |
+| `apps/api/tests/unit/ai-chat-assistant.test.ts` | 9 unit test memvalidasi regex invoice, grounding context, mode simulasi, dan prompt guardrails |
+

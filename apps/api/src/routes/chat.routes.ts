@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../config/database.js';
+import { generateAiChatDraft } from '../services/ai-chat-assistant.service.js';
 
 const router = Router();
 
@@ -229,4 +230,46 @@ router.post('/escalate', async (req, res) => {
   }
 });
 
+// POST /api/v1/chat/sessions/:id/ai-draft
+router.post('/sessions/:id/ai-draft', async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const { customer_message } = req.body;
+
+    const sessionCheck = await pool.query('SELECT id FROM chat_sessions WHERE id = $1', [sessionId]);
+    if (sessionCheck.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Sesi chat tidak ditemukan.' });
+    }
+
+    const draftResult = await generateAiChatDraft(sessionId, customer_message);
+    return res.json({
+      success: true,
+      data: draftResult,
+    });
+  } catch (error: any) {
+    console.error('Error generating AI chat draft:', error);
+    return res.status(500).json({ success: false, error: error.message || 'Gagal menghasilkan draf balasan AI.' });
+  }
+});
+
+// POST /api/v1/chat/ai-draft
+router.post('/ai-draft', async (req, res) => {
+  try {
+    const { session_id, customer_message } = req.body;
+    if (!session_id) {
+      return res.status(400).json({ success: false, error: 'session_id wajib diisi.' });
+    }
+
+    const draftResult = await generateAiChatDraft(session_id, customer_message);
+    return res.json({
+      success: true,
+      data: draftResult,
+    });
+  } catch (error: any) {
+    console.error('Error generating AI chat draft:', error);
+    return res.status(500).json({ success: false, error: error.message || 'Gagal menghasilkan draf balasan AI.' });
+  }
+});
+
 export default router;
+

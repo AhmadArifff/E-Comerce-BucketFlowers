@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { MessageSquare, Send, Phone, RefreshCw, CheckCircle2, BellRing } from 'lucide-react';
+import { MessageSquare, Send, Phone, RefreshCw, CheckCircle2, BellRing, Sparkles, Wand2 } from 'lucide-react';
 import { useChatStore } from '@/stores/useChatStore';
+import { showMagicToast } from '@/lib/magic-motion';
 
 // Tiny inline notification sound (base64-encoded short beep)
 const playNotificationSound = () => {
@@ -24,11 +25,20 @@ export const CSHubModal: React.FC = () => {
     selectAdminSession, 
     sendMessage, 
     escalateToWhatsApp,
+    generateAiDraft,
+    isGeneratingAiDraft,
     isLoading 
   } = useChatStore();
 
   const [replyText, setReplyText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [aiDraftInfo, setAiDraftInfo] = useState<{
+    isSimulation: boolean;
+    sourcesUsed: string[];
+    orderRef?: string | null;
+    modelUsed?: string;
+  } | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevTotalUnreadRef = useRef(0);
   const prevMsgCountRef = useRef(0);
@@ -69,6 +79,35 @@ export const CSHubModal: React.FC = () => {
 
   const activeSession = adminSessions.find((s) => s.id === activeAdminSessionId) || (adminSessions.length > 0 ? adminSessions[0] : null);
 
+  const handleGenerateAiDraft = async () => {
+    const targetId = activeAdminSessionId || activeSession?.id;
+    if (!targetId) return;
+
+    // Find the last message sent by CUSTOMER to ground the reply
+    const lastCustMsg = [...adminSessionMessages]
+      .reverse()
+      .find((m) => m.sender === 'CUSTOMER');
+
+    const res = await generateAiDraft(targetId, lastCustMsg?.text);
+    if (res.success && res.data) {
+      setReplyText(res.data.draftText);
+      setAiDraftInfo({
+        isSimulation: res.data.isSimulation,
+        sourcesUsed: res.data.sourcesUsed,
+        orderRef: res.data.orderRef,
+        modelUsed: res.data.modelUsed,
+      });
+
+      if (res.data.isSimulation) {
+        showMagicToast('Draf AI Dibuat! 💡', 'Draf cerdas dibuat berbasis fakta database (Mode Grounded).', '✨');
+      } else {
+        showMagicToast('Draf Gemini AI Siap! ✨', 'Draf balasan cerdas diracik oleh Gemini 1.5 Flash.', '🌸');
+      }
+    } else {
+      showMagicToast('Gagal Menghasilkan Draf ⚠️', res.error || 'Silakan coba lagi.', '❌');
+    }
+  };
+
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
     const targetId = activeAdminSessionId || activeSession?.id;
@@ -78,6 +117,7 @@ export const CSHubModal: React.FC = () => {
     try {
       await sendMessage(replyText.trim(), 'FLORIST', targetId);
       setReplyText('');
+      setAiDraftInfo(null);
       await selectAdminSession(targetId);
       // Refresh sessions to update unread count after staff reply
       await fetchAdminSessions(true);
@@ -87,6 +127,7 @@ export const CSHubModal: React.FC = () => {
       setIsSending(false);
     }
   };
+
 
   return (
     <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-sm space-y-6 mb-8">
@@ -164,7 +205,11 @@ export const CSHubModal: React.FC = () => {
               return (
                 <div
                   key={session.id}
-                  onClick={() => selectAdminSession(session.id)}
+                  onClick={() => {
+                    selectAdminSession(session.id);
+                    setAiDraftInfo(null);
+                    setReplyText('');
+                  }}
                   className={`p-3 rounded-xl border transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-white border-rose-300 shadow-xs ring-1 ring-rose-200'
@@ -293,24 +338,93 @@ export const CSHubModal: React.FC = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              <form onSubmit={handleReply} className="p-3 border-t border-stone-200 flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Balas pesan pelanggan sebagai staf florist atelier..."
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  disabled={isSending || !activeSession}
-                  className="flex-1 text-xs px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white"
-                />
-                <button
-                  type="submit"
-                  disabled={isSending || !replyText.trim() || !activeSession}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>{isSending ? 'Mengirim...' : 'Kirim'}</span>
-                </button>
+              {/* AI Grounding Source Info Banner */}
+              {aiDraftInfo && (
+                <div className="mx-3 mt-2 px-3.5 py-2 bg-gradient-to-r from-purple-50 via-indigo-50 to-rose-50 border border-purple-200/80 rounded-xl text-[11px] flex items-center justify-between gap-2 shadow-xs animate-in fade-in">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="flex-shrink-0 text-purple-700 font-extrabold flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-600 animate-pulse" />
+                      {aiDraftInfo.isSimulation ? 'Draf Grounded Database' : 'Draf Gemini AI'}
+                    </span>
+                    <span className="text-stone-300">•</span>
+                    <span className="text-stone-600 truncate">
+                      {aiDraftInfo.orderRef ? (
+                        <strong className="text-stone-800">Inv: {aiDraftInfo.orderRef} • </strong>
+                      ) : null}
+                      Sumber: {aiDraftInfo.sourcesUsed.join(', ') || 'Basis Toko'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAiDraftInfo(null)}
+                    className="text-stone-400 hover:text-stone-700 text-xs px-1 cursor-pointer"
+                    title="Tutup ringkasan sumber"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+              {/* Reply Form with AI Copilot Action Bar */}
+              <form onSubmit={handleReply} className="p-3 border-t border-stone-200 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={handleGenerateAiDraft}
+                    disabled={isGeneratingAiDraft || !activeSession}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-rose-600 hover:from-purple-700 hover:to-rose-700 disabled:opacity-50 text-white font-bold text-[11px] shadow-sm active:scale-95 transition-all cursor-pointer"
+                    title="Buat draf rekomendasi balasan berbasis fakta database nyata menggunakan Gemini AI"
+                  >
+                    <Sparkles className={`w-3.5 h-3.5 ${isGeneratingAiDraft ? 'animate-spin' : ''}`} />
+                    <span>{isGeneratingAiDraft ? 'Gemini meracik draf...' : '✨ Draf Balasan AI (Gemini)'}</span>
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    {replyText && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReplyText('');
+                          setAiDraftInfo(null);
+                        }}
+                        className="text-[11px] text-stone-400 hover:text-red-600 transition-colors cursor-pointer"
+                      >
+                        Bersihkan Draf
+                      </button>
+                    )}
+                    <span className="text-[10px] text-stone-400 hidden sm:inline">
+                      Review manual sebelum kirim
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 items-end">
+                  <textarea
+                    rows={2}
+                    placeholder="Tinjau atau edit draf balasan di sini sebelum dikirim ke pelanggan..."
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleReply(e);
+                      }
+                    }}
+                    disabled={isSending || !activeSession}
+                    className="flex-1 text-xs px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white resize-none leading-relaxed transition-all"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSending || !replyText.trim() || !activeSession}
+                    className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer h-[42px] self-end"
+                    title="Kirim balasan yang telah ditinjau"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{isSending ? 'Mengirim...' : 'Kirim'}</span>
+                  </button>
+                </div>
               </form>
+
             </>
           )}
         </div>

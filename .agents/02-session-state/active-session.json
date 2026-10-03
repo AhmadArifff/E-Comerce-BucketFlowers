@@ -109,6 +109,13 @@
       "prd_sections": ["Seksi 38", "Seksi 41"],
       "status": "VERIFIED_PASS",
       "verified_at": "2026-10-03"
+    },
+    {
+      "id": "M16_GEMINI_AI_CHAT_COPILOT_AND_DATABASE_GROUNDING",
+      "title": "CS WhatsApp Hub Gemini AI Copilot dengan Database Grounding & Human-in-the-Loop Review",
+      "prd_sections": ["Seksi 9", "Seksi 33", "Seksi 40"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-10-03"
     }
   ],
   "established_constraints": [
@@ -133,7 +140,8 @@
     "Occasion Reminder & Scheduler Integrity: Pemindaian momen H-7 otomatis dijalankan berkala via scheduler.service.ts dan dapat dipicu on-demand oleh pelanggan/admin dengan pembaruan is_reminded dan reminded_at",
     "BOM Raw Material Deduction Integrity: Pemotongan bahan baku fisik (raw_materials) dijalankan secara otomatis saat pesanan memasuki proses perakitan (Langkah 2 / CRAFTING_BOUQUET) dengan idempotency guard (orders.is_materials_deducted) dan direstorasi utuh jika pesanan dibatalkan (CANCELLED)",
     "Direct WhatsApp Order & Social Proof Integrity: Tombol pemesanan langsung WhatsApp pada detail produk dan keranjang belanja memformat rincian buket terstruktur secara rapi tanpa em dash, serta dilengkapi indikator minat sosial (viewer counter, lead time, low stock warning) guna memaksimalkan konversi",
-    "Mobile Optimization & Third-Party Fallback Integrity: Seluruh foto etalase dan thumbnail keranjang menggunakan next/image dengan remotePatterns wildcard https dan format WebP/AVIF adaptif, serta dilengkapi fallback kurir standar Depok (J&T, SiCepat, JNE) dan panduan bantuan saat Midtrans Snap ditutup/gagal"
+    "Mobile Optimization & Third-Party Fallback Integrity: Seluruh foto etalase dan thumbnail keranjang menggunakan next/image dengan remotePatterns wildcard https dan format WebP/AVIF adaptif, serta dilengkapi fallback kurir standar Depok (J&T, SiCepat, JNE) dan panduan bantuan saat Midtrans Snap ditutup/gagal",
+    "Gemini AI CS Copilot & Human-in-the-Loop Integrity: Draf balasan pesan CS WhatsApp Hub dihasilkan oleh Google Gemini AI via Google AI Studio API key dengan database grounding (status pesanan, produk, titik COD, toko) dan pembatasan keamanan ketat (anti-jailbreak, zero hallucination, rahasia dapur terlindungi), serta wajib melalui review manual staf sebelum dikirim (No Auto-Send)"
   ],
   "next_recommended_actions": [
     "Prioritas 1: SELESAI (Form ulasan bintang 1-5, upload foto buket, API /api/v1/reviews, & sync dinamis LookbookSection)",
@@ -141,7 +149,8 @@
     "Prioritas 3: SELESAI (Pemotongan Bahan Baku Otomatis Resep BOM saat Rangkaian Dimulai & Restorasi saat Batal)",
     "Prioritas 4: SELESAI (Direct WhatsApp Ordering button & Social Proof urgency badges)",
     "Prioritas 5: SELESAI (Migrasi next/image, wildcard https remotePatterns, WebP/AVIF, fallback kurir standar Depok, & payment error nudge)",
-    "Roadmap Rekomendasi 5 Prioritas: 100% SELESAI & TERVERIFIKASI PENUH"
+    "Roadmap Rekomendasi 5 Prioritas: 100% SELESAI & TERVERIFIKASI PENUH",
+    "CS WhatsApp Hub Gemini AI Copilot: SELESAI & TERVERIFIKASI (Grounding Database, Security Guardrails, HITL Review UI, 9 Unit Tests Passing)"
   ],
-  "last_updated": "2026-10-03T20:00:00+07:00"
+  "last_updated": "2026-10-03T22:45:00+07:00"
 }

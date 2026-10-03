@@ -48,3 +48,4 @@ Dokumen ini adalah kompas utama untuk agent AI agar dapat langsung melompat ke f
 | **40** | Optimasi Multi-Gambar Galeri | `product_images`, Supabase Storage | `POST /api/v1/products/:id/images`| `AdminViews.tsx` (ProductGalleryModal) |
 | **41** | Aksesibilitas WCAG AA & Keyboard | Focus Rings, Aria Labels | - | Seluruh file di `apps/web/src/` |
 | **42** | Otomasi Pengujian E2E Playwright | Browser Test Runner | - | `apps/web/e2e/`, Playwright MCP |
+| **43** | CS WhatsApp Hub Gemini AI Copilot | `chat_sessions`, `chat_messages`, `orders`, `products`, `cod_meetup_points` | `POST /api/v1/chat/sessions/:id/ai-draft` | `CSHubModal.tsx` |

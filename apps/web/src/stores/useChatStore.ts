@@ -18,6 +18,14 @@ export interface ChatSessionSummary {
   updated_at: string;
 }
 
+export interface AiDraftResponse {
+  draftText: string;
+  sourcesUsed: string[];
+  isSimulation: boolean;
+  orderRef?: string | null;
+  modelUsed?: string;
+}
+
 interface ChatState {
   isOpen: boolean;
   sessionId: string | null;
@@ -28,6 +36,8 @@ interface ChatState {
   activeAdminSessionId: string | null;
   adminSessionMessages: LiveChatMessage[];
   isLoading: boolean;
+  isGeneratingAiDraft: boolean;
+  lastAiDraftResult: AiDraftResponse | null;
 
   setIsOpen: (isOpen: boolean) => void;
   syncSessionIdentity: (customerName: string, customerPhone?: string) => Promise<void>;
@@ -37,6 +47,7 @@ interface ChatState {
   escalateToWhatsApp: (productContext?: string) => Promise<void>;
   fetchAdminSessions: (silent?: boolean) => Promise<void>;
   selectAdminSession: (sessionId: string) => Promise<void>;
+  generateAiDraft: (sessionId: string, customerMessage?: string) => Promise<{ success: boolean; data?: AiDraftResponse; error?: string }>;
   clearChat: () => void;
 }
 
@@ -52,6 +63,8 @@ export const useChatStore = create<ChatState>()(
       activeAdminSessionId: null,
       adminSessionMessages: [],
       isLoading: false,
+      isGeneratingAiDraft: false,
+      lastAiDraftResult: null,
 
       setIsOpen: (isOpen) => set({ isOpen }),
 
@@ -299,6 +312,28 @@ export const useChatStore = create<ChatState>()(
           }
         } catch (e) {
           console.warn('Could not fetch session messages:', e);
+        }
+      },
+
+      generateAiDraft: async (sessionId: string, customerMessage?: string) => {
+        set({ isGeneratingAiDraft: true });
+        try {
+          const res = await fetch(getApiUrl(`/api/v1/chat/sessions/${sessionId}/ai-draft`), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customer_message: customerMessage }),
+          });
+          const json = await res.json();
+          if (json.success && json.data) {
+            set({ lastAiDraftResult: json.data });
+            return { success: true, data: json.data };
+          }
+          return { success: false, error: json.error || 'Gagal meracik draf AI.' };
+        } catch (err: any) {
+          console.error('Failed to generate AI draft:', err);
+          return { success: false, error: err.message || 'Koneksi ke endpoint AI gagal.' };
+        } finally {
+          set({ isGeneratingAiDraft: false });
         }
       },
 
