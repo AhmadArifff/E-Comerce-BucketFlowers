@@ -78,6 +78,45 @@ export function extractInvoiceNumber(text: string): string | null {
 }
 
 /**
+ * Clean raw customer name by removing bracketed role labels e.g. (Member Mahasiswi UI)
+ * and extracting a friendly first name (e.g. "Annisa")
+ */
+export function cleanCustomerName(rawName?: string): string {
+  if (!rawName) return 'Kak';
+  // Remove bracketed role titles e.g. (Member Mahasiswi UI), (Member), (Tamu ...)
+  let cleaned = rawName.replace(/\s*\([^)]*\)/g, '').trim();
+  // Remove prefix "Kak" if already present to prevent "Kak Kak Annisa"
+  cleaned = cleaned.replace(/^kak\s+/i, '').trim();
+  // Extract words and take primary first name
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return 'Kak';
+  return words[0];
+}
+
+/**
+ * Sanitize draft reply:
+ * - Strip out unwanted non-face emojis (flowers, lightning, sparkles, alarm, package, card, etc.)
+ * - Allow ONLY face emoticons (😊, 🥰, 🤗, 👋, 😄, 😉, 🙏)
+ * - Remove awkward markdown bullet points (•) and replace with clean dashes (-)
+ * - Strip excessive asterisks and clean spaces
+ */
+export function sanitizeDraftReply(text: string): string {
+  if (!text) return text;
+  return text
+    // Remove unwanted non-face emojis
+    .replace(/[🌸💐⚡✨⏳🚨📦🏷️💳🎉🔥💡]/gu, '')
+    // Replace bullet points (•) with simple dash (-)
+    .replace(/^\s*[•*]\s+/gm, '- ')
+    // Replace double spaces created by emoji stripping
+    .replace(/[ \t]{2,}/g, ' ')
+    // Clean trailing spaces on lines
+    .replace(/[ \t]+$/gm, '')
+    // Clean excessive blank lines (more than 2)
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/**
  * Retrieve database grounding data for customer service context
  */
 export async function retrieveGroundingContext(
@@ -86,13 +125,14 @@ export async function retrieveGroundingContext(
 ): Promise<GroundingContext> {
   const sourcesUsed: string[] = [];
 
-  // 1. Session & Customer profile
+  // 1. Session & Customer profile with clean friendly name
   const sessionRes = await pool.query(
     `SELECT customer_name, guest_name, customer_phone FROM chat_sessions WHERE id = $1 LIMIT 1;`,
     [sessionId]
   );
   const session = sessionRes.rows[0] || {};
-  const customerName = session.customer_name || session.guest_name || 'Kak';
+  const rawCustomerName = session.customer_name || session.guest_name || 'Kak';
+  const customerName = cleanCustomerName(rawCustomerName);
   const customerPhone = session.customer_phone || '';
 
   // 2. Store settings & operational hours
@@ -305,11 +345,14 @@ ATURAN KEAMANAN & BATASAN KETAT (AI GUARDRAILS):
    - HANYA sebutkan nomor invoice, status tahap pengerjaan, atau nomor resi berdasarkan data [DATA DATABASE NYATA] di bawah.
    - Jika pelanggan menanyakan status pesanan namun nomor invoice tidak ditemukan pada data database, katakan dengan sopan bahwa data belum tercatat di sistem dan mohon dicek kembali nomor invoice-nya. DILARANG MENGARANG STATUS!
 4. DATA REDACTION: JANGAN PERNAH membocorkan rahasia internal seperti harga modal HPP bahan baku, kontak supplier grosir, password, atau token API.
-5. GAYA BICARA:
-   - Gunakan bahasa Indonesia santun, bersahabat, ramah khas anak muda Depok.
-   - Sapa dengan nama pelanggan (misal: "Halo Kak [Nama] 🌸").
-   - Gunakan emoji bunga secukupnya (🌸, 💐, ✨).
-6. FORMAT OUTPUT: Berikan teks balasan LANGSUNG tanpa tanda kutip pembungkus atau kata pengantar seperti "Berikut adalah draf balasan:".`;
+5. ATURAN EMOTICON & KARAKTER (SANGAT PENTING):
+   - PENGECUALIAN EMOTICON: HANYA BOLEH menggunakan EMOTICON WAJAH (Face Emoticons) seperti 😊, 🥰, 🤗, 👋, 😄, 😉, 🙏 untuk merefleksikan emosi ramah staf manusia (cukup 1-2 emoticon per pesan).
+   - DILARANG KERAS menggunakan simbol non-wajah seperti bunga (🌸, 💐), petir (⚡), bintang (✨), jam pasir (⏳), paket (📦), kartu (💳), atau tanda seru merah.
+   - HINDARI FORMATTING ROBOTIK: DILARANG menggunakan bullet point simbol aneh (seperti •) atau penebalan asteris berlebihan (*kata*). Tulis secara mengalir, santai, dan alami seperti staf admin manusia yang sedang mengetik pesan WhatsApp.
+6. PENYEBUTAN NAMA PELANGGAN:
+   - Sapa nama panggilan pelanggan secara bersih (misal: 'Halo Kak Annisa 😊').
+   - JANGAN PERNAH menyertakan teks dalam kurung label akun seperti '(Member Mahasiswi UI)' atau '(Tamu)'.
+7. FORMAT OUTPUT: Berikan teks balasan LANGSUNG tanpa tanda kutip pembungkus atau kata pengantar seperti "Berikut adalah draf balasan:".`;
 }
 
 /**
@@ -368,7 +411,7 @@ function buildUserPrompt(
     chatHistoryStr += `${senderLabel}: ${m.text}\n`;
   }
 
-  return `${dbContextStr}\n${chatHistoryStr}\n=== PESAN TERAKHIR PELANGGAN YANG HARUS DIBALAS ===\n"${customerMessage}"\n\nBuatlah draf balasan ramah yang siap ditinjau staf florist:`;
+  return `${dbContextStr}\n${chatHistoryStr}\n=== PESAN TERAKHIR PELANGGAN YANG HARUS DIBALAS ===\n"${customerMessage}"\n\nBuatlah draf balasan ramah yang siap ditinjau staf florist (gunakan HANYA emoticon wajah seperti 😊 atau 🙏, tanpa simbol bunga/petir/bintang):`;
 }
 
 /**
@@ -379,32 +422,35 @@ function generateDeterministicFallback(
   ctx: GroundingContext
 ): string {
   const name = ctx.customerName || 'Kak';
-  const lower = customerMessage.toLowerCase();
 
   // 1. Order status query
   if (ctx.order) {
-    return (
-      `Halo ${name}! 🌸\n\n` +
-      `Pesanan Kakak dengan nomor invoice *${ctx.order.invoice_number}* (${ctx.order.items_summary}) saat ini berstatus: *${ctx.order.step_title}*.\n\n` +
-      (ctx.order.latest_step_description
-        ? `Catatan pengerjaan florist: ${ctx.order.latest_step_description}\n\n`
-        : '') +
-      (ctx.order.delivery_method === 'COD_MEETUP'
-        ? `Metode pengambilan: COD Titik Temu di ${ctx.order.cod_location || 'Area Kampus Depok'}. Staf kami akan mengabari saat buket sudah siap di titik temu ya kak! 💐`
+    const statusNote = ctx.order.latest_step_description
+      ? `Catatan tim perangkai: ${ctx.order.latest_step_description}.\n\n`
+      : '';
+    const deliveryDetail =
+      ctx.order.delivery_method === 'COD_MEETUP'
+        ? `Pengambilan via COD di ${ctx.order.cod_location || 'titik temu kampus Depok'}. Nanti staf kami akan kabari begitu buket sudah siap diambil ya kak 😊`
         : ctx.order.tracking_number
-        ? `Nomor resi pengiriman kurir: *${ctx.order.tracking_number}*. Kakak dapat melacaknya langsung di web.`
-        : `Pesanan sedang kami siapkan sebaik mungkin dengan standar anti-patah 100%. Ada yang ingin ditambahkan untuk kartu ucapannya kak? ✨`)
+        ? `Nomor resi pengirimannya: ${ctx.order.tracking_number}. Kakak bisa pantau perjalanannya di menu lacak pesanan ya 😊`
+        : `Pesanan sedang kami siapkan sebaik mungkin dengan standar anti-patah 100%. Ada kartu ucapan yang mau ditambahkan kak? 😊`;
+
+    return sanitizeDraftReply(
+      `Halo Kak ${name} 😊\n\n` +
+      `Pesanan Kakak dengan invoice ${ctx.order.invoice_number} (${ctx.order.items_summary}) saat ini statusnya: ${ctx.order.step_title}.\n\n` +
+      statusNote +
+      deliveryDetail
     );
   }
 
   // 2. COD / Location query
   if (ctx.codPoints && ctx.codPoints.length > 0) {
-    const spots = ctx.codPoints.map((p) => `• *${p.name}* (${p.full_address})`).join('\n');
-    return (
-      `Halo ${name}! 🌸\n\n` +
-      `Untuk pengambilan langsung (COD) gratis ongkir, Chenille Atelier Florist menyediakan 6 titik temu resmi di sekitar kampus Depok:\n\n` +
+    const spots = ctx.codPoints.map((p) => `- ${p.name}: ${p.full_address}`).join('\n');
+    return sanitizeDraftReply(
+      `Halo Kak ${name} 😊\n\n` +
+      `Untuk pengambilan langsung (COD) gratis ongkir, Chenille Atelier Florist menyediakan titik temu resmi di sekitar kampus Depok:\n\n` +
       `${spots}\n\n` +
-      `Pengambilan COD tidak dikenakan biaya ongkir sama sekali ya kak. Silakan pilih titik temu yang paling dekat saat checkout di web! 💐`
+      `Pengambilan COD tidak dikenakan biaya ongkir sama sekali ya kak. Kakak bisa langsung pilih titik temu yang paling dekat saat checkout di web 🙏`
     );
   }
 
@@ -414,21 +460,21 @@ function generateDeterministicFallback(
       .slice(0, 3)
       .map(
         (p) =>
-          `• *${p.name}* (Rp ${p.price.toLocaleString('id-ID')}) - ${p.is_ready_stock ? '⚡ Ready Stock' : '⏳ PO ~' + p.po_lead_days + ' hari'}`
+          `- ${p.name} (Rp ${p.price.toLocaleString('id-ID')}, ${p.is_ready_stock ? 'Ready Stock' : 'PO ' + p.po_lead_days + ' hari'})`
       )
       .join('\n');
-    return (
-      `Halo ${name}! 🌸\n\n` +
-      `Terima kasih telah tertarik dengan buket kawat bulu Chenille Atelier! Berikut beberapa buket populer kami:\n\n` +
+    return sanitizeDraftReply(
+      `Halo Kak ${name} 😊\n\n` +
+      `Terima kasih sudah tanya ke Chenille Atelier! Untuk beberapa buket terpopuler kami yang sedang tersedia ada:\n\n` +
       `${topProds}\n\n` +
-      `Seluruh buket kami dibuat handmade berkualitas tinggi dengan garansi anti-patah 100%. Kakak juga bisa kustomisasi warna kawat dan wrapping di menu Custom Studio ya! ✨`
+      `Semua buket dibuat handmade kawat bulu berkualitas tinggi dengan garansi anti-patah 100% kak. Kakak juga bisa request warna kawat dan kertas wrapping di menu Custom Studio ya 😊`
     );
   }
 
   // 4. General polite assistant fallback
-  return (
-    `Halo ${name}! 🌸 Terima kasih telah menghubungi Chenille Atelier Florist Depok.\n\n` +
-    `Ada yang bisa staf florist kami bantu hari ini? Kakak bisa menanyakan ketersediaan buket ready stock, request kustomisasi kawat bulu, atau konfirmasi status pesanan buket Kakak. Staf kami siap melayani dengan senang hati! 💐✨`
+  return sanitizeDraftReply(
+    `Halo Kak ${name} 😊 Terima kasih sudah menghubungi Chenille Atelier Florist Depok.\n\n` +
+    `Ada yang bisa staf florist kami bantu hari ini? Kakak bisa tanya ketersediaan buket ready stock, request kustomisasi kawat bulu, atau cek status pesanan buket Kakak. Kami siap bantu dengan senang hati ya 🙏`
   );
 }
 
@@ -533,14 +579,16 @@ export async function generateAiChatDraft(
       };
     }
 
-    // Clean up response text
+    // Clean up response text and enforce face-emoticon and natural formatting rule
     const cleanText = rawText
       .replace(/^```[a-z]*\n/i, '')
       .replace(/\n```$/i, '')
       .trim();
 
+    const sanitizedText = sanitizeDraftReply(cleanText);
+
     return {
-      draftText: cleanText,
+      draftText: sanitizedText,
       sourcesUsed: groundingContext.sourcesUsed,
       isSimulation: false,
       orderRef: groundingContext.order?.invoice_number || null,
@@ -558,3 +606,4 @@ export async function generateAiChatDraft(
     };
   }
 }
+
