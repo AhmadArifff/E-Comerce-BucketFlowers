@@ -79,7 +79,7 @@ export const CartDrawer: React.FC = () => {
 
   const { user } = useAuthStore();
   const { addNewOrder } = useOrderStore();
-  const { paymentGateways, codPoints, logisticsConfig } = useSettingsStore();
+  const { paymentGateways, codPoints, logisticsConfig, isMaintenanceMode } = useSettingsStore();
   const [dbCodPoints, setDbCodPoints] = useState<any[]>([]);
   const [courierOptions, setCourierOptions] = useState<any[]>([]);
   const [isLoadingCouriers, setIsLoadingCouriers] = useState(false);
@@ -250,6 +250,11 @@ export const CartDrawer: React.FC = () => {
 
   const handleProceedToCheckout = () => {
     if (items.length === 0) return;
+    if (isMaintenanceMode) {
+      setFormError('Atelier Chenille sedang dalam mode istirahat produksi. Pemesanan publik ditutup sementara.');
+      showMagicToast('Toko Istirahat Produksi ☕', 'Pemesanan publik ditutup sementara oleh atelier.', '⏳');
+      return;
+    }
     setFormError(null);
     setStep('CHECKOUT');
   };
@@ -257,6 +262,12 @@ export const CartDrawer: React.FC = () => {
   const handleConfirmOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) return;
+    if (isMaintenanceMode) {
+      setIsCheckingOut(false);
+      setFormError('Atelier Chenille sedang dalam mode istirahat produksi. Pemesanan publik ditutup sementara.');
+      showMagicToast('Toko Istirahat Produksi ☕', 'Pemesanan publik ditutup sementara oleh atelier.', '⏳');
+      return;
+    }
 
     // Validation
     if (!customerName.trim()) {
@@ -311,10 +322,17 @@ export const CartDrawer: React.FC = () => {
           ? 'COD_CASH_ON_DELIVERY'
           : 'MIDTRANS_SNAP_QRIS',
       theme_used: 'TEMA_A_KOREAN_PASTEL',
-      items: items.map((i) => ({
-        product_id: i.product.id,
-        quantity: i.quantity,
-      })),
+      items: items.map((i) => {
+        const isCustom = i.product.id?.startsWith('custom-');
+        return {
+          product_id: isCustom ? null : i.product.id,
+          product_name: i.product.name,
+          price: i.product.discountPrice ?? i.product.price,
+          raw_cost_hpp: i.product.rawCostHpp ?? Math.round((i.product.discountPrice ?? i.product.price) * 0.45),
+          quantity: i.quantity,
+          custom_specs_json: (i as any).customSpecs || (isCustom ? { description: i.product.description } : null),
+        };
+      }),
     };
 
     try {
@@ -981,11 +999,16 @@ export const CartDrawer: React.FC = () => {
 
                   <button
                     type="button"
+                    disabled={isMaintenanceMode}
                     onClick={handleProceedToCheckout}
-                    className="btn-primary-atelier w-full py-3.5 text-xs sm:text-sm font-extrabold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className={`w-full py-3.5 text-xs sm:text-sm font-extrabold shadow-lg transition-all flex items-center justify-center gap-2 ${
+                      isMaintenanceMode
+                        ? 'bg-amber-100 text-amber-800 border border-amber-300 cursor-not-allowed opacity-90'
+                        : 'btn-primary-atelier active:scale-95 cursor-pointer'
+                    }`}
                   >
-                    <span>{copy.cart.checkoutBtn}</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <span>{isMaintenanceMode ? '⚠️ Toko Sedang Istirahat Produksi' : copy.cart.checkoutBtn}</span>
+                    {!isMaintenanceMode && <ArrowRight className="w-4 h-4" />}
                   </button>
                 </div>
               )}

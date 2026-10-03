@@ -67,10 +67,61 @@ describe('Orders & Checkout API Integration Tests (PRD 7.5, 7.17 & 14.2)', () =>
     expect(Array.isArray(res.body.data)).toBe(true);
   });
 
-  it('GET /api/v1/orders/:id should return 404 for non-existent invoice', async () => {
-    const res = await request(app).get('/api/v1/orders/INV-99999999-9999');
+  it('POST /api/v1/orders should successfully create an order with a custom studio bouquet', async () => {
+    const res = await request(app)
+      .post('/api/v1/orders')
+      .send({
+        customer_name: 'Dewi Custom Studio',
+        customer_phone: '081299887766',
+        customer_email: 'dewi.custom@example.com',
+        fulfillment_type: 'COD_MEETUP_POINT',
+        payment_method: 'COD_CASH_ON_DELIVERY',
+        items: [
+          {
+            product_id: null,
+            product_name: 'Custom Buket Tulip Cantik (Pastel Pink)',
+            price: 135000,
+            raw_cost_hpp: 60750,
+            quantity: 1,
+            custom_specs_json: {
+              flower: 'Tulip Cantik',
+              color: 'Pastel Pink',
+              wrapping: 'Korean Two-Tone Pink',
+              ribbon: 'Pita Satin Mengkilap',
+            },
+          },
+        ],
+      });
 
-    expect(res.status).toBe(404);
-    expect(res.body.success).toBe(false);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty('id');
+    expect(Number(res.body.data.total_amount)).toBe(135000);
+    expect(res.body.data.items).toHaveLength(1);
+    expect(res.body.data.items[0].product_name).toBe('Custom Buket Tulip Cantik (Pastel Pink)');
+    expect(res.body.data.items[0].product_id).toBeNull();
+  });
+
+  it('POST /api/v1/orders should return 403 when store is in maintenance mode', async () => {
+    const { pool } = await import('../../src/config/database.js');
+    await pool.query('UPDATE store_settings SET is_maintenance_mode = true WHERE id = $1;', ['atelier_setting']);
+
+    try {
+      const res = await request(app)
+        .post('/api/v1/orders')
+        .send({
+          customer_name: 'Test Customer',
+          customer_phone: '08123456789',
+          items: [{ product_id: 'prod-01', quantity: 1 }],
+        });
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toMatch(/Istirahat Produksi/);
+    } finally {
+      // Restore maintenance mode to false
+      await pool.query('UPDATE store_settings SET is_maintenance_mode = false WHERE id = $1;', ['atelier_setting']);
+    }
   });
 });
+

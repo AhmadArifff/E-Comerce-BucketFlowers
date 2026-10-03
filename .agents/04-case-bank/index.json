@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "E-Comerce-BucketFlowers",
-  "total_cases": 3,
+  "total_cases": 4,
   "cases": [
     {
       "id": "case-20261002-postgresql-enum-type-deduction",
@@ -26,6 +26,14 @@
       "severity": "MEDIUM",
       "status": "VERIFIED",
       "file": "cases/case-20261002-csv-utf8-bom-excel-compatibility.yaml"
+    },
+    {
+      "id": "case-20261003-custom-studio-checkout-and-maintenance-guard",
+      "title": "Dukungan Checkout Buket Kustom Studio dan Penegakan Guard Mode Istirahat Produksi pada Orders API",
+      "domain": "checkout-ecommerce-state-machine",
+      "severity": "HIGH",
+      "status": "VERIFIED",
+      "file": "cases/case-20261003-custom-studio-checkout-and-maintenance-guard.yaml"
     }
   ]
 }

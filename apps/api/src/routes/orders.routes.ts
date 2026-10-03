@@ -271,10 +271,19 @@ router.post('/', async (req, res) => {
 
     await client.query('BEGIN');
 
-    // 1. Capacity Throttling Check (Daily PO Quota)
-    const settingsRes = await client.query('SELECT daily_po_limit FROM store_settings LIMIT 1;');
-    const dailyLimit = settingsRes.rows[0]?.daily_po_limit || 25;
+    // 1. Store Status (Maintenance Mode) & Capacity Throttling Check (Daily PO Quota)
+    const settingsRes = await client.query(
+      'SELECT daily_po_limit, is_maintenance_mode, maintenance_title, maintenance_desc FROM store_settings LIMIT 1;'
+    );
+    const storeSetting = settingsRes.rows[0];
 
+    if (storeSetting?.is_maintenance_mode) {
+      const mTitle = storeSetting.maintenance_title || 'Atelier Chenille Sedang Istirahat Produksi';
+      const mDesc = storeSetting.maintenance_desc || 'Kapasitas buket hari ini telah penuh atau studio sedang libur produksi. Silakan hubungi WhatsApp kami.';
+      throw new Error(`MODE_MAINTENANCE: ${mTitle}. ${mDesc}`);
+    }
+
+    const dailyLimit = storeSetting?.daily_po_limit || 25;
     const todayOrdersRes = await client.query(
       `SELECT COUNT(*)::int as count FROM orders WHERE created_at >= CURRENT_DATE AND order_status != 'CANCELLED';`
     );
@@ -284,11 +293,18 @@ router.post('/', async (req, res) => {
       throw new Error(`Kuota Pre-Order hari ini telah penuh (${todayCount}/${dailyLimit} pesanan). Silakan memesan kembali untuk slot pengiriman besok.`);
     }
 
-    const productIds = items.map((i: any) => i.product_id).filter(Boolean);
-    const prodRes = await client.query(
-      `SELECT id, name, price, discount_price, raw_cost_hpp, stock, is_active FROM products WHERE id = ANY($1) FOR UPDATE;`,
-      [productIds]
-    );
+    // Separate regular catalog products from custom studio items
+    const productIds = items
+      .map((i: any) => i.product_id)
+      .filter((id: any) => id && !String(id).startsWith('custom-'));
+
+    let prodRes = { rows: [] as any[] };
+    if (productIds.length > 0) {
+      prodRes = await client.query(
+        `SELECT id, name, price, discount_price, raw_cost_hpp, stock, is_active FROM products WHERE id = ANY($1) FOR UPDATE;`,
+        [productIds]
+      );
+    }
     const productMap = new Map<string, any>();
     prodRes.rows.forEach((p) => productMap.set(p.id, p));
 
@@ -297,40 +313,64 @@ router.post('/', async (req, res) => {
     const orderItemsToInsert: any[] = [];
 
     for (const item of items) {
-      const prod = productMap.get(item.product_id);
-      if (!prod || !prod.is_active) {
-        throw new Error(`Produk dengan ID ${item.product_id} tidak tersedia.`);
-      }
-      const qty = Math.max(1, parseInt(item.quantity || '1', 10));
-      if (prod.stock < qty) {
-        throw new Error(`Stok untuk "${prod.name}" tidak mencukupi (sisa ${prod.stock}).`);
-      }
+      const isCustom = !item.product_id || String(item.product_id).startsWith('custom-');
 
-      const unitPrice = prod.discount_price ? Number(prod.discount_price) : Number(prod.price);
-      const unitHpp = Number(prod.raw_cost_hpp);
-      const itemSubtotal = unitPrice * qty;
-      const itemHppTotal = unitHpp * qty;
+      if (isCustom) {
+        // Dynamic Custom Studio bouquet item (specs stored in custom_specs_json)
+        const qty = Math.max(1, parseInt(item.quantity || '1', 10));
+        const unitPrice = Math.max(0, Number(item.price || item.unit_price || 0));
+        const unitHpp = Math.max(0, Number(item.raw_cost_hpp || Math.round(unitPrice * 0.45)));
+        const itemSubtotal = unitPrice * qty;
+        const itemHppTotal = unitHpp * qty;
 
-      calculatedSubtotal += itemSubtotal;
-      calculatedHpp += itemHppTotal;
+        calculatedSubtotal += itemSubtotal;
+        calculatedHpp += itemHppTotal;
 
-      orderItemsToInsert.push({
-        product_id: prod.id,
-        product_name: prod.name,
-        price: unitPrice,
-        raw_cost_hpp: unitHpp,
-        quantity: qty,
-        subtotal: itemSubtotal,
-        custom_specs_json: item.custom_specs_json || null,
-      });
+        orderItemsToInsert.push({
+          product_id: null,
+          product_name: item.product_name || 'Buket Custom Studio Chenille',
+          price: unitPrice,
+          raw_cost_hpp: unitHpp,
+          quantity: qty,
+          subtotal: itemSubtotal,
+          custom_specs_json: item.custom_specs_json || null,
+        });
+      } else {
+        const prod = productMap.get(item.product_id);
+        if (!prod || !prod.is_active) {
+          throw new Error(`Produk dengan ID ${item.product_id} tidak tersedia.`);
+        }
+        const qty = Math.max(1, parseInt(item.quantity || '1', 10));
+        if (prod.stock < qty) {
+          throw new Error(`Stok untuk "${prod.name}" tidak mencukupi (sisa ${prod.stock}).`);
+        }
 
-      // Atomic Inventory Decrement Lock
-      const updateStockRes = await client.query(
-        `UPDATE products SET stock = stock - $1 WHERE id = $2 AND stock >= $1 RETURNING stock;`,
-        [qty, prod.id]
-      );
-      if (updateStockRes.rowCount === 0) {
-        throw new Error(`Stok untuk produk "${prod.name}" tidak mencukupi untuk memenuhi pesanan.`);
+        const unitPrice = prod.discount_price ? Number(prod.discount_price) : Number(prod.price);
+        const unitHpp = Number(prod.raw_cost_hpp);
+        const itemSubtotal = unitPrice * qty;
+        const itemHppTotal = unitHpp * qty;
+
+        calculatedSubtotal += itemSubtotal;
+        calculatedHpp += itemHppTotal;
+
+        orderItemsToInsert.push({
+          product_id: prod.id,
+          product_name: prod.name,
+          price: unitPrice,
+          raw_cost_hpp: unitHpp,
+          quantity: qty,
+          subtotal: itemSubtotal,
+          custom_specs_json: item.custom_specs_json || null,
+        });
+
+        // Atomic Inventory Decrement Lock
+        const updateStockRes = await client.query(
+          `UPDATE products SET stock = stock - $1 WHERE id = $2 AND stock >= $1 RETURNING stock;`,
+          [qty, prod.id]
+        );
+        if (updateStockRes.rowCount === 0) {
+          throw new Error(`Stok untuk produk "${prod.name}" tidak mencukupi untuk memenuhi pesanan.`);
+        }
       }
     }
 
@@ -582,7 +622,11 @@ router.post('/', async (req, res) => {
   } catch (error: any) {
     await client.query('ROLLBACK');
     console.error('Error creating order:', error);
-    return res.status(400).json({ success: false, error: error.message || 'Gagal membuat pesanan.' });
+    const isMaintenance = error.message?.startsWith('MODE_MAINTENANCE:');
+    const cleanMsg = isMaintenance
+      ? error.message.replace('MODE_MAINTENANCE: ', '')
+      : (error.message || 'Gagal membuat pesanan.');
+    return res.status(isMaintenance ? 403 : 400).json({ success: false, error: cleanMsg });
   } finally {
     client.release();
   }

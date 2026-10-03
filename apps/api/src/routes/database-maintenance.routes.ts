@@ -278,6 +278,12 @@ router.post('/granular-reset', requireAdmin, async (req: AuthenticatedRequest, r
       if (await tableExists(client, 'products')) {
         await client.query(`DELETE FROM products;`);
       }
+      if (await tableExists(client, 'waste_material_logs')) {
+        await client.query(`DELETE FROM waste_material_logs;`);
+      }
+      if (await tableExists(client, 'procurement_orders')) {
+        await client.query(`DELETE FROM procurement_orders;`);
+      }
       if (await tableExists(client, 'raw_materials')) {
         await client.query(`DELETE FROM raw_materials;`);
       }

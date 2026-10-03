@@ -46,6 +46,13 @@
       "prd_sections": ["Governance", "Seksi 1-42"],
       "status": "VERIFIED_PASS",
       "verified_at": "2026-10-03"
+    },
+    {
+      "id": "M7_CUSTOM_CHECKOUT_MAINTENANCE_GUARD",
+      "title": "Penyelarasan Alur Checkout Custom Studio & Penegakan Guard Mode Istirahat Produksi",
+      "prd_sections": ["Seksi 2", "Seksi 4", "Seksi 21", "Seksi 32"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-10-03"
     }
   ],
   "established_constraints": [
@@ -57,11 +64,13 @@
     "Zero-Residual Scratch Rule: File uji coba sementara dilarang ditinggalkan di root repo git",
     "Clean PRD Policy: Fitur baru dicatat di PRD.md & .agents, perbaikan bug hanya dicatat di .agents/ (04-case-bank)",
     "Autonomous Delivery Protocol: Review -> User Approval -> Dev & Verify -> Direct Git Push to GitHub (khusus proyek E-Comerce-BucketFlowers)",
-    "Hub-and-Spoke Knowledge Sync: Mengadopsi default dari induk C:\\Users\\ASUS\\Documents\\Web Dev\\improving\\agentic AI dan menyinkronkan kembali pola solusi tervalidasi"
+    "Hub-and-Spoke Knowledge Sync: Mengadopsi default dari induk C:\\Users\\ASUS\\Documents\\Web Dev\\improving\\agentic AI dan menyinkronkan kembali pola solusi tervalidasi",
+    "Custom Studio Checkout Integrity: Item kustom studio dikirim dengan product_id null dan specs lengkap di custom_specs_json pada order_items",
+    "Store Maintenance Enforce: Endpoint POST /api/v1/orders wajib memvalidasi is_maintenance_mode sebelum transaksi dan mengembalikan HTTP 403 jika toko libur"
   ],
   "next_recommended_actions": [
-    "Sistem tata kelola .agents dan sinkronisasi induk berhasil di-push ke GitHub",
-    "Menunggu instruksi pengguna untuk implementasi modul PRD berikutnya atau audit fungsional"
+    "Commit dan push perbaikan alur checkout dan guard maintenance ke origin main",
+    "Sinkronisasi balik Case 4 ke induk agentic AI"
   ],
-  "last_updated": "2026-10-03T04:18:00+07:00"
+  "last_updated": "2026-10-03T21:32:00+07:00"
 }

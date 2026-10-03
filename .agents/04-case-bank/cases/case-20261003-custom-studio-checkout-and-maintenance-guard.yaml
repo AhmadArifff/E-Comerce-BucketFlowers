@@ -1,0 +1,32 @@
+id: case-20261003-custom-studio-checkout-and-maintenance-guard
+title: "Dukungan Checkout Buket Kustom Studio dan Penegakan Guard Mode Istirahat Produksi pada Orders API"
+date: "2026-10-03"
+project: "E-Comerce-BucketFlowers"
+domain: "checkout-ecommerce-state-machine"
+severity: "HIGH"
+status: "VERIFIED"
+
+symptom: |
+  1. Ketika pelanggan merancang buket kustom di Custom Studio dan melakukan checkout melalui keranjang (CartDrawer), pesanan gagal dibuat dengan error "Produk dengan ID custom-... tidak tersedia". Hal ini karena item kustom memiliki ID dinamis dan tidak terdaftar di tabel master products.
+  2. Saat admin menyalakan Mode Pemeliharaan (is_maintenance_mode = true), frontend menampilkan layar overlay tetapi backend endpoint POST /api/v1/orders belum memvalidasi status tersebut, sehingga pesanan publik yang ditembak langsung via API masih bisa masuk ke database.
+  3. Pada fitur reset database kanonikal, pembersihan tabel raw_materials gagal karena relasi foreign key dari tabel procurement_orders dan waste_material_logs belum dibersihkan terlebih dahulu.
+
+root_cause: |
+  1. Pada backend orders.routes.ts, seluruh item pesanan diasumsikan berasal dari tabel products dan dikueri dengan SELECT ... FROM products WHERE id = ANY($1). Item buket kustom tidak memiliki entri di tabel master products, sehingga productMap.get() mengembalikan undefined dan memicu throw error.
+  2. Pada endpoint POST /api/v1/orders, kueri awal hanya membaca daily_po_limit dan tidak membaca kolom is_maintenance_mode dari tabel store_settings.
+  3. Pada database-maintenance.routes.ts, perintah DELETE FROM raw_materials dieksekusi sebelum DELETE FROM procurement_orders, melanggar foreign key constraint procurement_orders_material_id_fkey.
+
+solution_pattern: |
+  1. Di CartDrawer.tsx, sertakan rincian produk kustom lengkap (product_name, price, raw_cost_hpp, custom_specs_json) dalam orderPayload, dan set product_id: null untuk item kustom.
+  2. Di backend orders.routes.ts:
+     - Pisahkan produk reguler dari buket kustom (isCustom).
+     - Untuk produk reguler: validasi stok dan jalankan atomic lock decrement (UPDATE products SET stock = stock - $1).
+     - Untuk buket kustom: bypass kueri tabel products, izinkan product_id: null (sesuai schema Supabase), dan simpan metadata rancangan ke custom_specs_json pada tabel order_items.
+  3. Di orders.routes.ts, periksa store_settings.is_maintenance_mode di awal transaksi dan lempar error MODE_MAINTENANCE dengan HTTP status 403 jika toko sedang dalam masa istirahat produksi.
+  4. Di database-maintenance.routes.ts, hapus data anak terlebih dahulu dari waste_material_logs dan procurement_orders sebelum menghapus raw_materials.
+
+verification: |
+  - Vitest test POST /api/v1/orders with custom studio bouquet: PASSED (200 OK, order_items tersimpan dengan product_id: null dan specs kustom utuh).
+  - Vitest test POST /api/v1/orders during maintenance mode: PASSED (403 Forbidden).
+  - Vitest test POST /api/v1/admin/database/granular-reset: PASSED (200 OK, cascading cleanup berhasil).
+  - Monorepo type-check (turbo run type-check): 100% PASSED (0 errors di 3 paket).
