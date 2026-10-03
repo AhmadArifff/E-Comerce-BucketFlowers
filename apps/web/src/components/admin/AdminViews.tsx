@@ -3107,6 +3107,28 @@ export const StoreSettingsView: React.FC = () => {
     status: 'idle' | 'testing' | 'success' | 'error';
     message: string;
   }>({ status: 'idle', message: '' });
+  const [isScanningOccasions, setIsScanningOccasions] = useState(false);
+
+  const handleScanOccasions = async () => {
+    setIsScanningOccasions(true);
+    try {
+      const res = await fetch(getApiUrl('/api/v1/admin/settings/notifications/scan-occasions'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days_ahead: 7 }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showMagicToast('Scan Momen Selesai! 📅', data.message, '✨');
+      } else {
+        showMagicToast('Gagal Scan Momen ⚠️', data.error || 'Terjadi kesalahan.', '❌');
+      }
+    } catch (err: any) {
+      showMagicToast('Koneksi Error ⚠️', 'Gagal memanggil endpoint scan occasions.', '❌');
+    } finally {
+      setIsScanningOccasions(false);
+    }
+  };
 
   const handleTestBiteship = async () => {
     setTestApiState({ status: 'testing', message: 'Menghubungi server Biteship...' });
@@ -4459,9 +4481,20 @@ export const StoreSettingsView: React.FC = () => {
               <div className="p-4 rounded-2xl bg-white border border-stone-200">
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-extrabold text-stone-800 text-xs">🔔 Kontrol Event Trigger</span>
-                  <span className="text-[9px] text-stone-400 font-bold">
-                    {Object.values(notifForm.events).filter(Boolean).length}/7 Aktif
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleScanOccasions}
+                      disabled={isScanningOccasions}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold flex items-center gap-1 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                      title="Pindai momen pelanggan H-7 dan kirim notifikasi WhatsApp otomatis sekarang"
+                    >
+                      <span>⚡ {isScanningOccasions ? 'Memindai...' : 'Scan Momen Hari Ini (H-7)'}</span>
+                    </button>
+                    <span className="text-[9px] text-stone-400 font-bold">
+                      {Object.values(notifForm.events).filter(Boolean).length}/8 Aktif
+                    </span>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {([
@@ -4472,6 +4505,7 @@ export const StoreSettingsView: React.FC = () => {
                     { key: 'completed' as const, icon: '🎉', label: 'Completed', desc: 'Pesanan selesai diterima' },
                     { key: 'warrantySubmitted' as const, icon: '📋', label: 'Warranty Submitted', desc: 'Klaim garansi diajukan' },
                     { key: 'warrantyApproved' as const, icon: '✅', label: 'Warranty Approved', desc: 'Klaim garansi disetujui' },
+                    { key: 'occasionReminder' as const, icon: '📅', label: 'Occasion Reminder (H-7)', desc: 'Pengingat momen spesial pelanggan' },
                   ]).map((ev) => (
                     <div
                       key={ev.key}

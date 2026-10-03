@@ -15,7 +15,8 @@ export type NotificationEventType =
   | 'IN_DELIVERY'
   | 'COMPLETED'
   | 'WARRANTY_SUBMITTED'
-  | 'WARRANTY_APPROVED';
+  | 'WARRANTY_APPROVED'
+  | 'OCCASION_REMINDER';
 
 /**
  * Data payload for notification template rendering
@@ -32,6 +33,13 @@ export interface NotificationPayload {
   trackingUrl?: string;
   points?: number;
   portalUrl?: string;
+  userName?: string;
+  recipientName?: string;
+  occasionTitle?: string;
+  eventDate?: string;
+  daysRemaining?: number;
+  catalogUrl?: string;
+  occasionId?: string;
 }
 
 /**
@@ -48,6 +56,7 @@ interface NotificationConfig {
   event_completed: boolean;
   event_warranty_submitted: boolean;
   event_warranty_approved: boolean;
+  event_occasion_reminder?: boolean;
 }
 
 // Retry intervals in milliseconds (PRD 7.19: 30s, 2min, 10min)
@@ -84,6 +93,9 @@ function getMessageTemplate(event: NotificationEventType, data: NotificationPayl
     case 'WARRANTY_APPROVED':
       return `✅ Klaim disetujui! Buket pengganti baru sedang dirangkai & akan dikirim GRATIS.${data.awb ? ` Resi: ${data.awb}` : ''}`;
 
+    case 'OCCASION_REMINDER':
+      return `Halo Kak ${data.userName || 'Pelanggan'}! 🌸 Mengingatkan ${data.daysRemaining !== undefined ? `${data.daysRemaining} hari lagi` : 'sebentar lagi'} (${data.eventDate || ''}) adalah momen spesial "${data.occasionTitle || 'Momen Spesial'}" untuk ${data.recipientName || 'orang tersayang'} nih. Mau kami amankan slot perakitan buket kawat bulunya lebih awal agar tenang dan tidak kehabisan kuota harian atelier? 💐\nPesan sekarang di: ${data.catalogUrl || PORTAL_BASE_URL}`;
+
     default:
       return `📢 Notifikasi dari Aesthetic Chenille Flowers Atelier — Pesanan #${data.invoice || data.orderId}`;
   }
@@ -101,8 +113,10 @@ function isEventEnabled(config: NotificationConfig, event: NotificationEventType
     COMPLETED: 'event_completed',
     WARRANTY_SUBMITTED: 'event_warranty_submitted',
     WARRANTY_APPROVED: 'event_warranty_approved',
+    OCCASION_REMINDER: 'event_occasion_reminder',
   };
-  return config[eventMap[event]] as boolean;
+  const val = config[eventMap[event]];
+  return val !== undefined ? Boolean(val) : true;
 }
 
 /**
@@ -130,6 +144,7 @@ async function getNotificationConfig(): Promise<NotificationConfig> {
     event_completed: true,
     event_warranty_submitted: true,
     event_warranty_approved: true,
+    event_occasion_reminder: true,
   };
 }
 
@@ -376,4 +391,13 @@ export async function testWhatsAppConnection(
     message: `Gagal mengirim pesan tes ke ${phone}. Periksa API Key dan device WhatsApp di dashboard Fonnte.`,
     response: result.response,
   };
+}
+
+/**
+ * Convenience helper to send occasion reminder
+ */
+export async function sendOccasionReminderNotification(
+  data: NotificationPayload
+): Promise<void> {
+  return sendOrderNotification('OCCASION_REMINDER', data);
 }

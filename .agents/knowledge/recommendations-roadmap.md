@@ -25,26 +25,39 @@
 
 ---
 
-## 2. Prioritas 2: Otomasi Pengingat Momen Spesial WhatsApp H-7 (Cron Scheduler)
-*Terkait: PRD Seksi 17 & 23 | Tabel: `customer_occasions`, `notification_configs` | Service: `whatsapp.service.ts`*
+## 2. Prioritas 2: Otomasi Pengingat Momen Spesial WhatsApp H-7 (Cron Scheduler) [COMPLETED - VERIFIED PASS]
+*Terkait: PRD Seksi 17 & 23 | Tabel: `customer_occasions`, `notification_configs`, `notification_logs` | Service: `whatsapp.service.ts`, `scheduler.service.ts`*
 
-### Latar Belakang & Masalah
-- Pelanggan dapat mencatat kalender tanggal wisuda/sidang/ulang tahun teman di Portal (`customer_occasions`), dan API CRUD sudah aktif.
-- Namun, belum ada *scheduler* atau *cron job* yang otomatis memindai momen H-7 dan memicu notifikasi WhatsApp via Fonnte Gateway.
-
-### Spesifikasi Teknis Implementasi
-1. **Backend Route (`apps/api/src/routes/occasions.routes.ts`)**:
-   - Buat endpoint `POST /api/v1/occasions/scan-reminders` (dapat dilindungi oleh `x-cron-secret` atau admin token).
-   - Query:
-     ```sql
-     SELECT id, user_phone, user_name, recipient_name, occasion_title, event_date
-     FROM customer_occasions
-     WHERE is_reminded = false 
-       AND event_date::date = (CURRENT_DATE + INTERVAL '7 days');
-     ```
-   - Pemicu WhatsApp: Kirim template pesan ramah:
-     > *"Halo Kak [user_name]! 🌸 Mengingatkan 7 hari lagi hari [occasion_title] untuk [recipient_name] nih. Mau kami amankan slot perakitan buket kawat bulunya lebih awal agar tenang dan tidak kehabisan kuota harian? Klik di sini untuk pesan: https://chenille-atelier.com"*
-   - Update: Set `is_reminded = true` setelah pesan terkirim.
+### Status: SELESAI & TERVERIFIKASI
+- **Backend**:
+  - `apps/api/src/services/whatsapp.service.ts`:
+    - Event `OCCASION_REMINDER` ditambahkan ke `NotificationEventType` dan `NotificationConfig`.
+    - Template WhatsApp hangat personal dengan perhitungan hari tersisa (`daysRemaining`), tanggal ramah, dan tautan katalog atelier.
+    - Fallback otomatis ke mode simulasi aman di `notification_logs` jika Fonnte API Key belum diisi.
+  - `apps/api/src/services/scheduler.service.ts`:
+    - Service background scheduler berkala (interval teratur setiap 6 jam) dan pemindaian startup.
+    - Fungsi kanonikal `scanAndDispatchOccasionReminders(daysAhead: number = 7)` dengan pembaruan otomatis kolom `is_reminded` dan `reminded_at`.
+  - `apps/api/src/routes/occasions.routes.ts`:
+    - `POST /api/v1/occasions/scan-reminders`: Endpoint pemindaian momen rentang H-0 s/d H-`days_ahead` (default 7 hari).
+    - `POST /api/v1/occasions/:id/send-reminder-now`: Endpoint on-demand kirim notifikasi WhatsApp seketika untuk 1 momen tertentu.
+  - `apps/api/src/routes/admin.routes.ts`:
+    - Dukungan konfigurasi `event_occasion_reminder` di settings notifications (`PATCH` & `GET /settings/all`).
+    - `POST /api/v1/admin/settings/notifications/scan-occasions`: Endpoint pemicu pemindaian manual dari dashboard admin.
+  - `apps/api/src/server.ts`:
+    - Inisialisasi `initScheduler()` otomatis saat server aktif.
+- **Frontend**:
+  - `apps/web/src/stores/useSettingsStore.ts`:
+    - Menambahkan `occasionReminder: boolean` pada interface dan state default `NotificationConfig.events`.
+  - `apps/web/src/components/portal/OccasionCalendarWidget.tsx`:
+    - Badge status pengingat WhatsApp: `✅ WA Terkirim` berserta tanggal pengiriman jika sudah diingatkan.
+    - Tombol aksi interaktif on-demand: `🔔 Kirim WA Sekarang` untuk momen yang belum diingatkan.
+  - `apps/web/src/components/admin/AdminViews.tsx`:
+    - Kontrol event trigger `Occasion Reminder (H-7)` (total 8/8 event aktif).
+    - Tombol aksi instan admin: `⚡ Scan Momen Hari Ini (H-7)` dengan feedback toast.
+- **Verifikasi Kualitas**:
+  - `apps/api/tests/integration/occasions.api.test.ts`: 7/7 test lolos (100%).
+  - Total test suite `@chenille/api`: 21 test files, 132/132 tests lolos (100%).
+  - TypeScript Compilation: `turbo run type-check` 0 error across all packages.
 
 ---
 

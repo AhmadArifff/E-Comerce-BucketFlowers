@@ -113,6 +113,7 @@ export interface NotificationConfig {
     completed: boolean;
     warrantySubmitted: boolean;
     warrantyApproved: boolean;
+    occasionReminder: boolean;
   };
 }
 
@@ -571,6 +572,7 @@ export const useSettingsStore = create<SettingsState>()(
           completed: true,
           warrantySubmitted: true,
           warrantyApproved: true,
+          occasionReminder: true,
         },
       },
       wasteMaterials: DEFAULT_WASTE_MATERIALS,

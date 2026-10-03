@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import app from './app.js';
+import { initScheduler } from './services/scheduler.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,6 +21,7 @@ if (process.env.NODE_ENV !== 'production') {
     console.log(`🌸 [Chenille API] Backend engine is running on http://localhost:${port}`);
     console.log(`🩺 Health check available at: http://localhost:${port}/api/health`);
     console.log(`📦 RESTful endpoints active at: http://localhost:${port}/api/v1`);
+    initScheduler();
   });
 }
 

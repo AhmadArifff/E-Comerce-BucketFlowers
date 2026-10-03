@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { pool } from '../config/database.js';
 import { testWhatsAppConnection } from '../services/whatsapp.service.js';
+import { scanAndDispatchOccasionReminders } from '../services/scheduler.service.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -224,6 +225,7 @@ router.get('/settings/all', async (req, res) => {
         completed: notifConfig.event_completed,
         warrantySubmitted: notifConfig.event_warranty_submitted,
         warrantyApproved: notifConfig.event_warranty_approved,
+        occasionReminder: notifConfig.event_occasion_reminder ?? true,
       },
     };
 
@@ -544,9 +546,10 @@ router.patch('/settings/notifications', async (req, res) => {
           id, is_enabled, api_key, sender_device,
           event_order_created, event_crafting_started, event_quality_check,
           event_in_delivery, event_completed, event_warranty_submitted, event_warranty_approved,
+          event_occasion_reminder,
           updated_at
         ) VALUES (
-          'wa_fonnte_setting', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()
+          'wa_fonnte_setting', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW()
         ) RETURNING *;
       `;
       params = [
@@ -560,6 +563,7 @@ router.patch('/settings/notifications', async (req, res) => {
         events?.completed ?? true,
         events?.warrantySubmitted ?? true,
         events?.warrantyApproved ?? true,
+        events?.occasionReminder ?? true,
       ];
     } else {
       sql = `
@@ -574,6 +578,7 @@ router.patch('/settings/notifications', async (req, res) => {
             event_completed = COALESCE($8, event_completed),
             event_warranty_submitted = COALESCE($9, event_warranty_submitted),
             event_warranty_approved = COALESCE($10, event_warranty_approved),
+            event_occasion_reminder = COALESCE($11, event_occasion_reminder),
             updated_at = NOW()
         WHERE id = 'wa_fonnte_setting'
         RETURNING *;
@@ -589,6 +594,7 @@ router.patch('/settings/notifications', async (req, res) => {
         events?.completed,
         events?.warrantySubmitted,
         events?.warrantyApproved,
+        events?.occasionReminder,
       ];
     }
 
@@ -609,12 +615,33 @@ router.patch('/settings/notifications', async (req, res) => {
           completed: row.event_completed,
           warrantySubmitted: row.event_warranty_submitted,
           warrantyApproved: row.event_warranty_approved,
+          occasionReminder: row.event_occasion_reminder ?? true,
         },
       },
       message: 'Pengaturan notifikasi WhatsApp berhasil disimpan.',
     });
   } catch (error: any) {
     console.error('Error saving notification settings:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/v1/admin/settings/notifications/scan-occasions
+router.post('/settings/notifications/scan-occasions', async (req, res) => {
+  try {
+    const daysAhead = Number(req.body?.days_ahead || 7);
+    const reminders = await scanAndDispatchOccasionReminders(daysAhead);
+    return res.json({
+      success: true,
+      message: `Pemindaian selesai: ${reminders.length} pengingat momen berhasil diproses.`,
+      data: {
+        count: reminders.length,
+        days_ahead: daysAhead,
+        reminders,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error scanning occasions from admin:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 });

@@ -15,6 +15,7 @@ export interface OccasionItem {
   event_date: string;
   notes?: string | null;
   is_reminded?: boolean;
+  reminded_at?: string | null;
 }
 
 const OCCASION_PRESETS = [
@@ -36,6 +37,7 @@ export const OccasionCalendarWidget: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
 
   // Form State
   const [recipientName, setRecipientName] = useState('');
@@ -125,6 +127,26 @@ export const OccasionCalendarWidget: React.FC = () => {
       }
     } catch (e) {
       console.warn('Could not delete occasion:', e);
+    }
+  };
+
+  const handleSendReminderNow = async (id: string) => {
+    try {
+      setSendingReminderId(id);
+      const res = await fetch(getApiUrl(`/api/v1/occasions/${id}/send-reminder-now`), {
+        method: 'POST',
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        showMagicToast('Pengingat WA Terkirim! 📱', json.message, '🌸');
+        fetchOccasions();
+      } else {
+        throw new Error(json.error || 'Gagal mengirimkan pengingat WhatsApp.');
+      }
+    } catch (err: any) {
+      showMagicToast('Gagal Mengirim', err.message || 'Silakan periksa koneksi WhatsApp.', '⚠️');
+    } finally {
+      setSendingReminderId(null);
     }
   };
 
@@ -324,7 +346,7 @@ export const OccasionCalendarWidget: React.FC = () => {
                   )}
                 </div>
 
-                <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between">
+                <div className="pt-2 border-t border-stone-200/60 flex flex-wrap items-center justify-between gap-2">
                   <span
                     className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                       isPast
@@ -337,11 +359,34 @@ export const OccasionCalendarWidget: React.FC = () => {
                     {isPast ? 'Selesai' : daysLeft === 0 ? 'Hari Ini! 🌸' : `H-${daysLeft} (${daysLeft} Hari Lagi)`}
                   </span>
 
-                  {isUrgent && (
-                    <span className="text-[10px] font-extrabold text-rose-600">
-                      Rekomendasi PO H-3!
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {item.is_reminded ? (
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-200/80 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span>✅ WA Terkirim</span>
+                        {item.reminded_at && (
+                          <span className="text-[9px] opacity-75">
+                            ({new Date(item.reminded_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })})
+                          </span>
+                        )}
+                      </span>
+                    ) : !isPast ? (
+                      <button
+                        type="button"
+                        onClick={() => handleSendReminderNow(item.id)}
+                        disabled={sendingReminderId === item.id}
+                        className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-lg flex items-center gap-1 transition-all cursor-pointer disabled:opacity-50"
+                        title="Kirim pengingat ramah ke nomor WhatsApp sekarang"
+                      >
+                        <span>🔔 {sendingReminderId === item.id ? 'Mengirim...' : 'Kirim WA Sekarang'}</span>
+                      </button>
+                    ) : null}
+
+                    {isUrgent && (
+                      <span className="text-[10px] font-extrabold text-rose-600">
+                        Rekomendasi PO H-3!
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             );
