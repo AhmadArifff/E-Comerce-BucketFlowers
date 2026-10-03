@@ -60,6 +60,13 @@
       "prd_sections": ["Seksi 1", "Seksi 7", "Seksi 20", "Seksi 21", "Seksi 24"],
       "status": "VERIFIED_PASS",
       "verified_at": "2026-10-03"
+    },
+    {
+      "id": "M9_COD_CHECKOUT_GUARD_AND_ZERO_DUMMY_QUOTA",
+      "title": "Penegakan Guard Validasi Titik Temu COD di CartDrawer & Eliminasi Mock Kuota Harian Storefront",
+      "prd_sections": ["Seksi 1", "Seksi 4", "Seksi 7", "Seksi 21"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-10-03"
     }
   ],
   "established_constraints": [
@@ -75,11 +82,13 @@
     "Custom Studio Checkout Integrity: Item kustom studio dikirim dengan product_id null dan specs lengkap di custom_specs_json pada order_items",
     "Store Maintenance Enforce: Endpoint POST /api/v1/orders wajib memvalidasi is_maintenance_mode sebelum transaksi dan mengembalikan HTTP 403 jika toko libur",
     "Storefront Live Sync Guard: Footer dan Navbar wajib membaca useSettingsStore agar perubahan profil toko di admin langsung terefleksi di landing page",
-    "Anti-Slop Copywriting Mandate: Seluruh teks tema wajib mencerminkan empati nyata, humor mahasiswa wisuda/skripsi Depok yang relatable, dan 100% bebas tanda em dash (R-02)"
+    "Anti-Slop Copywriting Mandate: Seluruh teks tema wajib mencerminkan empati nyata, humor mahasiswa wisuda/skripsi Depok yang relatable, dan 100% bebas tanda em dash (R-02)",
+    "COD Meetup Checkout Guard: CartDrawer wajib menolak konfirmasi pesanan jika metode COD dipilih saat tidak ada titik temu aktif di database",
+    "Storefront Zero Dummy Quota: AnnouncementBar dan CapacityWidget wajib membaca konfigurasi toko dari useSettingsStore tanpa menampilkan angka awal tiruan"
   ],
   "next_recommended_actions": [
-    "Audit data dan peremajaan teks humanis telah selesai diimplementasikan",
-    "Lakukan push git otomatis sesuai protokol otonom"
+    "Peningkatan guard COD dan zero-dummy kuota selesai diverifikasi dengan 0 compiler error",
+    "Jalankan commit, pull-rebase, dan push ke GitHub sesuai Autonomous Delivery Protocol"
   ],
-  "last_updated": "2026-10-03T22:10:00+07:00"
+  "last_updated": "2026-10-03T22:25:00+07:00"
 }

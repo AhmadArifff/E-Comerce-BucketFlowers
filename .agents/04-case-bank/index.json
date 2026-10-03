@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "E-Comerce-BucketFlowers",
-  "total_cases": 5,
+  "total_cases": 6,
   "cases": [
     {
       "id": "case-20261002-postgresql-enum-type-deduction",
@@ -42,6 +42,14 @@
       "severity": "HIGH",
       "status": "VERIFIED",
       "file": "cases/case-20261003-admin-storefront-data-sync-copywriting.yaml"
+    },
+    {
+      "id": "case-20261003-cod-checkout-guard-and-zero-dummy-quota",
+      "title": "Penegakan Guard Validasi Titik Temu COD di CartDrawer & Eliminasi Mock Kuota Harian Storefront",
+      "domain": "checkout-ecommerce-state-integrity",
+      "severity": "HIGH",
+      "status": "VERIFIED",
+      "file": "cases/case-20261003-cod-checkout-guard-and-zero-dummy-quota.yaml"
     }
   ]
 }

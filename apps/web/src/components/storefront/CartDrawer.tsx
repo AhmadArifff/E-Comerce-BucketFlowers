@@ -291,10 +291,17 @@ export const CartDrawer: React.FC = () => {
       return;
     }
 
+    const selectedMeetup = activeMeetupPoints.find((m) => m.id === selectedCodPointId) || activeMeetupPoints[0];
+
+    if (fulfillmentType === 'COD_MEETUP_POINT') {
+      if (activeMeetupPoints.length === 0 || !selectedMeetup?.id) {
+        setFormError('Titik temu COD belum tersedia di sistem. Silakan pilih metode pengiriman Kurir Ekspedisi atau hubungi WhatsApp Florist.');
+        return;
+      }
+    }
+
     setFormError(null);
     setIsCheckingOut(true);
-
-    const selectedMeetup = activeMeetupPoints.find((m) => m.id === selectedCodPointId) || activeMeetupPoints[0];
 
     const paymentStatus: 'PAYMENT_CONFIRMED' | 'WAITING_PAYMENT' | 'PAID_ON_COD' =
       selectedPayment === 'midtrans'
@@ -641,7 +648,9 @@ export const CartDrawer: React.FC = () => {
                           <MapPin className="w-4 h-4 flex-shrink-0 text-theme-primary mt-0.5" />
                           <div>
                             <div>COD Titik Temu</div>
-                            <span className="text-[10px] text-emerald-600 font-bold">Gratis Ongkir</span>
+                            <span className={`text-[10px] font-bold ${activeMeetupPoints.length === 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                              {activeMeetupPoints.length === 0 ? 'Belum Tersedia' : 'Gratis Ongkir'}
+                            </span>
                           </div>
                         </button>
 

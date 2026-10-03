@@ -1,0 +1,23 @@
+id: case-20261003-cod-checkout-guard-and-zero-dummy-quota
+title: "Penegakan Guard Validasi Titik Temu COD di CartDrawer & Eliminasi Mock Kuota Harian Storefront"
+domain: "checkout-ecommerce-state-integrity"
+severity: "HIGH"
+status: "VERIFIED"
+date_resolved: "2026-10-03"
+
+symptoms:
+  - "Pelanggan dapat melakukan konfirmasi pesanan dengan metode COD_MEETUP_POINT meskipun tidak ada titik temu COD aktif di database atau titik temu tidak terpilih, menghasilkan pesanan tanpa lokasi pertemuan terdefinisi."
+  - "AnnouncementBar dan CapacityWidget menampilkan angka awal kuota harian palsu/hardcoded yang saling kontradiktif (12/20 vs 3/25) sebelum data API selesai dimuat."
+
+root_cause:
+  - "CartDrawer.tsx tidak memiliki guard clause untuk memvalidasi ketersediaan dan keterpilihan selectedMeetup saat fulfillmentType bernilai COD_MEETUP_POINT."
+  - "AnnouncementBar.tsx dan CapacityWidget.tsx menginisialisasi state lokal dengan objek dummy statis daripada membaca konfigurasi aktual dari useSettingsStore."
+
+resolution_pattern:
+  - "Tambahkan guard clause di handleConfirmOrder CartDrawer.tsx untuk menolak submit jika fulfillmentType === 'COD_MEETUP_POINT' dan activeMeetupPoints kosong atau tidak ada selectedMeetup."
+  - "Perbarui tombol selector COD di CartDrawer.tsx untuk menampilkan badge 'Belum Tersedia' saat titik temu COD kosong."
+  - "Hubungkan AnnouncementBar.tsx dan CapacityWidget.tsx ke useSettingsStore (dailyQuota) dan hindari angka pesanan tiruan pada state awal."
+
+verification:
+  - "TypeScript compilation: turbo run type-check lolos 100% pada 3 packages (@chenille/api, @chenille/shared, chenille-flowers-web) dengan 0 error."
+  - "Zero-Dummy verification: Tidak ada angka kuota fiktif yang ditampilkan saat initial load."

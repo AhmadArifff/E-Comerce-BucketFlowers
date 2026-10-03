@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Sparkles, AlertCircle, CheckCircle2, RotateCw } from 'lucide-react';
 import { getApiUrl } from '@/lib/api-client';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 
 interface QuotaData {
   daily_po_limit: number;
@@ -12,10 +13,11 @@ interface QuotaData {
 }
 
 export const CapacityWidget: React.FC = () => {
+  const { dailyQuota } = useSettingsStore();
   const [quota, setQuota] = useState<QuotaData>({
-    daily_po_limit: 25,
-    today_orders_count: 3,
-    po_slots_remaining: 22,
+    daily_po_limit: dailyQuota || 25,
+    today_orders_count: 0,
+    po_slots_remaining: dailyQuota || 25,
     is_quota_full: false,
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);

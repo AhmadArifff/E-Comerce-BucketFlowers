@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Clock, Truck } from 'lucide-react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { getThemeCopy } from '@/lib/theme-copy';
 import { getApiUrl } from '@/lib/api-client';
 
 export const AnnouncementBar: React.FC = () => {
   const { theme } = useThemeStore();
+  const { dailyQuota } = useSettingsStore();
   const [mounted, setMounted] = useState(false);
   const [campaign, setCampaign] = useState<{
     cod_promo_enabled?: boolean;
@@ -19,11 +21,7 @@ export const AnnouncementBar: React.FC = () => {
     orders_today?: number;
     daily_limit?: number;
     remaining_slots?: number;
-  }>({
-    orders_today: 12,
-    daily_limit: 20,
-    remaining_slots: 8,
-  });
+  } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -96,14 +94,20 @@ export const AnnouncementBar: React.FC = () => {
             {campaign?.cod_promo_enabled && campaign.cod_promo_banner_text ? (
               <strong>{campaign.cod_promo_banner_text}</strong>
             ) : (
-              <span>{copy.announcement.quotaTemplate(quota.remaining_slots ?? 5)}</span>
+              <span>
+                {copy.announcement.quotaTemplate(
+                  quota?.remaining_slots ?? dailyQuota ?? 25
+                )}
+              </span>
             )}
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-4 text-[11px] font-bold">
           <div className={bar.badgeClass}>
             <Clock className="w-3 h-3 inline mr-1" />
-            <span>Sisa Kuota: {quota.remaining_slots ?? 8} / {quota.daily_limit ?? 20} Buket</span>
+            <span>
+              Sisa Kuota: {quota?.remaining_slots ?? dailyQuota ?? 25} / {quota?.daily_limit ?? dailyQuota ?? 25} Buket
+            </span>
           </div>
           <span>Bebas Ongkir COD Radius {campaign?.cod_max_radius_km ?? 5} KM UI</span>
         </div>

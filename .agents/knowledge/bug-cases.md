@@ -67,4 +67,18 @@ Daftar kendala masa lalu dan solusi yang telah diverifikasi pada sistem E-Commer
   3. Berikan prop `availableCategories` pada `CategoryFilter.tsx` yang mengekstrak seluruh kategori unik produk.
   4. Perbarui `THEME_COPY_MATRIX` di `theme-copy.ts` dengan menyuntikkan kehangatan, empati nyata, humor mahasiswa pejuang skripsi/wisuda Depok (UI, Gunadarma, PNJ), dan 100% bebas tanda em dash (R-02).
 
+---
+
+## 6. Bug: Validasi Titik Temu COD Tanpa Guard & Mock Kuota Harian Storefront
+- **Gejala**:
+  1. Pelanggan dapat mengonfirmasi pesanan COD saat titik temu COD di database kosong, menghasilkan order tanpa lokasi serah terima.
+  2. `AnnouncementBar` dan `CapacityWidget` menampilkan angka kuota awal fiktif yang saling kontradiktif (12/20 vs 3/25) sebelum data API tiba.
+- **Akar Masalah**:
+  1. `handleConfirmOrder` di `CartDrawer.tsx` tidak memvalidasi `selectedMeetup?.id` saat metode pengiriman `COD_MEETUP_POINT`.
+  2. `AnnouncementBar.tsx` dan `CapacityWidget.tsx` menginisialisasi state dengan hardcoded mock data alih-alih membaca `dailyQuota` dari `useSettingsStore`.
+- **Solusi**:
+  1. Tambahkan guard clause di `CartDrawer.tsx` untuk menolak pesanan jika metode COD dipilih tanpa ketersediaan titik temu.
+  2. Perbarui badge tombol COD menjadi *"Belum Tersedia"* saat titik temu kosong.
+  3. Hubungkan `AnnouncementBar.tsx` dan `CapacityWidget.tsx` ke `useSettingsStore` untuk nilai kuota awal dan eliminasi angka pesanan tiruan.
+
 
