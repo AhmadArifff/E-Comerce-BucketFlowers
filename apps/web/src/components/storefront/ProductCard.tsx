@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { ShoppingBag, Star, Eye, MessageCircle, Clock } from 'lucide-react';
 import type { ExtendedProduct } from '@chenille/shared';
 import { useCartStore } from '@/stores/useCartStore';
@@ -23,6 +24,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
   const copy = getThemeCopy(theme);
   const [isAdding, setIsAdding] = useState(false);
   const [clickCount, setClickCount] = useState(product.clickCount || 0);
+  const [imgSrc, setImgSrc] = useState(
+    product.image || (product as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg'
+  );
+
+  useEffect(() => {
+    setImgSrc(product.image || (product as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg');
+  }, [product.image, (product as any).image_url]);
 
   useEffect(() => {
     if (product.clickCount !== undefined) {
@@ -69,14 +77,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
     >
       {/* Product Image Container */}
       <div className="relative aspect-square w-full overflow-hidden bg-theme-surface-subtle">
-        <img
-          src={product.image || (product as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg'}
+        <Image
+          src={imgSrc}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.src = '/images/products/buket-mawar-merah-velvet.jpg';
-          }}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          onError={() => setImgSrc('/images/products/buket-mawar-merah-velvet.jpg')}
         />
 
         {/* Badge: Best seller / Ready Stock / Low Stock Urgency */}

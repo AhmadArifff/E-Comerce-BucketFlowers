@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   X,
@@ -86,6 +87,37 @@ export const CartDrawer: React.FC = () => {
   const [isCodLoaded, setIsCodLoaded] = useState(false);
   const [courierOptions, setCourierOptions] = useState<any[]>([]);
   const [isLoadingCouriers, setIsLoadingCouriers] = useState(false);
+  const [isUsingFallbackCouriers, setIsUsingFallbackCouriers] = useState(false);
+
+  const FALLBACK_COURIERS = [
+    {
+      courier_name: 'J&T Express',
+      courier_code: 'jnt',
+      courier_service_name: 'EZ Reguler (Tarif Standar)',
+      courier_service_code: 'ez',
+      duration: '1-2 hari',
+      shipment_fee: 12000,
+      etd: '1-2 Hari',
+    },
+    {
+      courier_name: 'SiCepat Ekspres',
+      courier_code: 'sicepat',
+      courier_service_name: 'SIUNTUNG (Tarif Standar)',
+      courier_service_code: 'siuntung',
+      duration: '1-2 hari',
+      shipment_fee: 11000,
+      etd: '1-2 Hari',
+    },
+    {
+      courier_name: 'JNE Express',
+      courier_code: 'jne',
+      courier_service_name: 'REG Reguler (Tarif Standar)',
+      courier_service_code: 'reg',
+      duration: '2-3 hari',
+      shipment_fee: 13000,
+      etd: '2-3 Hari',
+    },
+  ];
 
   const [campaignConfig, setCampaignConfig] = useState<{
     cod_promo_enabled?: boolean;
@@ -117,7 +149,7 @@ export const CartDrawer: React.FC = () => {
       .catch(() => {});
   }, []);
 
-  // Fetch live courier rates from Biteship Logistics API
+  // Fetch live courier rates from Biteship Logistics API with fallback
   useEffect(() => {
     if (fulfillmentType === 'COURIER_EXPEDITION' && courierOptions.length === 0) {
       setIsLoadingCouriers(true);
@@ -140,12 +172,26 @@ export const CartDrawer: React.FC = () => {
         .then((res) => {
           if (res.success && res.data?.length > 0) {
             setCourierOptions(res.data);
+            setIsUsingFallbackCouriers(false);
             if (!selectedCourier) {
               setSelectedCourier(res.data[0]);
             }
+          } else {
+            setCourierOptions(FALLBACK_COURIERS);
+            setIsUsingFallbackCouriers(true);
+            if (!selectedCourier) {
+              setSelectedCourier(FALLBACK_COURIERS[0]);
+            }
           }
         })
-        .catch((err) => console.warn('Could not fetch courier rates:', err))
+        .catch((err) => {
+          console.warn('Could not fetch courier rates, using standard fallback:', err);
+          setCourierOptions(FALLBACK_COURIERS);
+          setIsUsingFallbackCouriers(true);
+          if (!selectedCourier) {
+            setSelectedCourier(FALLBACK_COURIERS[0]);
+          }
+        })
         .finally(() => setIsLoadingCouriers(false));
     }
   }, [fulfillmentType, courierOptions.length, selectedCourier, setSelectedCourier, logisticsConfig]);
@@ -468,11 +514,11 @@ export const CartDrawer: React.FC = () => {
           },
           onError: () => {
             setIsCheckingOut(false);
-            showMagicToast('Pembayaran Gagal ⚠️', 'Transaksi dibatalkan atau waktu habis.', '⚠️');
+            showMagicToast('Pembayaran Terkendala ⚠️', 'Koneksi Midtrans terhambat. Silakan gunakan Transfer BCA Manual atau COD.', '⚠️');
           },
           onClose: () => {
             setIsCheckingOut(false);
-            showMagicToast('Jendela Ditutup', 'Pembayaran Midtrans belum selesai.', 'ℹ️');
+            showMagicToast('Jendela Ditutup 💳', 'Anda dapat mencoba lagi atau beralih ke Transfer BCA Manual / COD.', 'ℹ️');
           },
         });
         return;
@@ -596,14 +642,15 @@ export const CartDrawer: React.FC = () => {
                         key={item.product.id}
                         className="flex gap-3 p-3 rounded-2xl bg-theme-surface-subtle border border-theme-border"
                       >
-                        <img
-                          src={item.product.image || (item.product as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg'}
-                          alt={item.product.name}
-                          className="w-16 h-16 rounded-xl object-cover border border-theme-border flex-shrink-0"
-                          onError={(e) => {
-                            e.currentTarget.src = '/images/products/buket-mawar-merah-velvet.jpg';
-                          }}
-                        />
+                        <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-theme-border flex-shrink-0 bg-stone-100">
+                          <Image
+                            src={item.product.image || (item.product as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg'}
+                            alt={item.product.name}
+                            fill
+                            sizes="64px"
+                            className="object-cover"
+                          />
+                        </div>
                         <div className="flex-1 min-w-0 flex flex-col justify-between">
                           <div className="flex items-start justify-between gap-2">
                             <h4 className="text-xs font-bold text-stone-800 truncate">
@@ -707,12 +754,19 @@ export const CartDrawer: React.FC = () => {
                         <div className="pt-2 space-y-2">
                           <div className="flex items-center justify-between">
                             <label className="text-[11px] font-semibold text-stone-600 block">
-                              Pilih Layanan Ekspedisi (Biteship API):
+                              Pilih Layanan Ekspedisi {isUsingFallbackCouriers ? '(Tarif Standar)' : '(Biteship API)'}:
                             </label>
                             <span className="text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
                               Asal: Margonda Depok
                             </span>
                           </div>
+
+                          {isUsingFallbackCouriers && (
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[10px] font-bold">
+                              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 text-amber-600" />
+                              <span>Tarif kurir standar aktif (koneksi Biteship dialihkan otomatis)</span>
+                            </div>
+                          )}
 
                           {isLoadingCouriers ? (
                             <div className="p-4 bg-stone-50 border border-stone-200 rounded-2xl text-center text-xs text-stone-500 animate-pulse">

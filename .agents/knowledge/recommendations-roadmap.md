@@ -111,12 +111,27 @@
 
 ---
 
-## 5. Prioritas 5: Optimasi Performa Mobile & Resiliensi Error Boundary
-*Terkait: PRD Seksi 38 & 41 | Komponen: `apps/web/src/`*
+## 5. Prioritas 5: Optimasi Performa Mobile & Resiliensi Error Boundary [COMPLETED - VERIFIED PASS]
+*Terkait: PRD Seksi 38 & 41 | Komponen: `next.config.ts`, `ProductCard.tsx`, `ProductDetailModal.tsx`, `CartDrawer.tsx`*
 
-### Spesifikasi Teknis Implementasi
-1. **Migrasi `next/image`**:
-   - Ganti elemen `<img>` pada etalase produk dengan komponen `Image` dari `next/image`.
-   - Manfaatkan WebP/AVIF otomatis dan lazy-loading native untuk menghemat kuota mobile mahasiswa.
-2. **Third-Party API Graceful Degradation**:
-   - Bungkus komponen pemanggilan kurir Biteship dan Midtrans dengan fallback lokal (transfer bank BCA dan COD) jika koneksi API pihak ketiga mengalami *timeout*.
+### Implementasi Lengkap (Commit `feat(perf)`):
+1. **Migrasi `next/image` dengan Wildcard HTTPS Remote Pattern**:
+   - `apps/web/next.config.ts`:
+     - Menambahkan konfigurasi `remotePatterns: [{ protocol: 'https', hostname: '**' }]` serta format `['image/avif', 'image/webp']` guna memastikan kompresi otomatis modern bekerja mulus pada seluruh foto produk Supabase Storage maupun CDN remote tanpa error domain mismatch.
+   - `apps/web/src/components/storefront/ProductCard.tsx`:
+     - Migrasi elemen `<img>` etalase ke komponen `Image` dari `next/image` dengan properti `fill`, `sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"`, `className="object-cover group-hover:scale-105 transition-transform duration-500"`, dan state fallback `imgSrc` jika gambar gagal dimuat.
+   - `apps/web/src/components/storefront/ProductDetailModal.tsx`:
+     - Migrasi modal detail ke `Image` dengan `fill`, `priority={true}` (LCP optimization), `sizes="(max-width: 1024px) 100vw, 50vw"`, dan fallback state `modalImgSrc`.
+   - `apps/web/src/components/storefront/CartDrawer.tsx`:
+     - Thumbnail keranjang belanja berukuran 64x64px dimigrasikan ke `next/image` dengan `fill` dan `sizes="64px"` untuk rendering hemat kuota mobile.
+2. **Third-Party API Graceful Degradation & Resiliensi Error Boundary**:
+   - **Logistik Biteship**:
+     - `apps/web/src/components/storefront/CartDrawer.tsx`: Disediakan fallback otomatis `FALLBACK_COURIERS` standar area Depok (J&T Regular Rp 9.000, SiCepat Reg Rp 10.000, JNE Reg Rp 10.000) yang langsung aktif tanpa menghentikan proses belanja jika API Biteship offline, merespon kosong, atau terjadi network timeout.
+     - Ditambahkan badge notifikasi visual: `"⚡ Tarif kurir standar aktif (koneksi Biteship dialihkan otomatis)"`.
+   - **Pembayaran Midtrans**:
+     - Ditambahkan penanganan error tangguh dan pesan panduan ramah saat jendela Midtrans Snap ditutup oleh pembeli atau mengalami kegagalan teknis, mengarahkan pembeli dengan mulus untuk memilih metode transfer manual Bank BCA atau COD 6 titik temu kampus.
+- **Verifikasi Kualitas**:
+   - TypeScript Compilation: `turbo run type-check --force` 100% lolos (0 error di 3 packages: `@chenille/shared`, `@chenille/api`, `chenille-flowers-web`).
+   - Test Suite: `npm run test --workspace=@chenille/api` 23 test files, 145/145 passing (100% pass).
+   - Seluruh 5 dari 5 Prioritas Roadmap Rekomendasi kini telah selesai 100% (`COMPLETED - VERIFIED PASS`).
+

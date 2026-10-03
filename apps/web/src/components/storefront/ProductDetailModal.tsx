@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { X, Star, Sparkles, ShoppingBag, Clock, ShieldCheck, Heart, Check, Plus, Minus, MessageCircle, Flame } from 'lucide-react';
 import { ATELIER_CONFIG, type ExtendedProduct } from '@chenille/shared';
 import { useCartStore } from '@/stores/useCartStore';
@@ -25,6 +26,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [greetingCardText, setGreetingCardText] = useState('');
   const [isAddedSuccess, setIsAddedSuccess] = useState(false);
   const [isProcessingBuy, setIsProcessingBuy] = useState(false);
+  const [modalImgSrc, setModalImgSrc] = useState(
+    product?.image || (product as any)?.image_url || '/images/products/buket-mawar-merah-velvet.jpg'
+  );
+
+  useEffect(() => {
+    if (product) {
+      setModalImgSrc(product.image || (product as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg');
+    }
+  }, [product]);
 
   if (!isOpen || !product) return null;
 
@@ -98,13 +108,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2">
           {/* Image Side */}
           <div className="relative aspect-square sm:aspect-auto sm:h-full bg-theme-surface-subtle overflow-hidden">
-            <img
-              src={product.image || (product as any).image_url || '/images/products/buket-mawar-merah-velvet.jpg'}
+            <Image
+              src={modalImgSrc}
               alt={product.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.currentTarget.src = '/images/products/buket-mawar-merah-velvet.jpg';
-              }}
+              fill
+              priority
+              sizes="(max-width: 640px) 100vw, 50vw"
+              className="object-cover"
+              onError={() => setModalImgSrc('/images/products/buket-mawar-merah-velvet.jpg')}
             />
             {product.badge && (
               <div className="absolute top-4 left-4 badge-atelier text-[10px] font-black uppercase tracking-wider px-2.5 py-1 shadow-md">
