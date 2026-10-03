@@ -332,11 +332,29 @@ export async function retrieveGroundingContext(
 /**
  * System prompt strictly bounding Gemini to Chenille Florist domain with anti-jailbreak guardrails
  */
-function buildSystemInstruction(): string {
-  return `Anda adalah Asisten AI Resmi untuk Staf Florist Chenille Atelier Depok (spesialis buket bunga kawat bulu / chenille pipe cleaner handmade estetik di Beji, Depok).
+/**
+ * System prompt strictly bounding Gemini to Chenille Florist domain with anti-jailbreak guardrails
+ * and customer service persona DNA
+ */
+export function buildSystemInstruction(hasPriorGreeting: boolean): string {
+  return `Anda adalah Asisten AI Resmi untuk Staf Customer Service Chenille Atelier Depok (spesialis buket bunga kawat bulu / chenille pipe cleaner handmade estetik di Beji, Depok).
 
 TUGAS UTAMA:
-Meracik draf balasan pesan yang ramah, santun, hangat, empatik, dan 100% akurat berdasarkan FAKTA DATABASE yang disediakan. Draf ini akan ditinjau oleh staf florist sebelum dikirim ke pelanggan.
+Meracik draf balasan pesan WhatsApp yang SANGAT PROFESIONAL, RAMAH, EMPATIK, CERDAS, dan 100% AKURAT berdasarkan FAKTA DATABASE yang disediakan. Draf ini akan ditinjau oleh staf florist sebelum dikirim ke pelanggan.
+
+ATURAN STATUS SAPAAN (MULTI-TURN CHAT CONTEXT):
+${
+  hasPriorGreeting
+    ? `⚠️ STATUS SAPAAN SAAT INI: PERCAKAPAN SUDAH BERLANGSUNG (SUDAH DISAPA SEBELUMNYA).
+- DILARANG KERAS MENGULANG SALAM PEMBUKA FORMAL 2 KALI!
+- JANGAN katakan lagi: "Halo Kak [Nama], terima kasih sudah menghubungi Chenille Atelier Florist Depok. Ada yang bisa kami bantu hari ini?".
+- LANGSUNG respon dan jawab pertanyaan pelanggan secara to-the-point, santun, dan hangat dengan sapaan akrab (contoh: "Tentu bisa banget Kak [Nama] 😊...", "Bisa banget kak! Untuk...", "Siap Kak [Nama] 😊...").`
+    : `⚠️ STATUS SAPAAN SAAT INI: PERCAKAPAN BARU DIMULAI (PESAN PERTAMA).
+- Berikan salam pembuka yang ramah dan hangat (contoh: "Halo Kak [Nama] 😊 Terima kasih sudah menghubungi Chenille Atelier!").`
+}
+
+ATURAN PERTANYAAN PENUTUP PROAKTIF (PROACTIVE CLOSING):
+- Di akhir balasan, SELALU tutup dengan pertanyaan penutup yang ramah, sopan, dan proaktif selayaknya customer service profesional (contoh: "Apakah ada hal lain yang ingin Kakak tanyakan atau perlu kami bantu siapkan? 😊", "Ada request khusus untuk kartu ucapannya nanti kak? 🥰", "Apakah pilihan warna ini sudah sesuai dengan selera Kakak? 🙏").
 
 ATURAN KEAMANAN & BATASAN KETAT (AI GUARDRAILS):
 1. BATAS DOMAIN: Anda HANYA menjawab seputar produk buket bunga kawat bulu, status pesanan/invoice, kustomisasi studio, pengiriman kurir/COD kampus Depok (UI, Gunadarma, PNJ), jam operasional, dan garansi anti-patah 100%.
@@ -345,23 +363,33 @@ ATURAN KEAMANAN & BATASAN KETAT (AI GUARDRAILS):
    - HANYA sebutkan nomor invoice, status tahap pengerjaan, atau nomor resi berdasarkan data [DATA DATABASE NYATA] di bawah.
    - Jika pelanggan menanyakan status pesanan namun nomor invoice tidak ditemukan pada data database, katakan dengan sopan bahwa data belum tercatat di sistem dan mohon dicek kembali nomor invoice-nya. DILARANG MENGARANG STATUS!
 4. DATA REDACTION: JANGAN PERNAH membocorkan rahasia internal seperti harga modal HPP bahan baku, kontak supplier grosir, password, atau token API.
-5. ATURAN EMOTICON & KARAKTER (SANGAT PENTING):
-   - PENGECUALIAN EMOTICON: HANYA BOLEH menggunakan EMOTICON WAJAH (Face Emoticons) seperti 😊, 🥰, 🤗, 👋, 😄, 😉, 🙏 untuk merefleksikan emosi ramah staf manusia (cukup 1-2 emoticon per pesan).
-   - DILARANG KERAS menggunakan simbol non-wajah seperti bunga (🌸, 💐), petir (⚡), bintang (✨), jam pasir (⏳), paket (📦), kartu (💳), atau tanda seru merah.
-   - HINDARI FORMATTING ROBOTIK: DILARANG menggunakan bullet point simbol aneh (seperti •) atau penebalan asteris berlebihan (*kata*). Tulis secara mengalir, santai, dan alami seperti staf admin manusia yang sedang mengetik pesan WhatsApp.
-6. PENYEBUTAN NAMA PELANGGAN:
-   - Sapa nama panggilan pelanggan secara bersih (misal: 'Halo Kak Annisa 😊').
-   - JANGAN PERNAH menyertakan teks dalam kurung label akun seperti '(Member Mahasiswi UI)' atau '(Tamu)'.
-7. FORMAT OUTPUT: Berikan teks balasan LANGSUNG tanpa tanda kutip pembungkus atau kata pengantar seperti "Berikut adalah draf balasan:".`;
+
+PENGETAHUAN FAQ & KEBIJAKAN ATELIER:
+- GARANSI ANTI-PATAH & RUSAK PENGIRIMAN 100%: Setiap buket memiliki garansi 100%. Jika buket rusak atau patah saat pengiriman, pelanggan bisa klaim penggantian buket baru secara gratis cukup dengan mengirimkan foto bukti buket rusak saat pertama kali diterima.
+- KUSTOMISASI CUSTOM STUDIO: Pelanggan bisa kustomisasi warna kawat bulu (pastel, bold, gradasi), jumlah tangkai, kartu ucapan gratis, dan jenis kertas wrapping (korean cellophane/kraft) langsung di menu Custom Studio di web.
+- PENGAMBILAN COD KAMPUS DEPOK: 6 titik temu resmi gratis ongkir di sekitar kampus Depok (Vokasi UI, FISIP UI, Balairung UI, Gunadarma Kampus D/E, PNJ).
+- READY STOCK VS PRE-ORDER: Ready stock dikirim di hari yang sama jika pesan sebelum jam 15:00 WIB. Pre-order pengerjaan 1-3 hari kerja.
+
+ATURAN EMOTICON & KARAKTER (SANGAT PENTING):
+- PENGECUALIAN EMOTICON: HANYA BOLEH menggunakan EMOTICON WAJAH (Face Emoticons) seperti 😊, 🥰, 🤗, 👋, 😄, 😉, 🙏 untuk merefleksikan emosi ramah staf manusia (cukup 1-2 emoticon per pesan).
+- DILARANG KERAS menggunakan simbol non-wajah seperti bunga (🌸, 💐), petir (⚡), bintang (✨), jam pasir (⏳), paket (📦), kartu (💳), atau tanda seru merah.
+- HINDARI FORMATTING ROBOTIK: DILARANG menggunakan bullet point simbol aneh (seperti •) atau penebalan asteris berlebihan (*kata*). Tulis secara mengalir, santai, dan alami seperti staf admin manusia yang sedang mengetik pesan WhatsApp.
+
+PENYEBUTAN NAMA PELANGGAN:
+- Sapa nama panggilan pelanggan secara bersih (misal: 'Kak Annisa').
+- JANGAN PERNAH menyertakan teks dalam kurung label akun seperti '(Member Mahasiswi UI)' atau '(Tamu)'.
+
+FORMAT OUTPUT: Berikan teks balasan LANGSUNG tanpa tanda kutip pembungkus atau kata pengantar seperti "Berikut adalah draf balasan:".`;
 }
 
 /**
- * Compose user prompt with retrieved database context
+ * Compose user prompt with retrieved database context and multi-turn chat history
  */
-function buildUserPrompt(
+export function buildUserPrompt(
   customerMessage: string,
   recentMessages: Array<{ sender: string; text: string }>,
-  ctx: GroundingContext
+  ctx: GroundingContext,
+  hasPriorGreeting: boolean
 ): string {
   let dbContextStr = `=== DATA DATABASE NYATA ATELIER ===\n`;
   dbContextStr += `Nama Pelanggan: ${ctx.customerName}\n`;
@@ -405,56 +433,114 @@ function buildUserPrompt(
     }
   }
 
-  let chatHistoryStr = `=== RIWAYAT CHAT TERAKHIR ===\n`;
-  for (const m of recentMessages) {
-    const senderLabel = m.sender === 'CUSTOMER' ? 'Pelanggan' : m.sender === 'BOT' ? 'Bot' : 'Florist';
-    chatHistoryStr += `${senderLabel}: ${m.text}\n`;
+  let chatHistoryStr = `=== RIWAYAT PERCAKAPAN TERAKHIR ===\n`;
+  if (recentMessages.length === 0) {
+    chatHistoryStr += `(Belum ada pesan sebelumnya, ini percakapan baru)\n`;
+  } else {
+    for (const m of recentMessages) {
+      const senderLabel =
+        m.sender === 'CUSTOMER' ? 'Pelanggan' : m.sender === 'BOT' ? 'Bot Toko' : 'Staf Florist';
+      chatHistoryStr += `[${senderLabel}]: ${m.text}\n`;
+    }
   }
 
-  return `${dbContextStr}\n${chatHistoryStr}\n=== PESAN TERAKHIR PELANGGAN YANG HARUS DIBALAS ===\n"${customerMessage}"\n\nBuatlah draf balasan ramah yang siap ditinjau staf florist (gunakan HANYA emoticon wajah seperti 😊 atau 🙏, tanpa simbol bunga/petir/bintang):`;
+  return `${dbContextStr}
+${chatHistoryStr}
+=== STATUS KONTEKS SESI INI ===
+- Riwayat Sebelumnya: ${recentMessages.length} pesan
+- Sudah Pernah Disapa Florist/Bot: ${hasPriorGreeting ? 'YA (Dilarang mengulang salam pembuka formal, langsung jawab to-the-point)' : 'TIDAK (Gunakan salam pembuka hangat)'}
+
+=== PESAN TERAKHIR PELANGGAN YANG HARUS DIBALAS ===
+"${customerMessage}"
+
+Buatlah draf balasan ramah yang siap ditinjau staf florist (gunakan HANYA emoticon wajah seperti 😊 atau 🙏, tanpa simbol bunga/petir/bintang, dan sertakan pertanyaan penutup proaktif):`;
 }
 
 /**
  * Deterministic smart grounded template generator for simulation / fallback mode
  */
-function generateDeterministicFallback(
+export function generateDeterministicFallback(
   customerMessage: string,
-  ctx: GroundingContext
+  ctx: GroundingContext,
+  hasPriorGreeting = false
 ): string {
   const name = ctx.customerName || 'Kak';
+  const lowerMsg = (customerMessage || '').toLowerCase();
 
-  // 1. Order status query
+  // 1. Warranty / Claim / Damage query
+  const isWarrantyQuery =
+    lowerMsg.includes('rusak') ||
+    lowerMsg.includes('claim') ||
+    lowerMsg.includes('klaim') ||
+    lowerMsg.includes('garansi') ||
+    lowerMsg.includes('patah') ||
+    lowerMsg.includes('ganti');
+
+  if (isWarrantyQuery) {
+    const opening = hasPriorGreeting
+      ? `Tentu bisa banget Kak ${name}! 😊\n\n`
+      : `Halo Kak ${name} 😊 Terima kasih sudah menghubungi Chenille Atelier.\n\n`;
+
+    return sanitizeDraftReply(
+      opening +
+      `Di Chenille Atelier, kami memberikan Garansi Anti-Patah & Rusak Pengiriman 100% untuk semua buket kawat bulu kami. Jika buket yang Kakak terima mengalami kerusakan saat pengiriman, Kakak bisa langsung klaim penggantian buket baru secara gratis cukup dengan mengirimkan foto bukti buketnya saat pertama kali diterima ya kak.\n\n` +
+      `Apakah ada buket atau pesanan tertentu yang ingin kami bantu cek status garansinya kak? 🙏`
+    );
+  }
+
+  // 2. Custom Studio / Warna / Wrapping query
+  const isCustomQuery =
+    lowerMsg.includes('kustom') ||
+    lowerMsg.includes('custom') ||
+    lowerMsg.includes('warna') ||
+    lowerMsg.includes('wrapping') ||
+    lowerMsg.includes('request');
+
+  if (isCustomQuery) {
+    const opening = hasPriorGreeting
+      ? `Bisa banget Kak ${name}! 😊\n\n`
+      : `Halo Kak ${name} 😊 Terima kasih sudah tanya ke Chenille Atelier!\n\n`;
+
+    return sanitizeDraftReply(
+      opening +
+      `Untuk buket bunga kawat bulu kami, Kakak bebas memilih kombinasi warna kawat bulu dan kertas wrapping sesuai keinginan di menu Custom Studio di web kami. Kakak juga bisa menambahkan kartu ucapan gratis lho!\n\n` +
+      `Ada tema warna khusus atau buket favorit yang ingin Kakak konsultasikan bersama staf kami? 🥰`
+    );
+  }
+
+  // 3. Order status query
   if (ctx.order) {
+    const opening = hasPriorGreeting
+      ? `Untuk pesanan Kak ${name} dengan invoice ${ctx.order.invoice_number} (${ctx.order.items_summary}), saat ini statusnya: ${ctx.order.step_title} 😊\n\n`
+      : `Halo Kak ${name} 😊\n\nPesanan Kakak dengan invoice ${ctx.order.invoice_number} (${ctx.order.items_summary}) saat ini statusnya: ${ctx.order.step_title}.\n\n`;
+
     const statusNote = ctx.order.latest_step_description
       ? `Catatan tim perangkai: ${ctx.order.latest_step_description}.\n\n`
       : '';
     const deliveryDetail =
       ctx.order.delivery_method === 'COD_MEETUP'
-        ? `Pengambilan via COD di ${ctx.order.cod_location || 'titik temu kampus Depok'}. Nanti staf kami akan kabari begitu buket sudah siap diambil ya kak 😊`
+        ? `Pengambilan via COD di ${ctx.order.cod_location || 'titik temu kampus Depok'}. Nanti staf kami akan kabari begitu buket sudah siap diambil ya kak 😊\n\nApakah waktu pengambilannya sudah sesuai dengan jadwal Kakak?`
         : ctx.order.tracking_number
-        ? `Nomor resi pengirimannya: ${ctx.order.tracking_number}. Kakak bisa pantau perjalanannya di menu lacak pesanan ya 😊`
-        : `Pesanan sedang kami siapkan sebaik mungkin dengan standar anti-patah 100%. Ada kartu ucapan yang mau ditambahkan kak? 😊`;
+        ? `Nomor resi pengirimannya: ${ctx.order.tracking_number}. Kakak bisa pantau perjalanannya di menu lacak pesanan ya 😊\n\nAda hal lain yang perlu kami bantu cek seputar pengirimannya kak?`
+        : `Pesanan sedang kami siapkan sebaik mungkin dengan standar anti-patah 100% kak. Apakah ada kartu ucapan yang mau ditambahkan? 😊`;
 
-    return sanitizeDraftReply(
-      `Halo Kak ${name} 😊\n\n` +
-      `Pesanan Kakak dengan invoice ${ctx.order.invoice_number} (${ctx.order.items_summary}) saat ini statusnya: ${ctx.order.step_title}.\n\n` +
-      statusNote +
-      deliveryDetail
-    );
+    return sanitizeDraftReply(opening + statusNote + deliveryDetail);
   }
 
-  // 2. COD / Location query
+  // 4. COD / Location query
   if (ctx.codPoints && ctx.codPoints.length > 0) {
     const spots = ctx.codPoints.map((p) => `- ${p.name}: ${p.full_address}`).join('\n');
+    const opening = hasPriorGreeting
+      ? `Untuk pengambilan langsung (COD) gratis ongkir di sekitar kampus Depok, berikut titik temu resminya ya Kak ${name} 😊:\n\n`
+      : `Halo Kak ${name} 😊\n\nUntuk pengambilan langsung (COD) gratis ongkir, Chenille Atelier Florist menyediakan titik temu resmi di sekitar kampus Depok:\n\n`;
+
     return sanitizeDraftReply(
-      `Halo Kak ${name} 😊\n\n` +
-      `Untuk pengambilan langsung (COD) gratis ongkir, Chenille Atelier Florist menyediakan titik temu resmi di sekitar kampus Depok:\n\n` +
-      `${spots}\n\n` +
-      `Pengambilan COD tidak dikenakan biaya ongkir sama sekali ya kak. Kakak bisa langsung pilih titik temu yang paling dekat saat checkout di web 🙏`
+      `${opening}${spots}\n\n` +
+      `Pengambilan COD tidak dikenakan biaya ongkir sama sekali ya kak. Apakah titik temu tersebut dekat dengan lokasi Kakak? Kami siap bantu koordinasikan ya 🙏`
     );
   }
 
-  // 3. Products / Bouquet query
+  // 5. Products / Bouquet query
   if (ctx.products && ctx.products.length > 0) {
     const topProds = ctx.products
       .slice(0, 3)
@@ -463,15 +549,24 @@ function generateDeterministicFallback(
           `- ${p.name} (Rp ${p.price.toLocaleString('id-ID')}, ${p.is_ready_stock ? 'Ready Stock' : 'PO ' + p.po_lead_days + ' hari'})`
       )
       .join('\n');
+
+    const opening = hasPriorGreeting
+      ? `Untuk rekomendasi buket favorit yang sedang tersedia di Chenille Atelier ada:\n\n`
+      : `Halo Kak ${name} 😊\n\nTerima kasih sudah tanya ke Chenille Atelier! Untuk beberapa buket terpopuler kami yang sedang tersedia ada:\n\n`;
+
     return sanitizeDraftReply(
-      `Halo Kak ${name} 😊\n\n` +
-      `Terima kasih sudah tanya ke Chenille Atelier! Untuk beberapa buket terpopuler kami yang sedang tersedia ada:\n\n` +
-      `${topProds}\n\n` +
-      `Semua buket dibuat handmade kawat bulu berkualitas tinggi dengan garansi anti-patah 100% kak. Kakak juga bisa request warna kawat dan kertas wrapping di menu Custom Studio ya 😊`
+      `${opening}${topProds}\n\n` +
+      `Semua buket dibuat handmade kawat bulu berkualitas tinggi dengan garansi anti-patah 100% kak. Ada model buket yang paling Kakak sukai di antara pilihan di atas? 🥰`
     );
   }
 
-  // 4. General polite assistant fallback
+  // 6. General polite assistant fallback
+  if (hasPriorGreeting) {
+    return sanitizeDraftReply(
+      `Iya Kak ${name} 😊 Ada yang bisa staf florist kami bantu lagi seputar pilihan buket atau pesanan Kakak? Kami siap bantu dengan senang hati ya 🙏`
+    );
+  }
+
   return sanitizeDraftReply(
     `Halo Kak ${name} 😊 Terima kasih sudah menghubungi Chenille Atelier Florist Depok.\n\n` +
     `Ada yang bisa staf florist kami bantu hari ini? Kakak bisa tanya ketersediaan buket ready stock, request kustomisasi kawat bulu, atau cek status pesanan buket Kakak. Kami siap bantu dengan senang hati ya 🙏`
@@ -485,9 +580,9 @@ export async function generateAiChatDraft(
   sessionId: string,
   customerMessageOverride?: string
 ): Promise<AiDraftResult> {
-  // 1. Fetch recent messages in session
+  // 1. Fetch recent messages in session (up to 12 for rich conversational context)
   const msgsRes = await pool.query(
-    `SELECT sender, text, sent_at FROM chat_messages WHERE session_id = $1 ORDER BY sent_at DESC LIMIT 6;`,
+    `SELECT sender, text, sent_at FROM chat_messages WHERE session_id = $1 ORDER BY sent_at DESC LIMIT 12;`,
     [sessionId]
   );
 
@@ -496,6 +591,22 @@ export async function generateAiChatDraft(
     sender: r.sender,
     text: r.text,
   }));
+
+  // Detect whether a greeting has already taken place in this conversation thread
+  const hasPriorGreeting =
+    recentMessages.some((m) => {
+      const senderUpper = (m.sender || '').toUpperCase();
+      if (senderUpper === 'FLORIST' || senderUpper === 'BOT') {
+        const lower = (m.text || '').toLowerCase();
+        return (
+          lower.includes('halo') ||
+          lower.includes('selamat') ||
+          lower.includes('terima kasih') ||
+          lower.includes('hai')
+        );
+      }
+      return false;
+    }) || recentMessages.length >= 2;
 
   // Identify last customer message
   const resolvedCustomerMessage: string =
@@ -508,13 +619,17 @@ export async function generateAiChatDraft(
 
   // 3. Check Gemini API Key configuration
   const apiKey = (process.env.GEMINI_API_KEY || '').trim();
-  const model = (process.env.GEMINI_MODEL || 'gemini-1.5-flash').trim();
+  const configuredModel = (process.env.GEMINI_MODEL || 'gemini-3.5-flash').trim();
 
   const isKeyConfigured = apiKey.length >= 20 && !apiKey.startsWith('AIzaSy-xxx');
 
   // If no API key or in test/simulation mode
   if (!isKeyConfigured) {
-    const fallbackText = generateDeterministicFallback(resolvedCustomerMessage, groundingContext);
+    const fallbackText = generateDeterministicFallback(
+      resolvedCustomerMessage,
+      groundingContext,
+      hasPriorGreeting
+    );
     return {
       draftText: fallbackText,
       sourcesUsed: groundingContext.sourcesUsed,
@@ -524,63 +639,72 @@ export async function generateAiChatDraft(
     };
   }
 
-  // 4. Call Google Gemini API
-  try {
-    const systemPrompt = buildSystemInstruction();
-    const userPrompt = buildUserPrompt(resolvedCustomerMessage, recentMessages, groundingContext);
+  // 4. Candidate models cascade for high resilience (auto-recovery from 404 / 503)
+  const candidateModels = Array.from(
+    new Set([
+      configuredModel,
+      'gemini-3.5-flash',
+      'gemini-3.7-flash',
+      'gemini-flash-latest',
+      'gemini-3.1-flash-lite',
+    ])
+  );
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const systemPrompt = buildSystemInstruction(hasPriorGreeting);
+  const userPrompt = buildUserPrompt(
+    resolvedCustomerMessage,
+    recentMessages,
+    groundingContext,
+    hasPriorGreeting
+  );
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: systemPrompt }],
-        },
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: userPrompt }],
+  let rawGeneratedText: string | null = null;
+  let activeModelUsed = configuredModel;
+
+  for (const modelToTry of candidateModels) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${apiKey}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemPrompt }],
           },
-        ],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 800,
-        },
-      }),
-    });
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: userPrompt }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 800,
+          },
+        }),
+      });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.warn(`[AI Assistant] Gemini API returned HTTP ${response.status}:`, errText);
-      const fallbackText = generateDeterministicFallback(resolvedCustomerMessage, groundingContext);
-      return {
-        draftText: fallbackText,
-        sourcesUsed: groundingContext.sourcesUsed,
-        isSimulation: true,
-        orderRef: groundingContext.order?.invoice_number || null,
-        modelUsed: `${model} (Fallback due to HTTP ${response.status})`,
-      };
+      if (response.ok) {
+        const data: any = await response.json();
+        const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (candidateText && candidateText.trim().length > 0) {
+          rawGeneratedText = candidateText;
+          activeModelUsed = modelToTry;
+          break; // Model responded successfully!
+        }
+      } else {
+        const errText = await response.text();
+        console.warn(`[AI Assistant] Model ${modelToTry} returned HTTP ${response.status}:`, errText.substring(0, 120));
+      }
+    } catch (err: any) {
+      console.warn(`[AI Assistant] Error calling model ${modelToTry}:`, err.message);
     }
+  }
 
-    const data: any = await response.json();
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!rawText) {
-      console.warn('[AI Assistant] Gemini returned empty candidate text');
-      const fallbackText = generateDeterministicFallback(resolvedCustomerMessage, groundingContext);
-      return {
-        draftText: fallbackText,
-        sourcesUsed: groundingContext.sourcesUsed,
-        isSimulation: true,
-        orderRef: groundingContext.order?.invoice_number || null,
-        modelUsed: `${model} (Empty Candidate Fallback)`,
-      };
-    }
-
-    // Clean up response text and enforce face-emoticon and natural formatting rule
-    const cleanText = rawText
+  // If Gemini produced text
+  if (rawGeneratedText) {
+    const cleanText = rawGeneratedText
       .replace(/^```[a-z]*\n/i, '')
       .replace(/\n```$/i, '')
       .trim();
@@ -592,18 +716,22 @@ export async function generateAiChatDraft(
       sourcesUsed: groundingContext.sourcesUsed,
       isSimulation: false,
       orderRef: groundingContext.order?.invoice_number || null,
-      modelUsed: model,
-    };
-  } catch (error: any) {
-    console.error('[AI Assistant] Exception calling Gemini API:', error);
-    const fallbackText = generateDeterministicFallback(resolvedCustomerMessage, groundingContext);
-    return {
-      draftText: fallbackText,
-      sourcesUsed: groundingContext.sourcesUsed,
-      isSimulation: true,
-      orderRef: groundingContext.order?.invoice_number || null,
-      modelUsed: `${model} (Exception Fallback: ${error.message})`,
+      modelUsed: activeModelUsed,
     };
   }
+
+  // If all Gemini calls failed or returned empty, graceful fallback to smart template
+  const fallbackText = generateDeterministicFallback(
+    resolvedCustomerMessage,
+    groundingContext,
+    hasPriorGreeting
+  );
+  return {
+    draftText: fallbackText,
+    sourcesUsed: groundingContext.sourcesUsed,
+    isSimulation: true,
+    orderRef: groundingContext.order?.invoice_number || null,
+    modelUsed: `${configuredModel} (Fallback Mode)`,
+  };
 }
 

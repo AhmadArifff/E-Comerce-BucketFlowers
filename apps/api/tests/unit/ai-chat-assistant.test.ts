@@ -5,6 +5,8 @@ import {
   sanitizeDraftReply,
   generateAiChatDraft,
   retrieveGroundingContext,
+  generateDeterministicFallback,
+  buildSystemInstruction,
 } from '../../src/services/ai-chat-assistant.service.js';
 
 describe('AI Chat Assistant Service (Gemini CS Copilot)', () => {
@@ -138,6 +140,58 @@ describe('AI Chat Assistant Service (Gemini CS Copilot)', () => {
       expect(typeof draftResult.draftText).toBe('string');
       expect(draftResult.draftText).toMatch(/(😊|🙏|🥰|🤗|👋)/);
       expect(draftResult.draftText).not.toContain('🌸');
+    });
+
+    it('should not repeat opening greeting when conversation is already ongoing (Single Greeting Rule)', () => {
+      const fakeCtx = {
+        customerName: 'Annisa',
+        storeInfo: { store_name: 'Chenille', is_maintenance: false },
+        sourcesUsed: [],
+      };
+
+      // Turn 2+ (already greeted)
+      const followUpReply = generateDeterministicFallback('kalau barang rusak apakah bisa claim?', fakeCtx, true);
+      expect(followUpReply).not.toContain('Terima kasih sudah menghubungi Chenille Atelier Florist Depok');
+      expect(followUpReply).toContain('Garansi Anti-Patah');
+      expect(followUpReply).toContain('foto bukti');
+      expect(followUpReply).toContain('?'); // Proactive closing question
+    });
+
+    it('should provide informative warranty response when customer asks about broken/damage claim', () => {
+      const fakeCtx = {
+        customerName: 'Budi',
+        storeInfo: { store_name: 'Chenille', is_maintenance: false },
+        sourcesUsed: [],
+      };
+
+      const reply = generateDeterministicFallback('bisa garansi ga kalau rusak di jalan?', fakeCtx, true);
+      expect(reply).toContain('Garansi Anti-Patah & Rusak Pengiriman 100%');
+      expect(reply).toMatch(/(😊|🙏|🥰)/);
+      expect(reply).not.toContain('🌸');
+    });
+
+    it('should provide custom studio response with proactive closing when asked about colors/wrapping', () => {
+      const fakeCtx = {
+        customerName: 'Siti',
+        storeInfo: { store_name: 'Chenille', is_maintenance: false },
+        sourcesUsed: [],
+      };
+
+      const reply = generateDeterministicFallback('mau tanya kustom warna buket kawat bulu', fakeCtx, true);
+      expect(reply).toContain('Custom Studio');
+      expect(reply).toContain('warna kawat bulu');
+      expect(reply).toContain('?');
+      expect(reply).toMatch(/(😊|🥰)/);
+    });
+
+    it('should configure system instruction with single greeting rule and persona DNA', () => {
+      const instructionWithGreeting = buildSystemInstruction(true);
+      expect(instructionWithGreeting).toContain('DILARANG KERAS MENGULANG SALAM PEMBUKA FORMAL 2 KALI');
+      expect(instructionWithGreeting).toContain('PROACTIVE CLOSING');
+      expect(instructionWithGreeting).toContain('GARANSI ANTI-PATAH & RUSAK PENGIRIMAN 100%');
+
+      const instructionFirstMessage = buildSystemInstruction(false);
+      expect(instructionFirstMessage).toContain('PERCAKAPAN BARU DIMULAI');
     });
   });
 });
