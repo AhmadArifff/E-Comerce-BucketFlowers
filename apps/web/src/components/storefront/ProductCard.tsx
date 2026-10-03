@@ -79,7 +79,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
           }}
         />
 
-        {/* Badge: Best seller / Ready Stock */}
+        {/* Badge: Best seller / Ready Stock / Low Stock Urgency */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
           {product.badge && (
             <span className="badge-atelier text-[10px] px-2.5 py-1 tracking-wider">
@@ -97,6 +97,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
               PO {product.poLeadDays} Hari
             </span>
           )}
+          {product.stock <= 5 && (
+            <span className="bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 animate-pulse">
+              🚨 Sisa {product.stock} slot!
+            </span>
+          )}
         </div>
 
         {/* Quick Consultation Float Button */}
@@ -109,9 +114,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
         </button>
 
         {/* Views / CTR Counter */}
-        <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
-          <Eye className="w-3 h-3" />
-          <span>{clickCount}</span>
+        <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
+          <Eye className="w-3 h-3 text-rose-300" />
+          <span>{clickCount} dilihat</span>
         </div>
       </div>
 

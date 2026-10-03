@@ -87,17 +87,27 @@
 
 ---
 
-## 4. Prioritas 4: Peningkatan Konversi Penjualan (Direct WA Ordering & Social Proof)
-*Terkait: PRD Seksi 1 & 3 | Komponen: `ProductDetailModal.tsx`, `CartDrawer.tsx`*
+## 4. Prioritas 4: Peningkatan Konversi Penjualan (Direct WA Ordering & Social Proof) [COMPLETED - VERIFIED PASS]
+*Terkait: PRD Seksi 1 & 3 | Komponen: `ProductDetailModal.tsx`, `CartDrawer.tsx`, `ProductCard.tsx`, `whatsapp-order.ts`*
 
-### Spesifikasi Teknis Implementasi
-1. **Tombol "Tanya / Pesan Langsung via WhatsApp"**:
-   - Tambahkan tombol di samping tombol *Tambah ke Keranjang* pada [ProductDetailModal.tsx](../../apps/web/src/components/storefront/ProductDetailModal.tsx).
-   - Link membuka `https://wa.me/{waNumber}?text=...` dengan teks rapi berisi nama buket, harga, dan link gambar produk.
-2. **Micro-Badge Social Proof Dinamis**:
-   - Menampilkan indikator minat beli di bawah foto produk:
-     - *"🔥 [N] orang melihat buket ini hari ini"* (membaca `products.view_count`).
-     - *"⏳ Estimasi pengerjaan: [po_lead_days] hari kerja (Siap untuk wisuda weekend)"*.
+### Implementasi Lengkap (Commit `feat(storefront)`):
+- **Shared WhatsApp Order Formatter (`packages/shared/src/utils/whatsapp-order.ts`)**:
+  - `normalizeWhatsAppNumber`: Normalisasi nomor HP Indonesia (08... / +62...) ke format internasional `62...`.
+  - `formatDirectProductWhatsAppUrl`: Memformat pesan pesanan buket tunggal lengkap dengan nama buket, seri kategori, harga satuan, total kuantitas, catatan kartu ucapan kustom, dan status kesiapan (Ready Stock vs Pre-Order).
+  - `formatCartWhatsAppUrl`: Memformat rincian seluruh isi keranjang belanja, rincian subtotal, diskon kupon/poin, total pembayaran, serta metode pengambilan COD titik temu gratis ongkir.
+- **Product Detail Modal (`apps/web/src/components/storefront/ProductDetailModal.tsx`)**:
+  - Social proof banner dinamis: `"🔥 [N] orang sedang melihat buket ini hari ini"`.
+  - Indikator kesiapan & urgensi: `"⚡ Ready Stock (Siap Kirim / COD)"` vs `"⏳ Pre-Order (~N Hari Kerja)"` serta badge peringatan stok menipis `"🚨 Sisa N buket siap rangkai!"` jika stok $\le$ 5.
+  - Tombol CTA *"Pesan Langsung via WhatsApp"* yang membuka deep-link pemesanan langsung ke nomor atelier.
+- **Product Card (`apps/web/src/components/storefront/ProductCard.tsx`)**:
+  - Penambahan badge urgensi stok menipis `"🚨 Sisa N slot!"` jika `product.stock <= 5`.
+  - Refinement indikator view counter dengan ikon mata kontras tinggi (`[N] dilihat`).
+- **Cart Drawer (`apps/web/src/components/storefront/CartDrawer.tsx`)**:
+  - Penambahan tombol alternatif *"Order Cepat via WhatsApp"* di Langkah 1 Keranjang yang memformat seluruh ringkasan keranjang belanja untuk dikirim ke WhatsApp florist.
+- **Verifikasi Kualitas**:
+  - Unit test `apps/api/tests/unit/whatsapp-order.test.ts`: 7/7 tests lolos (100% pass).
+  - Total test suite backend: 23 test files, 145/145 tests lolos (100% pass).
+  - TypeScript Compilation: `turbo run type-check` 0 error across all packages.
 
 ---
 

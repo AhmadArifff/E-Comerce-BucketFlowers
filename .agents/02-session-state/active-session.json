@@ -95,6 +95,13 @@
       "prd_sections": ["Seksi 29", "Seksi 31"],
       "status": "VERIFIED_PASS",
       "verified_at": "2026-10-03"
+    },
+    {
+      "id": "M14_DIRECT_WHATSAPP_ORDER_AND_SOCIAL_PROOF_BADGES",
+      "title": "Peningkatan Konversi Penjualan via Direct WhatsApp Ordering & Social Proof Urgency Badges",
+      "prd_sections": ["Seksi 1", "Seksi 3"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-10-03"
     }
   ],
   "established_constraints": [
@@ -117,14 +124,15 @@
     "Storefront Zero Dummy Quota: AnnouncementBar dan CapacityWidget wajib membaca konfigurasi toko dari useSettingsStore tanpa menampilkan angka awal tiruan",
     "Customer Review Integrity: Ulasan hanya dapat diberikan pada pesanan berstatus selesai (COMPLETED/Langkah 4), dibatasi 1 ulasan per invoice, dan menghadiahkan reward +25 Flower Points",
     "Occasion Reminder & Scheduler Integrity: Pemindaian momen H-7 otomatis dijalankan berkala via scheduler.service.ts dan dapat dipicu on-demand oleh pelanggan/admin dengan pembaruan is_reminded dan reminded_at",
-    "BOM Raw Material Deduction Integrity: Pemotongan bahan baku fisik (raw_materials) dijalankan secara otomatis saat pesanan memasuki proses perakitan (Langkah 2 / CRAFTING_BOUQUET) dengan idempotency guard (orders.is_materials_deducted) dan direstorasi utuh jika pesanan dibatalkan (CANCELLED)"
+    "BOM Raw Material Deduction Integrity: Pemotongan bahan baku fisik (raw_materials) dijalankan secara otomatis saat pesanan memasuki proses perakitan (Langkah 2 / CRAFTING_BOUQUET) dengan idempotency guard (orders.is_materials_deducted) dan direstorasi utuh jika pesanan dibatalkan (CANCELLED)",
+    "Direct WhatsApp Order & Social Proof Integrity: Tombol pemesanan langsung WhatsApp pada detail produk dan keranjang belanja memformat rincian buket terstruktur secara rapi tanpa em dash, serta dilengkapi indikator minat sosial (viewer counter, lead time, low stock warning) guna memaksimalkan konversi"
   ],
   "next_recommended_actions": [
     "Prioritas 1: SELESAI (Form ulasan bintang 1-5, upload foto buket, API /api/v1/reviews, & sync dinamis LookbookSection)",
     "Prioritas 2: SELESAI (Otomasi Pengingat Momen Spesial WhatsApp H-7 Cron Scheduler, endpoint scan & on-demand, UI badges)",
     "Prioritas 3: SELESAI (Pemotongan Bahan Baku Otomatis Resep BOM saat Rangkaian Dimulai & Restorasi saat Batal)",
-    "Prioritas 4: Direct WhatsApp Ordering button & Social Proof urgency badges (PRD Seksi 1 & 3)",
+    "Prioritas 4: SELESAI (Direct WhatsApp Ordering button & Social Proof urgency badges)",
     "Prioritas 5: Migrasi next/image & third-party payment/logistics error boundaries (PRD Seksi 38 & 41)"
   ],
-  "last_updated": "2026-10-03T19:38:00+07:00"
+  "last_updated": "2026-10-03T19:50:00+07:00"
 }

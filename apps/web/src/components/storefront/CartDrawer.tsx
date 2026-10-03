@@ -25,6 +25,7 @@ import {
   Home,
   ShieldCheck,
   ExternalLink,
+  MessageCircle,
 } from 'lucide-react';
 import { useCartStore } from '@/stores/useCartStore';
 import { useOrderStore } from '@/stores/useOrderStore';
@@ -34,8 +35,9 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { getThemeCopy } from '@/lib/theme-copy';
 import { getApiUrl } from '@/lib/api-client';
 import { useMidtransSnap } from '@/hooks/useMidtransSnap';
-import { MOCK_MEETUP_POINTS, type MockOrder } from '@chenille/shared';
+import { ATELIER_CONFIG, MOCK_MEETUP_POINTS, type MockOrder } from '@chenille/shared';
 import { showMagicToast } from '@/lib/magic-motion';
+import { formatCartWhatsAppUrl } from '@/lib/whatsapp-order';
 
 export const CartDrawer: React.FC = () => {
   const router = useRouter();
@@ -79,7 +81,7 @@ export const CartDrawer: React.FC = () => {
 
   const { user } = useAuthStore();
   const { addNewOrder } = useOrderStore();
-  const { paymentGateways, codPoints, logisticsConfig, isMaintenanceMode } = useSettingsStore();
+  const { paymentGateways, codPoints, logisticsConfig, isMaintenanceMode, waNumber } = useSettingsStore();
   const [dbCodPoints, setDbCodPoints] = useState<any[]>([]);
   const [isCodLoaded, setIsCodLoaded] = useState(false);
   const [courierOptions, setCourierOptions] = useState<any[]>([]);
@@ -261,6 +263,33 @@ export const CartDrawer: React.FC = () => {
     }
     setFormError(null);
     setStep('CHECKOUT');
+  };
+
+  const handleQuickWhatsAppOrder = () => {
+    if (items.length === 0) return;
+    const activeMeetupPoints = dbCodPoints.length > 0 ? dbCodPoints : codPoints;
+    const selectedMeetup = activeMeetupPoints.find((m) => m.id === selectedCodPointId) || activeMeetupPoints[0];
+    const url = formatCartWhatsAppUrl({
+      waNumber: waNumber || ATELIER_CONFIG.phone,
+      items: items.map((i) => ({
+        name: i.product.name,
+        price: i.product.discountPrice ?? i.product.price,
+        quantity: i.quantity,
+        customSpecs: (i.product as any).customSpecs
+          ? typeof (i.product as any).customSpecs === 'string'
+            ? (i.product as any).customSpecs
+            : JSON.stringify((i.product as any).customSpecs)
+          : undefined,
+      })),
+      subtotal: getSubtotal(),
+      grandTotal: getGrandTotal(),
+      discountAmount,
+      pointsDiscount,
+      fulfillmentType,
+      meetupPointName: selectedMeetup?.name,
+      customerName: user?.name,
+    });
+    window.open(url, '_blank');
   };
 
   const handleConfirmOrder = async (e: React.FormEvent) => {
@@ -1028,6 +1057,17 @@ export const CartDrawer: React.FC = () => {
                   >
                     <span>{isMaintenanceMode ? '⚠️ Toko Sedang Istirahat Produksi' : copy.cart.checkoutBtn}</span>
                     {!isMaintenanceMode && <ArrowRight className="w-4 h-4" />}
+                  </button>
+
+                  {/* WhatsApp Quick Order Option */}
+                  <button
+                    type="button"
+                    onClick={handleQuickWhatsAppOrder}
+                    className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs font-black shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    title="Kirim rincian keranjang langsung ke WhatsApp Florist Atelier"
+                  >
+                    <MessageCircle className="w-4 h-4 fill-white/20 text-white" />
+                    <span>Order Cepat via WhatsApp</span>
                   </button>
                 </div>
               )}
