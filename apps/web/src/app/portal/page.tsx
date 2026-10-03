@@ -16,6 +16,7 @@ import { DigitalStampCardWidget } from '@/components/portal/DigitalStampCardWidg
 import { OccasionCalendarWidget } from '@/components/portal/OccasionCalendarWidget';
 import { WarrantyClaimModal } from '@/components/portal/WarrantyClaimModal';
 import { CustomerComplaintModal } from '@/components/portal/CustomerComplaintModal';
+import { OrderReviewModal } from '@/components/portal/OrderReviewModal';
 import { useOrderStore, deduplicateOrders } from '@/stores/useOrderStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useThemeStore } from '@/stores/useThemeStore';
@@ -45,6 +46,7 @@ export default function CustomerPortalPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
   const [isComplaintOpen, setIsComplaintOpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const { orders, activeOrderId, setActiveOrderId, updateOrderStep, syncDbOrders, warrantyClaims } = useOrderStore();
   const { user } = useAuthStore();
@@ -439,7 +441,17 @@ export default function CustomerPortalPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                  <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto flex-wrap">
+                    {activeOrder.currentStep === 4 && (
+                      <button
+                        type="button"
+                        onClick={() => setIsReviewOpen(true)}
+                        className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black shadow-sm shadow-amber-500/20 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 fill-white" />
+                        <span>Beri Ulasan Buket 🌸</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => setIsComplaintOpen(true)}
@@ -618,6 +630,16 @@ export default function CustomerPortalPage() {
         defaultInvoice={activeOrder?.invoiceNumber}
         customerName={user?.name}
         customerPhone={user?.phone}
+      />
+
+      {/* Order Review & Photo Rating Modal */}
+      <OrderReviewModal
+        isOpen={isReviewOpen}
+        onClose={() => setIsReviewOpen(false)}
+        orderId={activeOrder?.id || activeOrder?.invoiceNumber || ''}
+        customerName={user?.name || activeOrder?.customerName}
+        productName={activeOrder?.items?.[0]?.productName || 'Buket Bunga Kawat Bulu'}
+        productId={activeOrder?.items?.[0]?.productId}
       />
 
       {/* Cart Drawer for Full E-Commerce Flow */}

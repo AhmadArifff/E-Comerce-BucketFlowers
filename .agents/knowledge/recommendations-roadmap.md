@@ -4,22 +4,24 @@
 
 ---
 
-## 1. Prioritas 1: Form Ulasan Bintang & Foto Pembeli Pasca-Pesanan Selesai
-*Terkait: PRD Seksi 12 (Ulasan Foto Pembeli & Rating Bintang) | Tabel: `product_reviews`, `reviews` | Storage: `lookbook-reviews`*
+## 1. Prioritas 1: Form Ulasan Bintang & Foto Pembeli Pasca-Pesanan Selesai [COMPLETED - VERIFIED PASS]
+*Terkait: PRD Seksi 12 (Ulasan Foto Pembeli & Rating Bintang) & Seksi 14 (Gamifikasi Poin) | Tabel: `reviews`, `profiles`, `flower_point_transactions` | Storage: `product-images`*
 
-### Latar Belakang & Masalah
-- Pelanggan yang telah menerima pesanan di Portal Pelanggan (`/portal` atau `/lacak-pesanan` pada `current_step === 4`) belum memiliki antarmuka interaktif untuk memberikan rating bintang 1-5, komentar teks, dan unggah foto buket asli.
-- Akibatnya, tabel `product_reviews` di database belum terisi secara organik dari pembeli nyata.
-
-### Spesifikasi Teknis Implementasi
-1. **Frontend (`apps/web/src/components/portal/OrderReviewModal.tsx`)**:
-   - Tampilkan tombol *"Beri Ulasan & Foto Buket 🌸"* pada kartu pesanan yang berstatus selesai (`COMPLETED`).
-   - Modal input: Rating bintang 1-5, textarea ulasan jujur, dropzone unggah foto buket asli (maksimal 2MB, WebP/JPEG/PNG).
-   - Simpan foto ke Supabase Storage bucket `lookbook-reviews` dan kirim payload ke endpoint API review.
-2. **Backend (`apps/api/src/routes/products.routes.ts`)**:
-   - `POST /api/v1/products/reviews`: Menerima `order_id`, `product_id`, `rating`, `comment`, `photo_url`, dan `customer_name`.
-   - Validasi: Pastikan pesanan benar-benar berstatus `COMPLETED` dan belum pernah diulas oleh invoice yang sama (*single review per order*).
-   - `GET /api/v1/products/reviews/approved`: Mengembalikan daftar ulasan yang telah diverifikasi untuk ditampilkan di `LookbookSection.tsx` dan etalase landing page.
+### Status: SELESAI & TERVERIFIKASI
+- **Frontend**:
+  - `apps/web/src/components/portal/OrderReviewModal.tsx`: Modal interaktif rating bintang 1-5, dropzone upload foto buket asli, textarea ulasan jujur, reward callout (+25 Flower Points), dan feedback toast.
+  - `apps/web/src/app/portal/page.tsx`: Tombol *"Beri Ulasan Buket 🌸"* aktif otomatis pada kartu pesanan yang telah selesai (`currentStep === 4`), terintegrasi dengan pengecekan status pesanan.
+  - `apps/web/src/components/storefront/LookbookSection.tsx`: Menampilkan galeri foto ulasan pembeli nyata dari database via `GET /api/v1/reviews/approved`.
+- **Backend**:
+  - `apps/api/src/routes/reviews.routes.ts`:
+    - `POST /api/v1/reviews`: Validasi pesanan selesai (`COMPLETED` / `current_step >= 4`), guard anti-ulasan duplikat (1 invoice = 1 review), simpan ke tabel `reviews`, dan reward +25 Flower Points otomatis.
+    - `POST /api/v1/reviews/upload-photo`: Endpoint Multer unggah foto bukti buket pembeli ke Supabase Storage.
+    - `GET /api/v1/reviews/approved`: Endpoint publik kurasi ulasan untuk etalase storefront.
+    - `GET /api/v1/reviews/order/:orderId`: Cek apakah pesanan telah diulas.
+  - `apps/api/src/routes/index.ts`: Mendaftarkan route `/reviews`.
+- **Verifikasi Kualitas**:
+  - TypeScript Compilation: `turbo run type-check` 100% lolos (0 error).
+  - Test Suite: `npm run test --workspace=@chenille/api` 125/125 passing (100%).
 
 ---
 

@@ -19,11 +19,13 @@ import telemetryRoutes from './telemetry.routes.js';
 import occasionsRoutes from './occasions.routes.js';
 import complaintsRoutes from './complaints.routes.js';
 import databaseMaintenanceRoutes from './database-maintenance.routes.js';
+import reviewsRoutes from './reviews.routes.js';
 import { authLimiter, otpLimiter, checkoutLimiter } from '../middleware/rate-limiter.js';
 
 const apiV1Router = Router();
 
 apiV1Router.use('/products', productsRoutes);
+apiV1Router.use('/reviews', reviewsRoutes);
 apiV1Router.use('/orders', checkoutLimiter, ordersRoutes);
 apiV1Router.use('/payment', paymentRoutes);
 apiV1Router.use('/otp', otpLimiter, otpRoutes);
