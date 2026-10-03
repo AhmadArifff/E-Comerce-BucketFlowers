@@ -119,10 +119,18 @@ Sistem ini membagi kerja agent secara modular guna mengeliminasi *Echo-Chamber H
 ## 5. Cara Sesi Baru Beroperasi (*Session State Protocol*)
 
 Ketika sesi percakapan baru dimulai:
+0. **Mandatory Pre-Development Git Pull (Wajib Awal Sesi / Beda Device)**:
+   - Sebelum menganalisis tugas atau menulis rencana, developer/agen **WAJIB** menjalankan:
+     ```bash
+     git pull --rebase origin main
+     ```
+   - Periksa `git log -n 5 --oneline` untuk melihat commit terbaru dari rekan tim/developer lain jika ada. Langkah ini mutlak guna mencegah timpa-menimpa kode dan branch basi (*stale branch*).
 1. Agent **OTOMATIS** membaca:
    - `AGENTS.md` (file ini)
    - `.agents/02-session-state/active-session.json`
    - `.agents/knowledge/prd-index-map.md`
+   - `.agents/knowledge/recommendations-roadmap.md` (jika melanjutkan rencana roadmap)
+   - `.agents/knowledge/multi-device-collaboration.md` (protokol lintas perangkat)
 2. Agent mengecek `established_constraints` yang sudah dikunci dari sesi sebelumnya. Agent dilarang membatalkan atau mengubah constraint ini tanpa izin eksplisit pengguna.
 3. Agent mengidentifikasi sub-tugas yang sedang aktif dan langsung memberikan respon kontekstual tanpa meminta pengguna menjelaskan ulang arsitektur sistem.
 
@@ -153,7 +161,10 @@ Guna menjaga agar `PRD.md` tetap bersih, ramping, berwibawa, dan hanya berfokus 
 
 > ⚠️ **CATATAN RUANG LINGKUP**: Aturan auto-push ini **HANYA BERLAKU UNTUK PROYEK `E-Comerce-BucketFlowers` INI SAJA**, dan **TIDAK** berlaku untuk proyek-proyek lainnya kecuali jika secara eksplisit diminta oleh pengguna.
 
-Setiap pengerjaan teknis pada proyek ini wajib mengikuti 4 tahap teratur:
+Setiap pengerjaan teknis pada proyek ini wajib mengikuti 5 tahap teratur:
+0. **Tahap 0: Sinkronisasi Awal Lintas Perangkat (Pre-Development Pull-Rebase)**:
+   - Jalankan `git pull --rebase origin main` sebelum mulai merencanakan atau mengeksekusi tugas.
+   - Cek `git log -n 5 --oneline` untuk memverifikasi commit terbaru dari developer lain di perangkat lain.
 1. **Tahap 1: Review Pra-Pengembangan (Pre-Implementation Plan)**:
    - Agen menganalisis kebutuhan tugas, memvalidasi terhadap [PRD.md](./PRD.md) dan [RULES.md](./RULES.md), serta menyusun rencana terstruktur (`implementation_plan.md`).
 2. **Tahap 2: Persetujuan Pengguna (User Approval)**:

@@ -60,7 +60,10 @@ Setiap tugas wajib melalui 4 fase berurutan:
 
 > ⚠️ **CATATAN RUANG LINGKUP**: Aturan auto-push ini **HANYA BERLAKU UNTUK PROYEK `E-Comerce-BucketFlowers` INI SAJA**, dan **TIDAK** berlaku untuk proyek-proyek lainnya kecuali jika secara eksplisit diminta oleh pengguna.
 
-Setiap pengerjaan teknis pada proyek ini wajib mengikuti 4 tahap teratur:
+Setiap pengerjaan teknis pada proyek ini wajib mengikuti 5 tahap teratur:
+0. **Tahap 0: Sinkronisasi Awal Lintas Perangkat (Pre-Development Pull-Rebase)**:
+   - Sebelum menganalisis tugas atau menulis rencana, jalankan `git pull --rebase origin main` untuk mengunduh perubahan dari commit rekan tim di perangkat lain.
+   - Cek `git log -n 5 --oneline` untuk memverifikasi riwayat commit terkini.
 1. **Tahap 1: Review Pra-Pengembangan (Pre-Implementation Plan)**:
    - Agen menganalisis kebutuhan tugas, memvalidasi terhadap PRD dan rules, serta menyusun rencana terstruktur (`implementation_plan.md`).
 2. **Tahap 2: Persetujuan Pengguna (User Approval)**:
