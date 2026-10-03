@@ -60,7 +60,7 @@ describe('Database Maintenance & Granular Reset API Integration Tests (PRD Seksi
           delete_complaints: false,
           delete_loyalty_data: false,
           delete_customer_accounts: false,
-          reset_master_catalog: true,
+          reset_master_catalog: false,
           delete_complaint_asset_files: false,
           delete_warranty_asset_files: false,
           delete_custom_studio_asset_files: false,

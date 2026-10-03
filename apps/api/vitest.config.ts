@@ -11,6 +11,8 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     testTimeout: 20000,
     hookTimeout: 20000,
+    fileParallelism: false,
+    maxWorkers: 1,
   },
   resolve: {
     alias: {

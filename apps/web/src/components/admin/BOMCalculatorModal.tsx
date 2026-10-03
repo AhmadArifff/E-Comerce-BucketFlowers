@@ -114,6 +114,7 @@ export const BOMCalculatorModal: React.FC = () => {
   // Store hooks
   const {
     rawMaterials,
+    fetchRawMaterials,
     addRawMaterial,
     updateRawMaterial,
     deleteRawMaterial,
@@ -134,8 +135,9 @@ export const BOMCalculatorModal: React.FC = () => {
   const [rows, setRows] = useState<BomRow[]>(PRODUCT_RECIPES['prod-001'] || []);
   const [sellingPrice, setSellingPrice] = useState(165000);
 
-  // Fetch live products from Supabase API
+  // Fetch live products and raw materials from Supabase API
   React.useEffect(() => {
+    fetchRawMaterials();
     fetch(getApiUrl('/api/v1/products?limit=100&include_inactive=true'))
       .then((r) => r.json())
       .then((res) => {

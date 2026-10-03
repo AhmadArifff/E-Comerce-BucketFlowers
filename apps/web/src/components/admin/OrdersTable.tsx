@@ -89,8 +89,26 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ searchQuery = '', onPr
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ step: newStep }),
     })
-      .then(() => {
-        showMagicToast('Status Disimpan ke Supabase! 🌸', `${orderId} diset ke Langkah ${newStep}.`, '✅');
+      .then((r) => r.json())
+      .then((res) => {
+        if (newStep === 2 && res.data?.materials_deducted) {
+          const alerts = res.data?.low_stock_alerts;
+          if (Array.isArray(alerts) && alerts.length > 0) {
+            showMagicToast(
+              'Bahan Dipotong & Peringatan Stok ⚠️',
+              `Bahan baku dipotong otomatis. Perhatian: ${alerts.map((a: any) => a.materialName).join(', ')} menipis!`,
+              '📦'
+            );
+          } else {
+            showMagicToast(
+              'Bahan Baku Terpotong Otomatis! ✂️',
+              `Stok bahan baku gudang berhasil dipotong otomatis sesuai resep BOM.`,
+              '🌸'
+            );
+          }
+        } else {
+          showMagicToast('Status Disimpan ke Supabase! 🌸', `${orderId} diset ke Langkah ${newStep}.`, '✅');
+        }
       })
       .catch(() => {});
   };

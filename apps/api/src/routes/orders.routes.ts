@@ -2,6 +2,7 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import { pool } from '../config/database.js';
 import { sendOrderNotification } from '../services/whatsapp.service.js';
+import { deductMaterialsForOrder, restoreMaterialsForOrder, getOrderMaterialsBreakdown } from '../services/bom.service.js';
 
 const router = Router();
 
@@ -721,13 +722,23 @@ router.patch('/:id', async (req, res) => {
       );
     }
 
-    // Restore stock if cancelled
+    let bomResult = null;
+
+    // ✂️ Deduct BOM raw materials when Order reaches step 2 (CRAFTING_BOUQUET)
+    if (targetStep && targetStep >= 2 && !updateRes.rows[0].is_materials_deducted) {
+      bomResult = await deductMaterialsForOrder(client, id);
+    }
+
+    // Restore stock and materials if cancelled
     if (order_status === 'CANCELLED') {
       const itemsToRestore = await client.query('SELECT product_id, quantity FROM order_items WHERE order_id = $1;', [id]);
       for (const it of itemsToRestore.rows) {
         if (it.product_id) {
           await client.query('UPDATE products SET stock = stock + $1 WHERE id = $2;', [it.quantity, it.product_id]);
         }
+      }
+      if (updateRes.rows[0].is_materials_deducted) {
+        await restoreMaterialsForOrder(client, id);
       }
     }
 
@@ -825,7 +836,12 @@ router.patch('/:id', async (req, res) => {
 
     return res.json({
       success: true,
-      data: updatedOrder,
+      data: {
+        ...updatedOrder,
+        materials_deducted: Boolean(updatedOrder.is_materials_deducted || bomResult?.success),
+        deducted_materials: bomResult?.deductedItems || [],
+        low_stock_alerts: bomResult?.lowStockAlerts || [],
+      },
       message: 'Status pesanan berhasil diperbarui.',
     });
   } catch (error: any) {
@@ -862,6 +878,25 @@ router.delete('/:id', async (req, res) => {
     return res.status(500).json({ success: false, error: error.message || 'Gagal menghapus pesanan.' });
   } finally {
     client.release();
+  }
+});
+
+// GET /api/v1/orders/:id/materials
+// Get BOM materials breakdown for an order
+router.get('/:id/materials', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const breakdown = await getOrderMaterialsBreakdown(id);
+    return res.json({
+      success: true,
+      data: breakdown,
+    });
+  } catch (error: any) {
+    console.error('Error fetching order materials breakdown:', error);
+    return res.status(error.message?.includes('tidak ditemukan') ? 404 : 500).json({
+      success: false,
+      error: error.message || 'Gagal mengambil komposisi bahan baku pesanan.',
+    });
   }
 });
 

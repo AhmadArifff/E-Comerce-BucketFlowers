@@ -185,6 +185,7 @@ interface SettingsState {
   addRawMaterial: (material: Omit<RawMaterial, 'id' | 'updatedAt'>) => void;
   updateRawMaterial: (id: string, updates: Partial<RawMaterial>) => void;
   deleteRawMaterial: (id: string) => void;
+  fetchRawMaterials: () => Promise<void>;
 
   // Procurement Restock Actions
   addProcurementOrder: (order: Omit<ProcurementOrder, 'id' | 'isStockAdded'>) => void;
@@ -743,6 +744,32 @@ export const useSettingsStore = create<SettingsState>()(
         set((state) => ({
           rawMaterials: (state.rawMaterials || DEFAULT_RAW_MATERIALS).filter((m) => m.id !== id),
         }));
+      },
+
+      fetchRawMaterials: async () => {
+        try {
+          const res = await fetch(getApiUrl('/api/v1/raw-materials'));
+          const json = await res.json();
+          if (json.success && json.data?.materials) {
+            const mapped: RawMaterial[] = json.data.materials.map((m: any) => ({
+              id: m.id,
+              name: m.name,
+              category: m.category,
+              stock: Number(m.stock),
+              minStock: Number(m.min_stock),
+              unit: m.unit,
+              costPerUnit: Number(m.cost_per_unit),
+              supplierName: m.supplier_name || 'Supplier Florist',
+              supplierContact: m.supplier_contact || '',
+              supplierLink: m.supplier_link || '',
+              notes: m.notes || '',
+              updatedAt: m.updated_at || new Date().toISOString(),
+            }));
+            set({ rawMaterials: mapped });
+          }
+        } catch (e) {
+          console.warn('[useSettingsStore] Gagal fetch raw materials dari backend:', e);
+        }
       },
 
       addProcurementOrder: (order) => {

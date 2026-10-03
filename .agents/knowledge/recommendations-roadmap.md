@@ -61,25 +61,29 @@
 
 ---
 
-## 3. Prioritas 3: Pemotongan Bahan Baku Otomatis Resep BOM saat Perakitan Dimulai
-*Terkait: PRD Seksi 29 & 31 | Tabel: `raw_materials`, `bill_of_materials`, `order_items`*
+## 3. Prioritas 3: Pemotongan Bahan Baku Otomatis Resep BOM saat Perakitan Dimulai [COMPLETED - VERIFIED PASS]
+*Terkait: PRD Seksi 29 & 31 | Tabel: `raw_materials`, `bill_of_materials`, `orders`, `order_items`*
 
-### Latar Belakang & Masalah
-- Saat checkout, sistem hanya memotong stok produk jadi (`products.stock`).
-- Stok bahan mentah (`raw_materials`: kawat bulu, batang kawat, cellophane, pita) belum terpotong otomatis, sehingga perhitungan sisa bahan baku gudang harus dicatat manual.
-
-### Spesifikasi Teknis Implementasi
-1. **Backend Event (`apps/api/src/routes/orders.routes.ts`)**:
-   - Saat admin atau florist mengubah status pesanan ke **Langkah 2: Sedang Dirangkai (`CRAFTING_STARTED`)**:
-   - Query seluruh item pesanan: ambil `product_id` dan `quantity`.
-   - Untuk setiap produk, cari komposisi di `bill_of_materials` dan potong stok di `raw_materials`:
-     ```sql
-     UPDATE raw_materials rm
-     SET stock = stock - (bom.qty_needed * $1)
-     FROM bill_of_materials bom
-     WHERE bom.material_id = rm.id AND bom.product_id = $2;
-     ```
-   - Cek jika `stock <= min_stock`, picu log *Low Stock Alert* di dashboard admin.
+### Implementasi Lengkap (Commit `feat(bom)`):
+- **Database Schema**:
+  - Menambahkan kolom `orders.is_materials_deducted BOOLEAN DEFAULT false` sebagai *idempotency guard* untuk mencegah pemotongan ganda saat pembaruan status berulang.
+- **Backend Service & Routing**:
+  - `apps/api/src/services/bom.service.ts`:
+    - `deductMaterialsForOrder(client, orderId)`: Menghitung kebutuhan bahan baku katalog via `bill_of_materials` dan item kustom studio via `custom_specs_json`, memotong stok fisik di `raw_materials` secara atomik (`GREATEST(0, stock - qty)`), mendeteksi *Low Stock Alert* (`stock <= min_stock`), dan menandai `is_materials_deducted = true`.
+    - `restoreMaterialsForOrder(client, orderId)`: Mengembalikan seluruh stok bahan baku ke gudang jika pesanan dibatalkan (`CANCELLED`) dan mereset `is_materials_deducted = false`.
+    - `getOrderMaterialsBreakdown(orderId)`: Endpoint inspeksi komposisi bahan dan ketersediaan stok fisik gudang.
+  - `apps/api/src/routes/orders.routes.ts`:
+    - Terintegrasi pada hook `PATCH /api/v1/orders/:id` saat pesanan memasuki `targetStep >= 2` (`CRAFTING_BOUQUET`).
+    - Terintegrasi pada hook pembatalan `order_status === 'CANCELLED'`.
+    - Menambahkan endpoint publik/admin `GET /api/v1/orders/:id/materials`.
+- **Frontend Store & UI Feedback**:
+  - `apps/web/src/stores/useSettingsStore.ts`: Menambahkan aksi `fetchRawMaterials()` untuk menyinkronkan status stok bahan baku real-time ke UI admin.
+  - `apps/web/src/components/admin/OrdersTable.tsx`: Menampilkan toast feedback sukses pemotongan bahan baku BOM dan peringatan dini *Low Stock Alert* saat admin memajukan pesanan ke tahap perakitan.
+  - `apps/web/src/components/admin/BOMCalculatorModal.tsx`: Memanggil `fetchRawMaterials()` saat modal terbuka untuk menampilkan angka stok fisik teranyar.
+- **Verifikasi Kualitas**:
+  - `apps/api/tests/integration/bom-deduction.api.test.ts`: 6/6 test lolos (100% pass) memvalidasi pemotongan bertahap, idempotensi, inspeksi endpoint, dan restorasi pembatalan.
+  - Total test suite backend: 22 test files, 138/138 tests lolos (100%).
+  - TypeScript Compilation: `turbo run type-check` 0 error across all packages.
 
 ---
 
