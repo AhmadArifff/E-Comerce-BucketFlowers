@@ -68,8 +68,14 @@ Setiap pengerjaan teknis pada proyek ini wajib mengikuti 4 tahap teratur:
 3. **Tahap 3: Eksekusi Pengembangan & Verifikasi Kualitas**:
    - Builder menulis kode.
    - Reviewer menguji: wajib 0 error kompilasi TypeScript (`npm run type-check`) dan lolos tes fungsional / HTTP endpoint.
-4. **Tahap 4: Otomatis Commit & Push ke GitHub**:
-   - Segera setelah seluruh pengujian lolos (100% PASS), agen **WAJIB LANGSUNG mengeksekusi git commit dan git push ke origin main** dengan pesan commit terstruktur (`feat: ...`, `fix: ...`, `docs: ...`).
+4. **Tahap 4: Otomatis Commit, Pull-Rebase, Resolusi Konflik & Push ke GitHub**:
+   - **4.1. Commit Lokal**: Stage perubahan (`git add .`) dan buat commit lokal terstruktur (`feat: ...`, `fix: ...`, `docs: ...`).
+   - **4.2. Tarik Remote Terbaru (Pull-Rebase)**: Jalankan `git pull --rebase origin main` untuk menyelaraskan commit lokal di atas commit remote terbaru sebelum melakukan push.
+   - **4.3. Resolusi Konflik Cerdas & Re-Verifikasi**:
+     - Jika terdeteksi konflik merge/rebase: Agen langsung mengidentifikasi file terdampak, membedah marker `<<<<<<< HEAD`, `=======`, `>>>>>>>`, dan menyelesaikannya secara teliti tanpa menghilangkan logika yang sah dari kedua sisi.
+     - Lanjutkan rebase (`git add .` dan `git rebase --continue`).
+     - Jalankan ulang `npm run type-check` dan tes fungsional untuk memastikan hasil resolusi konflik 100% bebas dari regresi.
+   - **4.4. Push Bersih ke Origin**: Eksekusi `git push origin main`. Pastikan working tree bersih.
    - Pengguna tidak perlu lagi meminta push manual secara terpisah.
 
 ---
