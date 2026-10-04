@@ -19,6 +19,8 @@ import {
 import { getApiUrl } from '@/lib/api-client';
 import { showMagicToast } from '@/lib/magic-motion';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
+import { ATELIER_CONFIG, normalizeWhatsAppNumber } from '@chenille/shared';
 import type { ComplaintCategory, ComplaintSeverity } from '@chenille/shared';
 
 interface CustomerComplaintModalProps {
@@ -72,6 +74,7 @@ export const CustomerComplaintModal: React.FC<CustomerComplaintModalProps> = ({
   customerPhone = '',
 }) => {
   const { user } = useAuthStore();
+  const { waNumber } = useSettingsStore();
   const [invoiceNumber, setInvoiceNumber] = useState(defaultInvoice || '');
   const [name, setName] = useState(customerName || user?.name || '');
   const [phone, setPhone] = useState(customerPhone || user?.phone || '');
@@ -178,7 +181,8 @@ export const CustomerComplaintModal: React.FC<CustomerComplaintModalProps> = ({
     }
   };
 
-  const waSupportLink = `https://wa.me/6281298765432?text=${encodeURIComponent(
+  const activeSupportWa = normalizeWhatsAppNumber(waNumber || ATELIER_CONFIG.phone);
+  const waSupportLink = `https://wa.me/${activeSupportWa}?text=${encodeURIComponent(
     `Halo Customer Care Atelier Chenille, saya telah mengajukan evaluasi keluhan dengan Nomor Tiket: ${submittedCode} untuk Pesanan: ${invoiceNumber}. Mohon bantuannya.`
   )}`;
 

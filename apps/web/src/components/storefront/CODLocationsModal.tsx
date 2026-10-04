@@ -18,7 +18,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useChatStore } from '@/stores/useChatStore';
 import { showMagicToast } from '@/lib/magic-motion';
 import { getApiUrl } from '@/lib/api-client';
-import { ATELIER_CONFIG } from '@chenille/shared';
+import { ATELIER_CONFIG, normalizeWhatsAppNumber } from '@chenille/shared';
 
 export interface CodMeetupPoint {
   id: string;
@@ -342,7 +342,7 @@ export const CODLocationsModal: React.FC = () => {
           </div>
 
           <a
-            href={`https://wa.me/${activeWa.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Halo Florist Chenille Atelier, saya ingin tanya ketersediaan janjian titik temu COD di area kampus Depok...')}`}
+            href={`https://wa.me/${normalizeWhatsAppNumber(activeWa)}?text=${encodeURIComponent('Halo Florist Chenille Atelier, saya ingin tanya ketersediaan janjian titik temu COD di area kampus Depok...')}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3.5 py-2 rounded-xl border border-emerald-200 transition-all flex-shrink-0 cursor-pointer"

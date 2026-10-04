@@ -3,6 +3,7 @@
 import React from 'react';
 import { Sparkles, MessageCircle, Lock, Flower2 } from 'lucide-react';
 import Link from 'next/link';
+import { normalizeWhatsAppNumber } from '@chenille/shared';
 
 interface MaintenanceOverlayProps {
   title?: string;
@@ -15,7 +16,7 @@ export const MaintenanceOverlay: React.FC<MaintenanceOverlayProps> = ({
   desc = 'Kapasitas buket wisuda hari ini telah penuh demi menjaga kualitas kerapian terbaik. Pemesanan akan dibuka kembali segera.',
   waNumber = '+62 812-9831-7721',
 }) => {
-  const cleanPhone = waNumber.replace(/[^0-9]/g, '');
+  const cleanPhone = normalizeWhatsAppNumber(waNumber);
   const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
     'Halo Atelier Chenille, saya ingin menanyakan ketersediaan slot buket untuk hari ini.'
   )}`;

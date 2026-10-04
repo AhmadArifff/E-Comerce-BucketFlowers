@@ -245,7 +245,12 @@ router.post('/escalate', async (req, res) => {
       `UPDATE chat_sessions SET is_escalated_wa = true, updated_at = NOW() WHERE id = $1;`,
       [session_id]
     );
-    const waUrl = `https://wa.me/6281299281192?text=Halo%20Florist%20Chenille%20Atelier,%20saya%20ingin%20konsultasi%20buket%20custom%20(Ref:%20${session_id})`;
+    const storeRes = await pool.query(`SELECT official_whatsapp FROM store_settings LIMIT 1;`);
+    const rawWa = storeRes.rows[0]?.official_whatsapp || '6281299281192';
+    let cleanWa = rawWa.replace(/\D/g, '');
+    if (cleanWa.startsWith('0')) cleanWa = '62' + cleanWa.slice(1);
+    else if (!cleanWa.startsWith('62')) cleanWa = '62' + cleanWa;
+    const waUrl = `https://wa.me/${cleanWa}?text=Halo%20Florist%20Chenille%20Atelier,%20saya%20ingin%20konsultasi%20buket%20custom%20(Ref:%20${session_id})`;
     return res.json({ success: true, waUrl });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
