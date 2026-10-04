@@ -42,26 +42,58 @@ import {
 
 export default function CustomerPortalPage() {
   const { theme } = useThemeStore();
-  const [activeTab, setActiveTab] = useState<'MEMBER' | 'GUEST'>('MEMBER');
+  const { orders, activeOrderId, setActiveOrderId, updateOrderStep, syncDbOrders, warrantyClaims } = useOrderStore();
+  const { user, login } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<'MEMBER' | 'GUEST'>(user ? 'MEMBER' : 'GUEST');
   const [searchQuery, setSearchQuery] = useState('');
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
   const [isComplaintOpen, setIsComplaintOpen] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
-
-  const { orders, activeOrderId, setActiveOrderId, updateOrderStep, syncDbOrders, warrantyClaims } = useOrderStore();
-  const { user } = useAuthStore();
 
   // Sync data-theme attribute on client mount
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  const dedupedOrders = useMemo(() => deduplicateOrders(orders), [orders]);
-  const activeOrder = dedupedOrders.find((o) => o.id === activeOrderId || o.invoiceNumber === activeOrderId) || dedupedOrders[0];
-
-  // Fetch live orders from Supabase backend via apps/api
+  // If user state is not logged in, default tab to GUEST
   useEffect(() => {
-    fetch(getApiUrl('/api/v1/orders'))
+    if (!user) {
+      setActiveTab('GUEST');
+    }
+  }, [user]);
+
+  const dedupedOrders = useMemo(() => deduplicateOrders(orders), [orders]);
+
+  // 🛡️ Strict Member Scoping: Only display orders belonging to the logged-in member
+  const scopedMemberOrders = useMemo(() => {
+    if (!user) return [];
+    const cleanUserPhone = (user.phone || '').replace(/[^0-9]/g, '');
+    const cleanUserEmail = (user.email || '').toLowerCase().trim();
+
+    return dedupedOrders.filter((ord) => {
+      if (ord.customerPhone) {
+        const cleanOrdPhone = ord.customerPhone.replace(/[^0-9]/g, '');
+        if (cleanUserPhone && cleanOrdPhone.slice(-8) === cleanUserPhone.slice(-8)) return true;
+      }
+      if (ord.customerEmail && cleanUserEmail) {
+        if (ord.customerEmail.toLowerCase().trim() === cleanUserEmail) return true;
+      }
+      return false;
+    });
+  }, [dedupedOrders, user]);
+
+  const activeOrder = scopedMemberOrders.find((o) => o.id === activeOrderId || o.invoiceNumber === activeOrderId) || scopedMemberOrders[0];
+
+  // Fetch live orders from Supabase backend via apps/api (strictly scoped by member)
+  useEffect(() => {
+    if (!user) return;
+
+    const queryParams = new URLSearchParams();
+    if (user.id) queryParams.set('userId', user.id);
+    if (user.phone) queryParams.set('phone', user.phone);
+    if (user.email) queryParams.set('email', user.email);
+
+    fetch(getApiUrl(`/api/v1/orders?${queryParams.toString()}`))
       .then((r) => r.json())
       .then((res) => {
         if (res.success && Array.isArray(res.data)) {
@@ -131,7 +163,7 @@ export default function CustomerPortalPage() {
         }, 300);
       }
     }
-  }, []);
+  }, [user?.id, user?.phone, user?.email]);
 
   // Navigation handler from Navbar when on Portal
   const handleNavigate = (sectionId: string) => {
@@ -175,7 +207,7 @@ export default function CustomerPortalPage() {
 
   // Filtered orders for order history
   const filteredOrders = useMemo(() => {
-    return dedupedOrders.filter((ord) => {
+    return scopedMemberOrders.filter((ord) => {
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       const matchInvoice = (ord.invoiceNumber || '').toLowerCase().includes(q);
@@ -183,7 +215,7 @@ export default function CustomerPortalPage() {
       const matchItem = (ord.items || []).some((i) => (i.productName || '').toLowerCase().includes(q));
       return matchInvoice || matchCustomer || matchItem;
     });
-  }, [dedupedOrders, searchQuery]);
+  }, [scopedMemberOrders, searchQuery]);
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-stone-50/50">
@@ -218,7 +250,7 @@ export default function CustomerPortalPage() {
                     : 'text-stone-600 hover:text-stone-900'
                 }`}
               >
-                Member Hub ({user?.name ? user.name.split(' ')[0] : 'Siti'})
+                Member Hub ({user?.name ? user.name.split(' ')[0] : 'Masuk'})
               </button>
               <button
                 onClick={() => setActiveTab('GUEST')}
@@ -236,13 +268,46 @@ export default function CustomerPortalPage() {
 
         {activeTab === 'GUEST' ? (
           <GuestTracker />
+        ) : !user ? (
+          <div className="bg-white rounded-3xl p-8 sm:p-12 border border-rose-100 shadow-sm text-center space-y-5 max-w-2xl mx-auto animate-in fade-in my-8">
+            <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto shadow-inner">
+              <Package className="w-8 h-8" />
+            </div>
+            <div className="space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-200 inline-block">
+                Mode Tamu (Guest)
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-stone-800">
+                Silakan Masuk ke Akun Member Anda
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-500 leading-relaxed max-w-md mx-auto">
+                Demi privasi dan perlindungan kepemilikan pesanan, data Member Hub hanya dapat diakses setelah login. Pelanggan tanpa akun dapat langsung melacak pesanan di tab <strong>Lacak Tamu (Guest)</strong>.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
+              <button
+                type="button"
+                onClick={() => setActiveTab('GUEST')}
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-all cursor-pointer"
+              >
+                Buka Lacak Tamu (Guest)
+              </button>
+              <button
+                type="button"
+                onClick={() => login('CUSTOMER_MEMBER')}
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all cursor-pointer active:scale-95"
+              >
+                Masuk Akun Member (Demo: Annisa)
+              </button>
+            </div>
+          </div>
         ) : (
           <div className="space-y-8 animate-in fade-in">
             {/* Member Profile Header */}
             <MemberHeader />
 
             {/* ORDER SWITCHER PILL BAR & EMPTY STATE */}
-            {dedupedOrders.length === 0 ? (
+            {scopedMemberOrders.length === 0 ? (
               <div className="bg-white rounded-3xl p-8 border border-rose-100 shadow-sm text-center space-y-4">
                 <div className="w-14 h-14 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto shadow-inner">
                   <Package className="w-7 h-7" />
@@ -269,12 +334,12 @@ export default function CustomerPortalPage() {
                     <span>Pilih Pesanan untuk Dipantau / Diuji:</span>
                   </span>
                   <span className="text-[11px] text-stone-400 font-medium">
-                    {orders.length} Pesanan Tersedia
+                    {scopedMemberOrders.length} Pesanan Milik Anda
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                  {dedupedOrders.map((ord, idx) => {
+                  {scopedMemberOrders.map((ord, idx) => {
                     const isSelected = activeOrderId === ord.id || (!activeOrderId && idx === 0);
                     return (
                       <button
@@ -302,7 +367,7 @@ export default function CustomerPortalPage() {
             )}
 
             {/* Active Order Stepper Card */}
-            {dedupedOrders.length > 0 && activeOrder && (
+            {scopedMemberOrders.length > 0 && activeOrder && (
               <div id="portal-order-tracker" className="bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-sm space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-rose-100">
                   <div>
@@ -622,18 +687,18 @@ export default function CustomerPortalPage() {
       <WarrantyClaimModal
         isOpen={isWarrantyOpen}
         onClose={() => setIsWarrantyOpen(false)}
-        defaultInvoice={activeOrder?.invoiceNumber}
-        customerName={user?.name}
-        customerPhone={user?.phone}
+        defaultInvoice={activeOrder?.invoiceNumber || ''}
+        customerName={user?.name || activeOrder?.customerName || ''}
+        customerPhone={user?.phone || activeOrder?.customerPhone || ''}
       />
 
       {/* Customer Complaint & Quality Evaluation Modal */}
       <CustomerComplaintModal
         isOpen={isComplaintOpen}
         onClose={() => setIsComplaintOpen(false)}
-        defaultInvoice={activeOrder?.invoiceNumber}
-        customerName={user?.name}
-        customerPhone={user?.phone}
+        defaultInvoice={activeOrder?.invoiceNumber || ''}
+        customerName={user?.name || activeOrder?.customerName || ''}
+        customerPhone={user?.phone || activeOrder?.customerPhone || ''}
       />
 
       {/* Order Review & Photo Rating Modal */}

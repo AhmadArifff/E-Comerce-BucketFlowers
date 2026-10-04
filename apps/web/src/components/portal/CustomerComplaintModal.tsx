@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api-client';
 import { showMagicToast } from '@/lib/magic-motion';
+import { useAuthStore } from '@/stores/useAuthStore';
 import type { ComplaintCategory, ComplaintSeverity } from '@chenille/shared';
 
 interface CustomerComplaintModalProps {
@@ -70,12 +71,23 @@ export const CustomerComplaintModal: React.FC<CustomerComplaintModalProps> = ({
   customerName = '',
   customerPhone = '',
 }) => {
+  const { user } = useAuthStore();
   const [invoiceNumber, setInvoiceNumber] = useState(defaultInvoice || '');
-  const [name, setName] = useState(customerName || '');
-  const [phone, setPhone] = useState(customerPhone || '');
+  const [name, setName] = useState(customerName || user?.name || '');
+  const [phone, setPhone] = useState(customerPhone || user?.phone || '');
   const [category, setCategory] = useState<ComplaintCategory>('KERUSAKAN_BUNGA');
   const [severity, setSeverity] = useState<ComplaintSeverity>('MEDIUM');
   const [description, setDescription] = useState('');
+
+  // Sync state on modal open
+  React.useEffect(() => {
+    if (isOpen) {
+      setInvoiceNumber(defaultInvoice || '');
+      setName(customerName || user?.name || '');
+      setPhone(customerPhone || user?.phone || '');
+      setErrorMessage('');
+    }
+  }, [isOpen, defaultInvoice, customerName, customerPhone, user]);
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string>('');
@@ -155,7 +167,8 @@ export const CustomerComplaintModal: React.FC<CustomerComplaintModalProps> = ({
           '✨'
         );
       } else {
-        setErrorMessage(data.error?.message || 'Gagal mengirim pengajuan keluhan. Silakan coba lagi.');
+        const errorText = typeof data.error === 'string' ? data.error : data.error?.message;
+        setErrorMessage(errorText || 'Gagal mengirim pengajuan keluhan. Silakan coba lagi.');
       }
     } catch (err: any) {
       console.error('Error submitting complaint:', err);

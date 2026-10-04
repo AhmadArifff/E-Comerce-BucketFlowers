@@ -17,8 +17,10 @@ import {
   Send,
   ShieldAlert,
   MessageSquare,
+  Smartphone,
 } from 'lucide-react';
 import { useOrderStore, deduplicateOrders } from '@/stores/useOrderStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 import type { MockOrder } from '@chenille/shared';
 import { OrderStepper } from './OrderStepper';
 import { CustomerComplaintModal } from './CustomerComplaintModal';
@@ -31,11 +33,39 @@ export interface GuestTrackerProps {
 
 export const GuestTracker: React.FC<GuestTrackerProps> = ({ initialInvoice }) => {
   const { findOrderByQuery, updateOrderStep, addNewOrder, syncDbOrders } = useOrderStore();
+  const { user } = useAuthStore();
   const [query, setQuery] = useState(initialInvoice || '');
   const [searchedOrders, setSearchedOrders] = useState<MockOrder[]>([]);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [accessDeniedMessage, setAccessDeniedMessage] = useState('');
+
+  // Device Possession Orders (from Guest Checkout)
+  const [deviceOrders, setDeviceOrders] = useState<{
+    id: string;
+    phone: string;
+    name: string;
+    total: number;
+    createdAt: string;
+  }[]>([]);
+
+  // Load guest device orders from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('chenille_guest_device_orders');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            setDeviceOrders(parsed);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load guest device orders:', e);
+      }
+    }
+  }, []);
 
   // OTP Verification Modal State
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
@@ -47,10 +77,9 @@ export const GuestTracker: React.FC<GuestTrackerProps> = ({ initialInvoice }) =>
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const quickTestInvoices = [
-    { id: 'INV-20260907-001', label: 'INV-20260907-001 (Dewi - Langkah 2)' },
-    { id: 'INV-20260907-002', label: 'INV-20260907-002 (Budi - COD UI)' },
-    { id: '081299281192', label: 'WA 0812-9928-1192 (Dewi / OTP)' },
-    { id: '085711223344', label: 'WA 0857-1122-3344 (Budi / OTP)' },
+    { id: 'INV-20261003-9171', label: 'INV-20261003-9171 (Tulip Pink - Progres)' },
+    { id: 'INV-20261003-7504', label: 'INV-20261003-7504 (Mawar Velvet - Selesai)' },
+    { id: '081938851834', label: 'WA 0819-3885-1834 (Annisa / OTP)' },
   ];
 
   // Resend OTP countdown timer
@@ -197,11 +226,26 @@ export const GuestTracker: React.FC<GuestTrackerProps> = ({ initialInvoice }) =>
 
   const executeSearch = async (cleanQuery: string) => {
     if (!cleanQuery) return;
+    setAccessDeniedMessage('');
 
     // Check if input is a phone number (e.g. starts with 08, +62, 62, or only numbers)
     const isPhoneNumber = /^(\+?62|08|0)[0-9]{8,13}$/.test(cleanQuery.replace(/[\s-]/g, ''));
 
     if (isPhoneNumber) {
+      // 🛡️ Member Scoping Guard: If logged in, only allow tracking their own phone number
+      if (user) {
+        const cleanUserPhone = (user.phone || '').replace(/[^0-9]/g, '');
+        const cleanInputPhone = cleanQuery.replace(/[^0-9]/g, '');
+        if (cleanInputPhone.slice(-8) !== cleanUserPhone.slice(-8)) {
+          setAccessDeniedMessage(
+            `🛡️ Pembatasan Akses Akun: Anda saat ini login sebagai akun Member ${user.name}. Sesuai kebijakan privasi & keamanan garansi Chenille Atelier, Anda hanya memiliki izin melacak pesanan dengan nomor WhatsApp terdaftar akun Anda (${user.phone}). Untuk melacak pesanan pihak ketiga, silakan logout terlebih dahulu.`
+          );
+          setSearchedOrders([]);
+          setHasSearched(true);
+          return;
+        }
+      }
+
       // Trigger OTP flow for phone number privacy & security
       sendOtpRequest(cleanQuery);
       return;
@@ -215,6 +259,29 @@ export const GuestTracker: React.FC<GuestTrackerProps> = ({ initialInvoice }) =>
       const resJson = await res.json();
       if (resJson.success && resJson.data) {
         const mapped = mapDbOrderToMock(resJson.data);
+
+        // 🛡️ Member Isolation Guard: Logged in members can ONLY track their own orders!
+        if (user) {
+          const cleanUserPhone = (user.phone || '').replace(/[^0-9]/g, '');
+          const cleanOrderPhone = (mapped.customerPhone || '').replace(/[^0-9]/g, '');
+          const cleanUserEmail = (user.email || '').toLowerCase().trim();
+          const cleanOrderEmail = (mapped.customerEmail || '').toLowerCase().trim();
+
+          const isOwner =
+            (cleanUserPhone && cleanOrderPhone && cleanOrderPhone.slice(-8) === cleanUserPhone.slice(-8)) ||
+            (cleanUserEmail && cleanOrderEmail && cleanUserEmail === cleanOrderEmail);
+
+          if (!isOwner) {
+            setAccessDeniedMessage(
+              `🛡️ Pembatasan Akses Akun: Anda sedang login sebagai ${user.name} (${user.phone}). Sesuai kebijakan privasi Chenille Atelier, Anda tidak diperkenankan melacak pesanan milik pihak lain (${mapped.invoiceNumber}). Silakan logout terlebih dahulu jika ingin melacak pesanan pihak ketiga.`
+            );
+            setSearchedOrders([]);
+            setHasSearched(true);
+            setIsLoading(false);
+            return;
+          }
+        }
+
         syncDbOrders([mapped]);
         setSearchedOrders([mapped]);
         setSelectedOrderIndex(0);
@@ -226,6 +293,27 @@ export const GuestTracker: React.FC<GuestTrackerProps> = ({ initialInvoice }) =>
       // 2. Fallback to local store
       const local = findOrderByQuery(cleanQuery);
       if (local) {
+        if (user) {
+          const cleanUserPhone = (user.phone || '').replace(/[^0-9]/g, '');
+          const cleanOrderPhone = (local.customerPhone || '').replace(/[^0-9]/g, '');
+          const cleanUserEmail = (user.email || '').toLowerCase().trim();
+          const cleanOrderEmail = (local.customerEmail || '').toLowerCase().trim();
+
+          const isOwner =
+            (cleanUserPhone && cleanOrderPhone && cleanOrderPhone.slice(-8) === cleanUserPhone.slice(-8)) ||
+            (cleanUserEmail && cleanOrderEmail && cleanUserEmail === cleanOrderEmail);
+
+          if (!isOwner) {
+            setAccessDeniedMessage(
+              `🛡️ Pembatasan Akses Akun: Anda sedang login sebagai ${user.name} (${user.phone}). Anda tidak diperkenankan melacak pesanan milik pihak lain (${local.invoiceNumber}). Silakan logout jika ingin melacak pesanan orang lain.`
+            );
+            setSearchedOrders([]);
+            setHasSearched(true);
+            setIsLoading(false);
+            return;
+          }
+        }
+
         setSearchedOrders([local]);
         setSelectedOrderIndex(0);
         setHasSearched(true);
@@ -322,6 +410,60 @@ export const GuestTracker: React.FC<GuestTrackerProps> = ({ initialInvoice }) =>
           Pelanggan tanpa akun dapat memantau buket live. Cukup masukkan Nomor Invoice atau Nomor WhatsApp untuk verifikasi OTP aman.
         </p>
       </div>
+
+      {/* Access Denied / Member Isolation Alert */}
+      {accessDeniedMessage && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 space-y-2 animate-in fade-in">
+          <div className="flex items-center gap-2 font-bold text-xs text-rose-700">
+            <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>Perlindungan Privasi & Kepemilikan Pesanan</span>
+          </div>
+          <p className="text-xs text-rose-800 leading-relaxed font-medium">
+            {accessDeniedMessage}
+          </p>
+        </div>
+      )}
+
+      {/* Pesanan di Perangkat Ini (Device Possession) */}
+      {deviceOrders.length > 0 && (
+        <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2.5 animate-in fade-in">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-extrabold text-amber-900 flex items-center gap-1.5">
+              <Smartphone className="w-4 h-4 text-amber-600" />
+              <span>Pesanan di Perangkat Ini ({deviceOrders.length})</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.removeItem('chenille_guest_device_orders');
+                setDeviceOrders([]);
+                showMagicToast('Riwayat Perangkat Dihapus', 'Daftar pesanan lokal telah dibersihkan.', '🧹');
+              }}
+              className="text-[10px] text-stone-500 hover:text-rose-600 underline font-semibold cursor-pointer"
+            >
+              Hapus Riwayat
+            </button>
+          </div>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {deviceOrders.map((dOrd) => (
+              <button
+                key={dOrd.id}
+                type="button"
+                onClick={() => handleQuickSelect(dOrd.id)}
+                className="px-3.5 py-2 rounded-xl bg-white hover:bg-amber-100/60 border border-amber-300 text-stone-800 text-xs font-bold transition-all cursor-pointer flex items-center gap-2.5 text-left shadow-2xs hover:scale-101 shrink-0"
+              >
+                <div>
+                  <div className="font-mono text-xs text-rose-700 font-extrabold">{dOrd.id}</div>
+                  <div className="text-[10px] text-stone-500 font-normal">
+                    {dOrd.name} • Rp {Number(dOrd.total || 0).toLocaleString('id-ID')}
+                  </div>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-amber-600 ml-1" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Quick Test Invoices & Numbers */}
       <div className="flex items-center gap-2 flex-wrap text-xs">

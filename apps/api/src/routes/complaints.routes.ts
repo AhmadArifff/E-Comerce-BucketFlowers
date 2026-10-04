@@ -88,14 +88,12 @@ router.post('/upload-proof', upload.single('proof'), async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     await ensureComplaintsTable();
-    const {
-      order_id,
-      customer_name,
-      customer_phone,
-      complaint_category,
-      description,
-      evidence_photo_url,
-    } = req.body;
+    const order_id = req.body.order_id;
+    const customer_name = req.body.customer_name;
+    const customer_phone = req.body.customer_phone;
+    const complaint_category = req.body.complaint_category || req.body.category;
+    const description = req.body.description || req.body.complaint_description;
+    const evidence_photo_url = req.body.evidence_photo_url || req.body.proof_url;
 
     // Guard: Validasi field wajib
     if (!customer_name || !customer_phone || !complaint_category || !description) {
@@ -118,6 +116,33 @@ router.post('/', async (req, res) => {
         success: false,
         error: `Kategori komplain tidak valid. Pilihan yang tersedia: ${validCategories.join(', ')}`,
       });
+    }
+
+    // 🛡️ Strict Order Ownership Guard (if complaint references an order)
+    if (order_id && order_id.trim()) {
+      const cleanOrderId = order_id.trim();
+      const orderCheck = await pool.query(
+        'SELECT id, customer_phone FROM orders WHERE id = $1',
+        [cleanOrderId]
+      );
+
+      if (orderCheck.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Nomor invoice pesanan tidak ditemukan di sistem.',
+        });
+      }
+
+      const existingOrder = orderCheck.rows[0];
+      const cleanInputPhone = customer_phone.replace(/[^0-9]/g, '');
+      const cleanOrderPhone = (existingOrder.customer_phone || '').replace(/[^0-9]/g, '');
+
+      if (cleanInputPhone.slice(-8) !== cleanOrderPhone.slice(-8)) {
+        return res.status(403).json({
+          success: false,
+          error: 'Verifikasi Kepemilikan Gagal: Nomor WhatsApp tidak cocok dengan nomor yang terdaftar pada pesanan ini.',
+        });
+      }
     }
 
     const insertSql = `

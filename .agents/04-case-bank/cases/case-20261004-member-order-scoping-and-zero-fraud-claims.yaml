@@ -1,0 +1,42 @@
+id: case-20261004-member-order-scoping-and-zero-fraud-claims
+title: Penegakan Scoping Pesanan Member, Penyimpanan Perangkat Guest, dan Verifikasi Kepemilikan Klaim Anti-Fraud
+domain: security-authorization-order-scoping
+severity: CRITICAL
+status: VERIFIED
+created_at: "2026-10-04T15:05:00.000Z"
+context:
+  component: apps/api/src/routes/(orders|warranty|complaints).routes.ts, apps/web/src/app/portal/page.tsx, apps/web/src/components/portal/(GuestTracker|WarrantyClaimModal|CustomerComplaintModal).tsx
+  impact: Mencegah eskalasi hak akses (Horizontal Privilege Escalation / IDOR) di mana anggota atau pengunjung publik dapat melihat pesanan pelanggan lain atau mengajukan klaim garansi/asuransi dan komplain palsu atas invoice pihak ketiga.
+
+problem_statement: |
+  1. Halaman portal pelanggan sebelumnya mengambil seluruh pesanan aktif (/api/v1/orders tanpa filter) dan menampilkannya di Member Hub, sehingga pesanan milik pelanggan lain dapat terlihat oleh siapa pun yang membuka portal.
+  2. Pelanggan tamu (guest checkout) tidak memiliki riwayat pesanan otomatis di perangkat mereka setelah menyelesaikan pesanan tanpa akun.
+  3. Form klaim garansi anti-patah 100% dan tiket komplain menerima sembarang nomor WhatsApp tanpa verifikasi apakah nomor tersebut adalah pemilik sah yang memesan bunga, sehingga rawan dieksploitasi oleh pihak ketiga yang mengetahui nomor invoice publik untuk mengajukan klaim bunga pengganti gratis (free replacement) palsu.
+
+root_cause: |
+  1. Ketiadaan parameter scoping (userId, phone, email) pada endpoint GET /api/v1/orders dan ketiadaan filter kepemilikan di level client portal/page.tsx.
+  2. Ketiadaan persistensi lokal pesanan tamu (guest checkout possession) pada localStorage perangkat.
+  3. Ketiadaan guard verifikasi kepemilikan (ownership validation guard) dan tantangan WhatsApp OTP pada endpoint pengajuan klaim garansi dan komplain.
+
+solution_pattern: |
+  1. Guest Checkout Device Persistence:
+     - Di CartDrawer.tsx, setiap transaksi guest checkout otomatis disimpan ke localStorage ('chenille_guest_device_orders') berisi id, nama, nomor telepon, total biaya, dan tanggal pembuatan.
+     - Di GuestTracker.tsx, riwayat perangkat dirender dalam bilah chip cepat dengan opsi pembersihan mandiri.
+  2. Member Order Scoping & Isolation Guard:
+     - GET /api/v1/orders diperbarui dengan filter opsional userId, phone, dan email.
+     - Di portal/page.tsx, pesanan hanya di-fetch dengan scoping akun member yang sedang login.
+     - dedupedOrders difilter ketat menjadi scopedMemberOrders sehingga anggota hanya melihat pesanan miliknya sendiri.
+     - Jika pengguna sedang login sebagai member, pencarian pesanan pihak lain di GuestTracker otomatis diblokir dengan peringatan privasi & kepemilikan.
+  3. Zero-Fraud Claim Ownership Verification:
+     - Endpoint baru GET /api/v1/warranty/verify-order/:orderId memvalidasi keberadaan pesanan, memeriksa riwayat klaim aktif, dan mengembalikan maskedPhone (0819-****-1834).
+     - Jika member login yang mengajukan klaim cocok dengan pemilik pesanan, status otomatis 'VERIFIED_MEMBER' (pre-authorized 1-klik).
+     - Jika pengunjung adalah tamu atau belum login, sistem mewajibkan verifikasi OTP WhatsApp via /api/v1/otp/send dan /api/v1/otp/verify sebelum tombol submit klaim aktif.
+     - Backend di POST /api/v1/warranty dan POST /api/v1/complaints menegakkan guard perbandingan 8 digit nomor telepon terakhir (customer_phone.slice(-8) === order_phone.slice(-8)) dan menolak klaim tidak sah dengan HTTP 403 Forbidden.
+
+verification_evidence: |
+  - GET /api/v1/orders?userId=a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15 mengembalikan tepat 2 pesanan sah Annisa Larasati (INV-20261003-9171 dan INV-20261003-7504).
+  - GET /api/v1/warranty/verify-order/INV-20261003-9171 mengembalikan maskedPhone '0819-****-1834' dan status pesanan.
+  - Simulasi pengajuan klaim garansi palsu nomor telepon asing menghasilkan HTTP 403 Forbidden: 'Verifikasi Kepemilikan Gagal: Nomor WhatsApp tidak cocok dengan nomor yang terdaftar pada pesanan ini.'
+  - Simulasi pengajuan komplain pihak ketiga menghasilkan HTTP 403 Forbidden.
+  - 84 unit test vitest lolos 100% (npm run test:unit).
+  - Type-check 3 package turbo monorepo lolos 0 error kompilasi.

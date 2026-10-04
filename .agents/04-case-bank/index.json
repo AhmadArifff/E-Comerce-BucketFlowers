@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "E-Comerce-BucketFlowers",
-  "total_cases": 8,
+  "total_cases": 9,
   "cases": [
     {
       "id": "case-20261002-postgresql-enum-type-deduction",
@@ -66,6 +66,14 @@
       "severity": "MEDIUM",
       "status": "VERIFIED",
       "file": "cases/case-20261004-database-optimization-and-test-orders-cleanup.yaml"
+    },
+    {
+      "id": "case-20261004-member-order-scoping-and-zero-fraud-claims",
+      "title": "Penegakan Scoping Pesanan Member, Penyimpanan Perangkat Guest, dan Verifikasi Kepemilikan Klaim Anti-Fraud",
+      "domain": "security-authorization-order-scoping",
+      "severity": "CRITICAL",
+      "status": "VERIFIED",
+      "file": "cases/case-20261004-member-order-scoping-and-zero-fraud-claims.yaml"
     }
   ]
 }

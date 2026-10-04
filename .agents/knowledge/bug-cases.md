@@ -118,3 +118,20 @@ Daftar kendala masa lalu dan solusi yang telah diverifikasi pada sistem E-Commer
   2. Buat 16 indeks B-Tree strategis (`idx_order_status_histories_order_id`, `idx_order_items_product_id`, `idx_orders_user_id`, `idx_orders_cod_meetup_id`, `idx_product_images_product_id`, `idx_bill_of_materials_product_id`, `idx_reviews_product_id`, `idx_chat_messages_session_sent`, dll).
   3. Hapus 4 pesanan uji coba secara bersih dan perbarui statistik perencana kueri dengan `ANALYZE`.
   4. Diverifikasi via `GET /api/v1/orders` yang kini menyajikan tepat 2 pesanan otentik Annisa Larasati (`INV-20261003-9171` dan `INV-20261003-7504`).
+
+---
+
+## 9. Keamanan & Hak Akses: Penegakan Scoping Pesanan Member, Penyimpanan Perangkat Guest, dan Verifikasi Kepemilikan Klaim Anti-Fraud (Zero-Fraud Policy)
+- **Gejala**:
+  1. Halaman `/portal` mengambil seluruh data pesanan toko tanpa filter akun pengguna (`/api/v1/orders`), sehingga pesanan pembeli lain terlihat di Member Hub.
+  2. Pelanggan tamu (guest checkout) tidak memiliki riwayat pesanan otomatis di perangkat setelah menyelesaikan pesanan tanpa akun.
+  3. Formulir klaim garansi anti-patah 100% dan tiket komplain dapat disubmit oleh nomor WhatsApp asing mana pun, membuka celah klaim ganti baru (free replacement) palsu oleh pihak ketiga atas nomor invoice publik.
+- **Akar Masalah**:
+  1. Ketiadaan parameter scoping `userId`, `phone`, `email` pada `GET /api/v1/orders` dan ketiadaan isolasi filter kepemilikan di `portal/page.tsx`.
+  2. Ketiadaan penyimpanan lokal pesanan tamu (guest device possession) di browser `localStorage`.
+  3. Ketiadaan guard verifikasi kepemilikan dan tantangan WhatsApp OTP sebelum pengajuan klaim garansi atau komplain.
+- **Solusi**:
+  1. **Guest Device Possession**: Di `CartDrawer.tsx`, setiap checkout tamu otomatis disimpan ke `localStorage('chenille_guest_device_orders')` berisi nomor invoice, nama, WhatsApp, dan total pesanan. Di `GuestTracker.tsx`, riwayat pesanan perangkat dirender dalam bilah chip instan dengan opsi pembersihan mandiri.
+  2. **Member Isolation Guard**: `GET /api/v1/orders` memfilter pesanan berdasarkan `userId` atau `customer_phone` atau `customer_email`. Di `portal/page.tsx`, pesanan difilter ketat menjadi `scopedMemberOrders`. Jika pengguna sedang login sebagai member, pencarian pesanan milik orang lain di `GuestTracker` otomatis ditolak dengan peringatan privasi & kepemilikan.
+  3. **Zero-Fraud Ownership Verification**: Endpoint `GET /api/v1/warranty/verify-order/:orderId` mengembalikan data status pesanan, riwayat klaim aktif, dan `maskedPhone` (`0819-****-1834`). Jika member yang login cocok dengan pesanan, klaim berstatus `VERIFIED_MEMBER` (pre-authorized). Jika berstatus tamu atau belum login, wajib melakukan verifikasi OTP WhatsApp via `/api/v1/otp/send` dan `/api/v1/otp/verify` sebelum tombol submit klaim aktif. Backend di `POST /api/v1/warranty` dan `POST /api/v1/complaints` menegakkan guard pencocokan 8 digit nomor telepon terakhir dan menolak klaim tidak cocok dengan HTTP 403 Forbidden.
+

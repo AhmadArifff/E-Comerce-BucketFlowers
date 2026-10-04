@@ -524,6 +524,27 @@ export const CartDrawer: React.FC = () => {
         return;
       }
 
+      // 📱 Save to guest device localStorage if guest (not logged in)
+      if (typeof window !== 'undefined' && !user) {
+        try {
+          const raw = localStorage.getItem('chenille_guest_device_orders');
+          const guestOrders = raw ? JSON.parse(raw) : [];
+          const updated = [
+            {
+              id: invoiceNo,
+              phone: customerPhone.trim(),
+              name: customerName.trim(),
+              total: finalGrandTotal,
+              createdAt: new Date().toISOString(),
+            },
+            ...guestOrders.filter((g: any) => g.id !== invoiceNo),
+          ];
+          localStorage.setItem('chenille_guest_device_orders', JSON.stringify(updated.slice(0, 10)));
+        } catch (e) {
+          console.warn('Failed to save guest order to localStorage:', e);
+        }
+      }
+
       addNewOrder(newOrder);
       setIsCartOpen(false);
       clearCart();

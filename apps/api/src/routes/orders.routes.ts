@@ -11,12 +11,26 @@ router.get('/', async (req, res) => {
   try {
     const status = req.query.status as string | undefined;
     const phone = req.query.phone as string | undefined;
+    const userId = req.query.userId as string | undefined;
+    const email = req.query.email as string | undefined;
     const search = req.query.search as string | undefined;
     const limit = Math.max(1, Math.min(100, parseInt((req.query.limit as string) || '50', 10)));
 
     const conditions: string[] = [];
     const params: any[] = [];
     let idx = 1;
+
+    if (userId) {
+      conditions.push(`(o.user_id = $${idx} OR o.customer_phone = (SELECT phone FROM users WHERE id = $${idx}) OR o.customer_email = (SELECT email FROM users WHERE id = $${idx}))`);
+      params.push(userId);
+      idx++;
+    }
+
+    if (email) {
+      conditions.push(`o.customer_email ILIKE $${idx}`);
+      params.push(`%${email}%`);
+      idx++;
+    }
 
     if (status && status !== 'ALL') {
       conditions.push(`o.order_status = $${idx}`);

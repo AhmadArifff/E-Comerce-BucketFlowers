@@ -57,6 +57,53 @@ router.get('/order/:orderId', async (req, res) => {
   }
 });
 
+// GET /api/v1/warranty/verify-order/:orderId (Verify order existence and return masked phone for OTP challenge)
+router.get('/verify-order/:orderId', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const result = await pool.query(
+      `SELECT id, customer_name, customer_phone, order_status, current_step, user_id
+       FROM orders
+       WHERE id = $1
+       LIMIT 1;`,
+      [(orderId || '').trim()]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Nomor invoice pesanan tidak ditemukan di sistem.' });
+    }
+
+    const order = result.rows[0];
+    const rawPhone = order.customer_phone || '';
+    const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+    const maskedPhone = cleanPhone.length >= 8
+      ? `${cleanPhone.slice(0, 4)}-****-${cleanPhone.slice(-4)}`
+      : '***-***';
+
+    // Check existing claims
+    const claimRes = await pool.query(
+      `SELECT id, status, created_at FROM warranty_claims WHERE order_id = $1 AND status != 'REJECTED' LIMIT 1`,
+      [order.id]
+    );
+
+    return res.json({
+      success: true,
+      data: {
+        orderId: order.id,
+        customerName: order.customer_name,
+        maskedPhone,
+        userId: order.user_id,
+        orderStatus: order.order_status,
+        currentStep: order.current_step,
+        isCompleted: order.order_status === 'COMPLETED' || order.current_step === 4,
+        existingClaim: claimRes.rows[0] || null,
+      },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // POST /api/v1/warranty/upload-proof (Upload photo / video unboxing)
 router.post('/upload-proof', upload.single('proof'), async (req: Request, res: Response) => {
   try {
@@ -81,7 +128,7 @@ router.post('/upload-proof', upload.single('proof'), async (req: Request, res: R
   }
 });
 
-// POST /api/v1/warranty (Submit new warranty claim)
+// POST /api/v1/warranty (Submit new warranty claim with strict ownership validation)
 router.post('/', async (req, res) => {
   try {
     const { 
@@ -97,6 +144,40 @@ router.post('/', async (req, res) => {
 
     if (!order_id || !customer_phone || !description) {
       return res.status(400).json({ success: false, error: 'No order, nomor telepon, dan deskripsi kendala wajib diisi.' });
+    }
+
+    // 🛡️ Strict Order Ownership Guard
+    const cleanOrderId = (order_id || '').trim();
+    const orderCheck = await pool.query(
+      'SELECT id, customer_phone, user_id, order_status, current_step FROM orders WHERE id = $1',
+      [cleanOrderId]
+    );
+
+    if (orderCheck.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Nomor invoice pesanan tidak ditemukan di sistem.' });
+    }
+
+    const existingOrder = orderCheck.rows[0];
+    const cleanInputPhone = customer_phone.replace(/[^0-9]/g, '');
+    const cleanOrderPhone = (existingOrder.customer_phone || '').replace(/[^0-9]/g, '');
+
+    if (cleanInputPhone.slice(-8) !== cleanOrderPhone.slice(-8)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Verifikasi Kepemilikan Gagal: Nomor WhatsApp tidak cocok dengan nomor yang terdaftar pada pesanan ini.',
+      });
+    }
+
+    // Guard: Cek apakah klaim sudah pernah diajukan
+    const existingClaim = await pool.query(
+      `SELECT id, status FROM warranty_claims WHERE order_id = $1 AND status != 'REJECTED'`,
+      [cleanOrderId]
+    );
+    if (existingClaim.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Pengajuan klaim garansi untuk nomor pesanan ini sudah pernah dikirimkan sebelumnya.',
+      });
     }
 
     const id = `claim-${Date.now()}`;
