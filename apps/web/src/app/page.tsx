@@ -17,6 +17,7 @@ import { CartDrawer } from '@/components/storefront/CartDrawer';
 import { LiveChatWidget } from '@/components/storefront/LiveChatWidget';
 import { Footer } from '@/components/storefront/Footer';
 import { MaintenanceOverlay } from '@/components/storefront/MaintenanceOverlay';
+import { CODLocationsModal } from '@/components/storefront/CODLocationsModal';
 import type { ExtendedProduct } from '@chenille/shared';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
@@ -426,6 +427,9 @@ export default function StorefrontPage() {
         {/* 5. LACAK STATUS PESANAN */}
         <QuickTrackingSection />
 
+        {/* Anchor for COD Meetup Points Navigation */}
+        <div id="cod-meetup" className="scroll-mt-20" />
+
         {/* 6. BANTUAN, PERAWATAN & GARANSI 100% */}
         <WarrantyHelpSection />
       </main>
@@ -439,6 +443,9 @@ export default function StorefrontPage() {
         isOpen={!!selectedProduct}
         onClose={() => setSelectedProduct(null)}
       />
+
+      {/* 6 Kampus Depok COD Meetup Points Interactive Modal */}
+      <CODLocationsModal />
 
       <Footer />
 

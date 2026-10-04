@@ -100,10 +100,10 @@ export function formatChatForWhatsApp(text: string, baseUrl: string = ''): strin
   // Replace action tags with readable deep links
   waText = waText.replace(/\[\[action:([a-zA-Z0-9_-]+)(?:\?([^|\]]+))?\|([^\]]+)\]\]/g, (_, type, query, label) => {
     let link = `${host}/`;
-    if (type === 'OPEN_STUDIO') link = `${host}/#custom-studio`;
+    if (type === 'OPEN_STUDIO') link = `${host}/#custom`;
     else if (type === 'VIEW_COD') link = `${host}/#cod-meetup`;
     else if (type === 'VIEW_CATALOG') link = `${host}/#katalog`;
-    else if (type === 'VIEW_WARRANTY') link = `${host}/#garansi`;
+    else if (type === 'VIEW_WARRANTY') link = `${host}/#bantuan`;
     else if (type === 'TRACK_ORDER') {
       const inv = query ? new URLSearchParams(query).get('inv') : '';
       link = inv ? `${host}/lacak-pesanan?inv=${inv}` : `${host}/lacak-pesanan`;

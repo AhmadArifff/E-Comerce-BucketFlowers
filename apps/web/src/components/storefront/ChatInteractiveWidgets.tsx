@@ -14,6 +14,7 @@ import {
   ExternalLink 
 } from 'lucide-react';
 import { useCartStore } from '@/stores/useCartStore';
+import { showMagicToast } from '@/lib/magic-motion';
 import { getApiUrl } from '@/lib/api-client';
 import type { ParsedActionTag } from '@/lib/chat-interactive-parser';
 
@@ -107,6 +108,7 @@ export const ChatProductCard: React.FC<ChatProductCardProps> = ({
     };
 
     addItem(cartProduct, 1);
+    showMagicToast('Buket Ditambahkan! 🌸', `${product.name} telah masuk ke keranjang belanja.`, '🛒');
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
   };
@@ -200,12 +202,19 @@ export const ChatProductCard: React.FC<ChatProductCardProps> = ({
         <button
           type="button"
           onClick={() => {
+            // 1. Dispatch global select-product-by-id to open ProductDetailModal
+            window.dispatchEvent(
+              new CustomEvent('select-product-by-id', {
+                detail: { productId: product.id },
+              })
+            );
+            // 2. Also smooth scroll to catalog if needed
             const el = document.getElementById('katalog');
             if (el) el.scrollIntoView({ behavior: 'smooth' });
             if (onNavigate) onNavigate();
           }}
           className="px-2.5 py-1.5 rounded-xl border border-stone-200 hover:border-stone-300 text-stone-600 hover:text-stone-900 text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1"
-          title="Lihat katalog produk lengkap"
+          title="Lihat foto detail dan spesifikasi lengkap buket"
         >
           <span>Detail</span>
           <ArrowRight className="w-3 h-3 text-stone-400" />
@@ -230,15 +239,19 @@ export const ChatActionChips: React.FC<ChatActionChipsProps> = ({
     const { type, params } = action;
 
     if (type === 'OPEN_STUDIO') {
-      const el = document.getElementById('custom-studio');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      const el = document.getElementById('custom') || document.getElementById('custom-studio');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.location.href = '/#custom';
+      }
       if (onActionTriggered) onActionTriggered();
     } else if (type === 'TRACK_ORDER') {
       const inv = params?.inv || '';
       if (inv) {
         window.location.href = `/lacak-pesanan?inv=${encodeURIComponent(inv)}`;
       } else {
-        const el = document.getElementById('quick-tracking') || document.querySelector('[data-section="tracking"]');
+        const el = document.getElementById('tracking') || document.getElementById('quick-tracking');
         if (el) {
           el.scrollIntoView({ behavior: 'smooth' });
         } else {
@@ -247,21 +260,37 @@ export const ChatActionChips: React.FC<ChatActionChipsProps> = ({
       }
       if (onActionTriggered) onActionTriggered();
     } else if (type === 'VIEW_COD') {
-      const el = document.getElementById('cod-meetup') || document.getElementById('cod-points') || document.getElementById('katalog');
+      // 1. Dispatch custom event to open the dedicated 6 campus COD modal!
+      window.dispatchEvent(new CustomEvent('open-cod-modal'));
+      // 2. Also scroll to #cod-meetup anchor
+      const el = document.getElementById('cod-meetup');
       if (el) el.scrollIntoView({ behavior: 'smooth' });
+      // 3. Close/minimize chat so the full COD modal is unobstructed
       if (onActionTriggered) onActionTriggered();
     } else if (type === 'VIEW_CATALOG') {
       const el = document.getElementById('katalog') || document.querySelector('main');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.location.href = '/#katalog';
+      }
       if (onActionTriggered) onActionTriggered();
     } else if (type === 'VIEW_WARRANTY') {
-      const el = document.getElementById('warranty-help') || document.querySelector('[data-section="warranty"]');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      const el = document.getElementById('bantuan') || document.getElementById('warranty-help');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.location.href = '/#bantuan';
+      }
       if (onActionTriggered) onActionTriggered();
     } else {
       // Generic fallback
       const el = document.getElementById('katalog');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.location.href = '/#katalog';
+      }
       if (onActionTriggered) onActionTriggered();
     }
   };
