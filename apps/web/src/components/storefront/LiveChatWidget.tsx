@@ -187,9 +187,7 @@ export const LiveChatWidget: React.FC = () => {
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-stone-50/50 text-xs">
             {messages.map((msg) => {
               const isUser = msg.sender === 'CUSTOMER';
-              const parsed = !isUser
-                ? parseInteractiveChat(msg.text)
-                : { cleanText: msg.text, products: [], actions: [] };
+              const parsed = parseInteractiveChat(msg.text);
 
               return (
                 <div
@@ -206,7 +204,7 @@ export const LiveChatWidget: React.FC = () => {
                     <p className="leading-relaxed whitespace-pre-wrap">{parsed.cleanText || msg.text}</p>
 
                     {/* Interactive Recommended Product Cards */}
-                    {!isUser && parsed.products.length > 0 && (
+                    {parsed.products.length > 0 && (
                       <div className="space-y-1.5 mt-1">
                         {parsed.products.map((prod) => (
                           <ChatProductCard
@@ -220,7 +218,7 @@ export const LiveChatWidget: React.FC = () => {
                     )}
 
                     {/* Interactive Action Navigation Chips */}
-                    {!isUser && parsed.actions.length > 0 && (
+                    {parsed.actions.length > 0 && (
                       <ChatActionChips
                         actions={parsed.actions}
                         onActionTriggered={() => setIsOpen(false)}

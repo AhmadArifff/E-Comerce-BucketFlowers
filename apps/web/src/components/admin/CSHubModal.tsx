@@ -5,6 +5,7 @@ import { MessageSquare, Send, Phone, RefreshCw, CheckCircle2, BellRing, Sparkles
 import { useChatStore } from '@/stores/useChatStore';
 import { showMagicToast } from '@/lib/magic-motion';
 import { parseInteractiveChat, formatChatForWhatsApp } from '@/lib/chat-interactive-parser';
+import { ChatProductCard, ChatActionChips } from '@/components/storefront/ChatInteractiveWidgets';
 
 // Tiny inline notification sound (base64-encoded short beep)
 const playNotificationSound = () => {
@@ -104,7 +105,8 @@ export const CSHubModal: React.FC = () => {
       if (res.data.isSimulation) {
         showMagicToast('Draf AI Dibuat! 💡', 'Draf cerdas dibuat berbasis fakta database (Mode Grounded).', '✨');
       } else {
-        showMagicToast('Draf Gemini AI Siap! ✨', 'Draf balasan cerdas diracik oleh Gemini 1.5 Flash.', '🌸');
+        const activeModel = res.data.modelUsed || 'Gemini 3.5 Flash';
+        showMagicToast('Draf Gemini AI Siap! ✨', `Draf balasan cerdas diracik oleh ${activeModel}.`, '🌸');
       }
     } else {
       showMagicToast('Gagal Menghasilkan Draf ⚠️', res.error || 'Silakan coba lagi.', '❌');
@@ -314,6 +316,7 @@ export const CSHubModal: React.FC = () => {
                   adminSessionMessages.map((msg) => {
                     const isCustomer = msg.sender === 'CUSTOMER';
                     const isBot = msg.sender === 'BOT';
+                    const parsed = parseInteractiveChat(msg.text);
 
                     return (
                       <div
@@ -321,7 +324,7 @@ export const CSHubModal: React.FC = () => {
                         className={`flex flex-col ${isCustomer ? 'items-start' : isBot ? 'items-start' : 'items-end'}`}
                       >
                         <div
-                          className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl ${
+                          className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl ${
                             isCustomer
                               ? 'bg-stone-100 text-stone-800 rounded-bl-xs'
                               : isBot
@@ -329,7 +332,27 @@ export const CSHubModal: React.FC = () => {
                               : 'bg-rose-600 text-white rounded-br-xs shadow-sm'
                           }`}
                         >
-                          <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                          <p className="leading-relaxed whitespace-pre-wrap">{parsed.cleanText || msg.text}</p>
+
+                          {/* Render interactive product cards in admin chat */}
+                          {parsed.products.length > 0 && (
+                            <div className="space-y-1.5 mt-2">
+                              {parsed.products.map((prod) => (
+                                <ChatProductCard
+                                  key={prod.id}
+                                  productId={prod.id}
+                                  productName={prod.name}
+                                />
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Render interactive action chips in admin chat */}
+                          {parsed.actions.length > 0 && (
+                            <div className="mt-2">
+                              <ChatActionChips actions={parsed.actions} />
+                            </div>
+                          )}
                         </div>
                         <span className="text-[10px] text-stone-400 mt-1 px-1">
                           {isBot ? '🤖 Bot Sapaan' : isCustomer ? '👤 Pembeli' : '🌸 Florist Staff (Anda)'} • {msg.sentAt}

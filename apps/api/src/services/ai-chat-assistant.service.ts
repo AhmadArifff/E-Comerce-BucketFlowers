@@ -471,11 +471,38 @@ ATURAN KEAMANAN & BATASAN KETAT (AI GUARDRAILS):
    - Jika pelanggan menanyakan status pesanan namun nomor invoice tidak ditemukan pada data database, katakan dengan sopan bahwa data belum tercatat di sistem dan mohon dicek kembali nomor invoice-nya. DILARANG MENGARANG STATUS!
 4. DATA REDACTION: JANGAN PERNAH membocorkan rahasia internal seperti harga modal HPP bahan baku, kontak supplier grosir, password, atau token API.
 
-PENGETAHUAN FAQ & KEBIJAKAN ATELIER:
-- GARANSI ANTI-PATAH & RUSAK PENGIRIMAN 100%: Setiap buket memiliki garansi 100%. Jika buket rusak atau patah saat pengiriman, pelanggan bisa klaim penggantian buket baru secara gratis cukup dengan mengirimkan foto bukti buket rusak saat pertama kali diterima.
-- KUSTOMISASI CUSTOM STUDIO: Pelanggan bisa kustomisasi warna kawat bulu (pastel, bold, gradasi), jumlah tangkai, kartu ucapan gratis, dan jenis kertas wrapping (korean cellophane/kraft) langsung di menu Custom Studio di web.
-- PENGAMBILAN COD KAMPUS DEPOK: 6 titik temu resmi gratis ongkir di sekitar kampus Depok (Vokasi UI, FISIP UI, Balairung UI, Gunadarma Kampus D/E, PNJ).
-- READY STOCK VS PRE-ORDER: Ready stock dikirim di hari yang sama jika pesan sebelum jam 15:00 WIB. Pre-order pengerjaan 1-3 hari kerja.
+PENGETAHUAN FAQ & KEBIJAKAN ATELIER (DETAIL LENGKAP):
+1. KEUNGGULAN BAHAN KAWAT BULU (CHENILLE PIPE CLEANER):
+   - Seluruh buket dibuat handmade dari kawat bulu chenille premium yang halus, rapi, dan fleksibel.
+   - Bunga abadi (everlasting): Tidak akan layu, tidak perlu air, dan bebas serbuk sari (anti-alergi).
+   - Cara Perawatan: Jangan dicuci dengan air. Cukup dibersihkan dengan kuas lembut / lap microfiber kering, atau ditiup pelan jika berdebu. Jauhkan dari tempat lembap atau api.
+2. KUSTOMISASI & CUSTOM STUDIO:
+   - Pelanggan bebas kustomisasi warna kawat bulu (pastel, bold, gradasi mawar, matahari, tulip, daisy, dsb).
+   - Aksesoris wisuda: Topi toga wisuda, boneka beruang wisuda, selempang nama wisudawan custom (sash), pin pita logo universitas (UI, Gunadarma, PNJ).
+   - Pilihan kertas wrapping: Korean cellophane waterproof, kraft vintage, dan pita satin mewah.
+   - Kartu ucapan GRATIS (Free Greeting Card): Boleh request kata-kata ucapan selamat wisuda, ulang tahun, atau anniversary untuk dicetak rapi.
+3. PENGIRIMAN & 6 TITIK COD KAMPUS DEPOK (RADIUS 5 KM - GRATIS ONGKIR):
+   - 6 Titik Temu Resmi: Balairung UI, Stasiun UI / Rotunda Halte Bikun, Gunadarma Kampus D Margonda (Lobi Gd. 1), Gerbang Utama PNJ Kukusan, Stasiun KRL Pondok Cina (Pintu Timur), Margo City Mall (Lobi Utama GF depan Starbucks).
+   - Pengambilan COD 100% Gratis Ongkir. Staf akan konfirmasi via WA 15-30 menit sebelum jadwal temu.
+   - Ekspedisi Luar Kota (J&T, JNE, SiCepat): Dipacking ekstra aman menggunakan box kardus tebal (corrugated box) khusus buket + bubble wrap berlapis + stiker fragile.
+   - Kurir Instan (Grab/Gojek): Tersedia untuk area Depok dan sekitarnya di hari yang sama untuk produk ready stock.
+4. GARANSI ANTI-PATAH & RUSAK PENGIRIMAN 100%:
+   - Jika buket rusak, patah, atau penyok saat tiba, florist kami mengganti 100% buket baru secara GRATIS atau refund.
+   - Syarat klaim sangat mudah: Cukup kirimkan foto buket saat pertama kali diterima/unboxing ke chat/WA kami.
+5. METODE PEMBAYARAN:
+   - QRIS Instan (GoPay, OVO, Dana, ShopeePay, BCA Mobile).
+   - Virtual Account Otomatis (BCA, Mandiri, BNI, BRI).
+   - Transfer Bank Manual ke Rekening BCA Toko.
+   - Bayar Tunai (Cash on Delivery) saat serah terima di titik temu COD kampus.
+6. READY STOCK VS PRE-ORDER (PO):
+   - Ready Stock: Bisa dikirim atau diambil COD di hari yang sama jika dipesan sebelum jam 15:00 WIB.
+   - Pre-Order: Pengerjaan 1-3 hari kerja untuk buket custom atau partai besar.
+7. CARA PEMESANAN DARI AWAL HINGGA SELESAI (PANDUAN USER BARU):
+   - 1. Pilih buket di katalog atau kustom warna di Custom Studio.
+   - 2. Masukkan ke keranjang dan tambahkan catatan kartu ucapan gratis.
+   - 3. Checkout dengan memilih metode pengiriman (COD kampus gratis ongkir atau kurir ekspedisi).
+   - 4. Selesaikan pembayaran (QRIS, VA, Transfer BCA, atau Bayar Tunai COD).
+   - 5. Pantau proses pengerjaan florist langsung di menu Lacak Pesanan.
 
 ATURAN EMOTICON & KARAKTER (SANGAT PENTING):
 - PENGECUALIAN EMOTICON: HANYA BOLEH menggunakan EMOTICON WAJAH (Face Emoticons) seperti 😊, 🥰, 🤗, 👋, 😄, 😉, 🙏 untuk merefleksikan emosi ramah staf manusia (cukup 1-2 emoticon per pesan).
@@ -650,6 +677,123 @@ export function generateDeterministicFallback(
       `Untuk buket bunga kawat bulu kami, Kakak bebas memilih kombinasi warna kawat bulu dan kertas wrapping sesuai keinginan di menu Custom Studio di web kami. Kakak juga bisa menambahkan kartu ucapan gratis lho!\n\n` +
       `Ada tema warna khusus atau buket favorit yang ingin Kakak konsultasikan bersama staf kami? 🥰\n\n` +
       `[[action:OPEN_STUDIO|Buka Custom Studio]]`
+    );
+  }
+
+  // 2b. Order Guide / User Baru query
+  const isOrderGuideQuery =
+    lowerMsg.includes('cara pesan') ||
+    lowerMsg.includes('cara beli') ||
+    lowerMsg.includes('user baru') ||
+    lowerMsg.includes('langkah') ||
+    lowerMsg.includes('bingung') ||
+    lowerMsg.includes('gimana pesannya') ||
+    lowerMsg.includes('bagaimana pesannya');
+
+  if (isOrderGuideQuery) {
+    const opening = hasPriorGreeting
+      ? `Tenang saja Kak ${name}, jangan bingung ya 😊 Kami siap bantu pandu langkah-langkah pemesanannya:\n\n`
+      : `Halo Kak ${name} 😊 Selamat datang di Chenille Atelier Florist! Jangan bingung ya, pemesanannya gampang banget kok:\n\n`;
+
+    return sanitizeDraftReply(
+      opening +
+      `1. Pilih Buket: Kakak bisa pilih buket favorit di katalog atau kustom warna kawat bulu & wrapping di Custom Studio.\n` +
+      `2. Masukkan Keranjang: Klik tombol pesan/tambah ke keranjang dan cantumkan ucapan untuk kartu gratis.\n` +
+      `3. Pilih Pengiriman: Tentukan metode pengiriman (COD kampus Depok gratis ongkir atau kurir ekspedisi).\n` +
+      `4. Pembayaran: Pilih metode yang Kakak sukai (QRIS, Transfer VA/BCA, atau Bayar Tunai COD).\n` +
+      `5. Pantau Pengerjaan: Rangkaian buket Kakak bisa dipantau langsung perkembangannya di menu Lacak Pesanan.\n\n` +
+      `Kira-kira Kakak sedang mencari buket untuk momen wisuda, ulang tahun, atau kado spesial lainnya kak? 🥰\n\n` +
+      `[[action:VIEW_CATALOG|Lihat Semua Katalog]]\n[[action:OPEN_STUDIO|Buka Custom Studio]]`
+    );
+  }
+
+  // 2c. Care & Durability query (awet, tahan, layu, debu, cuci)
+  const isCareQuery =
+    lowerMsg.includes('awet') ||
+    lowerMsg.includes('tahan') ||
+    lowerMsg.includes('rawat') ||
+    lowerMsg.includes('debu') ||
+    lowerMsg.includes('layu') ||
+    lowerMsg.includes('cuci');
+
+  if (isCareQuery) {
+    const opening = hasPriorGreeting
+      ? `Buket kawat bulu kami awet selamanya Kak ${name}! 😊\n\n`
+      : `Halo Kak ${name} 😊\n\nBuket bunga kawat bulu (chenille pipe cleaner) kami bersifat abadi (everlasting), tidak akan layu atau rontok seperti bunga asli.\n\n`;
+
+    return sanitizeDraftReply(
+      opening +
+      `Untuk perawatannya sangat mudah: cukup bersihkan dengan kuas halus / lap kering atau ditiup pelan jika berdebu. Hindari dicuci dengan air atau disimpan di tempat yang terlalu lembap ya kak agar warnanya tetap cerah dan bentuk kawatnya terjaga sempurna.\n\n` +
+      `Apakah ada model buket yang sedang Kakak incar untuk koleksi atau hadiah wisuda? Kami siap bantu rekomendasikan ya 🥰\n\n` +
+      `[[action:VIEW_CATALOG|Lihat Semua Katalog]]`
+    );
+  }
+
+  // 2d. Greeting Card query (kartu ucapan)
+  const isCardQuery =
+    lowerMsg.includes('kartu') ||
+    lowerMsg.includes('ucapan') ||
+    lowerMsg.includes('greeting');
+
+  if (isCardQuery) {
+    const opening = hasPriorGreeting
+      ? `Tentu saja gratis Kak ${name}! 😊\n\n`
+      : `Halo Kak ${name} 😊\n\nSetiap pembelian buket di Chenille Atelier sudah termasuk KARTU UCAPAN GRATIS (Free Greeting Card)!\n\n`;
+
+    return sanitizeDraftReply(
+      opening +
+      `Kakak bisa menuliskan pesan khusus seperti ucapan wisuda, ulang tahun, anniversary, atau kata-kata manis lainnya saat checkout. Nanti kartu ucapan akan kami cetak dengan rapi dan disematkan langsung di rangkaian buket Kakak.\n\n` +
+      `Kakak mau request ucapan untuk momen apa nih kak? Staf kami siap bantu buatkan ya 🙏\n\n` +
+      `[[action:OPEN_STUDIO|Buka Custom Studio]]`
+    );
+  }
+
+  // 2e. Payment query (bayar, qris, transfer, va)
+  const isPaymentQuery =
+    lowerMsg.includes('bayar') ||
+    lowerMsg.includes('pembayaran') ||
+    lowerMsg.includes('transfer') ||
+    lowerMsg.includes('qris') ||
+    lowerMsg.includes('rekening') ||
+    lowerMsg.includes('va');
+
+  if (isPaymentQuery) {
+    const opening = hasPriorGreeting
+      ? `Untuk metode pembayaran di Chenille Atelier sangat fleksibel Kak ${name}! 😊\n\n`
+      : `Halo Kak ${name} 😊 Terima kasih sudah bertanya seputar metode pembayaran!\n\n`;
+
+    return sanitizeDraftReply(
+      opening +
+      `Kakak bisa memilih beberapa metode pembayaran berikut:\n` +
+      `- QRIS Otomatis (GoPay, OVO, Dana, ShopeePay, BCA Mobile)\n` +
+      `- Virtual Account Instan (BCA, Mandiri, BNI, BRI)\n` +
+      `- Transfer Bank Manual BCA\n` +
+      `- Bayar Tunai (Cash on Delivery) saat serah terima di titik temu COD kampus Depok\n\n` +
+      `Semua transaksi dijamin aman dan terverifikasi otomatis. Kira-kira metode pembayaran mana yang paling nyaman untuk Kakak? 🙏\n\n` +
+      `[[action:VIEW_CATALOG|Lihat Semua Katalog]]`
+    );
+  }
+
+  // 2f. Shipping / Packing query (luar kota, packing, ekspedisi)
+  const isShippingQuery =
+    lowerMsg.includes('luar kota') ||
+    lowerMsg.includes('packing') ||
+    lowerMsg.includes('kemasan') ||
+    lowerMsg.includes('kardus') ||
+    lowerMsg.includes('ekspedisi') ||
+    lowerMsg.includes('aman ga') ||
+    lowerMsg.includes('aman gak');
+
+  if (isShippingQuery) {
+    const opening = hasPriorGreeting
+      ? `Pengiriman ke luar kota dijamin super aman Kak ${name}! 😊\n\n`
+      : `Halo Kak ${name} 😊 Terima kasih sudah bertanya seputar keamanan pengiriman!\n\n`;
+
+    return sanitizeDraftReply(
+      opening +
+      `Untuk pengiriman via kurir ekspedisi (J&T, JNE, SiCepat), kami menggunakan kardus tebal khusus buket (corrugated box) ditambah bubble wrap tebal dan stiker fragile. Buket juga dilindungi garansi anti-patah 100%, jadi jika ada kendala dalam pengiriman, kami siap ganti buket baru secara gratis.\n\n` +
+      `Rencananya buket ini mau dikirim ke kota mana kak? Kami siap bantu cek estimasi pengirimannya ya 🙏\n\n` +
+      `[[action:VIEW_CATALOG|Lihat Semua Katalog]]`
     );
   }
 
