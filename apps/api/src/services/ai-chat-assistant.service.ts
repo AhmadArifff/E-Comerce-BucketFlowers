@@ -22,18 +22,35 @@ export interface GroundedOrder {
   latest_step_description?: string;
 }
 
+export interface SuggestedAction {
+  type: string;
+  label: string;
+  url?: string;
+  params?: Record<string, string>;
+}
+
+export interface RecommendedProduct {
+  id: string;
+  name: string;
+  price?: number;
+  image_url?: string;
+  is_ready_stock?: boolean;
+}
+
 export interface GroundingContext {
   customerName: string;
   customerPhone?: string;
   order?: GroundedOrder | null;
   ordersList?: GroundedOrder[];
   products?: Array<{
+    id: string;
     name: string;
     series?: string;
     price: number;
     is_ready_stock: boolean;
     stock: number;
     po_lead_days: number;
+    image_url?: string;
   }>;
   codPoints?: Array<{
     name: string;
@@ -56,6 +73,8 @@ export interface AiDraftResult {
   isSimulation: boolean;
   orderRef?: string | null;
   modelUsed: string;
+  suggestedActions?: SuggestedAction[];
+  recommendedProducts?: RecommendedProduct[];
 }
 
 /**
@@ -115,6 +134,68 @@ export function sanitizeDraftReply(text: string): string {
     // Clean excessive blank lines (more than 2)
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
+
+/**
+ * Extract interactive action chips and recommended product cards from message text
+ */
+export function extractInteractiveMetadata(
+  text: string,
+  contextProducts?: GroundingContext['products']
+): {
+  suggestedActions: SuggestedAction[];
+  recommendedProducts: RecommendedProduct[];
+} {
+  const suggestedActions: SuggestedAction[] = [];
+  const recommendedProducts: RecommendedProduct[] = [];
+
+  if (!text) return { suggestedActions, recommendedProducts };
+
+  // Match [[action:TYPE?params|Label]]
+  const actionRegex = /\[\[action:([a-zA-Z0-9_-]+)(?:\?([^|\]]+))?\|([^\]]+)\]\]/g;
+  let actionMatch: RegExpExecArray | null;
+  while ((actionMatch = actionRegex.exec(text)) !== null) {
+    const rawType = actionMatch[1];
+    const rawQuery = actionMatch[2] || '';
+    const label = actionMatch[3].trim();
+
+    const params: Record<string, string> = {};
+    if (rawQuery) {
+      const parts = rawQuery.split('&');
+      for (const part of parts) {
+        const [k, v] = part.split('=');
+        if (k) params[k] = decodeURIComponent(v || '');
+      }
+    }
+
+    suggestedActions.push({
+      type: rawType,
+      label,
+      params,
+    });
+  }
+
+  // Match [[product:id|Name]]
+  const productRegex = /\[\[product:([^|\]]+)\|([^\]]+)\]\]/g;
+  let prodMatch: RegExpExecArray | null;
+  while ((prodMatch = productRegex.exec(text)) !== null) {
+    const prodId = prodMatch[1].trim();
+    const prodName = prodMatch[2].trim();
+
+    const matchedInCtx = contextProducts?.find(
+      (p) => p.id === prodId || p.name.toLowerCase() === prodName.toLowerCase()
+    );
+
+    recommendedProducts.push({
+      id: prodId,
+      name: prodName,
+      price: matchedInCtx?.price,
+      image_url: matchedInCtx?.image_url,
+      is_ready_stock: matchedInCtx?.is_ready_stock ?? true,
+    });
+  }
+
+  return { suggestedActions, recommendedProducts };
 }
 
 /**
@@ -262,7 +343,7 @@ export async function retrieveGroundingContext(
     console.warn('[AI Assistant] Could not fetch order grounding:', err);
   }
 
-  // 4. Products grounding (if message talks about buket, harga, katalog, stok, custom)
+  // 4. Products grounding (if message talks about buket, harga, katalog, stok, custom, cara pesan, dll)
   let productsList: GroundingContext['products'] = [];
   const lowerMsg = customerMessage.toLowerCase();
   const isProductQuery =
@@ -273,25 +354,33 @@ export async function retrieveGroundingContext(
     lowerMsg.includes('ready') ||
     lowerMsg.includes('po') ||
     lowerMsg.includes('katalog') ||
-    lowerMsg.includes('rekomendasi');
+    lowerMsg.includes('pesan') ||
+    lowerMsg.includes('beli') ||
+    lowerMsg.includes('bingung') ||
+    lowerMsg.includes('rekomendasi') ||
+    lowerMsg.includes('wisuda') ||
+    lowerMsg.includes('mawar');
 
   if (isProductQuery) {
     try {
       const prodRes = await pool.query(`
-        SELECT p.name, c.name as category, p.price, p.is_ready_stock, p.stock, p.po_lead_days 
+        SELECT p.id, p.name, c.name as category, p.price, p.is_ready_stock, p.stock, p.po_lead_days,
+               COALESCE((SELECT image_url FROM product_images WHERE product_id = p.id ORDER BY is_primary DESC, sort_order ASC LIMIT 1), '') as image_url
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         WHERE p.is_active = true 
         ORDER BY p.is_ready_stock DESC, p.name ASC 
-        LIMIT 6;
+        LIMIT 8;
       `);
       productsList = prodRes.rows.map((r) => ({
+        id: String(r.id),
         name: r.name,
         series: r.category || 'Atelier Series',
         price: Number(r.price || 0),
         is_ready_stock: Boolean(r.is_ready_stock),
         stock: Number(r.stock || 0),
         po_lead_days: Number(r.po_lead_days || 1),
+        image_url: r.image_url || undefined,
       }));
       if (productsList.length > 0) {
         sourcesUsed.push('Katalog Produk & Ketersediaan Stok');
@@ -397,6 +486,31 @@ PENYEBUTAN NAMA PELANGGAN:
 - Sapa nama panggilan pelanggan secara bersih (misal: 'Kak Annisa').
 - JANGAN PERNAH menyertakan teks dalam kurung label akun seperti '(Member Mahasiswi UI)' atau '(Tamu)'.
 
+PANDUAN INTERAKTIF & TOMBOL AKSI CEPAT (CONVERSATIONAL COMMERCE):
+Agar balasan sangat interaktif dan langsung menyelesaikan masalah pelanggan, Anda DAPAT menyematkan tag interaktif berikut di baris baru paling akhir pesan:
+1. REKOMENDASI PRODUK (KARTU PRODUK INTERAKTIF):
+   - Jika merekomendasikan buket tertentu yang ada di [KATALOG PRODUK AKTIF], sertakan tag:
+     [[product:<ID_PRODUK>|<NAMA_PRODUK>]]
+     Contoh: [[product:prod-123|Buket Karakter Wisuda Ber-toga]]
+   - Maksimal 1-2 tag buket paling relevan. Sistem web akan otomatis mengubah tag ini menjadi kartu produk mini lengkap dengan foto asli, harga, dan tombol "Tambah ke Keranjang" 1-klik untuk pelanggan!
+2. TOMBOL AKSI NAVIGASI CEPAT (ACTION CHIPS):
+   Sertakan 1-2 tag aksi yang paling relevan dengan masalah pelanggan:
+   - Jika pelanggan bertanya kustomisasi / warna buket / bingung desain:
+     [[action:OPEN_STUDIO|Buka Custom Studio]]
+   - Jika pelanggan bertanya status pesanan / no invoice / lacak paket:
+     [[action:TRACK_ORDER?inv=<NO_INVOICE>|Cek Status Pesanan]]
+   - Jika pelanggan bertanya titik temu COD / kampus Depok:
+     [[action:VIEW_COD|Lihat 6 Titik Temu COD]]
+   - Jika pelanggan bingung cara pesan / minta katalog lengkap:
+     [[action:VIEW_CATALOG|Lihat Semua Katalog]]
+   - Jika pelanggan bertanya barang rusak / patah / klaim garansi:
+     [[action:VIEW_WARRANTY|Info Garansi Anti-Patah]]
+
+PENTING TENTANG FORMAT TAG:
+- Tuliskan tag PERSIS seperti format di atas: [[product:id|nama]] atau [[action:TYPE|label]].
+- JANGAN menyisipkan emoji di dalam kurung siku tag tersebut.
+- Letakkan seluruh tag pada baris tersendiri di akhir pesan setelah pertanyaan penutup.
+
 FORMAT OUTPUT: Berikan teks balasan LANGSUNG tanpa tanda kutip pembungkus atau kata pengantar seperti "Berikut adalah draf balasan:".`;
 }
 
@@ -451,7 +565,7 @@ export function buildUserPrompt(
       const stockInfo = p.is_ready_stock
         ? `Ready Stock (Stok: ${p.stock})`
         : `Pre-Order (~${p.po_lead_days} hari)`;
-      dbContextStr += `- ${p.name} (${p.series || 'Series'}): Rp ${p.price.toLocaleString('id-ID')} | ${stockInfo}\n`;
+      dbContextStr += `- ID: ${p.id} | Nama: ${p.name} (${p.series || 'Series'}) | Harga: Rp ${p.price.toLocaleString('id-ID')} | ${stockInfo}\n`;
     }
   }
 
@@ -513,7 +627,8 @@ export function generateDeterministicFallback(
     return sanitizeDraftReply(
       opening +
       `Di Chenille Atelier, kami memberikan Garansi Anti-Patah & Rusak Pengiriman 100% untuk semua buket kawat bulu kami. Jika buket yang Kakak terima mengalami kerusakan saat pengiriman, Kakak bisa langsung klaim penggantian buket baru secara gratis cukup dengan mengirimkan foto bukti buketnya saat pertama kali diterima ya kak.\n\n` +
-      `Apakah ada buket atau pesanan tertentu yang ingin kami bantu cek status garansinya kak? 🙏`
+      `Apakah ada buket atau pesanan tertentu yang ingin kami bantu cek status garansinya kak? 🙏\n\n` +
+      `[[action:VIEW_WARRANTY|Info Garansi Anti-Patah]]`
     );
   }
 
@@ -533,7 +648,8 @@ export function generateDeterministicFallback(
     return sanitizeDraftReply(
       opening +
       `Untuk buket bunga kawat bulu kami, Kakak bebas memilih kombinasi warna kawat bulu dan kertas wrapping sesuai keinginan di menu Custom Studio di web kami. Kakak juga bisa menambahkan kartu ucapan gratis lho!\n\n` +
-      `Ada tema warna khusus atau buket favorit yang ingin Kakak konsultasikan bersama staf kami? 🥰`
+      `Ada tema warna khusus atau buket favorit yang ingin Kakak konsultasikan bersama staf kami? 🥰\n\n` +
+      `[[action:OPEN_STUDIO|Buka Custom Studio]]`
     );
   }
 
@@ -555,7 +671,9 @@ export function generateDeterministicFallback(
           ? `Nomor resi pengirimannya: ${ord.tracking_number}. Kakak bisa pantau perjalanannya di menu lacak pesanan ya 😊\n\nAda hal lain yang perlu kami bantu cek seputar pengirimannya kak?`
           : `Pesanan sedang kami siapkan sebaik mungkin dengan standar anti-patah 100% kak. Apakah ada kartu ucapan yang mau ditambahkan? 😊`;
 
-      return sanitizeDraftReply(opening + statusNote + deliveryDetail);
+      return sanitizeDraftReply(
+        opening + statusNote + deliveryDetail + `\n\n[[action:TRACK_ORDER?inv=${ord.invoice_number}|Cek Status Pesanan]]`
+      );
     } else {
       const opening = hasPriorGreeting
         ? `Berikut adalah rincian pesanan Kak ${name} yang tercatat di sistem kami 😊:\n\n`
@@ -570,7 +688,7 @@ export function generateDeterministicFallback(
         .join('\n');
 
       return sanitizeDraftReply(
-        opening + listStr + `\n\nAda pesanan tertentu yang ingin Kakak tanyakan lebih detail? Kami siap bantu dengan senang hati ya 🥰`
+        opening + listStr + `\n\nAda pesanan tertentu yang ingin Kakak tanyakan lebih detail? Kami siap bantu dengan senang hati ya 🥰\n\n[[action:TRACK_ORDER?inv=${ctx.ordersList[0].invoice_number}|Cek Status Pesanan]]`
       );
     }
   } else if (ctx.order) {
@@ -588,7 +706,9 @@ export function generateDeterministicFallback(
         ? `Nomor resi pengirimannya: ${ctx.order.tracking_number}. Kakak bisa pantau perjalanannya di menu lacak pesanan ya 😊\n\nAda hal lain yang perlu kami bantu cek seputar pengirimannya kak?`
         : `Pesanan sedang kami siapkan sebaik mungkin dengan standar anti-patah 100% kak. Apakah ada kartu ucapan yang mau ditambahkan? 😊`;
 
-    return sanitizeDraftReply(opening + statusNote + deliveryDetail);
+    return sanitizeDraftReply(
+      opening + statusNote + deliveryDetail + `\n\n[[action:TRACK_ORDER?inv=${ctx.order.invoice_number}|Cek Status Pesanan]]`
+    );
   }
 
   // 4. COD / Location query
@@ -600,7 +720,8 @@ export function generateDeterministicFallback(
 
     return sanitizeDraftReply(
       `${opening}${spots}\n\n` +
-      `Pengambilan COD tidak dikenakan biaya ongkir sama sekali ya kak. Apakah titik temu tersebut dekat dengan lokasi Kakak? Kami siap bantu koordinasikan ya 🙏`
+      `Pengambilan COD tidak dikenakan biaya ongkir sama sekali ya kak. Apakah titik temu tersebut dekat dengan lokasi Kakak? Kami siap bantu koordinasikan ya 🙏\n\n` +
+      `[[action:VIEW_COD|Lihat 6 Titik Temu COD]]`
     );
   }
 
@@ -618,22 +739,28 @@ export function generateDeterministicFallback(
       ? `Untuk rekomendasi buket favorit yang sedang tersedia di Chenille Atelier ada:\n\n`
       : `Halo Kak ${name} 😊\n\nTerima kasih sudah tanya ke Chenille Atelier! Untuk beberapa buket terpopuler kami yang sedang tersedia ada:\n\n`;
 
+    const featuredTag = ctx.products[0] ? `[[product:${ctx.products[0].id}|${ctx.products[0].name}]]\n` : '';
+
     return sanitizeDraftReply(
       `${opening}${topProds}\n\n` +
-      `Semua buket dibuat handmade kawat bulu berkualitas tinggi dengan garansi anti-patah 100% kak. Ada model buket yang paling Kakak sukai di antara pilihan di atas? 🥰`
+      `Semua buket dibuat handmade kawat bulu berkualitas tinggi dengan garansi anti-patah 100% kak. Ada model buket yang paling Kakak sukai di antara pilihan di atas? 🥰\n\n` +
+      `${featuredTag}[[action:VIEW_CATALOG|Lihat Semua Katalog]]`
     );
   }
 
   // 6. General polite assistant fallback
+  const generalProductTag = ctx.products && ctx.products.length > 0 ? `[[product:${ctx.products[0].id}|${ctx.products[0].name}]]\n` : '';
   if (hasPriorGreeting) {
     return sanitizeDraftReply(
-      `Iya Kak ${name} 😊 Ada yang bisa staf florist kami bantu lagi seputar pilihan buket atau pesanan Kakak? Kami siap bantu dengan senang hati ya 🙏`
+      `Iya Kak ${name} 😊 Ada yang bisa staf florist kami bantu lagi seputar pilihan buket atau pesanan Kakak? Kami siap bantu dengan senang hati ya 🙏\n\n` +
+      `${generalProductTag}[[action:VIEW_CATALOG|Lihat Semua Katalog]]\n[[action:OPEN_STUDIO|Buka Custom Studio]]`
     );
   }
 
   return sanitizeDraftReply(
     `Halo Kak ${name} 😊 Terima kasih sudah menghubungi Chenille Atelier Florist Depok.\n\n` +
-    `Ada yang bisa staf florist kami bantu hari ini? Kakak bisa tanya ketersediaan buket ready stock, request kustomisasi kawat bulu, atau cek status pesanan buket Kakak. Kami siap bantu dengan senang hati ya 🙏`
+    `Ada yang bisa staf florist kami bantu hari ini? Kakak bisa tanya ketersediaan buket ready stock, request kustomisasi kawat bulu, atau cek status pesanan buket Kakak. Kami siap bantu dengan senang hati ya 🙏\n\n` +
+    `${generalProductTag}[[action:VIEW_CATALOG|Lihat Semua Katalog]]\n[[action:OPEN_STUDIO|Buka Custom Studio]]`
   );
 }
 
@@ -694,12 +821,15 @@ export async function generateAiChatDraft(
       groundingContext,
       hasPriorGreeting
     );
+    const meta = extractInteractiveMetadata(fallbackText, groundingContext.products);
     return {
       draftText: fallbackText,
       sourcesUsed: groundingContext.sourcesUsed,
       isSimulation: true,
       orderRef: groundingContext.order?.invoice_number || null,
       modelUsed: 'Simulation Mode (Deterministic Grounding)',
+      suggestedActions: meta.suggestedActions,
+      recommendedProducts: meta.recommendedProducts,
     };
   }
 
@@ -774,6 +904,7 @@ export async function generateAiChatDraft(
       .trim();
 
     const sanitizedText = sanitizeDraftReply(cleanText);
+    const meta = extractInteractiveMetadata(sanitizedText, groundingContext.products);
 
     return {
       draftText: sanitizedText,
@@ -781,6 +912,8 @@ export async function generateAiChatDraft(
       isSimulation: false,
       orderRef: groundingContext.order?.invoice_number || null,
       modelUsed: activeModelUsed,
+      suggestedActions: meta.suggestedActions,
+      recommendedProducts: meta.recommendedProducts,
     };
   }
 
@@ -790,12 +923,16 @@ export async function generateAiChatDraft(
     groundingContext,
     hasPriorGreeting
   );
+  const fallbackMeta = extractInteractiveMetadata(fallbackText, groundingContext.products);
+
   return {
     draftText: fallbackText,
     sourcesUsed: groundingContext.sourcesUsed,
     isSimulation: true,
     orderRef: groundingContext.order?.invoice_number || null,
     modelUsed: `${configuredModel} (Fallback Mode)`,
+    suggestedActions: fallbackMeta.suggestedActions,
+    recommendedProducts: fallbackMeta.recommendedProducts,
   };
 }
 

@@ -7,6 +7,7 @@ import {
   retrieveGroundingContext,
   generateDeterministicFallback,
   buildSystemInstruction,
+  extractInteractiveMetadata,
 } from '../../src/services/ai-chat-assistant.service.js';
 
 describe('AI Chat Assistant Service (Gemini CS Copilot)', () => {
@@ -192,6 +193,67 @@ describe('AI Chat Assistant Service (Gemini CS Copilot)', () => {
 
       const instructionFirstMessage = buildSystemInstruction(false);
       expect(instructionFirstMessage).toContain('PERCAKAPAN BARU DIMULAI');
+    });
+
+    it('should include interactive action tags in deterministic fallback for studio and tracking', () => {
+      const fakeCtx = {
+        customerName: 'Annisa',
+        storeInfo: { store_name: 'Chenille', is_maintenance: false },
+        sourcesUsed: [],
+        order: {
+          id: 'INV-20261003-9171',
+          invoice_number: 'INV-20261003-9171',
+          customer_name: 'Annisa',
+          current_step: 2,
+          step_title: 'Sedang Dirangkai',
+          order_status: 'PROCESSING',
+          delivery_method: 'COURIER_EXPEDITION',
+          items_summary: 'Buket Mawar',
+          total_amount: 150000,
+          created_at: '2026-10-03',
+        },
+      };
+
+      const reply = generateDeterministicFallback('cek status pesanan saya min', fakeCtx, true);
+      expect(reply).toContain('[[action:TRACK_ORDER?inv=INV-20261003-9171|Cek Status Pesanan]]');
+    });
+  });
+
+  describe('extractInteractiveMetadata (Parser Tag Aksi & Kartu Produk)', () => {
+    it('should extract product tags and match with context product details', () => {
+      const rawText = 'Silakan pilih buket ini kak:\n[[product:prod-01|Buket Karakter Wisuda Ber-toga]]\nAda yang mau ditanyakan lagi kak? 😊';
+      const mockProducts = [
+        {
+          id: 'prod-01',
+          name: 'Buket Karakter Wisuda Ber-toga',
+          price: 175000,
+          is_ready_stock: true,
+          stock: 10,
+          po_lead_days: 1,
+          image_url: 'https://example.com/flower.jpg',
+        },
+      ];
+
+      const { recommendedProducts, suggestedActions } = extractInteractiveMetadata(rawText, mockProducts);
+      expect(recommendedProducts).toHaveLength(1);
+      expect(recommendedProducts[0].id).toBe('prod-01');
+      expect(recommendedProducts[0].name).toBe('Buket Karakter Wisuda Ber-toga');
+      expect(recommendedProducts[0].price).toBe(175000);
+      expect(recommendedProducts[0].image_url).toBe('https://example.com/flower.jpg');
+      expect(suggestedActions).toHaveLength(0);
+    });
+
+    it('should extract action tags with parameters and labels', () => {
+      const rawText = 'Kakak bisa cek statusnya:\n[[action:TRACK_ORDER?inv=INV-20261003-9171|Cek Status Pesanan]]\n[[action:OPEN_STUDIO|Buka Custom Studio]]';
+      const { suggestedActions } = extractInteractiveMetadata(rawText);
+
+      expect(suggestedActions).toHaveLength(2);
+      expect(suggestedActions[0].type).toBe('TRACK_ORDER');
+      expect(suggestedActions[0].label).toBe('Cek Status Pesanan');
+      expect(suggestedActions[0].params?.inv).toBe('INV-20261003-9171');
+
+      expect(suggestedActions[1].type).toBe('OPEN_STUDIO');
+      expect(suggestedActions[1].label).toBe('Buka Custom Studio');
     });
   });
 });

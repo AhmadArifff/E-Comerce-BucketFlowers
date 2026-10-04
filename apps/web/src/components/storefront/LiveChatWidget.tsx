@@ -6,6 +6,8 @@ import { useChatStore } from '@/stores/useChatStore';
 import { useCartStore } from '@/stores/useCartStore';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { parseInteractiveChat } from '@/lib/chat-interactive-parser';
+import { ChatProductCard, ChatActionChips } from '@/components/storefront/ChatInteractiveWidgets';
 
 export const LiveChatWidget: React.FC = () => {
   const { 
@@ -185,19 +187,45 @@ export const LiveChatWidget: React.FC = () => {
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-stone-50/50 text-xs">
             {messages.map((msg) => {
               const isUser = msg.sender === 'CUSTOMER';
+              const parsed = !isUser
+                ? parseInteractiveChat(msg.text)
+                : { cleanText: msg.text, products: [], actions: [] };
+
               return (
                 <div
                   key={msg.id}
                   className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
                 >
                   <div
-                    className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl ${
+                    className={`max-w-[88%] px-3.5 py-2.5 rounded-2xl ${
                       isUser
                         ? 'bg-theme-primary text-white rounded-br-xs shadow-sm'
                         : 'bg-white text-stone-800 rounded-bl-xs border border-theme-border shadow-sm'
                     }`}
                   >
-                    <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                    <p className="leading-relaxed whitespace-pre-wrap">{parsed.cleanText || msg.text}</p>
+
+                    {/* Interactive Recommended Product Cards */}
+                    {!isUser && parsed.products.length > 0 && (
+                      <div className="space-y-1.5 mt-1">
+                        {parsed.products.map((prod) => (
+                          <ChatProductCard
+                            key={prod.id}
+                            productId={prod.id}
+                            productName={prod.name}
+                            onNavigate={() => setIsOpen(false)}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Interactive Action Navigation Chips */}
+                    {!isUser && parsed.actions.length > 0 && (
+                      <ChatActionChips
+                        actions={parsed.actions}
+                        onActionTriggered={() => setIsOpen(false)}
+                      />
+                    )}
                   </div>
                   <span className="text-[10px] text-stone-400 mt-1 px-1 flex items-center gap-1">
                     {!isUser && (

@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { MessageSquare, Send, Phone, RefreshCw, CheckCircle2, BellRing, Sparkles, Wand2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { MessageSquare, Send, Phone, RefreshCw, CheckCircle2, BellRing, Sparkles, Wand2, Copy } from 'lucide-react';
 import { useChatStore } from '@/stores/useChatStore';
 import { showMagicToast } from '@/lib/magic-motion';
+import { parseInteractiveChat, formatChatForWhatsApp } from '@/lib/chat-interactive-parser';
 
 // Tiny inline notification sound (base64-encoded short beep)
 const playNotificationSound = () => {
@@ -38,6 +39,8 @@ export const CSHubModal: React.FC = () => {
     orderRef?: string | null;
     modelUsed?: string;
   } | null>(null);
+
+  const interactivePreview = useMemo(() => parseInteractiveChat(replyText), [replyText]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevTotalUnreadRef = useRef(0);
@@ -397,6 +400,50 @@ export const CSHubModal: React.FC = () => {
                     </span>
                   </div>
                 </div>
+
+                {/* Interactive Action Preview in Admin Draft */}
+                {interactivePreview && (interactivePreview.products.length > 0 || interactivePreview.actions.length > 0) && (
+                  <div className="p-2.5 bg-rose-50/70 border border-rose-200/80 rounded-xl space-y-1.5 text-[11px] animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-rose-800 flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5 text-rose-600" />
+                        Elemen Interaktif Terlampir di Pesan:
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const formatted = formatChatForWhatsApp(replyText);
+                          navigator.clipboard.writeText(formatted);
+                          showMagicToast('Format WA Disalin! 📋', 'Teks dan tautan interaktif siap dipaste ke WhatsApp.', '✨');
+                        }}
+                        className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-100/80 hover:bg-emerald-200 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                        title="Salin pesan dengan link langsung untuk WhatsApp"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>Salin Format WA</span>
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 pt-0.5">
+                      {interactivePreview.products.map((p, idx) => (
+                        <span
+                          key={`admin-prod-${idx}`}
+                          className="inline-flex items-center gap-1 bg-white border border-rose-200 text-rose-700 font-bold px-2 py-0.5 rounded-full text-[10px] shadow-xs"
+                        >
+                          🌸 Buket: {p.name}
+                        </span>
+                      ))}
+                      {interactivePreview.actions.map((a, idx) => (
+                        <span
+                          key={`admin-act-${idx}`}
+                          className="inline-flex items-center gap-1 bg-white border border-stone-200 text-stone-700 font-bold px-2 py-0.5 rounded-full text-[10px] shadow-xs"
+                        >
+                          ⚡ Tombol: {a.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-2 items-end">
                   <textarea
