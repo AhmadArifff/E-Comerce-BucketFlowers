@@ -151,7 +151,7 @@
     "Gemini AI CS Copilot & Human-in-the-Loop Integrity: Draf balasan pesan CS WhatsApp Hub dihasilkan oleh Google Gemini AI via Google AI Studio API key dengan database grounding (status pesanan, produk, titik COD, toko) dan pembatasan keamanan ketat (anti-jailbreak, zero hallucination, rahasia dapur terlindungi), serta wajib melalui review manual staf sebelum dikirim (No Auto-Send)",
     "AI Copilot Face-Emoticon & Clean Persona Rule: Draf balasan AI wajib menyapa nama depan pelanggan secara bersih (tanpa embel-embel kurung role), melarang karakter robotik/bullet point kaku, dan HANYA mengizinkan penggunaan face emoticons (seperti 😊, 🥰, 🙏, 👋) untuk merefleksikan empati dan keramahan staf manusia asli tanpa simbol non-wajah",
     "AI Copilot Multi-Turn Context & Single Greeting Mandate: Draf balasan AI melacak riwayat obrolan sesi secara dinamis hingga 12 pesan terakhir; dilarang mengulang salam pembuka formal 2 kali jika percakapan sudah berlangsung, wajib menjawab inti pertanyaan secara to-the-point dan hangat, selalu menyertakan pertanyaan penutup proaktif, serta menggunakan model cascade (gemini-3.5-flash / gemini-3.7-flash) guna mencegah 404 pada model usang",
-    "Chat Action Navigation & Multi-Turn Sync Mandate: Tombol aksi live chat (VIEW_COD, OPEN_STUDIO, VIEW_CATALOG, TRACK_ORDER) meminimalkan jendela obrolan agar tampilan target terlihat leluasa; CODLocationsModal dikontrol via useChatStore & dimount universal di app/layout.tsx; portal mendukung parameter ?inv= dan ?invoice= dengan auto-scroll ke tracker; query AI grounding menggabungkan seluruh teks riwayat percakapan; query order_status_histories menggunakan kolom status_title dan status_desc; serta Gemini multi-turn payload strictly diawali role: 'user' dengan prioritas model aktif (gemini-3.5-flash-lite, gemini-3.6-flash, gemini-3.1-flash-lite)."
+    "Chat Action Navigation & Multi-Turn Sync Mandate: Tombol aksi live chat (VIEW_COD, OPEN_STUDIO, VIEW_CATALOG, TRACK_ORDER) meminimalkan jendela obrolan agar tampilan target terlihat leluasa; CODLocationsModal dikontrol via useChatStore & dimount universal di app/layout.tsx; rute pelacakan publik resmi PRD Seksi 34 di apps/web/src/app/lacak-pesanan/page.tsx aktif mendukung parameter ?inv= dan ?invoice= dengan live search database tanpa 404; query AI grounding menggabungkan seluruh teks riwayat percakapan; query order_status_histories menggunakan kolom status_title dan status_desc; serta Gemini multi-turn payload strictly diawali role: 'user' dengan prioritas model aktif (gemini-3.5-flash-lite, gemini-3.6-flash, gemini-3.1-flash-lite)."
   ],
   "next_recommended_actions": [
     "Prioritas 1: SELESAI (Form ulasan bintang 1-5, upload foto buket, API /api/v1/reviews, & sync dinamis LookbookSection)",
@@ -161,8 +161,9 @@
     "Prioritas 5: SELESAI (Migrasi next/image, wildcard https remotePatterns, WebP/AVIF, fallback kurir standar Depok, & payment error nudge)",
     "Roadmap Rekomendasi 5 Prioritas: 100% SELESAI & TERVERIFIKASI PENUH",
     "CS WhatsApp Hub Gemini AI Copilot: SELESAI & TERVERIFIKASI (Grounding Database, Security Guardrails, Face Emoticons Only Policy, Multi-Turn Context, Single Greeting Policy, Proactive Closing, Model Cascade gemini-3.5-flash, 24 Unit Tests Passing)",
-    "Live Chat Interactive Actions & Multi-Turn Sync: SELESAI & TERVERIFIKASI VIA PLAYWRIGHT (Global COD Modal, Unobstructed Action Navigation, Multi-Turn Grounding, Zero TypeScript Errors)"
+    "Live Chat Interactive Actions & Multi-Turn Sync: SELESAI & TERVERIFIKASI VIA PLAYWRIGHT (Global COD Modal, Unobstructed Action Navigation, Multi-Turn Grounding, Zero TypeScript Errors)",
+    "Lacak Pesanan Publik /lacak-pesanan (PRD Seksi 34): SELESAI & TERVERIFIKASI BEBAS 404 (Live Database Lookup, Multi-Step Progress Stepper, Playwright Screenshot Verified)"
   ],
-  "last_updated": "2026-10-04T13:30:00+07:00"
+  "last_updated": "2026-10-04T13:49:00+07:00"
 }
 

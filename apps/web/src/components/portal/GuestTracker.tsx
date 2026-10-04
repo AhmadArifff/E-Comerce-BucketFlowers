@@ -25,9 +25,13 @@ import { CustomerComplaintModal } from './CustomerComplaintModal';
 import { getApiUrl } from '@/lib/api-client';
 import { showMagicToast } from '@/lib/magic-motion';
 
-export const GuestTracker: React.FC = () => {
+export interface GuestTrackerProps {
+  initialInvoice?: string;
+}
+
+export const GuestTracker: React.FC<GuestTrackerProps> = ({ initialInvoice }) => {
   const { findOrderByQuery, updateOrderStep, addNewOrder, syncDbOrders } = useOrderStore();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialInvoice || '');
   const [searchedOrders, setSearchedOrders] = useState<MockOrder[]>([]);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
@@ -191,9 +195,7 @@ export const GuestTracker: React.FC = () => {
     }
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanQuery = query.trim();
+  const executeSearch = async (cleanQuery: string) => {
     if (!cleanQuery) return;
 
     // Check if input is a phone number (e.g. starts with 08, +62, 62, or only numbers)
@@ -208,7 +210,20 @@ export const GuestTracker: React.FC = () => {
     // Direct search by Invoice ID
     setIsLoading(true);
     try {
-      // Try local store first
+      // 1. Try live API by ID first for the freshest real-time DB status
+      const res = await fetch(getApiUrl(`/api/v1/orders/${encodeURIComponent(cleanQuery)}`));
+      const resJson = await res.json();
+      if (resJson.success && resJson.data) {
+        const mapped = mapDbOrderToMock(resJson.data);
+        syncDbOrders([mapped]);
+        setSearchedOrders([mapped]);
+        setSelectedOrderIndex(0);
+        setHasSearched(true);
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Fallback to local store
       const local = findOrderByQuery(cleanQuery);
       if (local) {
         setSearchedOrders([local]);
@@ -218,43 +233,42 @@ export const GuestTracker: React.FC = () => {
         return;
       }
 
-      // Try live API by ID
-      const res = await fetch(getApiUrl(`/api/v1/orders/${encodeURIComponent(cleanQuery)}`));
-      const resJson = await res.json();
-      if (resJson.success && resJson.data) {
-        const mapped = mapDbOrderToMock(resJson.data);
-        syncDbOrders([mapped]);
-        setSearchedOrders([mapped]);
-        setSelectedOrderIndex(0);
-        setHasSearched(true);
-      } else {
-        setSearchedOrders([]);
-        setHasSearched(true);
-      }
+      setSearchedOrders([]);
+      setHasSearched(true);
     } catch (err) {
       console.warn('Search order failed:', err);
-      setSearchedOrders([]);
+      const local = findOrderByQuery(cleanQuery);
+      if (local) {
+        setSearchedOrders([local]);
+        setSelectedOrderIndex(0);
+      } else {
+        setSearchedOrders([]);
+      }
       setHasSearched(true);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Auto-search if initialInvoice is provided via URL or prop
+  useEffect(() => {
+    if (initialInvoice && initialInvoice.trim()) {
+      const clean = initialInvoice.trim();
+      setQuery(clean);
+      executeSearch(clean);
+    }
+  }, [initialInvoice]);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanQuery = query.trim();
+    if (!cleanQuery) return;
+    executeSearch(cleanQuery);
+  };
+
   const handleQuickSelect = (val: string) => {
     setQuery(val);
-    const isPhoneNumber = /^(\+?62|08|0)[0-9]{8,13}$/.test(val.replace(/[\s-]/g, ''));
-    if (isPhoneNumber) {
-      sendOtpRequest(val);
-    } else {
-      const result = findOrderByQuery(val);
-      if (result) {
-        setSearchedOrders([result]);
-      } else {
-        setSearchedOrders([]);
-      }
-      setSelectedOrderIndex(0);
-      setHasSearched(true);
-    }
+    executeSearch(val);
   };
 
   const activeSearchedOrder = searchedOrders[selectedOrderIndex] || null;

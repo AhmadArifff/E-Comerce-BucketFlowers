@@ -79,23 +79,28 @@ Daftar kendala masa lalu dan solusi yang telah diverifikasi pada sistem E-Commer
 - **Solusi**:
 ---
 
-## 7. Bug: Chat Action Chips Menutup Tiba-Tiba & Multi-Turn History Desync pada AI Grounding
+## 7. Bug: Chat Action Chips Menutup Tiba-Tiba, Error 404 /lacak-pesanan & Multi-Turn History Desync pada AI Grounding
 - **Gejala**:
   1. Di `LiveChatWidget`, mengklik tombol aksi cepat (seperti *"Lihat 6 Titik Temu COD"*, *"Buka Custom Studio"*) hanya menutup jendela obrolan tanpa memunculkan modal/tampilan yang dituju.
-  2. Riwayat percakapan chat sebelumnya (multi-turn) tidak tersinkronisasi ke Gemini AI Copilot: AI mengabaikan konteks buket yang ditanyakan pada giliran sebelumnya atau mengulang sapaan pembuka ganda (*double greeting*).
-  3. Status riwayat pesanan pelanggan gagal di-grounding akibat error SQL `column "step_name" does not exist`.
-  4. Panggilan Gemini menghasilkan HTTP 400 Bad Request jika obrolan diawali pesan bot sambutan (karena `contents[0].role` bernilai `model`).
+  2. Mengklik tombol aksi *"Cek Status Pesanan"* atau membuka link WhatsApp pelacakan memunculkan halaman HTTP 404 Not Found.
+  3. Riwayat percakapan chat sebelumnya (multi-turn) tidak tersinkronisasi ke Gemini AI Copilot: AI mengabaikan konteks buket yang ditanyakan pada giliran sebelumnya atau mengulang sapaan pembuka ganda (*double greeting*).
+  4. Status riwayat pesanan pelanggan gagal di-grounding akibat error SQL `column "step_name" does not exist`.
+  5. Panggilan Gemini menghasilkan HTTP 400 Bad Request jika obrolan diawali pesan bot sambutan (karena `contents[0].role` bernilai `model`).
 - **Akar Masalah**:
   1. `CODLocationsModal` hanya di-render lokal dan mendengarkan Custom DOM Event yang rentan unmounted timing; selain itu jendela chat menutupi layar tanpa navigasi responsif.
-  2. `retrieveGroundingContext` hanya memeriksa pesan tunggal terakhir alih-alih seluruh percakapan multi-turn.
-  3. Query `order_status_histories` salah memanggil nama kolom `step_name` & `description` (nama kolom aktual adalah `status_title` & `status_desc`).
-  4. Google Gemini API mewajibkan elemen pertama `contents[0]` memiliki `role: 'user'` dan bergantian secara ketat (`user` -> `model` -> `user`).
+  2. Rute Next.js App Router `apps/web/src/app/lacak-pesanan/page.tsx` belum dibuat sehingga seluruh deep link pelacakan publik berujung ke 404.
+  3. Komponen `GuestTracker` belum menerima prop `initialInvoice` untuk auto-lookup saat dibuka dari deep link URL.
+  4. `retrieveGroundingContext` hanya memeriksa pesan tunggal terakhir alih-alih seluruh percakapan multi-turn.
+  5. Query `order_status_histories` salah memanggil nama kolom `step_name` & `description` (nama kolom aktual adalah `status_title` & `status_desc`).
+  6. Google Gemini API mewajibkan elemen pertama `contents[0]` memiliki `role: 'user'` dan bergantian secara ketat (`user` -> `model` -> `user`).
 - **Solusi**:
   1. Pindahkan kontrol modal COD ke Zustand `useChatStore` (`isCodModalOpen`, `openCodModal`, `closeCodModal`) dan render `<CODLocationsModal />` secara universal di `app/layout.tsx`.
-  2. Saat tombol aksi navigasi diklik (`VIEW_COD`, `OPEN_STUDIO`, `VIEW_CATALOG`, `TRACK_ORDER`), minimalkan jendela obrolan (`setIsOpen(false)`) sehingga pengguna dapat melihat tampilan atau modal tujuan secara leluasa tanpa terhalang popup chat.
-  3. Dukung parameter `?invoice=` dan `?inv=` di `portal/page.tsx` dengan auto-scroll ke `#portal-order-tracker`.
-  4. Koreksi query SQL di `ai-chat-assistant.service.ts` ke `status_title` dan `status_desc`.
-  5. Bangun struktur multi-turn native yang memisahkan pesan bot awal ke konteks prompt dan menjamin `contents[0].role === 'user'`, serta urutkan model cascade prioritas aktif (`gemini-3.5-flash-lite`, `gemini-3.6-flash`, `gemini-3.1-flash-lite`).
-  6. Diverifikasi secara deterministik via Playwright browser automation dan unit test Vitest (84 tests passed).
+  2. Implementasikan halaman pelacakan publik resmi PRD Seksi 34 pada `apps/web/src/app/lacak-pesanan/page.tsx` dengan Hero Banner, Suspense boundary, dan integrasi `GuestTracker`.
+  3. Perbarui `GuestTracker` untuk menerima prop `initialInvoice` dan memprioritaskan pengecekan live API Supabase PostgreSQL sebelum fallback ke local state.
+  4. Arahkan aksi `TRACK_ORDER` di `ChatInteractiveWidgets.tsx` langsung ke `/lacak-pesanan?inv=${encodeURIComponent(inv)}`.
+  5. Koreksi query SQL di `ai-chat-assistant.service.ts` ke `status_title` dan `status_desc`.
+  6. Bangun struktur multi-turn native yang memisahkan pesan bot awal ke konteks prompt dan menjamin `contents[0].role === 'user'`, serta urutkan model cascade prioritas aktif (`gemini-3.5-flash-lite`, `gemini-3.6-flash`, `gemini-3.1-flash-lite`).
+  7. Diverifikasi secara deterministik via Playwright browser automation (HTTP 200, bebas 404, order Annisa tampil) dan unit test Vitest (84 tests passed).
+
 
 

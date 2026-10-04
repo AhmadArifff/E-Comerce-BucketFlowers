@@ -253,14 +253,9 @@ export const ChatActionChips: React.FC<ChatActionChipsProps> = ({
     } else if (type === 'TRACK_ORDER') {
       const inv = params?.inv || '';
       if (inv) {
-        window.location.href = `/portal?invoice=${encodeURIComponent(inv)}`;
+        window.location.href = `/lacak-pesanan?inv=${encodeURIComponent(inv)}`;
       } else {
-        const el = document.getElementById('tracking') || document.getElementById('quick-tracking');
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
-        } else {
-          window.location.href = '/#tracking';
-        }
+        window.location.href = '/lacak-pesanan';
       }
       useChatStore.getState().setIsOpen(false);
       if (onActionTriggered) onActionTriggered();
