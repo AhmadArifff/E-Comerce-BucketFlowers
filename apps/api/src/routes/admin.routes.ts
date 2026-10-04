@@ -1,7 +1,9 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { pool } from '../config/database.js';
 import { testWhatsAppConnection } from '../services/whatsapp.service.js';
 import { scanAndDispatchOccasionReminders } from '../services/scheduler.service.js';
+import { uploadProductImage } from '../services/storage.service.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -10,6 +12,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = Router();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 3 * 1024 * 1024 }, // 3 MB for high-DPI logo
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Hanya file gambar (PNG, SVG, WEBP, JPEG) yang diizinkan untuk logo!'));
+    }
+  },
+});
 
 // GET /api/v1/admin/dashboard
 router.get('/dashboard', async (req, res) => {
@@ -421,6 +434,9 @@ router.patch('/settings', async (req, res) => {
       is_maintenance_mode,
       maintenance_title,
       maintenance_desc,
+      logo_url,
+      favicon_url,
+      brand_mark_type,
     } = req.body;
     const official_whatsapp = req.body.official_whatsapp || req.body.wa_number;
     const daily_po_limit = req.body.daily_po_limit !== undefined ? req.body.daily_po_limit : req.body.daily_quota;
@@ -439,6 +455,9 @@ router.patch('/settings', async (req, res) => {
           is_maintenance_mode = COALESCE($11, is_maintenance_mode),
           maintenance_title = COALESCE($12, maintenance_title),
           maintenance_desc = COALESCE($13, maintenance_desc),
+          logo_url = COALESCE($14, logo_url),
+          favicon_url = COALESCE($15, favicon_url),
+          brand_mark_type = COALESCE($16, brand_mark_type),
           updated_at = NOW()
       WHERE id = 'atelier_setting'
       RETURNING *;
@@ -457,10 +476,50 @@ router.patch('/settings', async (req, res) => {
       is_maintenance_mode !== undefined ? is_maintenance_mode : null,
       maintenance_title ?? null,
       maintenance_desc ?? null,
+      logo_url ?? null,
+      favicon_url ?? null,
+      brand_mark_type ?? null,
     ]);
     return res.json({ success: true, data: result.rows[0] });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/v1/admin/settings/logo
+// Upload custom store logo image to Supabase / Local Storage
+router.post('/settings/logo', upload.single('logo'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'File gambar logo wajib dipilih.' });
+    }
+
+    const uploadRes = await uploadProductImage(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype,
+      'atelier-logo'
+    );
+
+    const updateSql = `
+      UPDATE store_settings
+      SET logo_url = $1,
+          brand_mark_type = 'CUSTOM_UPLOAD',
+          updated_at = NOW()
+      WHERE id = 'atelier_setting'
+      RETURNING *;
+    `;
+    const result = await pool.query(updateSql, [uploadRes.url]);
+
+    return res.json({
+      success: true,
+      data: result.rows[0],
+      url: uploadRes.url,
+      message: 'Logo resmi atelier berhasil diunggah dan disimpan!',
+    });
+  } catch (error: any) {
+    console.error('Error uploading atelier logo:', error);
+    return res.status(500).json({ success: false, error: error.message || 'Gagal mengunggah logo.' });
   }
 });
 

@@ -4,13 +4,16 @@ import React, { useState } from 'react';
 import {
   SlidersHorizontal,
   ArrowUpDown,
-  Zap,
-  Tag,
   RotateCcw,
   Check,
   ChevronDown,
   X,
 } from 'lucide-react';
+import {
+  ReadyStockAtelierIcon,
+  DiscountRibbonIcon,
+  PriceCompassIcon,
+} from '@/components/common/CraftIcons';
 
 export interface FilterState {
   sort: string;
@@ -100,7 +103,7 @@ export const ProductFilterBar: React.FC<ProductFilterBarProps> = ({
                 : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
             }`}
           >
-            <Zap className={`w-3.5 h-3.5 ${filterState.readyStockOnly ? 'fill-emerald-500 text-emerald-600' : 'text-stone-400'}`} />
+            <ReadyStockAtelierIcon className={`w-3.5 h-3.5 ${filterState.readyStockOnly ? 'text-emerald-700' : 'text-stone-400'}`} />
             <span>Ready Stock</span>
             {filterState.readyStockOnly && <Check className="w-3 h-3 text-emerald-600" />}
           </button>
@@ -115,7 +118,7 @@ export const ProductFilterBar: React.FC<ProductFilterBarProps> = ({
                 : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
             }`}
           >
-            <Tag className={`w-3.5 h-3.5 ${filterState.discountOnly ? 'fill-rose-500 text-rose-600' : 'text-stone-400'}`} />
+            <DiscountRibbonIcon className={`w-3.5 h-3.5 ${filterState.discountOnly ? 'text-rose-600' : 'text-stone-400'}`} />
             <span>Sedang Diskon</span>
             {filterState.discountOnly && <Check className="w-3 h-3 text-rose-600" />}
           </button>
@@ -134,7 +137,7 @@ export const ProductFilterBar: React.FC<ProductFilterBarProps> = ({
                   : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
               }`}
             >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-stone-400" />
+              <PriceCompassIcon className="w-3.5 h-3.5 text-stone-400" />
               <span>
                 {hasPriceFilter
                   ? filterState.minPrice && filterState.maxPrice

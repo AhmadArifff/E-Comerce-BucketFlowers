@@ -1,7 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Sparkles, GraduationCap, Heart, Flower2, Smile, Coffee, Tag } from 'lucide-react';
+import {
+  BouquetAllIcon,
+  GraduationBouquetIcon,
+  KoreanTulipIcon,
+  VelvetRoseIcon,
+  KawaiiCharacterIcon,
+  MiniPotPlantIcon,
+} from '@/components/common/CraftIcons';
+import { Flower2 } from 'lucide-react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { getThemeCopy } from '@/lib/theme-copy';
 
@@ -12,23 +20,23 @@ interface CategoryFilterProps {
 }
 
 const DEFAULT_CATEGORIES = [
-  { id: 'ALL', name: 'Semua Produk', icon: Sparkles },
-  { id: 'Wisuda', name: 'Buket Wisuda', icon: GraduationCap },
-  { id: 'Pastel', name: 'Pastel Korea', icon: Flower2 },
-  { id: 'Romantis', name: 'Romantis Velvet', icon: Heart },
-  { id: 'Karakter', name: 'Karakter Kawaii', icon: Smile },
-  { id: 'Mini Pot', name: 'Mini Pot Meja', icon: Coffee },
+  { id: 'ALL', name: 'Semua Produk', icon: BouquetAllIcon },
+  { id: 'Wisuda', name: 'Buket Wisuda', icon: GraduationBouquetIcon },
+  { id: 'Pastel', name: 'Pastel Korea', icon: KoreanTulipIcon },
+  { id: 'Romantis', name: 'Romantis Velvet', icon: VelvetRoseIcon },
+  { id: 'Karakter', name: 'Karakter Kawaii', icon: KawaiiCharacterIcon },
+  { id: 'Mini Pot', name: 'Mini Pot Meja', icon: MiniPotPlantIcon },
 ];
 
 const getCategoryIcon = (id: string) => {
   const lower = id.toLowerCase();
-  if (lower === 'all') return Sparkles;
-  if (lower.includes('wisuda') || lower.includes('grad')) return GraduationCap;
-  if (lower.includes('pastel') || lower.includes('bunga') || lower.includes('flower')) return Flower2;
-  if (lower.includes('romantis') || lower.includes('love') || lower.includes('velvet')) return Heart;
-  if (lower.includes('karakter') || lower.includes('kawaii') || lower.includes('boneka')) return Smile;
-  if (lower.includes('pot') || lower.includes('meja') || lower.includes('vas')) return Coffee;
-  return Tag;
+  if (lower === 'all') return BouquetAllIcon;
+  if (lower.includes('wisuda') || lower.includes('grad')) return GraduationBouquetIcon;
+  if (lower.includes('pastel') || lower.includes('bunga') || lower.includes('flower') || lower.includes('tulip')) return KoreanTulipIcon;
+  if (lower.includes('romantis') || lower.includes('love') || lower.includes('velvet') || lower.includes('rose') || lower.includes('mawar')) return VelvetRoseIcon;
+  if (lower.includes('karakter') || lower.includes('kawaii') || lower.includes('boneka') || lower.includes('bear')) return KawaiiCharacterIcon;
+  if (lower.includes('pot') || lower.includes('meja') || lower.includes('vas') || lower.includes('tanaman')) return MiniPotPlantIcon;
+  return Flower2;
 };
 
 export const CategoryFilter: React.FC<CategoryFilterProps> = ({
@@ -52,7 +60,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
     }
     const unique = Array.from(new Set(availableCategories.filter(Boolean)));
     const items = [
-      { id: 'ALL', name: 'Semua Produk', icon: Sparkles },
+      { id: 'ALL', name: 'Semua Produk', icon: BouquetAllIcon },
       ...unique.map((cat) => ({
         id: cat,
         name: cat,

@@ -56,6 +56,7 @@ import {
   Power,
   Navigation,
   Crosshair,
+  Image as ImageIcon,
 } from 'lucide-react';
 import type { ExtendedProduct as Product } from '@chenille/shared';
 import { DatabaseResetManager } from './DatabaseResetManager';
@@ -66,6 +67,7 @@ import { showMagicToast } from '@/lib/magic-motion';
 import { getApiUrl } from '@/lib/api-client';
 import { exportOrdersToCsv, exportMonthlySummaryToCsv } from '@/lib/export-excel';
 import InteractiveMapPicker from './InteractiveMapPicker';
+import { ChenilleBrandEmblem } from '@/components/common/ChenilleBrandEmblem';
 
 // ============================================================================
 // 1. FINANCIAL MULTI-LINE SVG CHART CARD
@@ -2596,6 +2598,9 @@ export const StoreSettingsView: React.FC = () => {
     longitude,
     mapsLink,
     maxCodRadiusKm,
+    logoUrl,
+    faviconUrl,
+    brandMarkType,
     paymentGateways,
     logisticsConfig,
     notificationConfig,
@@ -2618,6 +2623,94 @@ export const StoreSettingsView: React.FC = () => {
     mapsLink: mapsLink || 'https://maps.google.com/?q=-6.3728,106.8315',
     maxCodRadiusKm: String(maxCodRadiusKm || 5.0),
   });
+
+  const [logoState, setLogoState] = useState<{
+    logoUrl: string | null;
+    brandMarkType: 'CUSTOM_UPLOAD' | 'BESPOKE_VECTOR';
+    isUploading: boolean;
+    uploadError: string | null;
+  }>({
+    logoUrl: logoUrl ?? null,
+    brandMarkType: (brandMarkType as any) || 'BESPOKE_VECTOR',
+    isUploading: false,
+    uploadError: null,
+  });
+  const logoFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showMagicToast('Format Tidak Didukung ⚠️', 'Harap unggah file gambar (PNG, JPG, SVG, WebP).', '❌');
+      return;
+    }
+
+    if (file.size > 3 * 1024 * 1024) {
+      showMagicToast('Ukuran Terlalu Besar ⚠️', 'Maksimal ukuran file logo adalah 3MB.', '❌');
+      return;
+    }
+
+    setLogoState((prev) => ({ ...prev, isUploading: true, uploadError: null }));
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    try {
+      const res = await fetch(getApiUrl('/api/v1/admin/settings/logo'), {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setLogoState({
+          logoUrl: data.url,
+          brandMarkType: 'CUSTOM_UPLOAD',
+          isUploading: false,
+          uploadError: null,
+        });
+        updateStoreProfile({
+          logoUrl: data.url,
+          brandMarkType: 'CUSTOM_UPLOAD',
+        });
+        showMagicToast('Logo Berhasil Diunggah! 🎨', 'Logo resmi atelier telah tersimpan dan aktif di seluruh etalase.', '✨');
+      } else {
+        setLogoState((prev) => ({
+          ...prev,
+          isUploading: false,
+          uploadError: data.error || 'Gagal mengunggah logo.',
+        }));
+        showMagicToast('Gagal Unggah Logo ⚠️', data.error || 'Terjadi kesalahan.', '❌');
+      }
+    } catch (err: any) {
+      setLogoState((prev) => ({
+        ...prev,
+        isUploading: false,
+        uploadError: err.message || 'Koneksi terputus.',
+      }));
+      showMagicToast('Gagal Unggah Logo ⚠️', 'Koneksi ke backend server bermasalah.', '❌');
+    } finally {
+      if (logoFileInputRef.current) logoFileInputRef.current.value = '';
+    }
+  };
+
+  const handleToggleBrandMarkType = async (type: 'CUSTOM_UPLOAD' | 'BESPOKE_VECTOR') => {
+    setLogoState((prev) => ({ ...prev, brandMarkType: type }));
+    updateStoreProfile({ brandMarkType: type });
+    try {
+      await fetch(getApiUrl('/api/v1/admin/settings'), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand_mark_type: type }),
+      });
+      showMagicToast(
+        type === 'CUSTOM_UPLOAD' ? 'Mode Logo Gambar Aktif! 🖼️' : 'Mode Lambang Vektor Aktif! 🌸',
+        type === 'CUSTOM_UPLOAD' ? 'Menampilkan logo gambar kustom atelier.' : 'Menampilkan lambang kawat bulu chenille adaptif tema.',
+        '✨'
+      );
+    } catch (e) {
+      console.warn('Gagal switch brand mark mode:', e);
+    }
+  };
 
   const [mapSearchQuery, setMapSearchQuery] = useState('');
   const [mapSearching, setMapSearching] = useState(false);
@@ -2826,6 +2919,11 @@ export const StoreSettingsView: React.FC = () => {
           });
           const dbWa = s.official_whatsapp || s.wa_number;
           const dbQuota = s.daily_po_limit || s.daily_quota;
+          setLogoState((prev) => ({
+            ...prev,
+            logoUrl: s.logo_url ?? prev.logoUrl,
+            brandMarkType: (s.brand_mark_type as any) || prev.brandMarkType || 'BESPOKE_VECTOR',
+          }));
           updateStoreProfile({
             storeName: s.store_name,
             tagline: s.tagline,
@@ -2836,6 +2934,9 @@ export const StoreSettingsView: React.FC = () => {
             longitude: s.longitude,
             mapsLink: s.maps_link,
             maxCodRadiusKm: s.max_cod_radius_km ? parseFloat(s.max_cod_radius_km) : undefined,
+            logoUrl: s.logo_url,
+            faviconUrl: s.favicon_url,
+            brandMarkType: s.brand_mark_type,
           });
         }
       })
@@ -3242,6 +3343,8 @@ export const StoreSettingsView: React.FC = () => {
       longitude: formProfile.longitude,
       mapsLink: formProfile.mapsLink,
       maxCodRadiusKm: parseFloat(formProfile.maxCodRadiusKm) || 5.0,
+      logoUrl: logoState.logoUrl,
+      brandMarkType: logoState.brandMarkType,
     });
     updatePaymentGatewayConfig('midtrans', midtransConfig);
     updatePaymentGatewayConfig('bcaManual', bcaConfig);
@@ -3264,6 +3367,8 @@ export const StoreSettingsView: React.FC = () => {
         longitude: formProfile.longitude,
         maps_link: formProfile.mapsLink,
         max_cod_radius_km: parseFloat(formProfile.maxCodRadiusKm) || 5.0,
+        logo_url: logoState.logoUrl,
+        brand_mark_type: logoState.brandMarkType,
       }),
     }).catch((err) => console.warn('Sync store settings error:', err));
 
@@ -3324,6 +3429,211 @@ export const StoreSettingsView: React.FC = () => {
       </div>
 
       <form onSubmit={handleSave} className="space-y-6 text-xs">
+        {/* SECTION 0: IDENTITAS BRAND & LOGO ATELIER */}
+        <div className="space-y-4 p-5 sm:p-6 rounded-2xl border border-rose-200/80 bg-gradient-to-br from-rose-50/50 via-white to-pink-50/30">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-rose-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-bold">
+                <ImageIcon className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase text-stone-800 tracking-wider">
+                    Identitas Brand & Logo Resmi Atelier
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    logoState.brandMarkType === 'CUSTOM_UPLOAD' && logoState.logoUrl
+                      ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                      : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                  }`}>
+                    {logoState.brandMarkType === 'CUSTOM_UPLOAD' && logoState.logoUrl ? '🖼️ Logo Gambar Kustom' : '🌸 Lambang Vektor Kawat Bulu'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-stone-500">
+                  Unggah logo resmi atelier Anda atau gunakan lambang kerajinan kawat bulu chenille adaptif yang otomatis menyesuaikan estetika 3 tema etalase.
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Upload Action */}
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <input
+                ref={logoFileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                className="hidden"
+                onChange={handleLogoFileChange}
+              />
+              <button
+                type="button"
+                onClick={() => logoFileInputRef.current?.click()}
+                disabled={logoState.isUploading}
+                className="px-3.5 py-2 rounded-xl bg-white border border-rose-200 hover:border-rose-400 text-rose-700 text-xs font-bold flex items-center gap-1.5 shadow-xs hover:shadow-sm transition-all cursor-pointer disabled:opacity-50"
+              >
+                {logoState.isUploading ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-rose-600" />
+                    <span>Mengunggah...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Unggah File Logo</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            {/* Left: Opsi Pilihan Tipe Brand Mark */}
+            <div className="lg:col-span-7 space-y-3">
+              <div className="text-[11px] font-bold text-stone-600 mb-1">
+                Pilih Tipe Logo / Lambang yang Ditampilkan di Header & Footer:
+              </div>
+
+              {/* Option 1: Custom Image Logo */}
+              <div
+                onClick={() => {
+                  if (logoState.logoUrl) {
+                    handleToggleBrandMarkType('CUSTOM_UPLOAD');
+                  } else {
+                    logoFileInputRef.current?.click();
+                  }
+                }}
+                className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
+                  logoState.brandMarkType === 'CUSTOM_UPLOAD' && logoState.logoUrl
+                    ? 'border-rose-400 bg-white ring-2 ring-rose-500/20 shadow-xs'
+                    : 'border-stone-200 bg-stone-50/60 hover:bg-white'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="brand_mark_choice"
+                  checked={logoState.brandMarkType === 'CUSTOM_UPLOAD' && Boolean(logoState.logoUrl)}
+                  onChange={() => {}}
+                  className="mt-0.5 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-stone-800 text-xs">
+                      1. Gunakan Logo Gambar Unggahan Pribadi
+                    </span>
+                    {logoState.logoUrl && (
+                      <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md">
+                        Tersedia
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-stone-500 mt-0.5">
+                    Cocok untuk toko yang sudah memiliki file logo resmi sendiri (PNG, SVG, WebP transparan, maks. 3MB).
+                  </p>
+                  {!logoState.logoUrl && (
+                    <div className="mt-2 text-[11px] text-rose-600 font-medium flex items-center gap-1">
+                      <span>Belum ada gambar logo. Klik tombol "Unggah File Logo" di atas.</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Option 2: Bespoke Craft Vector Emblem */}
+              <div
+                onClick={() => handleToggleBrandMarkType('BESPOKE_VECTOR')}
+                className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
+                  logoState.brandMarkType === 'BESPOKE_VECTOR'
+                    ? 'border-rose-400 bg-white ring-2 ring-rose-500/20 shadow-xs'
+                    : 'border-stone-200 bg-stone-50/60 hover:bg-white'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="brand_mark_choice"
+                  checked={logoState.brandMarkType === 'BESPOKE_VECTOR'}
+                  onChange={() => {}}
+                  className="mt-0.5 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-stone-800 text-xs">
+                      2. Lambang Vektor Kawat Bulu Adaptif (Bespoke Craft Suite)
+                    </span>
+                    <span className="text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-md">
+                      Rekomendasi
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-stone-500 mt-0.5">
+                    Otomatis beradaptasi dengan estetika tema: Segel Tulip Kawat Bulu (Tema Korea), Monogram CA Emas & Deep Wine (Editorial Luxury), atau Maskot Fluffy Daisy Bubbly (Kawaii Pop). Bebas AI slop.
+                  </p>
+                </div>
+              </div>
+
+              {logoState.uploadError && (
+                <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[11px] flex items-center gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{logoState.uploadError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Right: Live Preview Box */}
+            <div className="lg:col-span-5 p-4 rounded-xl border border-stone-200 bg-stone-900 text-white space-y-3 shadow-inner">
+              <div className="flex items-center justify-between border-b border-stone-800 pb-2">
+                <span className="text-[11px] font-bold text-stone-300 flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-rose-400" />
+                  Live Preview di Navbar Storefront
+                </span>
+                <span className="text-[10px] text-stone-400 bg-stone-800 px-2 py-0.5 rounded">
+                  {logoState.brandMarkType === 'CUSTOM_UPLOAD' && logoState.logoUrl ? 'Custom Image' : 'Vector Emblem'}
+                </span>
+              </div>
+
+              {/* Dark Background Preview */}
+              <div className="p-3 rounded-lg bg-stone-800/80 border border-stone-700/60 flex items-center gap-3">
+                <div className="w-10 h-10 shrink-0 flex items-center justify-center bg-stone-900/80 rounded-xl p-1 border border-stone-700">
+                  <ChenilleBrandEmblem
+                    className="w-8 h-8"
+                    customLogoUrl={
+                      logoState.brandMarkType === 'CUSTOM_UPLOAD' && logoState.logoUrl
+                        ? logoState.logoUrl
+                        : null
+                    }
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-extrabold text-xs text-white truncate">
+                    {formProfile.storeName || 'Chenille Atelier Depok'}
+                  </div>
+                  <div className="text-[10px] text-stone-400 truncate">
+                    {formProfile.tagline || 'Buket Bunga Kawat Bulu Chenille'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Light Background Preview */}
+              <div className="p-3 rounded-lg bg-white border border-stone-200 text-stone-800 flex items-center gap-3">
+                <div className="w-10 h-10 shrink-0 flex items-center justify-center bg-stone-50 rounded-xl p-1 border border-stone-200">
+                  <ChenilleBrandEmblem
+                    className="w-8 h-8"
+                    customLogoUrl={
+                      logoState.brandMarkType === 'CUSTOM_UPLOAD' && logoState.logoUrl
+                        ? logoState.logoUrl
+                        : null
+                    }
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-extrabold text-xs text-stone-800 truncate">
+                    {formProfile.storeName || 'Chenille Atelier Depok'}
+                  </div>
+                  <div className="text-[10px] text-stone-500 truncate">
+                    {formProfile.tagline || 'Buket Bunga Kawat Bulu Chenille'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* SECTION 1: PROFIL ATELIER */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">

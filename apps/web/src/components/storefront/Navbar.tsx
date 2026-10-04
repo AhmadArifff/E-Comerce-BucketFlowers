@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { getApiUrl } from '@/lib/api-client';
 import { showMagicToast } from '@/lib/magic-motion';
+import { ChenilleBrandEmblem } from '@/components/common/ChenilleBrandEmblem';
 import { CustomerProfileModal } from './CustomerProfileModal';
 import { CustomerChangePasswordModal } from './CustomerChangePasswordModal';
 
@@ -225,11 +226,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* BRAND LOGO */}
           <div
             onClick={() => handleNavClick('home')}
-            className="flex items-center gap-2 sm:gap-2.5 cursor-pointer flex-shrink-0 group"
+            className="flex items-center gap-2.5 sm:gap-3 cursor-pointer flex-shrink-0 group"
           >
-            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-lg sm:text-xl group-hover:scale-105 transition-transform flex-shrink-0 ${brandInfo.iconClass}`}>
-              <span>{brandInfo.icon}</span>
-            </div>
+            <ChenilleBrandEmblem className="w-9 h-9 sm:w-10 sm:h-10 group-hover:scale-105 transition-transform flex-shrink-0" />
             <div className="min-w-0 max-w-[170px] sm:max-w-[210px] xl:max-w-[190px] 2xl:max-w-none">
               <span className="text-sm sm:text-base font-black text-theme-text-main tracking-tight block leading-tight truncate">
                 {brandInfo.title}

@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Sparkles, MapPin, Phone, ShieldCheck, Heart } from 'lucide-react';
+import { ChenilleBrandEmblem } from '@/components/common/ChenilleBrandEmblem';
 import { ATELIER_CONFIG } from '@chenille/shared';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 
@@ -21,13 +22,8 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-stone-800">
           {/* Col 1: Brand Info */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded-lg text-white flex items-center justify-center shadow-xs"
-                style={{ background: 'var(--primary)' }}
-              >
-                <Sparkles className="w-4 h-4" />
-              </div>
+            <div className="flex items-center gap-2.5">
+              <ChenilleBrandEmblem className="w-8 h-8 rounded-lg shrink-0" />
               <span className="font-extrabold text-base text-white tracking-tight font-heading">
                 {activeStoreName}
               </span>

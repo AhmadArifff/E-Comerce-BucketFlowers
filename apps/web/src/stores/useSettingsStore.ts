@@ -141,6 +141,9 @@ interface SettingsState {
   longitude: string;
   mapsLink: string;
   maxCodRadiusKm: number;
+  logoUrl: string | null;
+  faviconUrl: string | null;
+  brandMarkType: 'CUSTOM_UPLOAD' | 'BESPOKE_VECTOR';
   paymentGateways: PaymentGatewaysConfig;
   logisticsConfig: LogisticsConfig;
   notificationConfig: NotificationConfig;
@@ -167,6 +170,9 @@ interface SettingsState {
     longitude?: string;
     mapsLink?: string;
     maxCodRadiusKm?: number;
+    logoUrl?: string | null;
+    faviconUrl?: string | null;
+    brandMarkType?: 'CUSTOM_UPLOAD' | 'BESPOKE_VECTOR';
   }) => void;
   togglePaymentGateway: (gateway: keyof PaymentGatewaysConfig, isEnabled: boolean) => void;
   updatePaymentGatewayConfig: <K extends keyof PaymentGatewaysConfig>(
@@ -458,6 +464,9 @@ export const useSettingsStore = create<SettingsState>()(
       longitude: '106.8315',
       mapsLink: 'https://maps.google.com/?q=-6.3728,106.8315',
       maxCodRadiusKm: 5.0,
+      logoUrl: null,
+      faviconUrl: null,
+      brandMarkType: 'BESPOKE_VECTOR',
       isMaintenanceMode: false,
       maintenanceTitle: 'Atelier Chenille Sedang Istirahat Produksi 🌸',
       maintenanceDesc: 'Kapasitas buket wisuda hari ini telah penuh demi menjaga kualitas kerapian terbaik. Kami akan segera kembali!',
@@ -499,6 +508,18 @@ export const useSettingsStore = create<SettingsState>()(
               isMaintenanceMode: Boolean(d.is_maintenance_mode),
               maintenanceTitle: d.maintenance_title || get().maintenanceTitle,
               maintenanceDesc: d.maintenance_desc || get().maintenanceDesc,
+              storeName: d.store_name || get().storeName,
+              tagline: d.tagline || get().tagline,
+              waNumber: d.wa_number || d.official_whatsapp || get().waNumber,
+              studioAddress: d.studio_address || get().studioAddress,
+              dailyQuota: typeof d.daily_quota === 'number' ? d.daily_quota : (typeof d.daily_po_limit === 'number' ? d.daily_po_limit : get().dailyQuota),
+              latitude: d.latitude || get().latitude,
+              longitude: d.longitude || get().longitude,
+              mapsLink: d.maps_link || get().mapsLink,
+              maxCodRadiusKm: typeof d.max_cod_radius_km === 'number' ? d.max_cod_radius_km : get().maxCodRadiusKm,
+              logoUrl: d.logo_url ?? get().logoUrl,
+              faviconUrl: d.favicon_url ?? get().faviconUrl,
+              brandMarkType: d.brand_mark_type || get().brandMarkType,
             });
           }
         } catch (e) {
