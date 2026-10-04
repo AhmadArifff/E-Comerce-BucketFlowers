@@ -2608,11 +2608,11 @@ export const StoreSettingsView: React.FC = () => {
   } = useSettingsStore();
 
   const [formProfile, setFormProfile] = useState({
-    storeName,
-    tagline,
-    waNumber,
-    studioAddress,
-    dailyQuota: String(dailyQuota),
+    storeName: storeName || '',
+    tagline: tagline || '',
+    waNumber: waNumber || '',
+    studioAddress: studioAddress || '',
+    dailyQuota: String(dailyQuota || 25),
     latitude: latitude || '-6.3728',
     longitude: longitude || '106.8315',
     mapsLink: mapsLink || 'https://maps.google.com/?q=-6.3728,106.8315',
@@ -2808,24 +2808,30 @@ export const StoreSettingsView: React.FC = () => {
       .then((data) => {
         if (data.success && data.data?.store_settings) {
           const s = data.data.store_settings;
-          setFormProfile((prev) => ({
-            ...prev,
-            storeName: s.store_name || prev.storeName,
-            tagline: s.tagline || prev.tagline,
-            waNumber: s.wa_number || prev.waNumber,
-            studioAddress: s.studio_address || prev.studioAddress,
-            dailyQuota: String(s.daily_quota || prev.dailyQuota),
-            latitude: s.latitude || prev.latitude,
-            longitude: s.longitude || prev.longitude,
-            mapsLink: s.maps_link || prev.mapsLink,
-            maxCodRadiusKm: String(s.max_cod_radius_km || prev.maxCodRadiusKm),
-          }));
+          setFormProfile((prev) => {
+            const resolvedWa = s.official_whatsapp || s.wa_number || prev.waNumber || '';
+            const resolvedDailyQuota = String(s.daily_po_limit || s.daily_quota || prev.dailyQuota || '25');
+            return {
+              ...prev,
+              storeName: s.store_name || prev.storeName || '',
+              tagline: s.tagline || prev.tagline || '',
+              waNumber: resolvedWa,
+              studioAddress: s.studio_address || prev.studioAddress || '',
+              dailyQuota: resolvedDailyQuota,
+              latitude: s.latitude || prev.latitude || '-6.3728',
+              longitude: s.longitude || prev.longitude || '106.8315',
+              mapsLink: s.maps_link || prev.mapsLink || '',
+              maxCodRadiusKm: String(s.max_cod_radius_km || prev.maxCodRadiusKm || '5.0'),
+            };
+          });
+          const dbWa = s.official_whatsapp || s.wa_number;
+          const dbQuota = s.daily_po_limit || s.daily_quota;
           updateStoreProfile({
             storeName: s.store_name,
             tagline: s.tagline,
-            waNumber: s.wa_number,
+            waNumber: dbWa,
             studioAddress: s.studio_address,
-            dailyQuota: s.daily_quota,
+            dailyQuota: dbQuota,
             latitude: s.latitude,
             longitude: s.longitude,
             mapsLink: s.maps_link,
@@ -3086,10 +3092,40 @@ export const StoreSettingsView: React.FC = () => {
     );
   };
 
-  const [midtransConfig, setMidtransConfig] = useState({ ...paymentGateways.midtrans });
-  const [bcaConfig, setBcaConfig] = useState({ ...paymentGateways.bcaManual });
-  const [codConfig, setCodConfig] = useState({ ...paymentGateways.codCash });
-  const [logisticsForm, setLogisticsForm] = useState({ ...logisticsConfig });
+  const [midtransConfig, setMidtransConfig] = useState({
+    isEnabled: paymentGateways.midtrans?.isEnabled ?? false,
+    merchantId: paymentGateways.midtrans?.merchantId || '',
+    clientKey: paymentGateways.midtrans?.clientKey || '',
+    serverKey: paymentGateways.midtrans?.serverKey || '',
+    adminFee: paymentGateways.midtrans?.adminFee ?? 0,
+  });
+  const [bcaConfig, setBcaConfig] = useState({
+    isEnabled: paymentGateways.bcaManual?.isEnabled ?? false,
+    accountNumber: paymentGateways.bcaManual?.accountNumber || '',
+    accountHolder: paymentGateways.bcaManual?.accountHolder || '',
+    branch: paymentGateways.bcaManual?.branch || '',
+    adminFee: paymentGateways.bcaManual?.adminFee ?? 0,
+  });
+  const [codConfig, setCodConfig] = useState({
+    isEnabled: paymentGateways.codCash?.isEnabled ?? false,
+    maxDistanceKm: paymentGateways.codCash?.maxDistanceKm ?? 5,
+    notes: paymentGateways.codCash?.notes || '',
+    adminFee: paymentGateways.codCash?.adminFee ?? 0,
+  });
+  const [logisticsForm, setLogisticsForm] = useState({
+    ...logisticsConfig,
+    apiKey: logisticsConfig?.apiKey || '',
+    originAddress: logisticsConfig?.originAddress || '',
+    originPostalCode: logisticsConfig?.originPostalCode || 16424,
+    extraPackingFee: logisticsConfig?.extraPackingFee ?? 0,
+    activeCouriers: logisticsConfig?.activeCouriers || {
+      jne: true,
+      jnt: true,
+      sicepat: true,
+      gosend: true,
+      anteraja: false,
+    },
+  });
   const [showApiKey, setShowApiKey] = useState(false);
   const [showWaApiKey, setShowWaApiKey] = useState(false);
   const [testApiState, setTestApiState] = useState<{
@@ -3098,10 +3134,10 @@ export const StoreSettingsView: React.FC = () => {
     servicesCount?: number;
   }>({ status: 'idle', message: '' });
   const [notifForm, setNotifForm] = useState({
-    isEnabled: notificationConfig.isEnabled,
-    apiKey: notificationConfig.apiKey || '',
-    senderDevice: notificationConfig.senderDevice || '081234567890',
-    events: { ...notificationConfig.events },
+    isEnabled: notificationConfig?.isEnabled ?? false,
+    apiKey: notificationConfig?.apiKey || '',
+    senderDevice: notificationConfig?.senderDevice || '081234567890',
+    events: { ...(notificationConfig?.events || {}) },
   });
   const [waTestState, setWaTestState] = useState<{
     status: 'idle' | 'testing' | 'success' | 'error';
@@ -3220,8 +3256,10 @@ export const StoreSettingsView: React.FC = () => {
         store_name: formProfile.storeName,
         tagline: formProfile.tagline,
         wa_number: formProfile.waNumber,
+        official_whatsapp: formProfile.waNumber,
         studio_address: formProfile.studioAddress,
         daily_quota: parseInt(formProfile.dailyQuota) || 25,
+        daily_po_limit: parseInt(formProfile.dailyQuota) || 25,
         latitude: formProfile.latitude,
         longitude: formProfile.longitude,
         maps_link: formProfile.mapsLink,
@@ -3300,7 +3338,7 @@ export const StoreSettingsView: React.FC = () => {
               <label className="block font-bold text-stone-700 mb-1">Nama Studio Atelier</label>
               <input
                 type="text"
-                value={formProfile.storeName}
+                value={formProfile.storeName || ''}
                 onChange={(e) => setFormProfile({ ...formProfile, storeName: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
               />
@@ -3310,7 +3348,7 @@ export const StoreSettingsView: React.FC = () => {
               <label className="block font-bold text-stone-700 mb-1">Nomor WhatsApp CS Resmi</label>
               <input
                 type="text"
-                value={formProfile.waNumber}
+                value={formProfile.waNumber || ''}
                 onChange={(e) => setFormProfile({ ...formProfile, waNumber: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
               />
@@ -3321,7 +3359,7 @@ export const StoreSettingsView: React.FC = () => {
             <label className="block font-bold text-stone-700 mb-1">Tagline Toko</label>
             <input
               type="text"
-              value={formProfile.tagline}
+              value={formProfile.tagline || ''}
               onChange={(e) => setFormProfile({ ...formProfile, tagline: e.target.value })}
               className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
             />
@@ -3332,7 +3370,7 @@ export const StoreSettingsView: React.FC = () => {
               <label className="block font-bold text-stone-700 mb-1">Alamat Fisik Workshop / Studio</label>
               <input
                 type="text"
-                value={formProfile.studioAddress}
+                value={formProfile.studioAddress || ''}
                 onChange={(e) => setFormProfile({ ...formProfile, studioAddress: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
               />
@@ -3342,7 +3380,7 @@ export const StoreSettingsView: React.FC = () => {
               <label className="block font-bold text-stone-700 mb-1">Kapasitas Slot PO (Buket/Hari)</label>
               <input
                 type="number"
-                value={formProfile.dailyQuota}
+                value={formProfile.dailyQuota || ''}
                 onChange={(e) => setFormProfile({ ...formProfile, dailyQuota: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white"
               />
@@ -3637,7 +3675,7 @@ export const StoreSettingsView: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  value={formProfile.latitude}
+                  value={formProfile.latitude || ''}
                   onChange={(e) => {
                     const lat = e.target.value;
                     setFormProfile({
@@ -3657,7 +3695,7 @@ export const StoreSettingsView: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  value={formProfile.longitude}
+                  value={formProfile.longitude || ''}
                   onChange={(e) => {
                     const lon = e.target.value;
                     setFormProfile({
@@ -3678,7 +3716,7 @@ export const StoreSettingsView: React.FC = () => {
                 <input
                   type="number"
                   step="0.1"
-                  value={formProfile.maxCodRadiusKm}
+                  value={formProfile.maxCodRadiusKm || ''}
                   onChange={(e) => setFormProfile({ ...formProfile, maxCodRadiusKm: e.target.value })}
                   placeholder="5.0"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20"
@@ -3692,7 +3730,7 @@ export const StoreSettingsView: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  value={formProfile.mapsLink}
+                  value={formProfile.mapsLink || ''}
                   onChange={(e) => setFormProfile({ ...formProfile, mapsLink: e.target.value })}
                   placeholder="https://maps.google.com/?q=..."
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-stone-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20"
@@ -3764,7 +3802,7 @@ export const StoreSettingsView: React.FC = () => {
                     <label className="block font-bold text-stone-600 text-[11px] mb-1">Merchant ID</label>
                     <input
                       type="text"
-                      value={midtransConfig.merchantId}
+                      value={midtransConfig.merchantId || ''}
                       onChange={(e) => setMidtransConfig({ ...midtransConfig, merchantId: e.target.value })}
                       className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
                     />
@@ -3773,7 +3811,7 @@ export const StoreSettingsView: React.FC = () => {
                     <label className="block font-bold text-stone-600 text-[11px] mb-1">Client Key</label>
                     <input
                       type="text"
-                      value={midtransConfig.clientKey}
+                      value={midtransConfig.clientKey || ''}
                       onChange={(e) => setMidtransConfig({ ...midtransConfig, clientKey: e.target.value })}
                       className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
                     />
@@ -3782,7 +3820,7 @@ export const StoreSettingsView: React.FC = () => {
                     <label className="block font-bold text-stone-600 text-[11px] mb-1">Server Key</label>
                     <input
                       type="password"
-                      value={midtransConfig.serverKey}
+                      value={midtransConfig.serverKey || ''}
                       onChange={(e) => setMidtransConfig({ ...midtransConfig, serverKey: e.target.value })}
                       className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
                     />
@@ -3852,7 +3890,7 @@ export const StoreSettingsView: React.FC = () => {
                     <label className="block font-bold text-stone-600 text-[11px] mb-1">Nomor Rekening</label>
                     <input
                       type="text"
-                      value={bcaConfig.accountNumber}
+                      value={bcaConfig.accountNumber || ''}
                       onChange={(e) => setBcaConfig({ ...bcaConfig, accountNumber: e.target.value })}
                       className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
                     />
@@ -3861,7 +3899,7 @@ export const StoreSettingsView: React.FC = () => {
                     <label className="block font-bold text-stone-600 text-[11px] mb-1">Atas Nama Rekening</label>
                     <input
                       type="text"
-                      value={bcaConfig.accountHolder}
+                      value={bcaConfig.accountHolder || ''}
                       onChange={(e) => setBcaConfig({ ...bcaConfig, accountHolder: e.target.value })}
                       className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs"
                     />
@@ -3870,7 +3908,7 @@ export const StoreSettingsView: React.FC = () => {
                     <label className="block font-bold text-stone-600 text-[11px] mb-1">Kantor Cabang</label>
                     <input
                       type="text"
-                      value={bcaConfig.branch}
+                      value={bcaConfig.branch || ''}
                       onChange={(e) => setBcaConfig({ ...bcaConfig, branch: e.target.value })}
                       className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs"
                     />
@@ -3969,7 +4007,7 @@ export const StoreSettingsView: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      value={codConfig.notes}
+                      value={codConfig.notes || ''}
                       onChange={(e) => setCodConfig({ ...codConfig, notes: e.target.value })}
                       className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs"
                     />
@@ -4083,7 +4121,7 @@ export const StoreSettingsView: React.FC = () => {
                       </div>
                       <input
                         type={showApiKey ? 'text' : 'password'}
-                        value={logisticsForm.apiKey}
+                        value={logisticsForm.apiKey || ''}
                         onChange={(e) => setLogisticsForm({ ...logisticsForm, apiKey: e.target.value })}
                         placeholder="biteship_test.eyJ..."
                         className="w-full px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-mono"
@@ -4118,7 +4156,7 @@ export const StoreSettingsView: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        value={logisticsForm.originAddress}
+                        value={logisticsForm.originAddress || ''}
                         onChange={(e) =>
                           setLogisticsForm({ ...logisticsForm, originAddress: e.target.value })
                         }
@@ -4419,7 +4457,7 @@ export const StoreSettingsView: React.FC = () => {
                     <div className="relative">
                       <input
                         type={showWaApiKey ? 'text' : 'password'}
-                        value={notifForm.apiKey}
+                        value={notifForm.apiKey || ''}
                         onChange={(e) => setNotifForm({ ...notifForm, apiKey: e.target.value })}
                         placeholder="Masukkan API Key dari dashboard fonnte.com"
                         className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-emerald-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20 pr-20"
@@ -4439,7 +4477,7 @@ export const StoreSettingsView: React.FC = () => {
                     <label className="block font-bold text-stone-700 mb-1 text-[11px]">Nomor Device WA Pengirim</label>
                     <input
                       type="text"
-                      value={notifForm.senderDevice}
+                      value={notifForm.senderDevice || ''}
                       onChange={(e) => setNotifForm({ ...notifForm, senderDevice: e.target.value })}
                       placeholder="081234567890"
                       className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-emerald-200 text-xs text-stone-800 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20"

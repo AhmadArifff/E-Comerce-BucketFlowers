@@ -135,3 +135,21 @@ Daftar kendala masa lalu dan solusi yang telah diverifikasi pada sistem E-Commer
   2. **Member Isolation Guard**: `GET /api/v1/orders` memfilter pesanan berdasarkan `userId` atau `customer_phone` atau `customer_email`. Di `portal/page.tsx`, pesanan difilter ketat menjadi `scopedMemberOrders`. Jika pengguna sedang login sebagai member, pencarian pesanan milik orang lain di `GuestTracker` otomatis ditolak dengan peringatan privasi & kepemilikan.
   3. **Zero-Fraud Ownership Verification**: Endpoint `GET /api/v1/warranty/verify-order/:orderId` mengembalikan data status pesanan, riwayat klaim aktif, dan `maskedPhone` (`0819-****-1834`). Jika member yang login cocok dengan pesanan, klaim berstatus `VERIFIED_MEMBER` (pre-authorized). Jika berstatus tamu atau belum login, wajib melakukan verifikasi OTP WhatsApp via `/api/v1/otp/send` dan `/api/v1/otp/verify` sebelum tombol submit klaim aktif. Backend di `POST /api/v1/warranty` dan `POST /api/v1/complaints` menegakkan guard pencocokan 8 digit nomor telepon terakhir dan menolak klaim tidak cocok dengan HTTP 403 Forbidden.
 
+---
+
+## 10. Frontend State & DB Persistence: Resolusi Warning React Uncontrolled-to-Controlled Input dan Sinkronisasi Alias WhatsApp Resmi Toko
+- **Gejala**:
+  1. Saat admin mengubah Nomor WhatsApp CS Resmi di tab Pengaturan Atelier (`StoreSettingsView`), muncul pesan error/warning React:
+     `A component is changing an uncontrolled input to be controlled. This is likely caused by the value changing from undefined to a defined value, which should not happen.`
+  2. Nilai nomor WhatsApp atau kuota PO yang baru diubah tidak tersimpan ke database saat formulir disimpan.
+- **Akar Masalah**:
+  1. State `formProfile` diinisialisasi dari `useSettingsStore()` tanpa fallback string aman sehingga `waNumber` bernilai `undefined` sebelum hidrasi store selesai.
+  2. Saat sinkronisasi dari `/api/v1/admin/settings/all`, backend mengembalikan kolom database `official_whatsapp` (bukan `wa_number`). Kode frontend hanya mengecek `s.wa_number` sehingga tetap `undefined`.
+  3. Elemen `<input value={formProfile.waNumber} />` ter-mount dengan `value={undefined}` (uncontrolled). Saat admin mengetik karakter pertama, `value` berubah menjadi terdefinisi (controlled), memicu warning React.
+  4. Pada saat `handleSave`, frontend mengirim payload `{ wa_number: ... }`, sedangkan handler backend `PATCH /settings` hanya membaca `official_whatsapp`.
+- **Solusi**:
+  1. **Guaranteed Fallback di State & Props**: Inisialisasi `formProfile` dan seluruh konfigurasi form dengan fallback string aman (`storeName || ''`, `waNumber || ''`, dll.), serta tambahkan `value={formProfile.waNumber || ''}` pada seluruh input JSX di `StoreSettingsView`.
+  2. **Dual-Naming Compatibility**: Di `AdminViews.tsx`, baca `s.official_whatsapp || s.wa_number`. Di `admin.routes.ts`, `GET /settings/all` menyertakan alias `wa_number` dan `daily_quota`, serta `PATCH /settings` membaca `official_whatsapp = req.body.official_whatsapp || req.body.wa_number` dan `daily_po_limit = req.body.daily_po_limit ?? req.body.daily_quota`.
+  3. Diverifikasi dengan `npm run type-check` (0 error) dan `npm run test:unit` (84 test lolos).
+
+

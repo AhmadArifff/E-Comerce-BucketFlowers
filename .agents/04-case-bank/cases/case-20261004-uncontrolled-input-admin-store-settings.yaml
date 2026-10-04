@@ -1,0 +1,35 @@
+id: case-20261004-uncontrolled-input-admin-store-settings
+title: Resolusi Error Uncontrolled Input React dan Sinkronisasi Alias WhatsApp Resmi di StoreSettingsView
+domain: frontend-react-forms-admin-settings
+severity: MEDIUM
+status: VERIFIED
+created_at: "2026-10-04T16:18:00.000Z"
+context:
+  component: apps/web/src/components/admin/AdminViews.tsx, apps/api/src/routes/admin.routes.ts
+  impact: Mencegah crash/warning runtime React "A component is changing an uncontrolled input to be controlled" saat admin mengetik nomor WhatsApp toko, serta menjamin nilai nomor WhatsApp tersimpan permanen ke kolom official_whatsapp pada tabel PostgreSQL store_settings.
+
+problem_statement: |
+  Saat admin mencoba mengganti Nomor WhatsApp CS Resmi di tab Pengaturan Atelier dengan nilai seperti '0895353025503', muncul warning/error React:
+  "A component is changing an uncontrolled input to be controlled. This is likely caused by the value changing from undefined to a defined value, which should not happen. Decide between using a controlled or uncontrolled input element for the lifetime of the component."
+
+root_cause: |
+  1. Pada AdminViews.tsx, formProfile diinisialisasi dari useSettingsStore() tanpa fallback string aman: waNumber bernilai undefined bila store belum terhidrasi.
+  2. Saat fetch /api/v1/admin/settings/all pada mount, backend PostgreSQL mengembalikan kolom official_whatsapp (bukan wa_number). Pemetaan sebelumnya melakukan `s.wa_number || prev.waNumber` sehingga nilainya tetap undefined.
+  3. Elemen JSX <input value={formProfile.waNumber} /> ter-mount dengan value={undefined} (dianggap oleh React sebagai uncontrolled input).
+  4. Ketika pengguna mulai mengetik angka pertama '0', onChange mengubah waNumber menjadi string yang terdefinisi, memicu transisi ilegal dari uncontrolled ke controlled.
+  5. Pada fungsi simpan (handleSave), frontend mengirim field wa_number, sedangkan endpoint PATCH /settings di backend hanya mengekstrak official_whatsapp, sehingga perubahan nomor tidak tersimpan ke database.
+
+solution_pattern: |
+  1. Guaranteed String Fallback di Initial State:
+     - Inisialisasi state formProfile, midtransConfig, bcaConfig, codConfig, logisticsForm, dan notifForm dengan fallback string/nilai default eksplisit (`storeName || ''`, `waNumber || ''`, `notes || ''`).
+  2. Dual-Naming Compatibility di Sinkronisasi Database:
+     - Di useEffect AdminViews.tsx, baca `s.official_whatsapp || s.wa_number || prev.waNumber || ''`.
+     - Di backend admin.routes.ts, GET /settings/all menyertakan alias `wa_number: storeRow.official_whatsapp` dan `daily_quota: storeRow.daily_po_limit`.
+     - Di backend admin.routes.ts, PATCH /settings mengekstrak `official_whatsapp = req.body.official_whatsapp || req.body.wa_number`.
+  3. Defensive Fallback pada JSX Props:
+     - Seluruh input controlled di StoreSettingsView diberikan `value={formProfile.waNumber || ''}`, `value={formProfile.storeName || ''}`, dsb., guna menjamin lifetime input 100% controlled.
+
+verification_evidence: |
+  - Kompilasi TypeScript monorepo lolos 0 error (npm run type-check).
+  - 84 unit test vitest lolos 100% (npm run test:unit).
+  - Nilai nomor WhatsApp CS resmi dan kuota harian tersinkronisasi dua arah antara frontend dan kolom PostgreSQL official_whatsapp.

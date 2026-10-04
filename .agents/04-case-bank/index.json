@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "E-Comerce-BucketFlowers",
-  "total_cases": 9,
+  "total_cases": 10,
   "cases": [
     {
       "id": "case-20261002-postgresql-enum-type-deduction",
@@ -74,6 +74,14 @@
       "severity": "CRITICAL",
       "status": "VERIFIED",
       "file": "cases/case-20261004-member-order-scoping-and-zero-fraud-claims.yaml"
+    },
+    {
+      "id": "case-20261004-uncontrolled-input-admin-store-settings",
+      "title": "Resolusi Error Uncontrolled Input React dan Sinkronisasi Alias WhatsApp Resmi di StoreSettingsView",
+      "domain": "frontend-react-forms-admin-settings",
+      "severity": "MEDIUM",
+      "status": "VERIFIED",
+      "file": "cases/case-20261004-uncontrolled-input-admin-store-settings.yaml"
     }
   ]
 }

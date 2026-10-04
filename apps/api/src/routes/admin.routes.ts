@@ -118,18 +118,27 @@ const maskSecretKey = (key?: string | null): string => {
 router.get('/settings/all', async (req, res) => {
   try {
     const storeRes = await pool.query(`SELECT * FROM store_settings LIMIT 1;`);
-    const store = storeRes.rows[0] || {
-      store_name: 'Chenille Atelier Depok',
-      tagline: 'Buket Bunga Kawat Bulu Chenille Premium & Graduation Florist',
-      official_whatsapp: '+62 812-9831-7721',
-      studio_address: 'Jl. Margonda Raya No. 120, Beji, Kota Depok, Jawa Barat 16424',
-      daily_po_limit: 25,
-      active_theme: 'TEMA_A_KOREAN_PASTEL',
-      latitude: '-6.3728',
-      longitude: '106.8315',
-      maps_link: 'https://maps.google.com/?q=-6.3728,106.8315',
-      max_cod_radius_km: 5.0,
-    };
+    const storeRow = storeRes.rows[0];
+    const store = storeRow
+      ? {
+          ...storeRow,
+          wa_number: storeRow.official_whatsapp || storeRow.wa_number,
+          daily_quota: storeRow.daily_po_limit || storeRow.daily_quota,
+        }
+      : {
+          store_name: 'Chenille Atelier Depok',
+          tagline: 'Buket Bunga Kawat Bulu Chenille Premium & Graduation Florist',
+          official_whatsapp: '+62 812-9831-7721',
+          wa_number: '+62 812-9831-7721',
+          studio_address: 'Jl. Margonda Raya No. 120, Beji, Kota Depok, Jawa Barat 16424',
+          daily_po_limit: 25,
+          daily_quota: 25,
+          active_theme: 'TEMA_A_KOREAN_PASTEL',
+          latitude: '-6.3728',
+          longitude: '106.8315',
+          maps_link: 'https://maps.google.com/?q=-6.3728,106.8315',
+          max_cod_radius_km: 5.0,
+        };
 
     // Logistics config
     const logRes = await pool.query(`SELECT * FROM logistics_configs LIMIT 1;`);
@@ -403,9 +412,7 @@ router.patch('/settings', async (req, res) => {
     const {
       store_name,
       tagline,
-      official_whatsapp,
       studio_address,
-      daily_po_limit,
       active_theme,
       latitude,
       longitude,
@@ -415,6 +422,8 @@ router.patch('/settings', async (req, res) => {
       maintenance_title,
       maintenance_desc,
     } = req.body;
+    const official_whatsapp = req.body.official_whatsapp || req.body.wa_number;
+    const daily_po_limit = req.body.daily_po_limit !== undefined ? req.body.daily_po_limit : req.body.daily_quota;
     const updateSql = `
       UPDATE store_settings
       SET store_name = COALESCE($1, store_name),
