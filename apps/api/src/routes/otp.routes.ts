@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import { pool } from '../config/database.js';
+import { sendOtpWhatsapp } from '../services/whatsapp.service.js';
 
 const router = Router();
 
@@ -40,17 +41,22 @@ router.post('/send', async (req: Request, res: Response) => {
       attempts: 0,
     });
 
-    console.log(`[OTP Gateway] Sent OTP ${code} to ${cleanPhone}`);
+    console.log(`[OTP Gateway] Generated OTP ${code} for ${cleanPhone}`);
+
+    // Dispatch via WhatsApp Gateway (Live Fonnte or graceful Simulation)
+    const waResult = await sendOtpWhatsapp(cleanPhone, code);
 
     return res.json({
       success: true,
       data: {
         phone: cleanPhone,
         expires_in: 300,
-        is_simulation: true,
-        dev_code: code,
+        is_simulation: waResult.mode === 'simulation',
+        dev_code: waResult.mode === 'simulation' ? code : undefined,
       },
-      message: `Kode verifikasi 6-digit telah dikirim ke WhatsApp ${phone}. (Kode Demo: ${code})`,
+      message: waResult.mode === 'live'
+        ? `Kode verifikasi 6-digit telah dikirim ke nomor WhatsApp Anda (${cleanPhone}).`
+        : `Kode verifikasi 6-digit telah dikirim ke WhatsApp ${cleanPhone}. (Mode Simulasi Demo: ${code})`,
     });
   } catch (error: any) {
     console.error('Error sending OTP:', error);

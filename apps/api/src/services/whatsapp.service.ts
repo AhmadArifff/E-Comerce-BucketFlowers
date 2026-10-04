@@ -401,3 +401,32 @@ export async function sendOccasionReminderNotification(
 ): Promise<void> {
   return sendOrderNotification('OCCASION_REMINDER', data);
 }
+
+/**
+ * Convenience helper to send WhatsApp OTP code
+ */
+export async function sendOtpWhatsapp(
+  phone: string,
+  code: string
+): Promise<{ success: boolean; mode: 'live' | 'simulation'; message: string }> {
+  const config = await getNotificationConfig();
+  const apiKey = process.env.WA_GATEWAY_API_KEY || config.api_key;
+
+  if (!isValidApiKey(apiKey)) {
+    console.log(`[OTP WA Gateway] Mode Simulasi: OTP ${code} untuk ${phone} (Fonnte API Key belum dikonfigurasi)`);
+    return {
+      success: true,
+      mode: 'simulation',
+      message: `Kode verifikasi simulasi: ${code}`,
+    };
+  }
+
+  const message = `🌸 *Chenille Atelier Florist Depok*\n\nKode verifikasi keamanan OTP Anda adalah: *${code}*\n\nKode ini berlaku selama 5 menit untuk memvalidasi kepemilikan pesanan atau klaim garansi Anda. Jangan bagikan kode ini kepada pihak mana pun demi keamanan pesanan Anda. 🙏`;
+
+  const result = await callFonnteApi(apiKey!, phone, message, config.sender_device);
+  return {
+    success: result.success,
+    mode: 'live',
+    message: result.success ? `Kode OTP terkirim ke WhatsApp ${phone}` : `Gagal mengirim ke WhatsApp gateway`,
+  };
+}
