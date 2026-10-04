@@ -744,7 +744,7 @@ export async function generateAiChatDraft(
           ],
           generationConfig: {
             temperature: 0.3,
-            maxOutputTokens: 1500,
+            maxOutputTokens: 3000,
           },
         }),
       });
