@@ -89,6 +89,9 @@ export const useChatStore = create<ChatState>()(
           } catch (e) {
             console.warn('Could not sync session identity:', e);
           }
+        } else if (phone) {
+          // On new device without sessionId, initialize with member identity to restore server session
+          await get().initClientSession(name, phone);
         }
       },
 
@@ -126,6 +129,8 @@ export const useChatStore = create<ChatState>()(
           const data = await res.json();
           if (data.success && data.data?.id) {
             set({ sessionId: data.data.id, customerName: name, customerPhone: phone });
+            // Immediately fetch messages for this session
+            await get().fetchClientMessages();
             return data.data.id;
           }
         } catch (e) {

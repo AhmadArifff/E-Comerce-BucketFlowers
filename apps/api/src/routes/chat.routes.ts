@@ -53,9 +53,31 @@ router.get('/sessions', async (req, res) => {
 router.post('/session', async (req, res) => {
   try {
     const { customer_name, customer_phone } = req.body;
+    const name = customer_name || 'Tamu Chenille';
+
+    // Multi-Device Restoration: Check if customer_phone already has an active session
+    if (customer_phone && customer_phone.trim().length >= 8) {
+      const existingSession = await pool.query(
+        `SELECT * FROM chat_sessions 
+         WHERE customer_phone = $1 AND is_active = true 
+         ORDER BY updated_at DESC LIMIT 1;`,
+        [customer_phone.trim()]
+      );
+      if (existingSession.rows.length > 0) {
+        const sess = existingSession.rows[0];
+        if (customer_name && customer_name !== 'Tamu Chenille' && sess.customer_name !== customer_name) {
+          await pool.query(
+            `UPDATE chat_sessions SET customer_name = $2, guest_name = $2, updated_at = NOW() WHERE id = $1;`,
+            [sess.id, customer_name]
+          );
+          sess.customer_name = customer_name;
+        }
+        return res.json({ success: true, data: sess, isRestored: true });
+      }
+    }
+
     const sessionToken = `sess-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const id = `chat-${Date.now()}`;
-    const name = customer_name || 'Tamu Chenille';
 
     const insertSql = `
       INSERT INTO chat_sessions (id, session_token, customer_name, guest_name, customer_phone, is_escalated_wa, is_active, created_at, updated_at)
@@ -76,7 +98,7 @@ router.post('/session', async (req, res) => {
       [`msg-${Date.now()}`, id]
     );
 
-    return res.json({ success: true, data: result.rows[0] });
+    return res.json({ success: true, data: result.rows[0], isRestored: false });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
   }

@@ -26,6 +26,7 @@ export interface GroundingContext {
   customerName: string;
   customerPhone?: string;
   order?: GroundedOrder | null;
+  ordersList?: GroundedOrder[];
   products?: Array<{
     name: string;
     series?: string;
@@ -160,8 +161,9 @@ export async function retrieveGroundingContext(
     console.warn('[AI Assistant] Could not fetch store_settings:', err);
   }
 
-  // 3. Check for specific order / invoice
+  // 3. Check for specific order / invoice or customer order history
   let groundedOrder: GroundedOrder | null = null;
+  const ordersList: GroundedOrder[] = [];
   const detectedInvoice = extractInvoiceNumber(customerMessage);
 
   try {
@@ -180,27 +182,33 @@ export async function retrieveGroundingContext(
         LIMIT 1;
       `;
       orderParams = [detectedInvoice];
-    } else if (customerPhone && customerPhone.length >= 8) {
-      // Find latest active order by customer phone
-      orderQuery = `
-        SELECT o.id, o.id as invoice_number, o.customer_name, o.customer_phone, 
-               COALESCE(o.fulfillment_type::text, 'COURIER_EXPEDITION') as delivery_method, 
-               o.current_step, o.order_status, o.tracking_number, o.cod_notes as notes, o.total_amount, 
-               o.created_at, cod.name as cod_name, cod.full_address as cod_address
-        FROM orders o
-        LEFT JOIN cod_meetup_points cod ON o.cod_meetup_id = cod.id
-        WHERE o.customer_phone = $1
-        ORDER BY o.created_at DESC
-        LIMIT 1;
-      `;
-      orderParams = [customerPhone];
+    } else {
+      // Find orders matching customer phone or customer name
+      const phoneParam = customerPhone && customerPhone.length >= 8 ? customerPhone : '';
+      const nameParam = customerName && customerName !== 'Kak' ? `%${customerName.toLowerCase()}%` : '';
+
+      if (phoneParam || nameParam) {
+        orderQuery = `
+          SELECT o.id, o.id as invoice_number, o.customer_name, o.customer_phone, 
+                 COALESCE(o.fulfillment_type::text, 'COURIER_EXPEDITION') as delivery_method, 
+                 o.current_step, o.order_status, o.tracking_number, o.cod_notes as notes, o.total_amount, 
+                 o.created_at, cod.name as cod_name, cod.full_address as cod_address
+          FROM orders o
+          LEFT JOIN cod_meetup_points cod ON o.cod_meetup_id = cod.id
+          WHERE (
+            ($1 <> '' AND o.customer_phone = $1)
+            OR ($2 <> '' AND LOWER(o.customer_name) LIKE $2)
+          )
+          ORDER BY o.created_at DESC
+          LIMIT 5;
+        `;
+        orderParams = [phoneParam, nameParam];
+      }
     }
 
     if (orderQuery) {
       const orderRes = await pool.query(orderQuery, orderParams);
-      if (orderRes.rows.length > 0) {
-        const o = orderRes.rows[0];
-
+      for (const o of orderRes.rows) {
         // Fetch order items summary
         const itemsRes = await pool.query(
           `SELECT product_name, quantity FROM order_items WHERE order_id = $1;`,
@@ -217,7 +225,7 @@ export async function retrieveGroundingContext(
         );
         const latestHistory = historyRes.rows[0];
 
-        groundedOrder = {
+        const mapped: GroundedOrder = {
           id: o.id,
           invoice_number: o.invoice_number,
           customer_name: o.customer_name,
@@ -238,7 +246,16 @@ export async function retrieveGroundingContext(
           latest_step_description: latestHistory?.description || undefined,
         };
 
-        sourcesUsed.push(`Data Pesanan Real-time (${o.invoice_number})`);
+        ordersList.push(mapped);
+      }
+
+      if (ordersList.length > 0) {
+        groundedOrder = ordersList[0];
+        if (ordersList.length === 1) {
+          sourcesUsed.push(`Data Pesanan Real-time (${ordersList[0].invoice_number})`);
+        } else {
+          sourcesUsed.push(`Data Pesanan Real-time (${ordersList.length} Pesanan)`);
+        }
       }
     }
   } catch (err) {
@@ -322,6 +339,7 @@ export async function retrieveGroundingContext(
     customerName,
     customerPhone,
     order: groundedOrder,
+    ordersList,
     products: productsList,
     codPoints: codList,
     storeInfo,
@@ -399,7 +417,18 @@ export function buildUserPrompt(
     dbContextStr += `Status Operasional: SEDANG LIBUR/MAINTENANCE (${ctx.storeInfo.maintenance_note})\n`;
   }
 
-  if (ctx.order) {
+  if (ctx.ordersList && ctx.ordersList.length > 0) {
+    dbContextStr += `\n[DAFTAR PESANAN PELANGGAN DI DATABASE (${ctx.ordersList.length} pesanan)]:\n`;
+    for (const ord of ctx.ordersList) {
+      const isCompleted = ord.current_step === 4 || ord.order_status === 'COMPLETED';
+      const statusType = isCompleted ? 'SELESAI (Completed)' : `SEDANG PROGRES (Tahap ${ord.current_step} - ${ord.step_title})`;
+      dbContextStr += `- Invoice: ${ord.invoice_number} | Kategori: ${statusType} | Item: ${ord.items_summary} | Total: Rp ${ord.total_amount.toLocaleString('id-ID')} | Tanggal: ${ord.created_at}`;
+      if (ord.tracking_number) dbContextStr += ` | Resi: ${ord.tracking_number}`;
+      if (ord.cod_location) dbContextStr += ` | Titik COD: ${ord.cod_location}`;
+      if (ord.latest_step_description) dbContextStr += ` | Catatan: ${ord.latest_step_description}`;
+      dbContextStr += `\n`;
+    }
+  } else if (ctx.order) {
     dbContextStr += `\n[STATUS PESANAN DITEMUKAN]\n`;
     dbContextStr += `- Invoice: ${ctx.order.invoice_number}\n`;
     dbContextStr += `- Tahap Saat Ini: Tahap ${ctx.order.current_step} - ${ctx.order.step_title}\n`;
@@ -413,7 +442,7 @@ export function buildUserPrompt(
       dbContextStr += `- Catatan Pengerjaan Terakhir: ${ctx.order.latest_step_description}\n`;
     }
   } else {
-    dbContextStr += `\n[STATUS PESANAN]: Tidak ada data invoice aktif yang terdeteksi untuk pesan ini.\n`;
+    dbContextStr += `\n[STATUS PESANAN]: Tidak ada data invoice atau pesanan aktif yang terdaftar atas nama atau nomor HP ini di database.\n`;
   }
 
   if (ctx.products && ctx.products.length > 0) {
@@ -508,8 +537,43 @@ export function generateDeterministicFallback(
     );
   }
 
-  // 3. Order status query
-  if (ctx.order) {
+  // 3. Order status query (multiple or single)
+  if (ctx.ordersList && ctx.ordersList.length > 0) {
+    if (ctx.ordersList.length === 1) {
+      const ord = ctx.ordersList[0];
+      const opening = hasPriorGreeting
+        ? `Untuk pesanan Kak ${name} dengan invoice ${ord.invoice_number} (${ord.items_summary}), saat ini statusnya: Tahap ${ord.current_step} - ${ord.step_title} 😊\n\n`
+        : `Halo Kak ${name} 😊\n\nPesanan Kakak dengan invoice ${ord.invoice_number} (${ord.items_summary}) saat ini statusnya: Tahap ${ord.current_step} - ${ord.step_title}.\n\n`;
+
+      const statusNote = ord.latest_step_description
+        ? `Catatan tim perangkai: ${ord.latest_step_description}.\n\n`
+        : '';
+      const deliveryDetail =
+        ord.delivery_method === 'COD_MEETUP'
+          ? `Pengambilan via COD di ${ord.cod_location || 'titik temu kampus Depok'}. Nanti staf kami akan kabari begitu buket sudah siap diambil ya kak 😊\n\nApakah waktu pengambilannya sudah sesuai dengan jadwal Kakak?`
+          : ord.tracking_number
+          ? `Nomor resi pengirimannya: ${ord.tracking_number}. Kakak bisa pantau perjalanannya di menu lacak pesanan ya 😊\n\nAda hal lain yang perlu kami bantu cek seputar pengirimannya kak?`
+          : `Pesanan sedang kami siapkan sebaik mungkin dengan standar anti-patah 100% kak. Apakah ada kartu ucapan yang mau ditambahkan? 😊`;
+
+      return sanitizeDraftReply(opening + statusNote + deliveryDetail);
+    } else {
+      const opening = hasPriorGreeting
+        ? `Berikut adalah rincian pesanan Kak ${name} yang tercatat di sistem kami 😊:\n\n`
+        : `Halo Kak ${name} 😊\n\nBerikut adalah rincian pesanan Kakak yang tercatat di sistem kami:\n\n`;
+
+      const listStr = ctx.ordersList
+        .map((ord) => {
+          const isDone = ord.current_step === 4 || ord.order_status === 'COMPLETED';
+          const label = isDone ? 'Pesanan Selesai' : `Tahap ${ord.current_step} (${ord.step_title})`;
+          return `- ${ord.invoice_number} (${ord.items_summary}) - ${label}`;
+        })
+        .join('\n');
+
+      return sanitizeDraftReply(
+        opening + listStr + `\n\nAda pesanan tertentu yang ingin Kakak tanyakan lebih detail? Kami siap bantu dengan senang hati ya 🥰`
+      );
+    }
+  } else if (ctx.order) {
     const opening = hasPriorGreeting
       ? `Untuk pesanan Kak ${name} dengan invoice ${ctx.order.invoice_number} (${ctx.order.items_summary}), saat ini statusnya: ${ctx.order.step_title} 😊\n\n`
       : `Halo Kak ${name} 😊\n\nPesanan Kakak dengan invoice ${ctx.order.invoice_number} (${ctx.order.items_summary}) saat ini statusnya: ${ctx.order.step_title}.\n\n`;
@@ -680,7 +744,7 @@ export async function generateAiChatDraft(
           ],
           generationConfig: {
             temperature: 0.3,
-            maxOutputTokens: 800,
+            maxOutputTokens: 1500,
           },
         }),
       });
