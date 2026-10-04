@@ -756,9 +756,15 @@ router.patch('/:id', async (req, res) => {
       }
     }
 
-    // 🌸 Award Flower Points when Order reaches step 4 (COMPLETED)
+    // 🌸 Award Flower Points & Complete Payment when Order reaches step 4 (COMPLETED)
     let pointsAwarded = 0;
     if (targetStep === 4) {
+      // Sync payment status to SETTLEMENT for completed orders (e.g. COD hand-off settled)
+      await client.query(
+        `UPDATE orders SET payment_status = 'SETTLEMENT', updated_at = NOW() WHERE id = $1 AND payment_status = 'UNPAID';`,
+        [id]
+      );
+
       // 1 point per Rp 10.000 (minimum 1 point)
       const earned = Math.max(1, Math.floor(Number(updateRes.rows[0].total_amount) / 10000));
       pointsAwarded = earned;

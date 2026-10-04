@@ -524,7 +524,7 @@ export const WarrantyClaimModal: React.FC<WarrantyClaimModalProps> = ({
                     <span className="text-[10px] text-amber-700 font-normal">Terkirim ke {guestPhoneInput}</span>
                   </div>
                   <p className="text-[11px] text-stone-500">
-                    Kode simulasi demo: <strong className="font-mono text-rose-600">123456</strong>
+                    Kode verifikasi WhatsApp (Sandbox): <strong className="font-mono text-rose-600">123456</strong>
                   </p>
                   <div className="flex gap-2">
                     <input

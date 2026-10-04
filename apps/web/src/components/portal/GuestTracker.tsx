@@ -76,12 +76,6 @@ export const GuestTracker: React.FC<GuestTrackerProps> = ({ initialInvoice }) =>
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
-  const quickTestInvoices = [
-    { id: 'INV-20261003-9171', label: 'INV-20261003-9171 (Tulip Pink - Progres)' },
-    { id: 'INV-20261003-7504', label: 'INV-20261003-7504 (Mawar Velvet - Selesai)' },
-    { id: '081938851834', label: 'WA 0819-3885-1834 (Annisa / OTP)' },
-  ];
-
   // Resend OTP countdown timer
   useEffect(() => {
     if (resendCooldown > 0) {
@@ -361,45 +355,12 @@ export const GuestTracker: React.FC<GuestTrackerProps> = ({ initialInvoice }) =>
 
   const activeSearchedOrder = searchedOrders[selectedOrderIndex] || null;
 
-  const handleStepClick = (step: number) => {
-    if (!activeSearchedOrder) return;
-    updateOrderStep(activeSearchedOrder.id, step);
-
-    // Sync to backend
-    fetch(getApiUrl(`/api/v1/orders/${activeSearchedOrder.id}`), {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ step }),
-    }).catch(() => {});
-
-    setSearchedOrders((prev) =>
-      prev.map((ord, idx) =>
-        idx === selectedOrderIndex
-          ? {
-              ...ord,
-              currentStep: step,
-              statusLabel:
-                step === 4
-                  ? 'Pesanan Selesai'
-                  : step === 3
-                  ? 'Lolos Quality Check'
-                  : step === 2
-                  ? 'Sedang Dirangkai'
-                  : 'Pembayaran Terkonfirmasi',
-            }
-          : ord
-      )
-    );
-
-    showMagicToast('Status Diperbarui ⚡', `Langkah pesanan kini berada di Tahap ${step}.`, '🌸');
-  };
-
   return (
     <div className="bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-sm space-y-6">
       <div className="max-w-xl">
         <div className="flex items-center gap-2 mb-1">
           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-700 uppercase tracking-wider">
-            Skenario 1: Guest Tracking
+            Lacak Pesanan Tamu
           </span>
           <span className="text-[11px] text-stone-400 font-medium">Privasi Dilindungi OTP</span>
         </div>
@@ -464,21 +425,6 @@ export const GuestTracker: React.FC<GuestTrackerProps> = ({ initialInvoice }) =>
           </div>
         </div>
       )}
-
-      {/* Quick Test Invoices & Numbers */}
-      <div className="flex items-center gap-2 flex-wrap text-xs">
-        <span className="font-bold text-stone-500 text-[11px]">Uji Coba Cepat (Test Data):</span>
-        {quickTestInvoices.map((q) => (
-          <button
-            key={q.id}
-            type="button"
-            onClick={() => handleQuickSelect(q.id)}
-            className="px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-[11px] font-bold transition-all cursor-pointer active:scale-95"
-          >
-            {q.label}
-          </button>
-        ))}
-      </div>
 
       <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2.5 max-w-xl">
         <div className="relative flex-1">
@@ -562,7 +508,6 @@ export const GuestTracker: React.FC<GuestTrackerProps> = ({ initialInvoice }) =>
                   fulfillmentType={activeSearchedOrder.fulfillmentType}
                   meetupPointName={activeSearchedOrder.meetupPointName}
                   courierName={activeSearchedOrder.courierName}
-                  onStepClick={handleStepClick}
                 />
               </div>
 
@@ -664,14 +609,14 @@ export const GuestTracker: React.FC<GuestTrackerProps> = ({ initialInvoice }) =>
                 Kami telah mengirimkan 6 digit kode OTP verifikasi ke nomor WhatsApp{' '}
                 <strong className="text-rose-600 font-bold">{otpPhone}</strong>.
               </p>
-              <div className="p-3 bg-rose-50/70 border border-rose-100 rounded-2xl flex items-center justify-between text-xs">
-                <span className="text-stone-600 font-medium">Mode Uji Coba Cepat:</span>
+              <div className="p-3 bg-stone-50 border border-stone-200 rounded-2xl flex items-center justify-between text-xs">
+                <span className="text-stone-500 text-[11px]">Simulasi Sandbox WA: Masukkan kode 123456</span>
                 <button
                   type="button"
                   onClick={() => setOtpCode('123456')}
-                  className="px-2.5 py-1 bg-white hover:bg-rose-100 border border-rose-200 text-rose-700 rounded-xl font-bold text-[11px] transition-all cursor-pointer shadow-2xs active:scale-95"
+                  className="px-2.5 py-1 bg-white hover:bg-stone-100 border border-stone-200 text-stone-700 rounded-xl font-bold text-[11px] transition-all cursor-pointer shadow-2xs active:scale-95"
                 >
-                  Gunakan OTP: 123456
+                  Isi Kode: 123456
                 </button>
               </div>
             </div>

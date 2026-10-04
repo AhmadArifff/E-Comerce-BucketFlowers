@@ -179,32 +179,6 @@ export default function CustomerPortalPage() {
     }
   };
 
-  // Quick Step Advance / Test Handler
-  const handleStepAdvance = (step: number) => {
-    if (!activeOrder) return;
-    updateOrderStep(activeOrder.id, step);
-
-    // Call Supabase backend
-    fetch(getApiUrl(`/api/v1/orders/${activeOrder.id}`), {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ step }),
-    }).catch(() => {});
-
-    const stepNames: Record<number, string> = {
-      1: 'Pembayaran Terkonfirmasi',
-      2: 'Sedang Dirangkai Pengrajin',
-      3: 'Quality Check Lolos',
-      4: activeOrder.fulfillmentType === 'COD_MEETUP_POINT' ? 'Siap di Titik Temu COD' : 'Dalam Pengiriman Kurir',
-    };
-    showMagicToast(
-      'Status Diperbarui di Supabase! ⚡',
-      `${activeOrder.invoiceNumber} sekarang di Langkah ${step} (${stepNames[step] || ''}).`,
-      '🚀'
-    );
-  };
-
-
   // Filtered orders for order history
   const filteredOrders = useMemo(() => {
     return scopedMemberOrders.filter((ord) => {
@@ -297,7 +271,7 @@ export default function CustomerPortalPage() {
                 onClick={() => login('CUSTOMER_MEMBER')}
                 className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all cursor-pointer active:scale-95"
               >
-                Masuk Akun Member (Demo: Annisa)
+                Masuk ke Akun Member
               </button>
             </div>
           </div>
@@ -331,10 +305,10 @@ export default function CustomerPortalPage() {
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-extrabold text-stone-700 flex items-center gap-1.5">
                     <Package className="w-3.5 h-3.5 text-rose-600" />
-                    <span>Pilih Pesanan untuk Dipantau / Diuji:</span>
+                    <span>Daftar Pesanan Anda:</span>
                   </span>
                   <span className="text-[11px] text-stone-400 font-medium">
-                    {scopedMemberOrders.length} Pesanan Milik Anda
+                    {scopedMemberOrders.length} Pesanan Terdaftar
                   </span>
                 </div>
 
@@ -390,53 +364,14 @@ export default function CustomerPortalPage() {
                   </div>
                 </div>
 
-                {/* 4-Step Animated Stepper with Interactive Node Clicking */}
+                {/* 4-Step Animated Stepper */}
                 <div className="py-3">
                   <OrderStepper
                     currentStep={activeOrder.currentStep}
                     fulfillmentType={activeOrder.fulfillmentType}
                     meetupPointName={activeOrder.meetupPointName}
                     courierName={activeOrder.courierName}
-                    onStepClick={handleStepAdvance}
                   />
-                </div>
-
-                {/* INTERACTIVE STEPPER CONTROL TOOLBAR FOR IMMEDIATE TESTING */}
-                <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <span className="text-[11px] font-black uppercase text-stone-600 tracking-wider block">
-                      ⚡ Simulator Cepat Status (Uji Animasi Langsung):
-                    </span>
-                    <span className="text-xs text-stone-500 font-medium">
-                      Klik tombol langkah untuk melihat laser beam & teks status bergerak:
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {[
-                      { step: 1, label: '1. Bayar' },
-                      { step: 2, label: '2. Rangkai' },
-                      { step: 3, label: '3. QC Lolos' },
-                      { step: 4, label: '4. Siap/Kirim' },
-                    ].map((btn) => {
-                      const isCurrent = activeOrder.currentStep === btn.step;
-                      return (
-                        <button
-                          key={btn.step}
-                          onClick={() => handleStepAdvance(btn.step)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer active:scale-95 ${
-                            isCurrent
-                              ? 'bg-rose-600 text-white border-rose-600 shadow-xs scale-105'
-                              : 'bg-white border-stone-200 text-stone-700 hover:bg-rose-50 hover:border-rose-300'
-                          }`}
-                          title={`Uji coba: Set pesanan ke langkah ${btn.step}`}
-                        >
-                          {isCurrent && <Check className="w-3 h-3 inline mr-1 stroke-[3]" />}
-                          {btn.label}
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
 
                 {/* Status Explanation Card */}

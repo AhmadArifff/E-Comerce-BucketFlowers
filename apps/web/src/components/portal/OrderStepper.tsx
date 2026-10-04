@@ -86,7 +86,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
                 className={`flex flex-col items-center text-center transition-all ${
                   onStepClick ? 'cursor-pointer group' : ''
                 }`}
-                title={onStepClick ? `Uji coba: Lompat ke Langkah ${step.num} (${step.title})` : undefined}
+                title={step.title}
               >
                 {/* Step Circle Node */}
                 <div
@@ -131,12 +131,6 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({
             );
           })}
         </div>
-
-        {onStepClick && (
-          <div className="text-[10px] text-stone-400 font-bold text-center mt-3 flex items-center justify-center gap-1">
-            <span>💡 Mode Uji Coba: Klik node langkah 1–4 untuk menguji animasi laser beam & pembaruan status live.</span>
-          </div>
-        )}
       </div>
 
       {/* MOBILE VERTICAL STEPPER */}
