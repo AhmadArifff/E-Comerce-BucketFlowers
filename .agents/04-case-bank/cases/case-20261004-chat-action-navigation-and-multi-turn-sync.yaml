@@ -1,0 +1,45 @@
+id: case-20261004-chat-action-navigation-and-multi-turn-sync
+title: "Resolusi Tombol Aksi Chat Menutup Tiba-Tiba & Sinkronisasi Konteks Multi-Turn Gemini AI"
+domain: "ai-chat-live-interactive-state"
+severity: "HIGH"
+status: "VERIFIED"
+created_at: "2026-10-04"
+tags:
+  - "ai-copilot"
+  - "live-chat"
+  - "multi-turn-context"
+  - "cod-meetup-modal"
+  - "interactive-widgets"
+  - "zustand-state"
+
+problem_description: |
+  1. Pada LiveChatWidget storefront, ketika pembeli mengklik tombol aksi navigasi cepat (seperti "Lihat 6 Titik Temu COD"
+     atau "Buka Custom Studio"), jendela live chat langsung menutup sendiri secara tiba-tiba tanpa memunculkan tampilan/modal
+     yang diinginkan pembeli. Hal ini disebabkan adanya `onActionTriggered={() => setIsOpen(false)}` serta selector DOM
+     yang mencari elemen kosong atau ID yang tidak cocok (`#cod-meetup` kosong, `#custom-studio` vs `#custom`).
+  2. Riwayat percakapan chat sebelumnya (multi-turn) tidak tersinkronisasi dengan cerdas ke AI Copilot, di mana query
+     grounding hanya memeriksa pesan tunggal terakhir dan riwayat percakapan hanya di-flatten sebagai string ke single-turn prompt,
+     sehingga AI mengabaikan pertanyaan sebelumnya atau mengulang salam pembuka (double greeting).
+
+root_cause: |
+  1. Callback `onActionTriggered={() => setIsOpen(false)}` pada LiveChatWidget secara agresif menutup jendela chat pada setiap klik aksi.
+  2. Komponen CODLocationsModal sebelumnya hanya dimount lokal di page.tsx dan mengandalkan custom DOM event yang rentan race condition,
+     serta tidak ada card visual di anchor `#cod-meetup`.
+  3. Service `ai-chat-assistant.service.ts` memanggil `retrieveGroundingContext` hanya dengan string pesan terakhir sehingga kehilangan
+     entitas yang disebut pada giliran pesan sebelumnya (produk, lokasi COD, dll).
+  4. Pemanggilan Gemini API hanya mengirim single user prompt dengan riwayat pesan digabung sebagai teks mentah, bukan format multi-turn
+     resmi Google (`role: 'user'` dan `role: 'model'`).
+
+solution_pattern: |
+  1. Hapus auto-close `setIsOpen(false)` dari LiveChatWidget sehingga jendela chat tetap terbuka dan interaksi terasa mulus.
+  2. Pindahkan state `isCodModalOpen` ke Zustand `useChatStore` (`openCodModal()`, `closeCodModal()`) dan pasang `CODLocationsModal`
+     secara universal di `app/layout.tsx` agar dapat dibuka secara reaktif dari halaman manapun.
+  3. Tambahkan komponen visual interaktif 6 Titik Temu COD di anchor `#cod-meetup` pada halaman beranda.
+  4. Perluas `retrieveGroundingContext` untuk memindai teks gabungan seluruh riwayat pesan obrolan multi-turn (combined conversation context).
+  5. Format payload Gemini API menggunakan percakapan multi-turn native (`contents: multiTurnContents` dengan pergantian role `user` dan `model`
+     yang valid), serta integrasikan multi-turn context ke `generateDeterministicFallback`.
+
+verification_and_tests: |
+  1. TypeScript type-check pada apps/web dan apps/api lolos 100% dengan 0 error kompilasi.
+  2. Unit test suite Vitest pada `apps/api` (84 tests di 10 test files) lolos 100%.
+  3. Verifikasi interaksi tombol aksi pada live chat: chat tetap terbuka, CODLocationsModal muncul di layar, dan navigasi smooth-scroll ke seksi tujuan berjalan sempurna.

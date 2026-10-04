@@ -211,7 +211,6 @@ export const LiveChatWidget: React.FC = () => {
                             key={prod.id}
                             productId={prod.id}
                             productName={prod.name}
-                            onNavigate={() => setIsOpen(false)}
                           />
                         ))}
                       </div>
@@ -221,7 +220,6 @@ export const LiveChatWidget: React.FC = () => {
                     {parsed.actions.length > 0 && (
                       <ChatActionChips
                         actions={parsed.actions}
-                        onActionTriggered={() => setIsOpen(false)}
                       />
                     )}
                   </div>

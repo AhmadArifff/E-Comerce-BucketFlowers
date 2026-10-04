@@ -17,7 +17,7 @@ import { CartDrawer } from '@/components/storefront/CartDrawer';
 import { LiveChatWidget } from '@/components/storefront/LiveChatWidget';
 import { Footer } from '@/components/storefront/Footer';
 import { MaintenanceOverlay } from '@/components/storefront/MaintenanceOverlay';
-import { CODLocationsModal } from '@/components/storefront/CODLocationsModal';
+import { useChatStore } from '@/stores/useChatStore';
 import type { ExtendedProduct } from '@chenille/shared';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
@@ -427,10 +427,39 @@ export default function StorefrontPage() {
         {/* 5. LACAK STATUS PESANAN */}
         <QuickTrackingSection />
 
-        {/* Anchor for COD Meetup Points Navigation */}
-        <div id="cod-meetup" className="scroll-mt-20" />
+        {/* 6. TITIK TEMU COD KAMPUS DEPOK (BEBAS ONGKIR) */}
+        <div id="cod-meetup" className="scroll-mt-20 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-rose-50 via-pink-50/50 to-amber-50/40 border border-rose-200/80 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-xl">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black uppercase tracking-wider">
+                <span>⚡ 100% Bebas Ongkir (Radius ≤ 5 KM)</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight font-heading">
+                6 Titik Temu COD Resmi Kampus & Mall Depok
+              </h3>
+              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
+                Janjian serah terima buket kawat bulu langsung di Balairung UI, Stasiun UI, Gunadarma Kampus D, Gerbang PNJ Kukusan, Stasiun Pocin, atau Margo City Mall. Bayar tunai di tempat!
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1 text-[11px] font-bold text-stone-600">
+                <span className="px-2.5 py-1 bg-white rounded-lg border border-stone-200 shadow-2xs">🎓 Balairung UI</span>
+                <span className="px-2.5 py-1 bg-white rounded-lg border border-stone-200 shadow-2xs">🚆 Stasiun UI / Rotunda</span>
+                <span className="px-2.5 py-1 bg-white rounded-lg border border-stone-200 shadow-2xs">🏫 Gunadarma Margonda</span>
+                <span className="px-2.5 py-1 bg-white rounded-lg border border-stone-200 shadow-2xs">🏛️ PNJ Kukusan</span>
+                <span className="px-2.5 py-1 bg-white rounded-lg border border-stone-200 shadow-2xs">🏢 Margo City Mall</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => useChatStore.getState().openCodModal()}
+              className="px-6 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs sm:text-sm shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2 cursor-pointer flex-shrink-0"
+            >
+              <span>Lihat Detail Titik & Peta</span>
+              <span>📍</span>
+            </button>
+          </div>
+        </div>
 
-        {/* 6. BANTUAN, PERAWATAN & GARANSI 100% */}
+        {/* 7. BANTUAN, PERAWATAN & GARANSI 100% */}
         <WarrantyHelpSection />
       </main>
 
@@ -443,9 +472,6 @@ export default function StorefrontPage() {
         isOpen={!!selectedProduct}
         onClose={() => setSelectedProduct(null)}
       />
-
-      {/* 6 Kampus Depok COD Meetup Points Interactive Modal */}
-      <CODLocationsModal />
 
       <Footer />
 

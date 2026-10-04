@@ -122,9 +122,13 @@ export default function CustomerPortalPage() {
 
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      const inv = params.get('invoice');
+      const inv = params.get('invoice') || params.get('inv');
       if (inv) {
         setActiveOrderId(inv);
+        setTimeout(() => {
+          const el = document.getElementById('portal-order-tracker');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 300);
       }
     }
   }, []);

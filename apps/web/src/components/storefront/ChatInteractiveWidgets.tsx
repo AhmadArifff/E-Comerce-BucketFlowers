@@ -14,6 +14,7 @@ import {
   ExternalLink 
 } from 'lucide-react';
 import { useCartStore } from '@/stores/useCartStore';
+import { useChatStore } from '@/stores/useChatStore';
 import { showMagicToast } from '@/lib/magic-motion';
 import { getApiUrl } from '@/lib/api-client';
 import type { ParsedActionTag } from '@/lib/chat-interactive-parser';
@@ -211,6 +212,8 @@ export const ChatProductCard: React.FC<ChatProductCardProps> = ({
             // 2. Also smooth scroll to catalog if needed
             const el = document.getElementById('katalog');
             if (el) el.scrollIntoView({ behavior: 'smooth' });
+            // 3. Minimize chat to show modal clearly
+            useChatStore.getState().setIsOpen(false);
             if (onNavigate) onNavigate();
           }}
           className="px-2.5 py-1.5 rounded-xl border border-stone-200 hover:border-stone-300 text-stone-600 hover:text-stone-900 text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1"
@@ -245,27 +248,33 @@ export const ChatActionChips: React.FC<ChatActionChipsProps> = ({
       } else {
         window.location.href = '/#custom';
       }
+      useChatStore.getState().setIsOpen(false);
       if (onActionTriggered) onActionTriggered();
     } else if (type === 'TRACK_ORDER') {
       const inv = params?.inv || '';
       if (inv) {
-        window.location.href = `/lacak-pesanan?inv=${encodeURIComponent(inv)}`;
+        window.location.href = `/portal?invoice=${encodeURIComponent(inv)}`;
       } else {
         const el = document.getElementById('tracking') || document.getElementById('quick-tracking');
         if (el) {
           el.scrollIntoView({ behavior: 'smooth' });
         } else {
-          window.location.href = '/lacak-pesanan';
+          window.location.href = '/#tracking';
         }
       }
+      useChatStore.getState().setIsOpen(false);
       if (onActionTriggered) onActionTriggered();
     } else if (type === 'VIEW_COD') {
-      // 1. Dispatch custom event to open the dedicated 6 campus COD modal!
-      window.dispatchEvent(new CustomEvent('open-cod-modal'));
+      // 1. Open the dedicated 6 campus COD modal via Zustand reactive store!
+      useChatStore.getState().openCodModal();
       // 2. Also scroll to #cod-meetup anchor
       const el = document.getElementById('cod-meetup');
       if (el) el.scrollIntoView({ behavior: 'smooth' });
-      // 3. Close/minimize chat so the full COD modal is unobstructed
+      // 3. Fallback event
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('open-cod-modal'));
+      }
+      useChatStore.getState().setIsOpen(false);
       if (onActionTriggered) onActionTriggered();
     } else if (type === 'VIEW_CATALOG') {
       const el = document.getElementById('katalog') || document.querySelector('main');
@@ -274,6 +283,7 @@ export const ChatActionChips: React.FC<ChatActionChipsProps> = ({
       } else {
         window.location.href = '/#katalog';
       }
+      useChatStore.getState().setIsOpen(false);
       if (onActionTriggered) onActionTriggered();
     } else if (type === 'VIEW_WARRANTY') {
       const el = document.getElementById('bantuan') || document.getElementById('warranty-help');
@@ -282,6 +292,7 @@ export const ChatActionChips: React.FC<ChatActionChipsProps> = ({
       } else {
         window.location.href = '/#bantuan';
       }
+      useChatStore.getState().setIsOpen(false);
       if (onActionTriggered) onActionTriggered();
     } else {
       // Generic fallback
@@ -291,6 +302,7 @@ export const ChatActionChips: React.FC<ChatActionChipsProps> = ({
       } else {
         window.location.href = '/#katalog';
       }
+      useChatStore.getState().setIsOpen(false);
       if (onActionTriggered) onActionTriggered();
     }
   };

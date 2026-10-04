@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "E-Comerce-BucketFlowers",
-  "total_cases": 6,
+  "total_cases": 7,
   "cases": [
     {
       "id": "case-20261002-postgresql-enum-type-deduction",
@@ -50,6 +50,14 @@
       "severity": "HIGH",
       "status": "VERIFIED",
       "file": "cases/case-20261003-cod-checkout-guard-and-zero-dummy-quota.yaml"
+    },
+    {
+      "id": "case-20261004-chat-action-navigation-and-multi-turn-sync",
+      "title": "Resolusi Navigasi Tombol Aksi Chat, Global COD Modal & Sinkronisasi Konteks Multi-Turn Gemini AI",
+      "domain": "ai-chat-live-interactive-state",
+      "severity": "HIGH",
+      "status": "VERIFIED",
+      "file": "cases/case-20261004-chat-action-navigation-and-multi-turn-sync.yaml"
     }
   ]
 }

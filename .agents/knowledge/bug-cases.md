@@ -77,8 +77,25 @@ Daftar kendala masa lalu dan solusi yang telah diverifikasi pada sistem E-Commer
   1. `handleConfirmOrder` di `CartDrawer.tsx` tidak memvalidasi `selectedMeetup?.id` saat metode pengiriman `COD_MEETUP_POINT`.
   2. `AnnouncementBar.tsx` dan `CapacityWidget.tsx` menginisialisasi state dengan hardcoded mock data alih-alih membaca `dailyQuota` dari `useSettingsStore`.
 - **Solusi**:
-  1. Tambahkan guard clause di `CartDrawer.tsx` untuk menolak pesanan jika metode COD dipilih tanpa ketersediaan titik temu.
-  2. Perbarui badge tombol COD menjadi *"Belum Tersedia"* saat titik temu kosong.
-  3. Hubungkan `AnnouncementBar.tsx` dan `CapacityWidget.tsx` ke `useSettingsStore` untuk nilai kuota awal dan eliminasi angka pesanan tiruan.
+---
+
+## 7. Bug: Chat Action Chips Menutup Tiba-Tiba & Multi-Turn History Desync pada AI Grounding
+- **Gejala**:
+  1. Di `LiveChatWidget`, mengklik tombol aksi cepat (seperti *"Lihat 6 Titik Temu COD"*, *"Buka Custom Studio"*) hanya menutup jendela obrolan tanpa memunculkan modal/tampilan yang dituju.
+  2. Riwayat percakapan chat sebelumnya (multi-turn) tidak tersinkronisasi ke Gemini AI Copilot: AI mengabaikan konteks buket yang ditanyakan pada giliran sebelumnya atau mengulang sapaan pembuka ganda (*double greeting*).
+  3. Status riwayat pesanan pelanggan gagal di-grounding akibat error SQL `column "step_name" does not exist`.
+  4. Panggilan Gemini menghasilkan HTTP 400 Bad Request jika obrolan diawali pesan bot sambutan (karena `contents[0].role` bernilai `model`).
+- **Akar Masalah**:
+  1. `CODLocationsModal` hanya di-render lokal dan mendengarkan Custom DOM Event yang rentan unmounted timing; selain itu jendela chat menutupi layar tanpa navigasi responsif.
+  2. `retrieveGroundingContext` hanya memeriksa pesan tunggal terakhir alih-alih seluruh percakapan multi-turn.
+  3. Query `order_status_histories` salah memanggil nama kolom `step_name` & `description` (nama kolom aktual adalah `status_title` & `status_desc`).
+  4. Google Gemini API mewajibkan elemen pertama `contents[0]` memiliki `role: 'user'` dan bergantian secara ketat (`user` -> `model` -> `user`).
+- **Solusi**:
+  1. Pindahkan kontrol modal COD ke Zustand `useChatStore` (`isCodModalOpen`, `openCodModal`, `closeCodModal`) dan render `<CODLocationsModal />` secara universal di `app/layout.tsx`.
+  2. Saat tombol aksi navigasi diklik (`VIEW_COD`, `OPEN_STUDIO`, `VIEW_CATALOG`, `TRACK_ORDER`), minimalkan jendela obrolan (`setIsOpen(false)`) sehingga pengguna dapat melihat tampilan atau modal tujuan secara leluasa tanpa terhalang popup chat.
+  3. Dukung parameter `?invoice=` dan `?inv=` di `portal/page.tsx` dengan auto-scroll ke `#portal-order-tracker`.
+  4. Koreksi query SQL di `ai-chat-assistant.service.ts` ke `status_title` dan `status_desc`.
+  5. Bangun struktur multi-turn native yang memisahkan pesan bot awal ke konteks prompt dan menjamin `contents[0].role === 'user'`, serta urutkan model cascade prioritas aktif (`gemini-3.5-flash-lite`, `gemini-3.6-flash`, `gemini-3.1-flash-lite`).
+  6. Diverifikasi secara deterministik via Playwright browser automation dan unit test Vitest (84 tests passed).
 
 

@@ -301,7 +301,7 @@ export async function retrieveGroundingContext(
 
         // Fetch latest workflow step description
         const historyRes = await pool.query(
-          `SELECT step_name, description FROM order_status_histories WHERE order_id = $1 ORDER BY step_number DESC, created_at DESC LIMIT 1;`,
+          `SELECT status_title, status_desc FROM order_status_histories WHERE order_id = $1 ORDER BY step_number DESC, created_at DESC LIMIT 1;`,
           [o.id]
         );
         const latestHistory = historyRes.rows[0];
@@ -324,7 +324,7 @@ export async function retrieveGroundingContext(
             month: 'long',
             year: 'numeric',
           }),
-          latest_step_description: latestHistory?.description || undefined,
+          latest_step_description: latestHistory?.status_desc || undefined,
         };
 
         ordersList.push(mapped);
@@ -632,10 +632,12 @@ Buatlah draf balasan ramah yang siap ditinjau staf florist (gunakan HANYA emotic
 export function generateDeterministicFallback(
   customerMessage: string,
   ctx: GroundingContext,
-  hasPriorGreeting = false
+  hasPriorGreeting = false,
+  recentMessages: Array<{ sender: string; text: string }> = []
 ): string {
   const name = ctx.customerName || 'Kak';
-  const lowerMsg = (customerMessage || '').toLowerCase();
+  const combinedHistory = recentMessages.map((m) => m.text).join(' ').toLowerCase();
+  const lowerMsg = `${customerMessage || ''} ${combinedHistory}`.toLowerCase();
 
   // 1. Warranty / Claim / Damage query
   const isWarrantyQuery =
@@ -915,23 +917,33 @@ export async function generateAiChatDraft(
   sessionId: string,
   customerMessageOverride?: string
 ): Promise<AiDraftResult> {
-  // 1. Fetch recent messages in session (up to 12 for rich conversational context)
+  // 1. Fetch recent messages in session in chronological order (up to 20 for rich multi-turn context)
   const msgsRes = await pool.query(
-    `SELECT sender, text, sent_at FROM chat_messages WHERE session_id = $1 ORDER BY sent_at DESC LIMIT 12;`,
+    `SELECT sender, text, sent_at FROM chat_messages WHERE session_id = $1 ORDER BY sent_at ASC LIMIT 20;`,
     [sessionId]
   );
 
-  const rawMessages = msgsRes.rows.reverse();
-  const recentMessages = rawMessages.map((r) => ({
+  const recentMessages = msgsRes.rows.map((r) => ({
     sender: r.sender,
     text: r.text,
   }));
+
+  // Append customerMessageOverride if provided and not already in recentMessages
+  if (customerMessageOverride && customerMessageOverride.trim()) {
+    const lastMsg = recentMessages[recentMessages.length - 1];
+    if (!lastMsg || lastMsg.text !== customerMessageOverride.trim()) {
+      recentMessages.push({
+        sender: 'CUSTOMER',
+        text: customerMessageOverride.trim(),
+      });
+    }
+  }
 
   // Detect whether a greeting has already taken place in this conversation thread
   const hasPriorGreeting =
     recentMessages.some((m) => {
       const senderUpper = (m.sender || '').toUpperCase();
-      if (senderUpper === 'FLORIST' || senderUpper === 'BOT') {
+      if (senderUpper === 'FLORIST' || senderUpper === 'BOT' || senderUpper === 'ADMIN') {
         const lower = (m.text || '').toLowerCase();
         return (
           lower.includes('halo') ||
@@ -946,15 +958,20 @@ export async function generateAiChatDraft(
   // Identify last customer message
   const resolvedCustomerMessage: string =
     (customerMessageOverride || '').trim() ||
-    ([...rawMessages].reverse().find((m) => (m.sender || '').toUpperCase() === 'CUSTOMER')?.text || '').trim() ||
+    ([...recentMessages].reverse().find((m) => (m.sender || '').toUpperCase() === 'CUSTOMER')?.text || '').trim() ||
     'Halo kak';
 
-  // 2. Retrieve Grounding Database Context
-  const groundingContext = await retrieveGroundingContext(sessionId, resolvedCustomerMessage);
+  // 2. Retrieve Grounding Database Context across the entire conversation history
+  const combinedContextText = [
+    ...recentMessages.map((m) => m.text),
+    resolvedCustomerMessage,
+  ].join(' ');
+
+  const groundingContext = await retrieveGroundingContext(sessionId, combinedContextText);
 
   // 3. Check Gemini API Key configuration
   const apiKey = (process.env.GEMINI_API_KEY || '').trim();
-  const configuredModel = (process.env.GEMINI_MODEL || 'gemini-3.5-flash').trim();
+  const configuredModel = (process.env.GEMINI_MODEL || 'gemini-2.5-flash').trim();
 
   const isKeyConfigured = apiKey.length >= 20 && !apiKey.startsWith('AIzaSy-xxx');
 
@@ -963,7 +980,8 @@ export async function generateAiChatDraft(
     const fallbackText = generateDeterministicFallback(
       resolvedCustomerMessage,
       groundingContext,
-      hasPriorGreeting
+      hasPriorGreeting,
+      recentMessages
     );
     const meta = extractInteractiveMetadata(fallbackText, groundingContext.products);
     return {
@@ -977,14 +995,17 @@ export async function generateAiChatDraft(
     };
   }
 
-  // 4. Candidate models cascade for high resilience (auto-recovery from 404 / 503)
+  // 4. Candidate models cascade for high resilience (prioritizing proven active models)
   const candidateModels = Array.from(
     new Set([
-      configuredModel,
-      'gemini-3.5-flash',
-      'gemini-3.7-flash',
-      'gemini-flash-latest',
+      'gemini-3.5-flash-lite',
+      'gemini-3.6-flash',
       'gemini-3.1-flash-lite',
+      'gemini-flash-lite-latest',
+      'gemini-3-flash-preview',
+      configuredModel,
+      'gemini-flash-latest',
+      'gemini-2.5-flash',
     ])
   );
 
@@ -995,6 +1016,63 @@ export async function generateAiChatDraft(
     groundingContext,
     hasPriorGreeting
   );
+
+  // Build strictly valid multi-turn conversation contents for Gemini
+  // Requirement: First turn MUST have role: 'user', subsequent turns alternate strictly
+  const multiTurnContents: Array<{ role: 'user' | 'model'; parts: [{ text: string }] }> = [];
+
+  // Separate leading bot/florist greetings from dialog turns
+  let initialBotGreeting = '';
+  const dialogMessages: Array<{ sender: string; text: string }> = [];
+
+  for (let i = 0; i < recentMessages.length; i++) {
+    const msg = recentMessages[i];
+    const isCust = (msg.sender || '').toUpperCase() === 'CUSTOMER' || (msg.sender || '').toUpperCase() === 'USER';
+    if (!isCust && dialogMessages.length === 0) {
+      initialBotGreeting += (initialBotGreeting ? '\n' : '') + msg.text;
+    } else {
+      dialogMessages.push(msg);
+    }
+  }
+
+  let isFirstUserTurn = true;
+  for (const msg of dialogMessages) {
+    const isCust = (msg.sender || '').toUpperCase() === 'CUSTOMER' || (msg.sender || '').toUpperCase() === 'USER';
+    const role: 'user' | 'model' = isCust ? 'user' : 'model';
+
+    let textContent = msg.text;
+    if (isCust && isFirstUserTurn) {
+      const greetingContext = initialBotGreeting ? `\n[Sapaan Bot Sambutan Toko Sebelumnya]: "${initialBotGreeting}"\n` : '';
+      textContent = `${userPrompt}${greetingContext}\n[Pesan Pertama Pelanggan]: "${msg.text}"`;
+      isFirstUserTurn = false;
+    }
+
+    if (multiTurnContents.length > 0 && multiTurnContents[multiTurnContents.length - 1].role === role) {
+      multiTurnContents[multiTurnContents.length - 1].parts[0].text += `\n${msg.text}`;
+    } else {
+      multiTurnContents.push({ role, parts: [{ text: textContent }] });
+    }
+  }
+
+  // Ensure the multi-turn payload starts with 'user' and ends with 'user'
+  if (multiTurnContents.length === 0) {
+    multiTurnContents.push({
+      role: 'user',
+      parts: [{ text: `${userPrompt}\n\n[Pesan Pelanggan]: "${resolvedCustomerMessage}"` }],
+    });
+  } else if (multiTurnContents[0].role !== 'user') {
+    multiTurnContents.unshift({
+      role: 'user',
+      parts: [{ text: `${userPrompt}\n\n[Mulai Percakapan]: "${resolvedCustomerMessage}"` }],
+    });
+  }
+
+  if (multiTurnContents[multiTurnContents.length - 1].role !== 'user') {
+    multiTurnContents.push({
+      role: 'user',
+      parts: [{ text: `Tolong balas pesan terakhir pelanggan ini dengan ramah, empatik, dan akurat: "${resolvedCustomerMessage}"` }],
+    });
+  }
 
   let rawGeneratedText: string | null = null;
   let activeModelUsed = configuredModel;
@@ -1010,12 +1088,7 @@ export async function generateAiChatDraft(
           systemInstruction: {
             parts: [{ text: systemPrompt }],
           },
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: userPrompt }],
-            },
-          ],
+          contents: multiTurnContents,
           generationConfig: {
             temperature: 0.3,
             maxOutputTokens: 3000,
@@ -1065,7 +1138,8 @@ export async function generateAiChatDraft(
   const fallbackText = generateDeterministicFallback(
     resolvedCustomerMessage,
     groundingContext,
-    hasPriorGreeting
+    hasPriorGreeting,
+    recentMessages
   );
   const fallbackMeta = extractInteractiveMetadata(fallbackText, groundingContext.products);
 

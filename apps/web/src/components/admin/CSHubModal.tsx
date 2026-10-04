@@ -87,12 +87,18 @@ export const CSHubModal: React.FC = () => {
     const targetId = activeAdminSessionId || activeSession?.id;
     if (!targetId) return;
 
-    // Find the last message sent by CUSTOMER to ground the reply
-    const lastCustMsg = [...adminSessionMessages]
-      .reverse()
-      .find((m) => m.sender === 'CUSTOMER');
+    // Collect all unreplied customer messages or the latest customer message
+    const lastStaffIdx = adminSessionMessages.map((m) => m.sender).lastIndexOf('FLORIST_ADMIN');
+    const newCustMsgs = adminSessionMessages
+      .slice(lastStaffIdx + 1)
+      .filter((m) => m.sender === 'CUSTOMER')
+      .map((m) => m.text);
 
-    const res = await generateAiDraft(targetId, lastCustMsg?.text);
+    const promptText = newCustMsgs.length > 0
+      ? newCustMsgs.join('\n')
+      : adminSessionMessages.filter((m) => m.sender === 'CUSTOMER').slice(-1)[0]?.text;
+
+    const res = await generateAiDraft(targetId, promptText);
     if (res.success && res.data) {
       setReplyText(res.data.draftText);
       setAiDraftInfo({

@@ -38,8 +38,11 @@ interface ChatState {
   isLoading: boolean;
   isGeneratingAiDraft: boolean;
   lastAiDraftResult: AiDraftResponse | null;
+  isCodModalOpen: boolean;
 
   setIsOpen: (isOpen: boolean) => void;
+  openCodModal: () => void;
+  closeCodModal: () => void;
   syncSessionIdentity: (customerName: string, customerPhone?: string) => Promise<void>;
   initClientSession: (customerName?: string, customerPhone?: string) => Promise<string>;
   fetchClientMessages: () => Promise<void>;
@@ -65,8 +68,11 @@ export const useChatStore = create<ChatState>()(
       isLoading: false,
       isGeneratingAiDraft: false,
       lastAiDraftResult: null,
+      isCodModalOpen: false,
 
       setIsOpen: (isOpen) => set({ isOpen }),
+      openCodModal: () => set({ isCodModalOpen: true }),
+      closeCodModal: () => set({ isCodModalOpen: false }),
 
       syncSessionIdentity: async (name: string, phone?: string) => {
         if (!name) return;

@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Cormorant_Garamond, Playfair_Display, Fredoka, Outfi
 import './globals.css';
 import { MagicToastContainer } from '@/components/storefront/MagicToastContainer';
 import { SessionTimeoutWatcher } from '@/components/auth/SessionTimeoutWatcher';
+import { CODLocationsModal } from '@/components/storefront/CODLocationsModal';
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -235,6 +236,7 @@ export default function RootLayout({
         {children}
         <MagicToastContainer />
         <SessionTimeoutWatcher />
+        <CODLocationsModal />
       </body>
     </html>
   );

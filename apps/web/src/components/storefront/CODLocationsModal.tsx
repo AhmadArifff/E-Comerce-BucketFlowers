@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useCartStore } from '@/stores/useCartStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useChatStore } from '@/stores/useChatStore';
 import { showMagicToast } from '@/lib/magic-motion';
 import { getApiUrl } from '@/lib/api-client';
 import { ATELIER_CONFIG } from '@chenille/shared';
@@ -94,7 +95,9 @@ const FALLBACK_COD_POINTS: CodMeetupPoint[] = [
 ];
 
 export const CODLocationsModal: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isCodModalOpen, openCodModal, closeCodModal } = useChatStore();
+  const isOpen = isCodModalOpen;
+
   const [points, setPoints] = useState<CodMeetupPoint[]>(FALLBACK_COD_POINTS);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPointId, setSelectedPointId] = useState<string>('cod-001');
@@ -107,7 +110,7 @@ export const CODLocationsModal: React.FC = () => {
   // Global event listener to open this modal from anywhere (Chat chips, buttons, hash)
   useEffect(() => {
     const handleOpen = () => {
-      setIsOpen(true);
+      openCodModal();
     };
 
     window.addEventListener('open-cod-modal', handleOpen);
@@ -115,7 +118,7 @@ export const CODLocationsModal: React.FC = () => {
     // Check hash on mount or hashchange
     const checkHash = () => {
       if (typeof window !== 'undefined' && window.location.hash === '#cod-meetup') {
-        setIsOpen(true);
+        openCodModal();
       }
     };
     checkHash();
@@ -125,7 +128,7 @@ export const CODLocationsModal: React.FC = () => {
       window.removeEventListener('open-cod-modal', handleOpen);
       window.removeEventListener('hashchange', checkHash);
     };
-  }, []);
+  }, [openCodModal]);
 
   // Fetch real-time points from backend API
   useEffect(() => {
@@ -159,7 +162,7 @@ export const CODLocationsModal: React.FC = () => {
     setSelectedPointId(point.id);
     setFulfillmentType('COD_MEETUP_POINT');
     setSelectedCodPointId(point.id);
-    setIsOpen(false);
+    closeCodModal();
     setIsCartOpen(true);
 
     showMagicToast(
@@ -170,7 +173,7 @@ export const CODLocationsModal: React.FC = () => {
   };
 
   const handleClose = () => {
-    setIsOpen(false);
+    closeCodModal();
     if (typeof window !== 'undefined' && window.location.hash === '#cod-meetup') {
       window.history.replaceState(null, '', window.location.pathname);
     }
