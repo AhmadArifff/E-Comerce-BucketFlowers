@@ -102,5 +102,19 @@ Daftar kendala masa lalu dan solusi yang telah diverifikasi pada sistem E-Commer
   6. Bangun struktur multi-turn native yang memisahkan pesan bot awal ke konteks prompt dan menjamin `contents[0].role === 'user'`, serta urutkan model cascade prioritas aktif (`gemini-3.5-flash-lite`, `gemini-3.6-flash`, `gemini-3.1-flash-lite`).
   7. Diverifikasi secara deterministik via Playwright browser automation (HTTP 200, bebas 404, order Annisa tampil) dan unit test Vitest (84 tests passed).
 
+---
 
-
+## 8. Database Optimization: 16 Indeks Performa B-Tree & Pembersihan 4 Pesanan Uji Coba
+- **Gejala**:
+  1. Audit PostgreSQL menemukan 27 Foreign Key (FK) tanpa indeks pendukung pada tabel-tabel berfrekuensi tinggi (`order_items`, `order_status_histories`, `orders`, `product_images`, `reviews`, `bill_of_materials`).
+  2. Kueri `chat_messages` mencatat lebih dari 41.544 kali sequential scan akibat subquery `WHERE session_id = ... ORDER BY sent_at DESC` tanpa composite index.
+  3. Dasbor menampilkan 6 pesanan bukannya 2 pesanan riil Annisa Larasati akibat sisa transaksi uji coba terdahulu.
+- **Akar Masalah**:
+  1. Relasi foreign key di PostgreSQL tidak otomatis membuat indeks pada kolom referencing anak.
+  2. Indeks awal pada `chat_messages` hanya mencakup `session_id` tunggal tanpa klausa `sent_at DESC`.
+  3. 4 pesanan uji coba manual (`INV-20261004-1262`, `INV-20261004-3432`, `INV-20261004-3685`, `INV-20261003-7331`) belum dibersihkan.
+- **Solusi**:
+  1. Jalankan skrip optimasi `apps/api/src/scripts/optimize_database_indexes.ts` secara atomik di dalam blok transaksi PostgreSQL.
+  2. Buat 16 indeks B-Tree strategis (`idx_order_status_histories_order_id`, `idx_order_items_product_id`, `idx_orders_user_id`, `idx_orders_cod_meetup_id`, `idx_product_images_product_id`, `idx_bill_of_materials_product_id`, `idx_reviews_product_id`, `idx_chat_messages_session_sent`, dll).
+  3. Hapus 4 pesanan uji coba secara bersih dan perbarui statistik perencana kueri dengan `ANALYZE`.
+  4. Diverifikasi via `GET /api/v1/orders` yang kini menyajikan tepat 2 pesanan otentik Annisa Larasati (`INV-20261003-9171` dan `INV-20261003-7504`).

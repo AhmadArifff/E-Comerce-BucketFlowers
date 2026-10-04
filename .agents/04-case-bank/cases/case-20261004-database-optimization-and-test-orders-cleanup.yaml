@@ -1,0 +1,57 @@
+id: case-20261004-database-optimization-and-test-orders-cleanup
+title: "Optimasi Performa Indeks Database PostgreSQL (27 FK Unindexed & Chat Subquery) serta Pembersihan Pesanan Uji Coba"
+domain: "database-performance-and-data-integrity"
+severity: "MEDIUM"
+status: "VERIFIED"
+created_at: "2026-10-04"
+tags:
+  - "database-optimization"
+  - "postgresql-indexes"
+  - "foreign-keys"
+  - "chat-messages-composite-index"
+  - "order-cleanup"
+  - "supabase"
+
+problem_description: |
+  1. Pada audit komprehensif 42 tabel database Supabase PostgreSQL:
+     - Ditemukan 27 relasi Foreign Key (FK) yang tidak memiliki indeks pendukung di tabel anak, termasuk tabel berfrekuensi tinggi
+       seperti `order_items(product_id)`, `order_status_histories(order_id)`, `orders(user_id)`, `orders(cod_meetup_id)`,
+       `product_images(product_id)`, `bill_of_materials(product_id, raw_material_id)`, dan `reviews(product_id, order_id, user_id)`.
+     - Tabel `chat_messages` mengalami lebih dari 41.544 kali sequential scan karena subquery riwayat obrolan diurutkan
+       menggunakan `WHERE session_id = ... ORDER BY sent_at DESC`, sedangkan indeks sebelumnya hanya mencakup `session_id`.
+  2. Terdapat 4 pesanan uji coba yang tersimpan dari iterasi pengujian sebelumnya (`INV-20261004-1262`, `INV-20261004-3432`,
+     `INV-20261004-3685`, `INV-20261003-7331`) yang menyebabkan jumlah pesanan di dasbor tampil 6 pesanan bukannya 2 pesanan riil.
+
+root_cause: |
+  1. PostgreSQL secara default tidak secara otomatis membuat indeks pada kolom referencing FOREIGN KEY.
+  2. Ketiadaan composite index `(session_id, sent_at DESC)` pada `chat_messages` memaksa perencana kueri melakukan sequential scan dan in-memory sort.
+  3. Data transaksi uji coba checkout manual dan automasi pengujian browser sebelumnya belum dibersihkan dari basis data.
+
+solution_pattern: |
+  1. Implementasikan skrip migrasi optimasi indeks di `apps/api/src/scripts/optimize_database_indexes.ts`.
+  2. Buat 16 indeks B-Tree berkinerja tinggi:
+     - `idx_order_status_histories_order_id` pada `order_status_histories(order_id)`
+     - `idx_order_items_product_id` pada `order_items(product_id)`
+     - `idx_orders_user_id` pada `orders(user_id)`
+     - `idx_orders_cod_meetup_id` pada `orders(cod_meetup_id)`
+     - `idx_orders_coupon_id` pada `orders(coupon_id)`
+     - `idx_product_images_product_id` pada `product_images(product_id)`
+     - `idx_bill_of_materials_product_id` pada `bill_of_materials(product_id)`
+     - `idx_bill_of_materials_raw_mat` pada `bill_of_materials(raw_material_id)`
+     - `idx_reviews_product_id` pada `reviews(product_id)`
+     - `idx_reviews_order_id` pada `reviews(order_id)`
+     - `idx_reviews_user_id` pada `reviews(user_id)`
+     - `idx_chat_messages_session_sent` pada `chat_messages(session_id, sent_at DESC)`
+     - `idx_chat_sessions_user_id` pada `chat_sessions(user_id)`
+     - `idx_payment_transactions_order_id` pada `payment_transactions(order_id)`
+     - `idx_procurement_material` pada `procurement_orders(material_id)`
+     - `idx_procurement_supplier` pada `procurement_orders(supplier_id)`
+  3. Bersihkan 4 pesanan uji coba secara atomik di dalam blok transaksi PostgreSQL dengan menghapus referensi di `payment_transactions`,
+     `order_status_histories`, `order_items`, dan `orders`.
+  4. Jalankan `ANALYZE` pada seluruh tabel terkait untuk memperbarui statistik query planner.
+
+verification_and_tests: |
+  1. Eksekusi skrip `npx tsx apps/api/src/scripts/optimize_database_indexes.ts` berhasil 100% tanpa error.
+  2. Verifikasi kueri API `GET /api/v1/orders` kini secara bersih hanya mengembalikan 2 pesanan otentik Annisa Larasati (`INV-20261003-9171` dan `INV-20261003-7504`).
+  3. Verifikasi TypeScript `npm run type-check` lolos 100% (0 error).
+  4. Unit test Vitest `npm run test:unit` lolos 84 dari 84 tes di seluruh paket.

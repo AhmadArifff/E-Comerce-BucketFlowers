@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "E-Comerce-BucketFlowers",
-  "total_cases": 7,
+  "total_cases": 8,
   "cases": [
     {
       "id": "case-20261002-postgresql-enum-type-deduction",
@@ -58,6 +58,14 @@
       "severity": "HIGH",
       "status": "VERIFIED",
       "file": "cases/case-20261004-chat-action-navigation-and-multi-turn-sync.yaml"
+    },
+    {
+      "id": "case-20261004-database-optimization-and-test-orders-cleanup",
+      "title": "Optimasi Performa Indeks Database PostgreSQL (27 FK Unindexed & Chat Subquery) serta Pembersihan Pesanan Uji Coba",
+      "domain": "database-performance-and-data-integrity",
+      "severity": "MEDIUM",
+      "status": "VERIFIED",
+      "file": "cases/case-20261004-database-optimization-and-test-orders-cleanup.yaml"
     }
   ]
 }
