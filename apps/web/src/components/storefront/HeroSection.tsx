@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, ArrowRight, Lightbulb, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Lightbulb } from 'lucide-react';
+import { KoreanTulipIcon } from '@/components/common/CraftIcons';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { getThemeCopy } from '@/lib/theme-copy';
 
@@ -47,7 +48,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
               {/* LEFT COLUMN: EDITORIAL COPY */}
               <div className="lg:col-span-7 space-y-4 sm:space-y-5 text-center lg:text-left">
                 <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[2.5px] text-[#C98A90] font-bold">
-                  <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+                  <KoreanTulipIcon className="w-3.5 h-3.5 text-[#D4AF37]" />
                   <span>✦ {copy.hero.topBadge}</span>
                 </div>
 
@@ -188,7 +189,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
               {/* LEFT COLUMN: VIBRANT POP COPY */}
               <div className="lg:col-span-7 space-y-4 sm:space-y-5 text-center lg:text-left">
                 <div className="inline-flex items-center gap-1.5 bg-[#FFD166] text-[#2C3E50] px-4 py-1.5 rounded-full text-xs font-black -rotate-2 shadow-xs">
-                  <Sparkles className="w-3.5 h-3.5 text-[#2C3E50]" />
+                  <KoreanTulipIcon className="w-3.5 h-3.5 text-[#2C3E50]" />
                   <span>{copy.hero.topBadge}</span>
                 </div>
 
@@ -292,7 +293,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
             {/* LEFT COLUMN: PASTEL COPYWRITING */}
             <div className="lg:col-span-7 space-y-4 sm:space-y-5 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FDF2F4] border border-[#F7D1D9] text-[#9C3D52] text-xs font-bold uppercase tracking-wider shadow-2xs">
-                <Sparkles className="w-3.5 h-3.5 text-[#F4A7B9]" />
+                <KoreanTulipIcon className="w-3.5 h-3.5 text-[#F4A7B9]" />
                 <span>{copy.hero.topBadge}</span>
               </div>
 
@@ -347,7 +348,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
                   
                   {/* FLOATING CHENILLE VELVET BADGE */}
                   <div className="animate-float-hero absolute top-3.5 left-3.5 bg-white/95 backdrop-blur-md text-[#9C3D52] text-xs font-black px-3.5 py-1.5 rounded-full shadow-md border border-[#F7D1D9] flex items-center gap-1.5 z-10">
-                    <Sparkles className="w-3.5 h-3.5 text-[#E38EA1]" />
+                    <KoreanTulipIcon className="w-3.5 h-3.5 text-[#E38EA1]" />
                     <span>🌸 100% Chenille Korea Halus</span>
                   </div>
                 </div>

@@ -3,7 +3,8 @@
  * Rujukan Mutlak: PRD.md Seksi 20 (Seksi 20.1 - 20.8) & Seksi 21
  */
 
-import { Sparkles, PackageCheck, MapPin, Award, ShieldCheck, Heart, Flower2, Smile, Clock, Truck, Music, CheckCircle2 } from 'lucide-react';
+import { PackageCheck, MapPin, Award, ShieldCheck, Heart, Flower2, Smile, Clock, Truck, Music, CheckCircle2 } from 'lucide-react';
+import { KoreanTulipIcon } from '@/components/common/CraftIcons';
 import type { ThemeId } from '@/stores/useThemeStore';
 
 export interface ThemeCopy {
@@ -103,7 +104,7 @@ export const THEME_COPY_MATRIX: Record<ThemeId, ThemeCopy> = {
         id: 'quality',
         title: 'Anti-Layu di Bawah Terik Matahari',
         desc: 'Mau foto 200 kali di taman kampus UI atau Margo, kelopak beludru tetap fluffy dan tegak sempurna.',
-        icon: Sparkles,
+        icon: KoreanTulipIcon,
       },
       {
         id: 'packaging',
@@ -208,7 +209,7 @@ export const THEME_COPY_MATRIX: Record<ThemeId, ThemeCopy> = {
         id: 'quality',
         title: 'Investasi Memori Sejati',
         desc: 'Bukan sekadar kado sesaat. Mahakarya yang tetap tegak megah di ruang kerja bertahun-tahun kemudian.',
-        icon: Sparkles,
+        icon: KoreanTulipIcon,
       },
       {
         id: 'packaging',
@@ -313,7 +314,7 @@ export const THEME_COPY_MATRIX: Record<ThemeId, ThemeCopy> = {
         id: 'quality',
         title: 'Garansi Nggak Bakal Letoy',
         desc: 'Tahan banting diajak lari-lari pas ngejar dosen pembimbing atau hunting spot foto di Margonda.',
-        icon: Sparkles,
+        icon: KoreanTulipIcon,
       },
       {
         id: 'packaging',
