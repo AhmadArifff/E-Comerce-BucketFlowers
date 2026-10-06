@@ -26,6 +26,7 @@ interface WrappingOpt {
   id: string;
   name: string;
   desc: string;
+  imageUrl?: string;
 }
 
 interface AddonOpt {
@@ -80,9 +81,9 @@ const COLORS: ColorOpt[] = [
 ];
 
 const WRAPPINGS: WrappingOpt[] = [
-  { id: 'korean_pink', name: 'Korean Two-Tone Pink', desc: 'Cellophane matte lembut' },
-  { id: 'lilac_white', name: 'Lilac & White Velvet', desc: 'Aksen beludru elegan' },
-  { id: 'clean_oat', name: 'Minimalist Clean Oat', desc: 'Nuansa earth tone aesthetic' },
+  { id: 'korean_pink', name: 'Korean Two-Tone Pink', desc: 'Cellophane matte lembut', imageUrl: '/images/studio/wrapping/wrapping-korean-pink.jpg' },
+  { id: 'lilac_white', name: 'Lilac & White Velvet', desc: 'Aksen beludru elegan', imageUrl: '/images/studio/wrapping/wrapping-lilac-velvet.jpg' },
+  { id: 'clean_oat', name: 'Minimalist Clean Oat', desc: 'Nuansa earth tone aesthetic', imageUrl: '/images/studio/wrapping/wrapping-clean-oat.jpg' },
 ];
 
 const RIBBONS: RibbonOpt[] = [
@@ -231,11 +232,18 @@ export const CustomStudioSection: React.FC = () => {
           }
 
           if (Array.isArray(g.WRAPPING_STYLE) && g.WRAPPING_STYLE.length > 0) {
-            const mappedWrappings: WrappingOpt[] = g.WRAPPING_STYLE.map((w: any) => ({
-              id: w.id,
-              name: w.name,
-              desc: w.description || '',
-            }));
+            const mappedWrappings: WrappingOpt[] = g.WRAPPING_STYLE.map((w: any) => {
+              const s = `${w.id} ${w.name}`.toLowerCase();
+              let img = '/images/studio/wrapping/wrapping-korean-pink.jpg';
+              if (s.includes('velvet') || s.includes('lilac') || s.includes('white')) img = '/images/studio/wrapping/wrapping-lilac-velvet.jpg';
+              else if (s.includes('oat') || s.includes('clean') || s.includes('earth')) img = '/images/studio/wrapping/wrapping-clean-oat.jpg';
+              return {
+                id: w.id,
+                name: w.name,
+                desc: w.description || '',
+                imageUrl: img,
+              };
+            });
             setWrappings(mappedWrappings);
             setSelectedWrapping((prev) => mappedWrappings.find((w) => w.id === prev.id) || mappedWrappings[0]);
           }
@@ -553,12 +561,6 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 {wrappings.map((w) => {
                   const isSelected = selectedWrapping.id === w.id;
-                  const gradient =
-                    w.id === 'korean_pink'
-                      ? 'from-pink-300 via-rose-200 to-pink-400'
-                      : w.id === 'lilac_white'
-                      ? 'from-purple-300 via-white to-purple-400'
-                      : 'from-amber-200 via-stone-200 to-amber-300';
                   return (
                     <button
                       key={w.id}
@@ -567,18 +569,35 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                         setSelectedWrapping(w);
                         logStudioStep(3);
                       }}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
+                      className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group flex flex-col justify-between ${
                         isSelected
                           ? 'border-theme-primary bg-theme-surface-subtle shadow-xs ring-2 ring-theme-primary/20'
                           : 'border-theme-border hover:border-theme-primary/40 bg-white'
                       }`}
                     >
-                      <div className={`h-2.5 w-full rounded-full bg-gradient-to-r ${gradient} mb-2 shadow-inner border border-black/5`} />
-                      <div className="text-xs font-bold text-theme-text-main flex items-center justify-between">
-                        <span>{w.name}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-theme-primary" />}
+                      <div className="relative w-full aspect-16/10 rounded-xl overflow-hidden mb-2 bg-stone-100 shadow-2xs border border-stone-200/60">
+                        {w.imageUrl ? (
+                          <img
+                            src={w.imageUrl}
+                            alt={w.name}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="h-full w-full bg-stone-200" />
+                        )}
+                        {isSelected && (
+                          <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px] shadow-xs">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        )}
                       </div>
-                      <div className="text-[10px] text-theme-text-muted mt-0.5">{w.desc}</div>
+                      <div>
+                        <div className="text-xs font-bold text-theme-text-main flex items-center justify-between">
+                          <span>{w.name}</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-theme-primary sm:hidden" />}
+                        </div>
+                        <div className="text-[10px] text-theme-text-muted mt-0.5 line-clamp-1">{w.desc}</div>
+                      </div>
                     </button>
                   );
                 })}
@@ -692,7 +711,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                           : 'border-theme-border hover:border-theme-primary/40 bg-white'
                       }`}
                     >
-                      <div className="w-13 h-13 rounded-xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200 shadow-2xs">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200 shadow-2xs">
                         {g.imageUrl ? (
                           <img
                             src={g.imageUrl}
@@ -700,7 +719,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                         ) : (
-                          <div className="text-2xl flex items-center justify-center w-full h-full">{g.icon}</div>
+                          <div className="text-xl flex items-center justify-center w-full h-full">{g.icon}</div>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -732,14 +751,14 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                     <div
                       key={a.id}
                       onClick={() => toggleAddon(a.id)}
-                      className={`p-2.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
+                      className={`p-2 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
                         isChecked
                           ? 'border-theme-primary bg-theme-surface-subtle shadow-xs ring-1 ring-theme-primary/30'
                           : 'border-theme-border hover:border-theme-primary/40 bg-white'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200 shadow-2xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200 shadow-2xs">
                           {a.imageUrl ? (
                             <img
                               src={a.imageUrl}
@@ -747,7 +766,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="text-2xl flex items-center justify-center w-full h-full">{a.icon}</div>
+                            <div className="text-xl flex items-center justify-center w-full h-full">{a.icon}</div>
                           )}
                         </div>
                         <div>
@@ -861,10 +880,10 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {/* 1. Kemasan Box/Bag */}
-                  <div className="p-2.5 rounded-2xl bg-stone-50 border border-stone-200/80 flex items-center gap-2.5">
-                    <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white border border-stone-200 shadow-2xs">
+                  <div className="p-2 rounded-2xl bg-stone-50 border border-stone-200/80 flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-white border border-stone-200 shadow-2xs">
                       {selectedPackaging.imageUrl ? (
                         <img
                           src={selectedPackaging.imageUrl}
@@ -872,21 +891,21 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="text-xl flex items-center justify-center w-full h-full">{selectedPackaging.icon}</div>
+                        <div className="text-base flex items-center justify-center w-full h-full">{selectedPackaging.icon}</div>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[9px] font-semibold text-stone-500 uppercase tracking-wider">Kemasan Delivery</div>
+                      <div className="text-[8px] font-semibold text-stone-500 uppercase tracking-wider">Kemasan Delivery</div>
                       <div className="text-xs font-bold text-stone-800 truncate">{selectedPackaging.name}</div>
                       <div className="text-[10px] text-theme-primary font-black">
-                        {selectedPackaging.price === 0 ? 'Termasuk (Standar)' : `+Rp ${selectedPackaging.price.toLocaleString('id-ID')}`}
+                        {selectedPackaging.price === 0 ? 'Termasuk' : `+Rp ${selectedPackaging.price.toLocaleString('id-ID')}`}
                       </div>
                     </div>
                   </div>
 
                   {/* 2. Kartu Ucapan & Seal */}
-                  <div className="p-2.5 rounded-2xl bg-stone-50 border border-stone-200/80 flex items-center gap-2.5">
-                    <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white border border-stone-200 shadow-2xs">
+                  <div className="p-2 rounded-2xl bg-stone-50 border border-stone-200/80 flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-white border border-stone-200 shadow-2xs">
                       {selectedGreeting.imageUrl ? (
                         <img
                           src={selectedGreeting.imageUrl}
@@ -894,11 +913,11 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="text-xl flex items-center justify-center w-full h-full">{selectedGreeting.icon}</div>
+                        <div className="text-base flex items-center justify-center w-full h-full">{selectedGreeting.icon}</div>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[9px] font-semibold text-stone-500 uppercase tracking-wider">Kartu & Segel</div>
+                      <div className="text-[8px] font-semibold text-stone-500 uppercase tracking-wider">Sertifikat Ucapan</div>
                       <div className="text-xs font-bold text-stone-800 truncate">{selectedGreeting.name}</div>
                       <div className="text-[10px] text-theme-primary font-black">
                         {selectedGreeting.price === 0 ? 'Gratis' : `+Rp ${selectedGreeting.price.toLocaleString('id-ID')}`}
@@ -908,8 +927,8 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                 </div>
 
                 {/* 3. Aksesori Tambahan (Add-ons Visualizer) */}
-                <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200/80">
-                  <div className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+                <div className="p-2.5 rounded-2xl bg-stone-50 border border-stone-200/80">
+                  <div className="text-[9px] font-semibold text-stone-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                     <span>Aksesori Tambahan ({selectedAddons.length})</span>
                     <span className="text-theme-primary font-bold">
                       {addonsTotal === 0 ? 'Tanpa Aksesori' : `+Rp ${addonsTotal.toLocaleString('id-ID')}`}
@@ -917,16 +936,16 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                   </div>
 
                   {selectedAddons.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       {selectedAddons.map((addonId) => {
                         const found = addons.find((a) => a.id === addonId);
                         if (!found) return null;
                         return (
                           <div
                             key={found.id}
-                            className="p-1.5 px-2 rounded-xl bg-white border border-stone-200/80 flex items-center gap-2 shadow-2xs"
+                            className="p-1 px-1.5 rounded-xl bg-white border border-stone-200/80 flex items-center gap-1.5 shadow-2xs"
                           >
-                            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-stone-50 border border-stone-100">
+                            <div className="w-7 h-7 rounded-md overflow-hidden shrink-0 bg-stone-50 border border-stone-100">
                               {found.imageUrl ? (
                                 <img
                                   src={found.imageUrl}
@@ -934,20 +953,20 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <div className="text-sm flex items-center justify-center w-full h-full">{found.icon}</div>
+                                <div className="text-xs flex items-center justify-center w-full h-full">{found.icon}</div>
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <div className="text-[11px] font-bold text-stone-800 truncate">{found.name}</div>
-                              <div className="text-[9px] text-emerald-600 font-extrabold">+Rp {found.price.toLocaleString('id-ID')}</div>
+                              <div className="text-[10px] font-bold text-stone-800 truncate">{found.name}</div>
+                              <div className="text-[8px] text-emerald-600 font-extrabold">+Rp {found.price.toLocaleString('id-ID')}</div>
                             </div>
                           </div>
                         );
                       })}
                     </div>
                   ) : (
-                    <div className="py-2 text-center text-[11px] text-stone-400 font-medium">
-                      Belum ada aksesori tambahan dipilih. Centang di Langkah 7 jika berminat.
+                    <div className="py-1 text-center text-[10px] text-stone-400 font-medium">
+                      Belum ada aksesori dipilih.
                     </div>
                   )}
                 </div>

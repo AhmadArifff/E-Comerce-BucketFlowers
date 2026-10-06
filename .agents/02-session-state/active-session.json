@@ -158,6 +158,13 @@
       "prd_sections": ["Seksi 2", "Seksi 15"],
       "status": "VERIFIED_PASS",
       "verified_at": "2026-10-06"
+    },
+    {
+      "id": "M23_STUDIO_ZERO_TEXT_CLEAN_PHOTOS_AND_COMPACT_VISUALIZER",
+      "title": "Studio Kustomisasi Buket Bersih Tanpa Teks (Zero Text Overlay): Foto Buket Tegak Konsisten Patokan Matahari, Kelopak Berubah Warna Nyata, Foto Fisik Kertas Wrapping, Sertifikat Kaligrafi Elok, dan Thumbnail Opsional Ramping/Kompak",
+      "prd_sections": ["Seksi 2", "Seksi 15"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-10-06"
     }
   ],
   "established_constraints": [
@@ -192,7 +199,8 @@
     "Controlled Form Input & DB Alias Integrity: Seluruh input formulir admin (StoreSettingsView) wajib memiliki string fallback aman ('') baik pada initial state, useEffect sync, maupun props value JSX untuk mencegah transisi ilegal uncontrolled-to-controlled React; serta mendukung alias dual-naming (official_whatsapp vs wa_number, daily_po_limit vs daily_quota) pada backend Express dan frontend Zustand agar nilai tersimpan permanen di database.",
     "Artisanal Craft Suite & Brand Identity Integrity: Seluruh icon etalase, filter produk, navbar, dan footer dilarang menggunakan generic AI slop (seperti kilat petir Zap pada Ready Stock, cangkir kopi Coffee pada vas pot bunga, atau sparkle bintang pada filter umum); seluruhnya wajib menggunakan Chenille Artisanal Craft Suite berbasis SVG kawat bulu buatan tangan serta mendukung mode logo ganda: upload kustom gambar oleh admin (Supabase Storage) atau lambang vektor adaptif tema (Tema A: Segel Tulip Kawat Bulu Korea, Tema B: Monogram Crest CA Gold & Deep Wine, Tema C: Maskot Fluffy Daisy Pop).",
     "Photorealistic Craft Staging & Approval Mandate: Seluruh opsi kustomisasi studio dan testimoni lookbook wajib menggunakan aset foto fisik kerajinan kawat bulu beresolusi tinggi, di-staging secara lokal terlebih dahulu untuk inspeksi visual pengguna di http://localhost:3000, dan HANYA diunggah ke Supabase Storage / disinkronkan ke PostgreSQL setelah persetujuan eksplisit pengguna.",
-    "Clean Core Bouquet & Package Bundle Separation: Studio kustomisasi memisahkan preview buket utama (Bunga, Nuansa Kawat Beludru, Kertas Wrapping, Pita Ribbon) sebagai foto buket utuh yang bersih dan elegan (448 variasi kombinasi foto resolusi tinggi), dengan panel visualizer kelengkapan paket (Kemasan delivery, Kartu ucapan & segel, serta Aksesori tambahan) di bawah kanvas berfoto objek fisik mandiri tanpa stiker/sayap CSS melayang yang bertabrakan di atas buket."
+    "Clean Core Bouquet & Package Bundle Separation: Studio kustomisasi memisahkan preview buket utama (Bunga, Nuansa Kawat Beludru, Kertas Wrapping, Pita Ribbon) sebagai foto buket utuh yang bersih dan elegan (336 variasi kombinasi foto resolusi tinggi), dengan panel visualizer kelengkapan paket (Kemasan delivery, Kartu ucapan & segel, serta Aksesori tambahan) di bawah kanvas berfoto objek fisik mandiri tanpa stiker/sayap CSS melayang yang bertabrakan di atas buket.",
+    "Zero Text Overlay & Consistent Upright Pose Mandate: Seluruh foto kombinasi buket studio kustomisasi WAJIB 100% murni foto bersih tanpa watermark teks, pill keterangan warna, atau badge brand apa pun di atas gambar; sudut kamera seluruh buket konsisten tegak lurus menghadap depan (upright front-facing portrait) mengacu pada patokan buket bunga matahari; opsi wrapping di Step 3 wajib menampilkan foto material fisik lembaran kertas florist; kartu ucapan berformat sertifikat kaligrafi elok dengan ornamen botani dan wax seal; serta seluruh thumbnail kemasan, kartu, dan aksesori berukuran ramping/kompak (36-40px) agar fokus estetika tetap pada keindahan buket utama."
   ],
   "next_recommended_actions": [
     "Prioritas 1: SELESAI (Form ulasan bintang 1-5, upload foto buket, API /api/v1/reviews, & sync dinamis LookbookSection)",
@@ -209,8 +217,9 @@
     "Store Settings Uncontrolled Input & WhatsApp Alias Persistence: SELESAI & TERVERIFIKASI (Guaranteed String Fallbacks, Dual-Naming official_whatsapp/wa_number, 0 Compilation Errors, 84 Unit Tests Passing)",
     "Upload Logo Kustom Admin & Artisanal Craft Icons Suite: SELESAI & TERVERIFIKASI (Zero AI Slop Icons, Chenille Craft SVG Suite, Dual-Mode Logo Picker di StoreSettingsView, 0 TypeScript Errors, 84 Unit Tests Passing)",
     "Staging Aset Foto Kerajinan Kawat Bulu Beresolusi Tinggi & Eliminasi Total AI Slop: SELESAI DITAMPILKAN DI STOREFRONT & SIAP DITINJAU PENGGUNA (7 Opsi Bunga Studio Berfoto, Live Canvas Preview Realistis, 3 Foto Testimoni Lookbook, Chip Filter Ready Stock Bebas Petir, 0 Error TypeScript, 84 Tests Lolos)",
-    "Pemisahan Visual Buket Utama & Package Bundle Visualizer: SELESAI & AKTIF DI STOREFRONT (Foto Buket Bersih dengan 448 Variasi Kombinasi Nyata, 10 Foto Objek Mandiri untuk Kemasan/Kartu/Addons, 0 Error TypeScript, 84 Unit Tests Lolos)"
+    "Pemisahan Visual Buket Utama & Package Bundle Visualizer: SELESAI & AKTIF DI STOREFRONT (Foto Buket Bersih dengan 336 Variasi Kombinasi Nyata, 10 Foto Objek Mandiri untuk Kemasan/Kartu/Addons, 0 Error TypeScript, 84 Unit Tests Lolos)",
+    "Studio Kustomisasi Bersih Tanpa Teks & Sertifikat Kaligrafi Elok: SELESAI & TERVERIFIKASI (Zero Text Overlay pada 336 Foto Kombinasi, Pose Tegak Konsisten Patokan Matahari, Foto Fisik Kertas Wrapping di Step 3, Kartu Sertifikat Kaligrafi Elok Anti-AI Slop, Thumbnail Opsional Ramping 36-40px, 0 Error TypeScript, 84 Unit Tests Lolos)"
   ],
-  "last_updated": "2026-10-06T21:20:00+07:00"
+  "last_updated": "2026-10-06T22:20:00+07:00"
 }
 
