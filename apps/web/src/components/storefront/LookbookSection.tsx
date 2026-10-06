@@ -135,13 +135,34 @@ export const LookbookSection: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {copy.lookbook.stories.map((story, idx) => (
-              <div
-                key={idx}
-                className="card-atelier overflow-hidden flex flex-col justify-between card-tilt-hover bg-white border border-theme-border rounded-2xl shadow-xs"
-              >
-                {/* TOP ACCENT */}
-                <div className={`p-6 ${story.avatarBg} flex items-center justify-between`}>
+            {copy.lookbook.stories.map((story, idx) => {
+              const photo =
+                idx === 0
+                  ? '/images/lookbook/review-annisa-rotunda.jpg'
+                  : idx === 1
+                  ? '/images/lookbook/review-dimas-wisuda.jpg'
+                  : '/images/lookbook/review-clarissa-velvet.jpg';
+
+              return (
+                <div
+                  key={idx}
+                  className="card-atelier overflow-hidden flex flex-col justify-between card-tilt-hover bg-white border border-theme-border rounded-2xl shadow-xs"
+                >
+                  {/* REAL BUYER PHOTO ACCENT */}
+                  <div className="h-48 w-full overflow-hidden bg-stone-100 relative group">
+                    <img
+                      src={photo}
+                      alt={`Foto Buket ${story.author}`}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
+                      <Sparkles className="w-3 h-3 text-amber-400" />
+                      <span>{story.occasion}</span>
+                    </div>
+                  </div>
+
+                  {/* TOP ACCENT */}
+                  <div className={`p-5 pb-3 ${story.avatarBg} flex items-center justify-between border-b border-stone-100/60`}>
                   <div className="flex items-center gap-2">
                     <div className="w-9 h-9 rounded-full bg-white/90 shadow-2xs flex items-center justify-center font-bold text-sm">
                       {story.author.charAt(0)}
@@ -169,7 +190,8 @@ export const LookbookSection: React.FC = () => {
                   </div>
                 </div>
               </div>
-            ))}
+            );
+          })}
           </div>
         )}
       </div>

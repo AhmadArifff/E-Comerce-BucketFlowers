@@ -276,7 +276,7 @@ export const CODLocationsModal: React.FC = () => {
                               : 'bg-amber-50 text-amber-700 border border-amber-200'
                           }`}
                         >
-                          {isFree ? '⚡ Gratis Ongkir' : 'Ongkir Rp 10.000'}
+                          {isFree ? 'Gratis Ongkir' : 'Ongkir Rp 10.000'}
                         </span>
                       </div>
 

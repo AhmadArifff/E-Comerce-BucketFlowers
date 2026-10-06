@@ -23,6 +23,7 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { getThemeCopy } from '@/lib/theme-copy';
 import { getApiUrl } from '@/lib/api-client';
+import { MapPin, CheckCircle2 } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -432,7 +433,8 @@ export default function StorefrontPage() {
           <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-rose-50 via-pink-50/50 to-amber-50/40 border border-rose-200/80 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="space-y-2 max-w-xl">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black uppercase tracking-wider">
-                <span>⚡ 100% Bebas Ongkir (Radius ≤ 5 KM)</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                <span>100% Bebas Ongkir (Radius ≤ 5 KM)</span>
               </div>
               <h3 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight font-heading">
                 6 Titik Temu COD Resmi Kampus & Mall Depok
@@ -454,7 +456,7 @@ export default function StorefrontPage() {
               className="px-6 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs sm:text-sm shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2 cursor-pointer flex-shrink-0"
             >
               <span>Lihat Detail Titik & Peta</span>
-              <span>📍</span>
+              <MapPin className="w-4 h-4" />
             </button>
           </div>
         </div>

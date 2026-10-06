@@ -158,7 +158,7 @@ export const ChatProductCard: React.FC<ChatProductCardProps> = ({
                   : 'bg-amber-50 text-amber-700 border border-amber-200'
               }`}
             >
-              {product.isReadyStock ? '⚡ Ready Stock' : `⏳ PO ~${product.leadTimeDays || 1} Hari`}
+              {product.isReadyStock ? 'Ready Stock' : `PO ~${product.leadTimeDays || 1} Hari`}
             </span>
           </div>
 
