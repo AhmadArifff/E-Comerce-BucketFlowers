@@ -137,6 +137,13 @@
       "prd_sections": ["Seksi 1", "Seksi 21", "Seksi 24", "Seksi 40"],
       "status": "VERIFIED_PASS",
       "verified_at": "2026-10-04"
+    },
+    {
+      "id": "M20_PHOTOREALISTIC_CRAFT_ASSETS_AND_STUDIO_STAGING",
+      "title": "Staging Aset Foto Kerajinan Kawat Bulu Beresolusi Tinggi & Eliminasi Total AI Slop pada Studio Kustomisasi, Lookbook, dan Chip Filter",
+      "prd_sections": ["Seksi 1", "Seksi 2", "Seksi 7", "Seksi 12", "Seksi 26"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-10-06"
     }
   ],
   "established_constraints": [
@@ -169,7 +176,8 @@
     "PostgreSQL Index & Data Integrity Mandate: Seluruh foreign key berfrekuensi tinggi (order_items, order_status_histories, orders, product_images, reviews, bill_of_materials) serta subquery riwayat chat wajib memiliki indeks B-Tree pendukung guna mencegah sequential scan penuh dan in-memory sorting; data pesanan uji coba dibersihkan secara atomik sehingga dasbor toko mencerminkan transaksi riil yang akurat.",
     "Member Order Scoping & Zero-Fraud Claim Integrity: Pesanan di portal dibatasi ketat hanya untuk pemilik akun (userId, customer_phone, customer_email); pesanan guest checkout otomatis disimpan ke localStorage perangkat ('chenille_guest_device_orders'); formulir klaim garansi anti-patah dan komplain memvalidasi kepemilikan via WhatsApp OTP (pre-authorized untuk akun member cocok) serta diverifikasi ketat oleh backend dengan HTTP 403 jika nomor WhatsApp tidak cocok dengan nomor terdaftar pesanan.",
     "Controlled Form Input & DB Alias Integrity: Seluruh input formulir admin (StoreSettingsView) wajib memiliki string fallback aman ('') baik pada initial state, useEffect sync, maupun props value JSX untuk mencegah transisi ilegal uncontrolled-to-controlled React; serta mendukung alias dual-naming (official_whatsapp vs wa_number, daily_po_limit vs daily_quota) pada backend Express dan frontend Zustand agar nilai tersimpan permanen di database.",
-    "Artisanal Craft Suite & Brand Identity Integrity: Seluruh icon etalase, filter produk, navbar, dan footer dilarang menggunakan generic AI slop (seperti kilat petir Zap pada Ready Stock, cangkir kopi Coffee pada vas pot bunga, atau sparkle bintang pada filter umum); seluruhnya wajib menggunakan Chenille Artisanal Craft Suite berbasis SVG kawat bulu buatan tangan serta mendukung mode logo ganda: upload kustom gambar oleh admin (Supabase Storage) atau lambang vektor adaptif tema (Tema A: Segel Tulip Kawat Bulu Korea, Tema B: Monogram Crest CA Gold & Deep Wine, Tema C: Maskot Fluffy Daisy Pop)."
+    "Artisanal Craft Suite & Brand Identity Integrity: Seluruh icon etalase, filter produk, navbar, dan footer dilarang menggunakan generic AI slop (seperti kilat petir Zap pada Ready Stock, cangkir kopi Coffee pada vas pot bunga, atau sparkle bintang pada filter umum); seluruhnya wajib menggunakan Chenille Artisanal Craft Suite berbasis SVG kawat bulu buatan tangan serta mendukung mode logo ganda: upload kustom gambar oleh admin (Supabase Storage) atau lambang vektor adaptif tema (Tema A: Segel Tulip Kawat Bulu Korea, Tema B: Monogram Crest CA Gold & Deep Wine, Tema C: Maskot Fluffy Daisy Pop).",
+    "Photorealistic Craft Staging & Approval Mandate: Seluruh opsi kustomisasi studio dan testimoni lookbook wajib menggunakan aset foto fisik kerajinan kawat bulu beresolusi tinggi, di-staging secara lokal terlebih dahulu untuk inspeksi visual pengguna di http://localhost:3000, dan HANYA diunggah ke Supabase Storage / disinkronkan ke PostgreSQL setelah persetujuan eksplisit pengguna."
   ],
   "next_recommended_actions": [
     "Prioritas 1: SELESAI (Form ulasan bintang 1-5, upload foto buket, API /api/v1/reviews, & sync dinamis LookbookSection)",
@@ -184,8 +192,9 @@
     "Optimasi Indeks Database & Pembersihan Data Uji Coba: SELESAI (16 Indeks B-Tree Baru, Penghapusan 4 Pesanan Mock, Tersisa 2 Pesanan Otentik Annisa Larasati)",
     "Scoping Pesanan Member, Penyimpanan Perangkat Guest & Verifikasi Klaim Anti-Fraud (Zero-Fraud Policy): SELESAI & TERVERIFIKASI PENUH (Isolation Guard, WhatsApp OTP Challenge, HTTP 403 Rejection for Unauthorized Claims, 84 Unit Tests Passing, 0 Type Errors)",
     "Store Settings Uncontrolled Input & WhatsApp Alias Persistence: SELESAI & TERVERIFIKASI (Guaranteed String Fallbacks, Dual-Naming official_whatsapp/wa_number, 0 Compilation Errors, 84 Unit Tests Passing)",
-    "Upload Logo Kustom Admin & Artisanal Craft Icons Suite: SELESAI & TERVERIFIKASI (Zero AI Slop Icons, Chenille Craft SVG Suite, Dual-Mode Logo Picker di StoreSettingsView, 0 TypeScript Errors, 84 Unit Tests Passing)"
+    "Upload Logo Kustom Admin & Artisanal Craft Icons Suite: SELESAI & TERVERIFIKASI (Zero AI Slop Icons, Chenille Craft SVG Suite, Dual-Mode Logo Picker di StoreSettingsView, 0 TypeScript Errors, 84 Unit Tests Passing)",
+    "Staging Aset Foto Kerajinan Kawat Bulu Beresolusi Tinggi & Eliminasi Total AI Slop: SELESAI DITAMPILKAN DI STOREFRONT & SIAP DITINJAU PENGGUNA (7 Opsi Bunga Studio Berfoto, Live Canvas Preview Realistis, 3 Foto Testimoni Lookbook, Chip Filter Ready Stock Bebas Petir, 0 Error TypeScript, 84 Tests Lolos)"
   ],
-  "last_updated": "2026-10-04T19:15:00+07:00"
+  "last_updated": "2026-10-06T20:18:00+07:00"
 }
 
