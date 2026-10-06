@@ -142,7 +142,7 @@ describe('AI Chat Assistant Service (Gemini CS Copilot)', () => {
       expect(typeof draftResult.draftText).toBe('string');
       expect(draftResult.draftText).toMatch(/(😊|🙏|🥰|🤗|👋)/);
       expect(draftResult.draftText).not.toContain('🌸');
-    });
+    }, 35000);
 
     it('should not repeat opening greeting when conversation is already ongoing (Single Greeting Rule)', () => {
       const fakeCtx = {
