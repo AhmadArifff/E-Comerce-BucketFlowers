@@ -33,6 +33,7 @@ interface AddonOpt {
   name: string;
   price: number;
   icon: string;
+  imageUrl?: string;
 }
 
 interface RibbonOpt {
@@ -49,6 +50,7 @@ interface PackagingOpt {
   desc: string;
   price: number;
   icon: string;
+  imageUrl?: string;
 }
 
 interface GreetingOpt {
@@ -57,6 +59,7 @@ interface GreetingOpt {
   desc: string;
   price: number;
   icon: string;
+  imageUrl?: string;
 }
 
 const FLOWERS: FlowerOpt[] = [
@@ -90,23 +93,59 @@ const RIBBONS: RibbonOpt[] = [
 ];
 
 const PACKAGINGS: PackagingOpt[] = [
-  { id: 'standard', name: 'Standard Protective Sleeve', desc: 'Plastik florist tebal bening', price: 0, icon: '📦' },
-  { id: 'mika_box', name: 'Box Jendela Mika Eksklusif', desc: 'Kotak kardus kaku mewah', price: 12000, icon: '🎁' },
-  { id: 'pvc_bag', name: 'Tas Jinjing PVC Bening', desc: 'Tas aesthetic praktis wisuda', price: 8000, icon: '🛍️' },
-  { id: 'gold_bag', name: 'Paper Bag Mewah Lis Gold', desc: 'Tas kertas tebal premium', price: 6000, icon: '👜' },
+  { id: 'standard', name: 'Standard Protective Sleeve', desc: 'Plastik florist tebal bening', price: 0, icon: '📦', imageUrl: '/images/studio/packaging/package-standard.jpg' },
+  { id: 'mika_box', name: 'Box Jendela Mika Eksklusif', desc: 'Kotak kardus kaku mewah lis gold', price: 12000, icon: '🎁', imageUrl: '/images/studio/packaging/package-mika-box.jpg' },
+  { id: 'pvc_bag', name: 'Tas Jinjing PVC Bening', desc: 'Tas aesthetic praktis wisuda', price: 8000, icon: '🛍️', imageUrl: '/images/studio/packaging/package-pvc-bag.jpg' },
+  { id: 'gold_bag', name: 'Paper Bag Mewah Lis Gold', desc: 'Tas kertas tebal premium', price: 6000, icon: '👜', imageUrl: '/images/studio/packaging/package-gold-bag.jpg' },
 ];
 
 const GREETINGS: GreetingOpt[] = [
-  { id: 'print_standard', name: 'Kartu Standard Cetak', desc: 'Art paper 260gsm cetak rapi', price: 0, icon: '✉️' },
-  { id: 'gold_foil', name: 'Kartu Hotprint Gold Foil', desc: 'Tulisan emas berkilau mewah', price: 5000, icon: '✨' },
-  { id: 'wax_seal', name: 'Vintage Wax Seal Stamp', desc: 'Amplop segel lilin stempel bunga', price: 8000, icon: '📜' },
+  { id: 'print_standard', name: 'Kartu Standard Cetak', desc: 'Art paper 260gsm cetak rapi', price: 0, icon: '✉️', imageUrl: '/images/studio/cards/card-standard.jpg' },
+  { id: 'gold_foil', name: 'Kartu Hotprint Gold Foil', desc: 'Tulisan emas berkilau mewah', price: 5000, icon: '✨', imageUrl: '/images/studio/cards/card-gold-foil.jpg' },
+  { id: 'wax_seal', name: 'Vintage Wax Seal Stamp', desc: 'Amplop segel lilin stempel bunga', price: 8000, icon: '📜', imageUrl: '/images/studio/cards/card-wax-seal.jpg' },
 ];
 
 const ADDONS: AddonOpt[] = [
-  { id: 'led', name: 'Lampu LED Fairy Light (Warm Glow)', price: 10000, icon: '💡' },
-  { id: 'bear', name: 'Boneka Toga Wisuda Mini (10cm)', price: 15000, icon: '🧸' },
-  { id: 'pin', name: 'Pin Bros Kupu-kupu Kristal', price: 5000, icon: '🦋' },
+  { id: 'led', name: 'Lampu LED Fairy Light (Warm Glow)', price: 10000, icon: '💡', imageUrl: '/images/studio/addons/addon-led-fairy.jpg' },
+  { id: 'bear', name: 'Boneka Toga Wisuda Mini (10cm)', price: 15000, icon: '🧸', imageUrl: '/images/studio/addons/addon-bear-toga.jpg' },
+  { id: 'pin', name: 'Pin Bros Kupu-kupu Kristal', price: 5000, icon: '🦋', imageUrl: '/images/studio/addons/addon-butterfly-pin.jpg' },
 ];
+
+// Helper to resolve combination image for 4 core bouquet choices
+const getBouquetPreviewUrl = (
+  flowerId: string,
+  colorId: string,
+  wrappingId: string,
+  ribbonId: string
+): string => {
+  let f = flowerId.replace('c-flw-', '').toLowerCase();
+  if (f.includes('tulip')) f = 'tulip';
+  else if (f.includes('rose') || f.includes('mawar')) f = 'rose';
+  else if (f.includes('sun') || f.includes('matahari')) f = 'sun';
+  else if (f.includes('lavender')) f = 'lavender';
+  else if (f.includes('karakter') || f.includes('toga') || f.includes('bear')) f = 'karakter';
+  else if (f.includes('pot') || f.includes('daisy')) f = 'minipot';
+  else if (f.includes('midnight')) f = 'midnight';
+
+  let c = colorId.replace('c-col-', '').toLowerCase();
+  if (c.includes('pink')) c = 'pink';
+  else if (c.includes('lilac') || c.includes('purple')) c = 'lilac';
+  else if (c.includes('blue') || c.includes('sky')) c = 'blue';
+  else if (c.includes('sage') || c.includes('green') || c.includes('matcha')) c = 'sage';
+
+  let w = wrappingId.replace('c-wrp-', '').toLowerCase();
+  if (w.includes('korean') || w.includes('pink')) w = 'korean';
+  else if (w.includes('velvet') || w.includes('lilac') || w.includes('white')) w = 'velvet';
+  else if (w.includes('oat') || w.includes('clean')) w = 'oat';
+
+  let r = ribbonId.replace('c-rbn-', '').toLowerCase();
+  if (r.includes('satin')) r = 'satin';
+  else if (r.includes('organza')) r = 'organza';
+  else if (r.includes('chiffon')) r = 'chiffon';
+  else if (r.includes('rustic') || r.includes('rami')) r = 'rustic';
+
+  return `/images/studio/combinations/${f}-${c}-${w}-${r}.jpg`;
+};
 
 export const CustomStudioSection: React.FC = () => {
   const { addItem, setIsCartOpen } = useCartStore();
@@ -137,6 +176,18 @@ export const CustomStudioSection: React.FC = () => {
   const [selectedGreeting, setSelectedGreeting] = useState<GreetingOpt>(GREETINGS[0]);
   const [selectedAddons, setSelectedAddons] = useState<string[]>(['led']);
   const [isAdding, setIsAdding] = useState(false);
+  const [bouquetImageSrc, setBouquetImageSrc] = useState<string>('/images/studio/combinations/tulip-pink-korean-satin.jpg');
+
+  // Sync bouquet combination photo whenever user selects any of the 4 core steps
+  useEffect(() => {
+    const nextSrc = getBouquetPreviewUrl(
+      selectedFlower.id,
+      selectedColor.id,
+      selectedWrapping.id,
+      selectedRibbon.id
+    );
+    setBouquetImageSrc(nextSrc);
+  }, [selectedFlower, selectedColor, selectedWrapping, selectedRibbon]);
 
   // Fetch dynamic custom studio options from database
   useEffect(() => {
@@ -202,36 +253,61 @@ export const CustomStudioSection: React.FC = () => {
           }
 
           if (Array.isArray(g.PACKAGING_BOX) && g.PACKAGING_BOX.length > 0) {
-            const mappedPackagings: PackagingOpt[] = g.PACKAGING_BOX.map((p: any) => ({
-              id: p.id,
-              name: p.name,
-              desc: p.description || '',
-              price: Number(p.price_modifier) || 0,
-              icon: p.emoji_or_icon || '📦',
-            }));
+            const mappedPackagings: PackagingOpt[] = g.PACKAGING_BOX.map((p: any) => {
+              const s = `${p.id} ${p.name}`.toLowerCase();
+              let img = '/images/studio/packaging/package-standard.jpg';
+              if (s.includes('mika')) img = '/images/studio/packaging/package-mika-box.jpg';
+              else if (s.includes('pvc')) img = '/images/studio/packaging/package-pvc-bag.jpg';
+              else if (s.includes('gold') || s.includes('paper')) img = '/images/studio/packaging/package-gold-bag.jpg';
+
+              return {
+                id: p.id,
+                name: p.name,
+                desc: p.description || '',
+                price: Number(p.price_modifier) || 0,
+                icon: p.emoji_or_icon || '📦',
+                imageUrl: img,
+              };
+            });
             setPackagings(mappedPackagings);
             setSelectedPackaging((prev) => mappedPackagings.find((p) => p.id === prev.id) || mappedPackagings[0]);
           }
 
           if (Array.isArray(g.GREETING_SEAL) && g.GREETING_SEAL.length > 0) {
-            const mappedGreetings: GreetingOpt[] = g.GREETING_SEAL.map((gr: any) => ({
-              id: gr.id,
-              name: gr.name,
-              desc: gr.description || '',
-              price: Number(gr.price_modifier) || 0,
-              icon: gr.emoji_or_icon || '✉️',
-            }));
+            const mappedGreetings: GreetingOpt[] = g.GREETING_SEAL.map((gr: any) => {
+              const s = `${gr.id} ${gr.name}`.toLowerCase();
+              let img = '/images/studio/cards/card-standard.jpg';
+              if (s.includes('wax') || s.includes('segel') || s.includes('lilin')) img = '/images/studio/cards/card-wax-seal.jpg';
+              else if (s.includes('gold') || s.includes('foil')) img = '/images/studio/cards/card-gold-foil.jpg';
+
+              return {
+                id: gr.id,
+                name: gr.name,
+                desc: gr.description || '',
+                price: Number(gr.price_modifier) || 0,
+                icon: gr.emoji_or_icon || '✉️',
+                imageUrl: img,
+              };
+            });
             setGreetings(mappedGreetings);
             setSelectedGreeting((prev) => mappedGreetings.find((gr) => gr.id === prev.id) || mappedGreetings[0]);
           }
 
           if (Array.isArray(g.ACCESSORY_ADDON) && g.ACCESSORY_ADDON.length > 0) {
-            const mappedAddons: AddonOpt[] = g.ACCESSORY_ADDON.map((a: any) => ({
-              id: a.id,
-              name: a.name,
-              price: Number(a.price_modifier) || 0,
-              icon: a.emoji_or_icon || '✨',
-            }));
+            const mappedAddons: AddonOpt[] = g.ACCESSORY_ADDON.map((a: any) => {
+              const s = `${a.id} ${a.name}`.toLowerCase();
+              let img = '/images/studio/addons/addon-led-fairy.jpg';
+              if (s.includes('bear') || s.includes('boneka') || s.includes('toga')) img = '/images/studio/addons/addon-bear-toga.jpg';
+              else if (s.includes('pin') || s.includes('kupu') || s.includes('bros')) img = '/images/studio/addons/addon-butterfly-pin.jpg';
+
+              return {
+                id: a.id,
+                name: a.name,
+                price: Number(a.price_modifier) || 0,
+                icon: a.emoji_or_icon || '✨',
+                imageUrl: img,
+              };
+            });
             setAddons(mappedAddons);
           }
         }
@@ -341,7 +417,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
       name: `Custom Buket ${selectedFlower.name} (${selectedColor.name})`,
       price: totalPrice,
       rawCostHpp: Math.round(totalPrice * 0.45),
-      image: selectedFlower.imageUrl || '/preview-tema-a.jpg',
+      image: bouquetImageSrc || selectedFlower.imageUrl || '/preview-tema-a.jpg',
       category: 'CUSTOM',
       description: `Buket custom ${selectedFlower.name} (${selectedColor.name}), wrapping ${selectedWrapping.name}, pita ${selectedRibbon.name}, box ${selectedPackaging.name}, kartu ${selectedGreeting.name}${activeAddonNames ? ' dan aksesori: ' + activeAddonNames : ''}.`,
       stock: 10,
@@ -564,18 +640,26 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                       key={p.id}
                       type="button"
                       onClick={() => setSelectedPackaging(p)}
-                      className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer group ${
+                      className={`p-2 rounded-2xl border text-left transition-all cursor-pointer group flex flex-col justify-between ${
                         isSelected
                           ? 'border-theme-primary bg-theme-surface-subtle shadow-xs ring-2 ring-theme-primary/20'
                           : 'border-theme-border hover:border-theme-primary/40 bg-white'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xl">{p.icon}</span>
+                      <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-2 bg-stone-100 shadow-2xs">
+                        {p.imageUrl ? (
+                          <img
+                            src={p.imageUrl}
+                            alt={p.name}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="text-2xl flex items-center justify-center w-full h-full">{p.icon}</div>
+                        )}
                         {isSelected && (
-                          <span className="w-4 h-4 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px]">
+                          <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-theme-primary text-white flex items-center justify-center text-[10px] shadow-xs">
                             ✓
-                          </span>
+                          </div>
                         )}
                       </div>
                       <div className="text-[11px] font-bold text-theme-text-main leading-tight line-clamp-1">{p.name}</div>
@@ -602,22 +686,32 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                       key={g.id}
                       type="button"
                       onClick={() => setSelectedGreeting(g)}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer group ${
+                      className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer group flex items-center gap-3 ${
                         isSelected
                           ? 'border-theme-primary bg-theme-surface-subtle shadow-xs ring-2 ring-theme-primary/20'
                           : 'border-theme-border hover:border-theme-primary/40 bg-white'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{g.icon}</span>
-                          <span className="text-xs font-bold text-theme-text-main truncate">{g.name}</span>
-                        </div>
-                        {isSelected && <Check className="w-4 h-4 text-theme-primary shrink-0" />}
+                      <div className="w-13 h-13 rounded-xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200 shadow-2xs">
+                        {g.imageUrl ? (
+                          <img
+                            src={g.imageUrl}
+                            alt={g.name}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="text-2xl flex items-center justify-center w-full h-full">{g.icon}</div>
+                        )}
                       </div>
-                      <div className="text-[10px] text-theme-text-muted">{g.desc}</div>
-                      <div className="text-[10px] text-theme-primary font-extrabold mt-1.5">
-                        {g.price === 0 ? 'Gratis' : `+Rp ${g.price.toLocaleString('id-ID')}`}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-xs font-bold text-theme-text-main truncate">{g.name}</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-theme-primary shrink-0" />}
+                        </div>
+                        <div className="text-[10px] text-theme-text-muted line-clamp-1">{g.desc}</div>
+                        <div className="text-[10px] text-theme-primary font-extrabold mt-1">
+                          {g.price === 0 ? 'Gratis' : `+Rp ${g.price.toLocaleString('id-ID')}`}
+                        </div>
                       </div>
                     </button>
                   );
@@ -638,19 +732,29 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                     <div
                       key={a.id}
                       onClick={() => toggleAddon(a.id)}
-                      className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
+                      className={`p-2.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
                         isChecked
                           ? 'border-theme-primary bg-theme-surface-subtle shadow-xs ring-1 ring-theme-primary/30'
                           : 'border-theme-border hover:border-theme-primary/40 bg-white'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-2xl">{a.icon}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200 shadow-2xs">
+                          {a.imageUrl ? (
+                            <img
+                              src={a.imageUrl}
+                              alt={a.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="text-2xl flex items-center justify-center w-full h-full">{a.icon}</div>
+                          )}
+                        </div>
                         <div>
                           <div className="text-xs font-bold text-theme-text-main flex items-center gap-1.5">
                             <span>{a.name}</span>
                             {isChecked && (
-                              <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-theme-primary text-white">
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-theme-primary text-white">
                                 Terpasang
                               </span>
                             )}
@@ -679,267 +783,173 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-theme-border shadow-lg space-y-6">
               
               <div>
-                <h3 className="text-sm font-black uppercase tracking-wider text-theme-text-main mb-3">
-                  Preview Desain Buket
-                </h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-black uppercase tracking-wider text-theme-text-main">
+                    Preview Desain Buket
+                  </h3>
+                  <span className="text-[10px] font-extrabold text-theme-primary bg-theme-surface-subtle px-2.5 py-0.5 rounded-full border border-theme-border">
+                    {selectedFlower.name} • {selectedColor.name}
+                  </span>
+                </div>
                 
-                {/* PREVIEW CANVAS DENGAN SISTEM LAYERED MODULAR CANVAS */}
-                <div
-                  className={`rounded-3xl border-2 transition-all duration-500 overflow-hidden shadow-inner flex flex-col group relative ${
-                    selectedPackaging.id === 'mika_box'
-                      ? 'border-amber-300 bg-gradient-to-b from-amber-50/40 via-stone-50 to-amber-100/30 ring-4 ring-amber-300/20'
-                      : selectedPackaging.id === 'pvc_bag'
-                      ? 'border-sky-300 bg-gradient-to-b from-sky-50/30 via-stone-50 to-slate-100/50 ring-4 ring-sky-200/20'
-                      : selectedPackaging.id === 'gold_bag'
-                      ? 'border-stone-400 bg-gradient-to-b from-stone-100 via-white to-stone-200/50 ring-4 ring-amber-300/20'
-                      : 'border-theme-border bg-gradient-to-b from-stone-50 via-white to-stone-100/60'
-                  }`}
-                >
-                  {/* TOP PACKAGING HEADER (JIKA MEMILIH KEMASAN KHUSUS) */}
-                  {selectedPackaging.id === 'mika_box' && (
-                    <div className="bg-gradient-to-r from-amber-500/15 via-amber-400/25 to-amber-500/15 border-b border-amber-300/50 px-3 py-1 text-center flex items-center justify-center gap-1.5 z-20">
-                      <Sparkles className="w-3 h-3 text-amber-600" />
-                      <span className="text-[10px] font-black text-amber-900 uppercase tracking-widest">
-                        Box Jendela Mika Eksklusif
-                      </span>
-                      <Sparkles className="w-3 h-3 text-amber-600" />
-                    </div>
-                  )}
+                {/* CLEAN CORE BOUQUET PHOTO STAGE */}
+                <div className="rounded-3xl border border-stone-200/80 bg-gradient-to-b from-stone-50 via-white to-stone-100/60 overflow-hidden shadow-inner relative group">
+                  {/* Velvet wire subtle ambient halo glow */}
+                  <div
+                    className="absolute inset-0 transition-all duration-700 pointer-events-none opacity-30 blur-2xl"
+                    style={{
+                      background: `radial-gradient(circle at 50% 45%, ${selectedColor.colorHex} 0%, rgba(255,255,255,0) 70%)`,
+                    }}
+                  />
 
-                  {selectedPackaging.id === 'pvc_bag' && (
-                    <div className="bg-gradient-to-r from-sky-500/10 via-sky-400/20 to-sky-500/10 border-b border-sky-300/40 px-3 py-1 text-center flex items-center justify-center gap-1.5 z-20">
-                      <ShoppingBag className="w-3 h-3 text-sky-600" />
-                      <span className="text-[10px] font-black text-sky-900 uppercase tracking-widest">
-                        Tas Jinjing PVC Florist Bening
-                      </span>
-                    </div>
-                  )}
+                  {/* Top Badges */}
+                  <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md border border-stone-200 text-stone-800 text-[10px] font-black tracking-wide flex items-center gap-1.5 shadow-xs">
+                    <Sparkles className="w-3 h-3 text-amber-500" />
+                    <span>100% Kawat Bulu Beludru</span>
+                  </div>
 
-                  {selectedPackaging.id === 'gold_bag' && (
-                    <div className="bg-gradient-to-r from-stone-900/10 via-amber-600/15 to-stone-900/10 border-b border-amber-400/40 px-3 py-1 text-center flex items-center justify-center gap-1.5 z-20">
-                      <Package className="w-3 h-3 text-amber-700" />
-                      <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest">
-                        Paper Bag Mewah Lis Gold
-                      </span>
-                    </div>
-                  )}
+                  <div className="absolute top-3 right-3 z-20 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md border border-stone-200 text-stone-700 text-[10px] font-bold flex items-center gap-1.5 shadow-xs">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0"
+                      style={{ backgroundColor: selectedColor.colorHex }}
+                    />
+                    <span>{selectedColor.name}</span>
+                  </div>
 
-                  {/* THE INTERACTIVE MULTI-LAYER CANVAS STAGE */}
-                  <div className="relative w-full h-80 sm:h-96 flex items-center justify-center p-3 overflow-hidden select-none">
-                    {/* LAYER 0: VELVET COLOR AMBIENT HALO */}
-                    <div
-                      className="absolute inset-0 transition-all duration-700 pointer-events-none opacity-40 blur-2xl"
-                      style={{
-                        background: `radial-gradient(circle at 50% 45%, ${selectedColor.colorHex} 0%, rgba(255,255,255,0) 70%)`,
+                  {/* HIGH-RES BOUQUET COMBINATION PHOTOGRAPH */}
+                  <div className="relative w-full h-80 sm:h-96 flex items-center justify-center p-4 overflow-hidden select-none">
+                    <img
+                      key={bouquetImageSrc}
+                      src={bouquetImageSrc}
+                      alt={`Preview Desain ${selectedFlower.name}`}
+                      className="w-full h-full object-contain filter drop-shadow-xl transition-all duration-500 group-hover:scale-102"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (selectedFlower.imageUrl && target.src !== selectedFlower.imageUrl) {
+                          target.src = selectedFlower.imageUrl;
+                        }
                       }}
                     />
-
-                    {/* LAYER 1: CELLOPHANE WRAPPING WINGS & BACKDROP */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-500">
-                      {selectedWrapping.id === 'korean_pink' && (
-                        <>
-                          <div className="w-56 sm:w-64 h-64 sm:h-76 rounded-[40px] rotate-3 bg-gradient-to-tr from-pink-300/40 via-rose-100/30 to-pink-400/40 border border-pink-300/50 shadow-inner scale-105 transition-all duration-500" />
-                          <div className="w-56 sm:w-64 h-64 sm:h-76 rounded-[40px] -rotate-3 bg-gradient-to-tl from-rose-200/30 via-pink-50/20 to-rose-300/30 border border-rose-300/40 shadow-inner scale-105 transition-all duration-500" />
-                        </>
-                      )}
-                      {selectedWrapping.id === 'lilac_white' && (
-                        <>
-                          <div className="w-56 sm:w-64 h-64 sm:h-76 rounded-[40px] rotate-3 bg-gradient-to-tr from-purple-300/40 via-indigo-50/30 to-purple-400/40 border border-purple-300/50 shadow-inner scale-105 transition-all duration-500" />
-                          <div className="w-56 sm:w-64 h-64 sm:h-76 rounded-[40px] -rotate-3 bg-gradient-to-tl from-indigo-200/30 via-white/40 to-purple-300/30 border border-purple-200/40 shadow-inner scale-105 transition-all duration-500" />
-                        </>
-                      )}
-                      {selectedWrapping.id === 'clean_oat' && (
-                        <>
-                          <div className="w-56 sm:w-64 h-64 sm:h-76 rounded-[40px] rotate-3 bg-gradient-to-tr from-amber-200/40 via-stone-100/30 to-orange-200/40 border border-amber-300/50 shadow-inner scale-105 transition-all duration-500" />
-                          <div className="w-56 sm:w-64 h-64 sm:h-76 rounded-[40px] -rotate-3 bg-gradient-to-tl from-stone-200/30 via-orange-50/20 to-amber-300/30 border border-amber-200/40 shadow-inner scale-105 transition-all duration-500" />
-                        </>
-                      )}
-                    </div>
-
-                    {/* LAYER 2: CORE BOUQUET PHOTO DENGAN TINT RONA BELUDRU */}
-                    <div className="relative w-full h-full flex items-center justify-center z-10 transition-all duration-500">
-                      {selectedFlower.imageUrl ? (
-                        <div className="relative w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                          <img
-                            src={selectedFlower.imageUrl}
-                            alt={`Preview Desain ${selectedFlower.name}`}
-                            className="w-full h-full object-contain filter drop-shadow-2xl transition-all duration-500"
-                          />
-                          {/* Subtle color tone overlay to reflect selected velvet wire color */}
-                          <div
-                            className="absolute inset-0 mix-blend-color opacity-25 pointer-events-none rounded-2xl transition-colors duration-500"
-                            style={{ backgroundColor: selectedColor.colorHex }}
-                          />
-                        </div>
-                      ) : (
-                        <span className="animate-float-hero text-7xl inline-block drop-shadow-md">
-                          {selectedFlower.emoji}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* LAYER 3: ATELIER RIBBON KNOT & STREAMERS DI PINGGANG BUKET */}
-                    <div className="absolute bottom-12 sm:bottom-14 inset-x-0 flex flex-col items-center justify-center z-20 pointer-events-none transition-all duration-500">
-                      <div
-                        className={`px-3 py-1 rounded-full text-[10px] font-black flex items-center gap-1.5 shadow-md border transition-all duration-300 ${
-                          selectedRibbon.id === 'satin'
-                            ? 'bg-gradient-to-r from-rose-500 via-pink-400 to-rose-500 text-white border-pink-300 shadow-pink-500/25 ring-2 ring-pink-200'
-                            : selectedRibbon.id === 'organza'
-                            ? 'bg-white/90 backdrop-blur-md text-pink-700 border-pink-300 shadow-pink-300/30 ring-2 ring-pink-100'
-                            : selectedRibbon.id === 'chiffon'
-                            ? 'bg-gradient-to-r from-purple-400 via-pink-300 to-purple-400 text-white border-purple-200 shadow-purple-500/25'
-                            : 'bg-amber-800 text-amber-100 border-amber-900/60 shadow-amber-900/30'
-                        }`}
-                      >
-                        <span>{selectedRibbon.emoji}</span>
-                        <span>{selectedRibbon.name}</span>
-                      </div>
-                      {/* Cascading Ribbon Tails */}
-                      <div className="flex items-center gap-3.5 -mt-0.5 opacity-90">
-                        <div
-                          className={`w-1.5 h-6 rounded-b-full -rotate-12 transition-all duration-300 ${
-                            selectedRibbon.id === 'satin'
-                              ? 'bg-pink-500'
-                              : selectedRibbon.id === 'organza'
-                              ? 'bg-pink-300/80 border border-pink-400/50'
-                              : selectedRibbon.id === 'chiffon'
-                              ? 'bg-purple-400'
-                              : 'bg-amber-800'
-                          }`}
-                        />
-                        <div
-                          className={`w-1.5 h-7 rounded-b-full rotate-12 transition-all duration-300 ${
-                            selectedRibbon.id === 'satin'
-                              ? 'bg-rose-500'
-                              : selectedRibbon.id === 'organza'
-                              ? 'bg-pink-300/80 border border-pink-400/50'
-                              : selectedRibbon.id === 'chiffon'
-                              ? 'bg-pink-400'
-                              : 'bg-amber-800'
-                          }`}
-                        />
-                      </div>
-                    </div>
-
-                    {/* LAYER 4: UPSELLING ACCESSORIES OVERLAYS */}
-                    {/* A. LED FAIRY LIGHT (WARM GLOW PARTICLES) */}
-                    {selectedAddons.includes('led') && (
-                      <div className="absolute inset-0 pointer-events-none z-15 overflow-hidden transition-opacity duration-500">
-                        <div className="absolute inset-0 bg-radial from-amber-400/15 via-yellow-200/5 to-transparent animate-pulse pointer-events-none" />
-                        <div className="absolute top-1/4 left-1/3 w-2.5 h-2.5 rounded-full bg-amber-300 shadow-[0_0_12px_#fbbf24] animate-ping" />
-                        <div className="absolute top-1/3 right-1/3 w-2 h-2 rounded-full bg-yellow-200 shadow-[0_0_10px_#fef08a] animate-pulse" />
-                        <div
-                          className="absolute top-1/2 left-1/4 w-2 h-2 rounded-full bg-amber-200 shadow-[0_0_10px_#fde68a] animate-ping"
-                          style={{ animationDelay: '0.4s' }}
-                        />
-                        <div
-                          className="absolute top-2/5 right-1/4 w-2.5 h-2.5 rounded-full bg-yellow-300 shadow-[0_0_12px_#facc15] animate-pulse"
-                          style={{ animationDelay: '0.7s' }}
-                        />
-                        <div
-                          className="absolute top-1/2 right-2/5 w-2 h-2 rounded-full bg-amber-300 shadow-[0_0_8px_#f59e0b] animate-ping"
-                          style={{ animationDelay: '1s' }}
-                        />
-                        <div
-                          className="absolute top-1/3 left-1/2 w-2 h-2 rounded-full bg-yellow-100 shadow-[0_0_10px_#fef9c3] animate-pulse"
-                          style={{ animationDelay: '0.2s' }}
-                        />
-                        <div className="absolute top-10 left-3 px-2 py-0.5 rounded-full bg-amber-500/90 backdrop-blur-xs text-white text-[9px] font-black flex items-center gap-1 shadow-sm animate-pulse z-20">
-                          <span>💡 LED Fairy Lights ON</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* B. BONEKA TOGA WISUDA MINI */}
-                    {selectedAddons.includes('bear') && (
-                      <div className="absolute top-7 right-4 z-25 transition-all duration-300 pointer-events-none">
-                        <div className="bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-2xl border-2 border-stone-800/20 shadow-lg flex items-center gap-1.5 ring-2 ring-amber-400/40">
-                          <span className="text-xl">🧸</span>
-                          <div className="text-left">
-                            <div className="text-[10px] font-black text-stone-900 leading-tight">Boneka Toga</div>
-                            <div className="text-[8px] font-bold text-amber-700 leading-none">Mini 10cm</div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* C. PIN BROS KUPU-KUPU KRISTAL */}
-                    {selectedAddons.includes('pin') && (
-                      <div className="absolute top-20 left-4 z-25 transition-all duration-300 pointer-events-none">
-                        <div className="bg-white/95 backdrop-blur-md px-2 py-1 rounded-2xl border border-sky-300 shadow-md flex items-center gap-1">
-                          <span className="text-base">🦋</span>
-                          <span className="text-[9px] font-black text-sky-800">Pin Kristal</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* LAYER 5: INTERACTIVE GREETING CARD / WAX SEAL TAG (SUDUT BAWAH) */}
-                    <div className="absolute bottom-2.5 right-2.5 z-25 transition-all duration-300 pointer-events-none">
-                      {selectedGreeting.id === 'wax_seal' && (
-                        <div className="bg-amber-50/95 backdrop-blur-md border border-amber-300/80 rounded-xl p-1.5 px-2 shadow-lg flex items-center gap-1.5 max-w-[170px] ring-1 ring-amber-400/30">
-                          <div className="w-5 h-5 rounded-full bg-rose-700 text-white flex items-center justify-center text-[10px] shadow-xs shrink-0 font-bold border border-rose-900">
-                            ★
-                          </div>
-                          <div className="text-left min-w-0">
-                            <div className="text-[9px] font-black text-amber-950 truncate">Vintage Wax Seal</div>
-                            <div className="text-[8px] text-amber-700 font-semibold truncate">Segel Lilin Merah</div>
-                          </div>
-                        </div>
-                      )}
-                      {selectedGreeting.id === 'gold_foil' && (
-                        <div className="bg-stone-900/90 backdrop-blur-md border-2 border-amber-400 rounded-xl p-1.5 px-2 shadow-lg flex items-center gap-1.5 max-w-[170px] ring-1 ring-amber-300/50">
-                          <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0 animate-pulse" />
-                          <div className="text-left min-w-0">
-                            <div className="text-[9px] font-black text-amber-300 truncate">Hotprint Gold Foil</div>
-                            <div className="text-[8px] text-stone-300 font-medium truncate">Aksen Emas Mewah</div>
-                          </div>
-                        </div>
-                      )}
-                      {selectedGreeting.id === 'print_standard' && (
-                        <div className="bg-white/95 backdrop-blur-md border border-stone-200 rounded-xl p-1 px-2 shadow-sm flex items-center gap-1.5 max-w-[150px]">
-                          <Mail className="w-3 h-3 text-theme-primary shrink-0" />
-                          <span className="text-[9px] font-bold text-stone-700 truncate">Kartu Standar Cetak</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* TOP BADGES */}
-                    <div className="absolute top-2.5 left-2.5 z-20 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md border border-stone-200 text-stone-800 text-[10px] font-black tracking-wide flex items-center gap-1.5 shadow-xs">
-                      <Sparkles className="w-3 h-3 text-amber-500" />
-                      <span>100% Kawat Bulu Beludru</span>
-                    </div>
-
-                    <div className="absolute top-2.5 right-2.5 z-20 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md border border-stone-200 text-stone-700 text-[10px] font-bold flex items-center gap-1.5 shadow-xs">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0"
-                        style={{ backgroundColor: selectedColor.colorHex }}
-                      />
-                      <span>{selectedColor.name}</span>
-                    </div>
                   </div>
 
                   {/* INFO BAR BAWAH CANVAS */}
-                  <div className="p-3.5 bg-white border-t border-theme-border text-center space-y-1.5">
-                    <div className="text-xs font-black text-theme-text-main">
-                      {selectedFlower.name} • {selectedColor.name}
-                    </div>
-                    <div className="text-[10px] text-theme-primary font-semibold">
-                      Wrapping: {selectedWrapping.name}
-                    </div>
-
-                    {/* DETAIL BADGES */}
-                    <div className="flex flex-wrap items-center gap-1.5 justify-center pt-1 max-w-xs mx-auto">
-                      <span className="px-2 py-0.5 rounded-full bg-stone-50 border border-stone-200 text-[10px] font-bold text-stone-700 flex items-center gap-1 shadow-2xs">
-                        <span>{selectedRibbon.emoji}</span> {selectedRibbon.name}
+                  <div className="p-3 bg-stone-50/90 border-t border-stone-200/80 text-center">
+                    <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] font-bold text-stone-700">
+                      <span className="flex items-center gap-1">
+                        <span className="text-stone-400 font-semibold">Wrapping:</span> {selectedWrapping.name}
                       </span>
-                      <span className="px-2 py-0.5 rounded-full bg-stone-50 border border-stone-200 text-[10px] font-bold text-stone-700 flex items-center gap-1 shadow-2xs">
-                        <span>{selectedPackaging.icon}</span> {selectedPackaging.name}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full bg-stone-50 border border-stone-200 text-[10px] font-bold text-stone-700 flex items-center gap-1 shadow-2xs">
-                        <span>{selectedGreeting.icon}</span> {selectedGreeting.name}
+                      <span className="text-stone-300">•</span>
+                      <span className="flex items-center gap-1">
+                        <span className="text-stone-400 font-semibold">Pita:</span> {selectedRibbon.emoji} {selectedRibbon.name}
                       </span>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* KELENGKAPAN PAKET YANG DIPILIH (PACKAGE BUNDLE VISUALIZER) */}
+              <div className="space-y-3 pt-2 border-t border-stone-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Gift className="w-4 h-4 text-theme-primary" />
+                    <h4 className="text-xs font-black uppercase tracking-wider text-theme-text-main">
+                      Kelengkapan Paket yang Dipilih
+                    </h4>
+                  </div>
+                  <span className="text-[10px] font-bold text-stone-500">
+                    Poin 5 – 7
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* 1. Kemasan Box/Bag */}
+                  <div className="p-2.5 rounded-2xl bg-stone-50 border border-stone-200/80 flex items-center gap-2.5">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white border border-stone-200 shadow-2xs">
+                      {selectedPackaging.imageUrl ? (
+                        <img
+                          src={selectedPackaging.imageUrl}
+                          alt={selectedPackaging.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-xl flex items-center justify-center w-full h-full">{selectedPackaging.icon}</div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[9px] font-semibold text-stone-500 uppercase tracking-wider">Kemasan Delivery</div>
+                      <div className="text-xs font-bold text-stone-800 truncate">{selectedPackaging.name}</div>
+                      <div className="text-[10px] text-theme-primary font-black">
+                        {selectedPackaging.price === 0 ? 'Termasuk (Standar)' : `+Rp ${selectedPackaging.price.toLocaleString('id-ID')}`}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Kartu Ucapan & Seal */}
+                  <div className="p-2.5 rounded-2xl bg-stone-50 border border-stone-200/80 flex items-center gap-2.5">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white border border-stone-200 shadow-2xs">
+                      {selectedGreeting.imageUrl ? (
+                        <img
+                          src={selectedGreeting.imageUrl}
+                          alt={selectedGreeting.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-xl flex items-center justify-center w-full h-full">{selectedGreeting.icon}</div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[9px] font-semibold text-stone-500 uppercase tracking-wider">Kartu & Segel</div>
+                      <div className="text-xs font-bold text-stone-800 truncate">{selectedGreeting.name}</div>
+                      <div className="text-[10px] text-theme-primary font-black">
+                        {selectedGreeting.price === 0 ? 'Gratis' : `+Rp ${selectedGreeting.price.toLocaleString('id-ID')}`}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Aksesori Tambahan (Add-ons Visualizer) */}
+                <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200/80">
+                  <div className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>Aksesori Tambahan ({selectedAddons.length})</span>
+                    <span className="text-theme-primary font-bold">
+                      {addonsTotal === 0 ? 'Tanpa Aksesori' : `+Rp ${addonsTotal.toLocaleString('id-ID')}`}
+                    </span>
+                  </div>
+
+                  {selectedAddons.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {selectedAddons.map((addonId) => {
+                        const found = addons.find((a) => a.id === addonId);
+                        if (!found) return null;
+                        return (
+                          <div
+                            key={found.id}
+                            className="p-1.5 px-2 rounded-xl bg-white border border-stone-200/80 flex items-center gap-2 shadow-2xs"
+                          >
+                            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-stone-50 border border-stone-100">
+                              {found.imageUrl ? (
+                                <img
+                                  src={found.imageUrl}
+                                  alt={found.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="text-sm flex items-center justify-center w-full h-full">{found.icon}</div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-[11px] font-bold text-stone-800 truncate">{found.name}</div>
+                              <div className="text-[9px] text-emerald-600 font-extrabold">+Rp {found.price.toLocaleString('id-ID')}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="py-2 text-center text-[11px] text-stone-400 font-medium">
+                      Belum ada aksesori tambahan dipilih. Centang di Langkah 7 jika berminat.
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -151,6 +151,13 @@
       "prd_sections": ["Seksi 2", "Seksi 15"],
       "status": "VERIFIED_PASS",
       "verified_at": "2026-10-06"
+    },
+    {
+      "id": "M22_STUDIO_CLEAN_CORE_AND_BUNDLE_VISUALIZER",
+      "title": "Pemisahan Estetika Studio Kustomisasi: Foto Buket Utama Bersih Fotorealistis (Clean Core Bouquet Photograph) dengan 448 Variasi Kombinasi Nyata dan Visualizer Kelengkapan Paket (Kemasan, Kartu Ucapan & Aksesori) Berfoto Objek Mandiri",
+      "prd_sections": ["Seksi 2", "Seksi 15"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-10-06"
     }
   ],
   "established_constraints": [
@@ -185,7 +192,7 @@
     "Controlled Form Input & DB Alias Integrity: Seluruh input formulir admin (StoreSettingsView) wajib memiliki string fallback aman ('') baik pada initial state, useEffect sync, maupun props value JSX untuk mencegah transisi ilegal uncontrolled-to-controlled React; serta mendukung alias dual-naming (official_whatsapp vs wa_number, daily_po_limit vs daily_quota) pada backend Express dan frontend Zustand agar nilai tersimpan permanen di database.",
     "Artisanal Craft Suite & Brand Identity Integrity: Seluruh icon etalase, filter produk, navbar, dan footer dilarang menggunakan generic AI slop (seperti kilat petir Zap pada Ready Stock, cangkir kopi Coffee pada vas pot bunga, atau sparkle bintang pada filter umum); seluruhnya wajib menggunakan Chenille Artisanal Craft Suite berbasis SVG kawat bulu buatan tangan serta mendukung mode logo ganda: upload kustom gambar oleh admin (Supabase Storage) atau lambang vektor adaptif tema (Tema A: Segel Tulip Kawat Bulu Korea, Tema B: Monogram Crest CA Gold & Deep Wine, Tema C: Maskot Fluffy Daisy Pop).",
     "Photorealistic Craft Staging & Approval Mandate: Seluruh opsi kustomisasi studio dan testimoni lookbook wajib menggunakan aset foto fisik kerajinan kawat bulu beresolusi tinggi, di-staging secara lokal terlebih dahulu untuk inspeksi visual pengguna di http://localhost:3000, dan HANYA diunggah ke Supabase Storage / disinkronkan ke PostgreSQL setelah persetujuan eksplisit pengguna.",
-    "Interactive Layered Modular Canvas: Preview buket kustomisasi studio di-render dinamis menggunakan 6 layer komposit reaktif tanpa beban penyimpanan 32.000 kombinasi gambar terpisah: Layer 0 (Velvet Ambient Halo), Layer 1 (Cellophane Wings), Layer 2 (Core Flower Tint), Layer 3 (Ribbon Knot & Streamers), Layer 4 (Fairy LED Glow / Toga Bear / Crystal Pin), Layer 5 (Wax Seal / Gold Foil Tag), dan Layer 6 (Packaging Window Frame)."
+    "Clean Core Bouquet & Package Bundle Separation: Studio kustomisasi memisahkan preview buket utama (Bunga, Nuansa Kawat Beludru, Kertas Wrapping, Pita Ribbon) sebagai foto buket utuh yang bersih dan elegan (448 variasi kombinasi foto resolusi tinggi), dengan panel visualizer kelengkapan paket (Kemasan delivery, Kartu ucapan & segel, serta Aksesori tambahan) di bawah kanvas berfoto objek fisik mandiri tanpa stiker/sayap CSS melayang yang bertabrakan di atas buket."
   ],
   "next_recommended_actions": [
     "Prioritas 1: SELESAI (Form ulasan bintang 1-5, upload foto buket, API /api/v1/reviews, & sync dinamis LookbookSection)",
@@ -202,8 +209,8 @@
     "Store Settings Uncontrolled Input & WhatsApp Alias Persistence: SELESAI & TERVERIFIKASI (Guaranteed String Fallbacks, Dual-Naming official_whatsapp/wa_number, 0 Compilation Errors, 84 Unit Tests Passing)",
     "Upload Logo Kustom Admin & Artisanal Craft Icons Suite: SELESAI & TERVERIFIKASI (Zero AI Slop Icons, Chenille Craft SVG Suite, Dual-Mode Logo Picker di StoreSettingsView, 0 TypeScript Errors, 84 Unit Tests Passing)",
     "Staging Aset Foto Kerajinan Kawat Bulu Beresolusi Tinggi & Eliminasi Total AI Slop: SELESAI DITAMPILKAN DI STOREFRONT & SIAP DITINJAU PENGGUNA (7 Opsi Bunga Studio Berfoto, Live Canvas Preview Realistis, 3 Foto Testimoni Lookbook, Chip Filter Ready Stock Bebas Petir, 0 Error TypeScript, 84 Tests Lolos)",
-    "Sistem Kanvas Komposit Berlapis (Layered Modular Canvas) Studio: SELESAI & AKTIF (6 Layer Reaktif: Nuansa Warna, Sayap Wrapping, Simpul Pita, Aksesori LED Glow & Boneka Toga, Kartu Wax Seal, dan Bingkai Box Mika/PVC, 0 Error TypeScript, 84 Tests Lolos)"
+    "Pemisahan Visual Buket Utama & Package Bundle Visualizer: SELESAI & AKTIF DI STOREFRONT (Foto Buket Bersih dengan 448 Variasi Kombinasi Nyata, 10 Foto Objek Mandiri untuk Kemasan/Kartu/Addons, 0 Error TypeScript, 84 Unit Tests Lolos)"
   ],
-  "last_updated": "2026-10-06T20:34:00+07:00"
+  "last_updated": "2026-10-06T21:20:00+07:00"
 }
 
