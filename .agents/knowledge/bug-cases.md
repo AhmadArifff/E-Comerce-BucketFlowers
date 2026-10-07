@@ -152,4 +152,26 @@ Daftar kendala masa lalu dan solusi yang telah diverifikasi pada sistem E-Commer
   2. **Dual-Naming Compatibility**: Di `AdminViews.tsx`, baca `s.official_whatsapp || s.wa_number`. Di `admin.routes.ts`, `GET /settings/all` menyertakan alias `wa_number` dan `daily_quota`, serta `PATCH /settings` membaca `official_whatsapp = req.body.official_whatsapp || req.body.wa_number` dan `daily_po_limit = req.body.daily_po_limit ?? req.body.daily_quota`.
   3. Diverifikasi dengan `npm run type-check` (0 error) dan `npm run test:unit` (84 test lolos).
 
+---
+
+## 11. Frontend Studio Assets & Cache: Swatch Kertas Wrapping Lipatan Sudut Dual-Tone, Buket Tulip Tegak Lurus, Lavender Chenille Otentik, & Universal Cache Buster v4
+- **Gejala**:
+  1. Di Step 3 Studio Kustomisasi, thumbnail opsi wrapping kertas menampilkan kartu grafis abstrak warna solid tanpa tekstur kertas florist asli.
+  2. Thumbnail bunga tulip berpose miring 45 derajat (berbaring di atas meja) sehingga inkonsisten dengan patokan buket matahari yang berdiri tegak.
+  3. Thumbnail opsi lavender sebelumnya menggunakan foto tulip yang diwarnai ungu (bukan kawat bulu pipa chenille asli).
+  4. Browser pengguna tidak merefleksikan pembaruan gambar karena HTTP cache browser menahan file static Next.js public tanpa versioning query parameter.
+- **Akar Masalah**:
+  1. Aset wrapping sebelumnya di-generate sebagai geometric cards, bukan foto lembaran datar persegi beralas putih dengan lipatan sudut kanan atas (dual-tone) sesuai foto referensi pengguna.
+  2. Gambar dasar tulip belum dirotasi ke posisi vertikal 90 derajat simetris.
+  3. Aset lavender belum bersumber dari kerajinan tangan kawat bulu chenille asli.
+  4. URL gambar statis di `CustomStudioSection.tsx` tidak memiliki parameter cache-busting query string.
+- **Solusi**:
+  1. **Dual-Tone Folded Corner Wrapping Swatches**: Menghasilkan 3 foto swatch kertas florist asli dengan lembaran flat square beralas putih bersih dan lipatan segitiga di sudut atas-kanan yang memperlihatkan warna luar dan dalam (`wrapping-korean-pink.jpg`, `wrapping-lilac-velvet.jpg`, `wrapping-clean-oat.jpg`).
+  2. **Upright Tulip Base**: Merotasi `flower-tulip-pastel.jpg` sebesar -32 derajat dan crop tengah 800x800 sehingga berdiri tegak lurus sempurna menghadap depan dengan pita di bawah dan kelopak di atas, bebas bingkai.
+  3. **Authentic Chenille Lavender Base**: Mengintegrasikan foto fisik kawat bulu pipa chenille lavender asli dengan tekstur berbulu lembut warna ungu/lilac dan tangkai hijau (`flower-lavender-lilac.jpg`).
+  4. **Regenerasi 336 Kombinasi Buket**: Memperbarui seluruh 336 foto kombinasi buket studio di `apps/web/public/images/studio/combinations/` dengan base tulip tegak dan lavender otentik tanpa watermark teks.
+  5. **Universal Cache Buster v4**: Menetapkan `ASSET_VERSION = 'v=4'` dan menyematkan `?${ASSET_VERSION}` pada seluruh opsi bunga, wrapping, kemasan, kartu ucapan, aksesori, serta kombinasi kanvas di `CustomStudioSection.tsx`.
+  6. Diverifikasi dengan `npm run type-check` (0 error di web dan api) serta `npm run test:unit` (84/84 tests pass).
+
+
 

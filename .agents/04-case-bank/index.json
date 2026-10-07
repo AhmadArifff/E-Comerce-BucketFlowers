@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "E-Comerce-BucketFlowers",
-  "total_cases": 10,
+  "total_cases": 11,
   "cases": [
     {
       "id": "case-20261002-postgresql-enum-type-deduction",
@@ -82,6 +82,14 @@
       "severity": "MEDIUM",
       "status": "VERIFIED",
       "file": "cases/case-20261004-uncontrolled-input-admin-store-settings.yaml"
+    },
+    {
+      "id": "case-20261007-studio-folded-wrapping-upright-chenille",
+      "title": "Resolusi Swatch Kertas Wrapping Lipatan Sudut Dual-Tone, Buket Tulip Tegak Lurus, Lavender Chenille Otentik, & Cache-Buster v4",
+      "domain": "frontend-studio-asset-integrity",
+      "severity": "HIGH",
+      "status": "VERIFIED",
+      "file": "cases/case-20261007-studio-folded-wrapping-upright-chenille.yaml"
     }
   ]
 }

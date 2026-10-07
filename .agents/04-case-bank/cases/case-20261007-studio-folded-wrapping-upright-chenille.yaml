@@ -1,0 +1,25 @@
+id: "case-20261007-studio-folded-wrapping-upright-chenille"
+title: "Resolusi Swatch Kertas Wrapping Lipatan Sudut Dual-Tone, Buket Tulip Tegak Lurus, Lavender Chenille Otentik, & Cache-Buster v4"
+domain: "frontend-studio-asset-integrity"
+severity: "HIGH"
+status: "VERIFIED"
+symptoms:
+  - "Thumbnail opsi wrapping kertas di Step 3 studio menampilkan kartu grafis abstrak/aneh, bukan lembaran fisik kertas florist berlipat sudut seperti patokan foto pengguna."
+  - "Thumbnail bunga tulip miring 45 derajat (lying on table) berbeda dengan patokan pose tegak buket bunga matahari."
+  - "Thumbnail lavender sebelumnya menggunakan foto tulip yang diwarnai ungu, bukan kawat bulu chenille asli dengan bulu halus dan tangkai hijau."
+  - "Browser pengguna tidak merefleksikan pembaruan gambar karena HTTP cache browser menahan aset gambar static Next.js public."
+root_cause:
+  - "Aset awal wrapping dibuat sebagai graphic card alih-alih foto fisik lembaran flat florist paper berlipat segitiga di sudut atas-kanan."
+  - "Base gambar tulip diambil dari foto berbaring 45 derajat."
+  - "Aset lavender belum memiliki base foto fisik kawat bulu pipa chenille asli."
+  - "URL aset di CustomStudioSection.tsx tidak memiliki parameter cache-busting dinamis saat diperbarui."
+solution:
+  - "Menghasilkan 3 foto swatch kertas wrapping dengan komposisi lembaran flat square beralas putih dengan lipatan sudut kanan atas (dual-tone) persis foto patokan."
+  - "Memutar base tulip -32 derajat dan crop tengah 800x800 sehingga berdiri tegak lurus sempurna (upright front-facing) simetris."
+  - "Mengekstrak foto kerajinan bunga kawat bulu lavender asli (fuzzy chenille pipe cleaner lavender spires) tanpa watermark atau teks."
+  - "Meregenerasi seluruh 336 kombinasi buket studio menggunakan base tegak dan lavender asli."
+  - "Menambahkan konstanta ASSET_VERSION = 'v=4' ke seluruh referensi aset di CustomStudioSection.tsx."
+verification:
+  - "npm run type-check di apps/web lolos dengan 0 error."
+  - "npm run type-check di apps/api lolos dengan 0 error."
+  - "npm run test:unit di apps/api lolos 84/84 tests (100% pass)."

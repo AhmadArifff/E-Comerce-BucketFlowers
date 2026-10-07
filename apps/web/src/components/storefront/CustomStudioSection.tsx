@@ -63,14 +63,16 @@ interface GreetingOpt {
   imageUrl?: string;
 }
 
+const ASSET_VERSION = 'v=4';
+
 const FLOWERS: FlowerOpt[] = [
-  { id: 'tulip', name: 'Tulip Pastel Korea', emoji: '🌷', basePrice: 120000, imageUrl: '/images/studio/flower-tulip-pastel.jpg' },
-  { id: 'rose', name: 'Mawar Velvet Merah', emoji: '🌹', basePrice: 130000, imageUrl: '/images/studio/flower-rose-velvet.jpg' },
-  { id: 'sunflower', name: 'Bunga Matahari Wisuda', emoji: '🌻', basePrice: 115000, imageUrl: '/images/studio/flower-sunflower-bear.jpg' },
-  { id: 'lavender', name: 'Lavender Lilac Serene', emoji: '🪻', basePrice: 125000, imageUrl: '/images/studio/flower-lavender-lilac.jpg' },
-  { id: 'karakter', name: 'Karakter Wisuda Toga', emoji: '🧸', basePrice: 140000, imageUrl: '/images/studio/flower-karakter-wisuda.jpg' },
-  { id: 'minipot', name: 'Mini Pot Daisy Meja', emoji: '🪴', basePrice: 65000, imageUrl: '/images/studio/flower-mini-pot.jpg' },
-  { id: 'midnight', name: 'Midnight Rose Deluxe', emoji: '🥀', basePrice: 165000, imageUrl: '/images/studio/flower-midnight-romance.jpg' },
+  { id: 'tulip', name: 'Tulip Pastel Korea', emoji: '🌷', basePrice: 120000, imageUrl: `/images/studio/flower-tulip-pastel.jpg?${ASSET_VERSION}` },
+  { id: 'rose', name: 'Mawar Velvet Merah', emoji: '🌹', basePrice: 130000, imageUrl: `/images/studio/flower-rose-velvet.jpg?${ASSET_VERSION}` },
+  { id: 'sunflower', name: 'Bunga Matahari Wisuda', emoji: '🌻', basePrice: 115000, imageUrl: `/images/studio/flower-sunflower-bear.jpg?${ASSET_VERSION}` },
+  { id: 'lavender', name: 'Lavender Lilac Serene', emoji: '🪻', basePrice: 125000, imageUrl: `/images/studio/flower-lavender-lilac.jpg?${ASSET_VERSION}` },
+  { id: 'karakter', name: 'Karakter Wisuda Toga', emoji: '🧸', basePrice: 140000, imageUrl: `/images/studio/flower-karakter-wisuda.jpg?${ASSET_VERSION}` },
+  { id: 'minipot', name: 'Mini Pot Daisy Meja', emoji: '🪴', basePrice: 65000, imageUrl: `/images/studio/flower-mini-pot.jpg?${ASSET_VERSION}` },
+  { id: 'midnight', name: 'Midnight Rose Deluxe', emoji: '🥀', basePrice: 165000, imageUrl: `/images/studio/flower-midnight-romance.jpg?${ASSET_VERSION}` },
 ];
 
 const COLORS: ColorOpt[] = [
@@ -81,9 +83,9 @@ const COLORS: ColorOpt[] = [
 ];
 
 const WRAPPINGS: WrappingOpt[] = [
-  { id: 'korean_pink', name: 'Korean Two-Tone Pink', desc: 'Cellophane matte lembut', imageUrl: '/images/studio/wrapping/wrapping-korean-pink.jpg' },
-  { id: 'lilac_white', name: 'Lilac & White Velvet', desc: 'Aksen beludru elegan', imageUrl: '/images/studio/wrapping/wrapping-lilac-velvet.jpg' },
-  { id: 'clean_oat', name: 'Minimalist Clean Oat', desc: 'Nuansa earth tone aesthetic', imageUrl: '/images/studio/wrapping/wrapping-clean-oat.jpg' },
+  { id: 'korean_pink', name: 'Korean Two-Tone Pink', desc: 'Cellophane matte lembut dua sisi', imageUrl: `/images/studio/wrapping/wrapping-korean-pink.jpg?${ASSET_VERSION}` },
+  { id: 'lilac_white', name: 'Lilac & White Velvet', desc: 'Aksen beludru elegan dua sisi', imageUrl: `/images/studio/wrapping/wrapping-lilac-velvet.jpg?${ASSET_VERSION}` },
+  { id: 'clean_oat', name: 'Minimalist Clean Oat', desc: 'Nuansa earth tone aesthetic dua sisi', imageUrl: `/images/studio/wrapping/wrapping-clean-oat.jpg?${ASSET_VERSION}` },
 ];
 
 const RIBBONS: RibbonOpt[] = [
@@ -94,22 +96,22 @@ const RIBBONS: RibbonOpt[] = [
 ];
 
 const PACKAGINGS: PackagingOpt[] = [
-  { id: 'standard', name: 'Standard Protective Sleeve', desc: 'Plastik florist tebal bening', price: 0, icon: '📦', imageUrl: '/images/studio/packaging/package-standard.jpg' },
-  { id: 'mika_box', name: 'Box Jendela Mika Eksklusif', desc: 'Kotak kardus kaku mewah lis gold', price: 12000, icon: '🎁', imageUrl: '/images/studio/packaging/package-mika-box.jpg' },
-  { id: 'pvc_bag', name: 'Tas Jinjing PVC Bening', desc: 'Tas aesthetic praktis wisuda', price: 8000, icon: '🛍️', imageUrl: '/images/studio/packaging/package-pvc-bag.jpg' },
-  { id: 'gold_bag', name: 'Paper Bag Mewah Lis Gold', desc: 'Tas kertas tebal premium', price: 6000, icon: '👜', imageUrl: '/images/studio/packaging/package-gold-bag.jpg' },
+  { id: 'standard', name: 'Standard Protective Sleeve', desc: 'Plastik florist tebal bening', price: 0, icon: '📦', imageUrl: `/images/studio/packaging/package-standard.jpg?${ASSET_VERSION}` },
+  { id: 'mika_box', name: 'Box Jendela Mika Eksklusif', desc: 'Kotak kardus kaku mewah lis gold', price: 12000, icon: '🎁', imageUrl: `/images/studio/packaging/package-mika-box.jpg?${ASSET_VERSION}` },
+  { id: 'pvc_bag', name: 'Tas Jinjing PVC Bening', desc: 'Tas aesthetic praktis wisuda', price: 8000, icon: '🛍️', imageUrl: `/images/studio/packaging/package-pvc-bag.jpg?${ASSET_VERSION}` },
+  { id: 'gold_bag', name: 'Paper Bag Mewah Lis Gold', desc: 'Tas kertas tebal premium', price: 6000, icon: '👜', imageUrl: `/images/studio/packaging/package-gold-bag.jpg?${ASSET_VERSION}` },
 ];
 
 const GREETINGS: GreetingOpt[] = [
-  { id: 'print_standard', name: 'Kartu Standard Cetak', desc: 'Art paper 260gsm cetak rapi', price: 0, icon: '✉️', imageUrl: '/images/studio/cards/card-standard.jpg' },
-  { id: 'gold_foil', name: 'Kartu Hotprint Gold Foil', desc: 'Tulisan emas berkilau mewah', price: 5000, icon: '✨', imageUrl: '/images/studio/cards/card-gold-foil.jpg' },
-  { id: 'wax_seal', name: 'Vintage Wax Seal Stamp', desc: 'Amplop segel lilin stempel bunga', price: 8000, icon: '📜', imageUrl: '/images/studio/cards/card-wax-seal.jpg' },
+  { id: 'print_standard', name: 'Kartu Standard Cetak', desc: 'Art paper 260gsm cetak rapi', price: 0, icon: '✉️', imageUrl: `/images/studio/cards/card-standard.jpg?${ASSET_VERSION}` },
+  { id: 'gold_foil', name: 'Kartu Hotprint Gold Foil', desc: 'Tulisan emas berkilau mewah', price: 5000, icon: '✨', imageUrl: `/images/studio/cards/card-gold-foil.jpg?${ASSET_VERSION}` },
+  { id: 'wax_seal', name: 'Vintage Wax Seal Stamp', desc: 'Amplop segel lilin stempel bunga', price: 8000, icon: '📜', imageUrl: `/images/studio/cards/card-wax-seal.jpg?${ASSET_VERSION}` },
 ];
 
 const ADDONS: AddonOpt[] = [
-  { id: 'led', name: 'Lampu LED Fairy Light (Warm Glow)', price: 10000, icon: '💡', imageUrl: '/images/studio/addons/addon-led-fairy.jpg' },
-  { id: 'bear', name: 'Boneka Toga Wisuda Mini (10cm)', price: 15000, icon: '🧸', imageUrl: '/images/studio/addons/addon-bear-toga.jpg' },
-  { id: 'pin', name: 'Pin Bros Kupu-kupu Kristal', price: 5000, icon: '🦋', imageUrl: '/images/studio/addons/addon-butterfly-pin.jpg' },
+  { id: 'led', name: 'Lampu LED Fairy Light (Warm Glow)', price: 10000, icon: '💡', imageUrl: `/images/studio/addons/addon-led-fairy.jpg?${ASSET_VERSION}` },
+  { id: 'bear', name: 'Boneka Toga Wisuda Mini (10cm)', price: 15000, icon: '🧸', imageUrl: `/images/studio/addons/addon-bear-toga.jpg?${ASSET_VERSION}` },
+  { id: 'pin', name: 'Pin Bros Kupu-kupu Kristal', price: 5000, icon: '🦋', imageUrl: `/images/studio/addons/addon-butterfly-pin.jpg?${ASSET_VERSION}` },
 ];
 
 // Helper to resolve combination image for 4 core bouquet choices
@@ -145,7 +147,7 @@ const getBouquetPreviewUrl = (
   else if (r.includes('chiffon')) r = 'chiffon';
   else if (r.includes('rustic') || r.includes('rami')) r = 'rustic';
 
-  return `/images/studio/combinations/${f}-${c}-${w}-${r}.jpg`;
+  return `/images/studio/combinations/${f}-${c}-${w}-${r}.jpg?${ASSET_VERSION}`;
 };
 
 export const CustomStudioSection: React.FC = () => {
@@ -177,7 +179,7 @@ export const CustomStudioSection: React.FC = () => {
   const [selectedGreeting, setSelectedGreeting] = useState<GreetingOpt>(GREETINGS[0]);
   const [selectedAddons, setSelectedAddons] = useState<string[]>(['led']);
   const [isAdding, setIsAdding] = useState(false);
-  const [bouquetImageSrc, setBouquetImageSrc] = useState<string>('/images/studio/combinations/tulip-pink-korean-satin.jpg');
+  const [bouquetImageSrc, setBouquetImageSrc] = useState<string>(`/images/studio/combinations/tulip-pink-korean-satin.jpg?${ASSET_VERSION}`);
 
   // Sync bouquet combination photo whenever user selects any of the 4 core steps
   useEffect(() => {
@@ -202,12 +204,12 @@ export const CustomStudioSection: React.FC = () => {
           if (Array.isArray(g.FLOWER_TYPE) && g.FLOWER_TYPE.length > 0) {
             const mappedFlowers: FlowerOpt[] = g.FLOWER_TYPE.map((f: any) => {
               const s = `${f.id} ${f.name}`.toLowerCase();
-              let img = '/images/studio/flower-tulip-pastel.jpg';
-              if (s.includes('rose') || s.includes('mawar') || s.includes('midnight')) img = '/images/studio/flower-rose-velvet.jpg';
-              else if (s.includes('sun') || s.includes('matahari')) img = '/images/studio/flower-sunflower-bear.jpg';
-              else if (s.includes('lavender')) img = '/images/studio/flower-lavender-lilac.jpg';
-              else if (s.includes('karakter') || s.includes('bear') || s.includes('toga')) img = '/images/studio/flower-karakter-wisuda.jpg';
-              else if (s.includes('pot') || s.includes('daisy')) img = '/images/studio/flower-mini-pot.jpg';
+              let img = `/images/studio/flower-tulip-pastel.jpg?${ASSET_VERSION}`;
+              if (s.includes('rose') || s.includes('mawar') || s.includes('midnight')) img = `/images/studio/flower-rose-velvet.jpg?${ASSET_VERSION}`;
+              else if (s.includes('sun') || s.includes('matahari')) img = `/images/studio/flower-sunflower-bear.jpg?${ASSET_VERSION}`;
+              else if (s.includes('lavender')) img = `/images/studio/flower-lavender-lilac.jpg?${ASSET_VERSION}`;
+              else if (s.includes('karakter') || s.includes('bear') || s.includes('toga')) img = `/images/studio/flower-karakter-wisuda.jpg?${ASSET_VERSION}`;
+              else if (s.includes('pot') || s.includes('daisy')) img = `/images/studio/flower-mini-pot.jpg?${ASSET_VERSION}`;
 
               return {
                 id: f.id,
@@ -234,9 +236,9 @@ export const CustomStudioSection: React.FC = () => {
           if (Array.isArray(g.WRAPPING_STYLE) && g.WRAPPING_STYLE.length > 0) {
             const mappedWrappings: WrappingOpt[] = g.WRAPPING_STYLE.map((w: any) => {
               const s = `${w.id} ${w.name}`.toLowerCase();
-              let img = '/images/studio/wrapping/wrapping-korean-pink.jpg';
-              if (s.includes('velvet') || s.includes('lilac') || s.includes('white')) img = '/images/studio/wrapping/wrapping-lilac-velvet.jpg';
-              else if (s.includes('oat') || s.includes('clean') || s.includes('earth')) img = '/images/studio/wrapping/wrapping-clean-oat.jpg';
+              let img = `/images/studio/wrapping/wrapping-korean-pink.jpg?${ASSET_VERSION}`;
+              if (s.includes('velvet') || s.includes('lilac') || s.includes('white')) img = `/images/studio/wrapping/wrapping-lilac-velvet.jpg?${ASSET_VERSION}`;
+              else if (s.includes('oat') || s.includes('clean') || s.includes('earth')) img = `/images/studio/wrapping/wrapping-clean-oat.jpg?${ASSET_VERSION}`;
               return {
                 id: w.id,
                 name: w.name,
@@ -263,10 +265,10 @@ export const CustomStudioSection: React.FC = () => {
           if (Array.isArray(g.PACKAGING_BOX) && g.PACKAGING_BOX.length > 0) {
             const mappedPackagings: PackagingOpt[] = g.PACKAGING_BOX.map((p: any) => {
               const s = `${p.id} ${p.name}`.toLowerCase();
-              let img = '/images/studio/packaging/package-standard.jpg';
-              if (s.includes('mika')) img = '/images/studio/packaging/package-mika-box.jpg';
-              else if (s.includes('pvc')) img = '/images/studio/packaging/package-pvc-bag.jpg';
-              else if (s.includes('gold') || s.includes('paper')) img = '/images/studio/packaging/package-gold-bag.jpg';
+              let img = `/images/studio/packaging/package-standard.jpg?${ASSET_VERSION}`;
+              if (s.includes('mika')) img = `/images/studio/packaging/package-mika-box.jpg?${ASSET_VERSION}`;
+              else if (s.includes('pvc')) img = `/images/studio/packaging/package-pvc-bag.jpg?${ASSET_VERSION}`;
+              else if (s.includes('gold') || s.includes('paper')) img = `/images/studio/packaging/package-gold-bag.jpg?${ASSET_VERSION}`;
 
               return {
                 id: p.id,
@@ -284,9 +286,9 @@ export const CustomStudioSection: React.FC = () => {
           if (Array.isArray(g.GREETING_SEAL) && g.GREETING_SEAL.length > 0) {
             const mappedGreetings: GreetingOpt[] = g.GREETING_SEAL.map((gr: any) => {
               const s = `${gr.id} ${gr.name}`.toLowerCase();
-              let img = '/images/studio/cards/card-standard.jpg';
-              if (s.includes('wax') || s.includes('segel') || s.includes('lilin')) img = '/images/studio/cards/card-wax-seal.jpg';
-              else if (s.includes('gold') || s.includes('foil')) img = '/images/studio/cards/card-gold-foil.jpg';
+              let img = `/images/studio/cards/card-standard.jpg?${ASSET_VERSION}`;
+              if (s.includes('wax') || s.includes('segel') || s.includes('lilin')) img = `/images/studio/cards/card-wax-seal.jpg?${ASSET_VERSION}`;
+              else if (s.includes('gold') || s.includes('foil')) img = `/images/studio/cards/card-gold-foil.jpg?${ASSET_VERSION}`;
 
               return {
                 id: gr.id,
@@ -304,9 +306,9 @@ export const CustomStudioSection: React.FC = () => {
           if (Array.isArray(g.ACCESSORY_ADDON) && g.ACCESSORY_ADDON.length > 0) {
             const mappedAddons: AddonOpt[] = g.ACCESSORY_ADDON.map((a: any) => {
               const s = `${a.id} ${a.name}`.toLowerCase();
-              let img = '/images/studio/addons/addon-led-fairy.jpg';
-              if (s.includes('bear') || s.includes('boneka') || s.includes('toga')) img = '/images/studio/addons/addon-bear-toga.jpg';
-              else if (s.includes('pin') || s.includes('kupu') || s.includes('bros')) img = '/images/studio/addons/addon-butterfly-pin.jpg';
+              let img = `/images/studio/addons/addon-led-fairy.jpg?${ASSET_VERSION}`;
+              if (s.includes('bear') || s.includes('boneka') || s.includes('toga')) img = `/images/studio/addons/addon-bear-toga.jpg?${ASSET_VERSION}`;
+              else if (s.includes('pin') || s.includes('kupu') || s.includes('bros')) img = `/images/studio/addons/addon-butterfly-pin.jpg?${ASSET_VERSION}`;
 
               return {
                 id: a.id,
