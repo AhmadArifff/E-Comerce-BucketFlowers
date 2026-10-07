@@ -173,5 +173,24 @@ Daftar kendala masa lalu dan solusi yang telah diverifikasi pada sistem E-Commer
   5. **Universal Cache Buster v4**: Menetapkan `ASSET_VERSION = 'v=4'` dan menyematkan `?${ASSET_VERSION}` pada seluruh opsi bunga, wrapping, kemasan, kartu ucapan, aksesori, serta kombinasi kanvas di `CustomStudioSection.tsx`.
   6. Diverifikasi dengan `npm run type-check` (0 error di web dan api) serta `npm run test:unit` (84/84 tests pass).
 
+---
+
+## 12. Frontend Studio Color Integrity & UX: Resolusi Kebocoran Warna Modulasi Global Bunga Matahari & Lightbox Modal Detail Kelengkapan Paket
+- **Gejala**:
+  1. Saat memilih warna nuansa bunga matahari di Step 2, seluruh foto berubah warna secara global: tangan manusia memegang buket, meja kayu, boneka beruang toga wisuda, dan kertas pembungkus ikut terseret menjadi warna ungu, biru, atau hijau alien.
+  2. Kertas pembungkus buket matahari di foto tidak cocok dengan pilihan Step 3 (misal memilih *Minimalist Clean Oat* namun foto menampilkan kertas biru terang atau ungu).
+  3. Thumbnail kelengkapan paket yang dipilih (kemasan delivery, kartu ucapan, aksesori) di panel preview bawah kanvas berukuran kecil (36-40px) sehingga calon pembeli tidak dapat melihat detail fisik material secara utuh.
+- **Akar Masalah**:
+  1. Skrip pemrosesan kombinasi menggunakan fungsi `sharp.modulate({ hue })` ke seluruh raster gambar `flower-sunflower-bear.jpg` tanpa segmentasi objek non-bunga, merusak warna alami kulit tangan manusia, boneka wisuda, dan kertas wrapping bawaan foto.
+  2. Komponen studio belum memiliki modal dialog Lightbox untuk menginspeksi foto produk pendukung dalam ukuran besar dan membaca spesifikasi lengkapnya.
+- **Solusi**:
+  1. **Sunflower Natural Authenticity**: Mengecualikan bunga matahari dari manipulasi hue global. Menjaga kelopak kuning emas otentik (*golden yellow*), boneka toga cokelat alami, dan warna kulit tangan manusia 100% natural tanpa kebocoran warna aneh.
+  2. **Accurate Wrapping Overlays**: Menerapkan overlay framing kertas wrapping terpisah (Korean Pink, Lilac Velvet, Clean Oat) dan pita ribbon secara presisi pada 48 kombinasi `sun-*-*-*.jpg`.
+  3. **Package Detail Lightbox Modal**: Mengembangkan modal dialog interaktif (`activeDetailItem`) yang menampilkan foto beresolusi tinggi 800x800, badge harga, paragraf deskripsi material, serta daftar spesifikasi dan keunggulan produk.
+  4. **Interactive Zoom Triggers**: Menambahkan aksi klik pada kartu preview di bawah kanvas dan tombol opsi di Step 5, 6, 7 dengan ikon `ZoomIn` yang elegan.
+  5. **Universal Cache Buster v5**: Menaikkan `ASSET_VERSION = 'v=5'` pada `CustomStudioSection.tsx` agar browser segera memuat aset foto terbaru.
+  6. Diverifikasi dengan `npm run type-check` (0 error di web dan api) serta `npm run test:unit` (84/84 tests pass).
+
+
 
 

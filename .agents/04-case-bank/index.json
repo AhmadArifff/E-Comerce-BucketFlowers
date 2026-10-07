@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "E-Comerce-BucketFlowers",
-  "total_cases": 11,
+  "total_cases": 12,
   "cases": [
     {
       "id": "case-20261002-postgresql-enum-type-deduction",
@@ -90,6 +90,14 @@
       "severity": "HIGH",
       "status": "VERIFIED",
       "file": "cases/case-20261007-studio-folded-wrapping-upright-chenille.yaml"
+    },
+    {
+      "id": "case-20261007-sunflower-natural-color-and-package-lightbox",
+      "title": "Resolusi Kebocoran Warna Modulasi Global Bunga Matahari & Implementasi Lightbox Modal Detail Kelengkapan Paket Studio",
+      "domain": "frontend-studio-color-integrity-and-ux",
+      "severity": "HIGH",
+      "status": "VERIFIED",
+      "file": "cases/case-20261007-sunflower-natural-color-and-package-lightbox.yaml"
     }
   ]
 }

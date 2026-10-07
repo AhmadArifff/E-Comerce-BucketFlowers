@@ -1,0 +1,23 @@
+id: "case-20261007-sunflower-natural-color-and-package-lightbox"
+title: "Resolusi Kebocoran Warna Modulasi Global Bunga Matahari & Implementasi Lightbox Modal Detail Kelengkapan Paket Studio"
+domain: "frontend-studio-color-integrity-and-ux"
+severity: "HIGH"
+status: "VERIFIED"
+symptoms:
+  - "Saat memilih warna nuansa bunga matahari di Step 2, seluruh foto berubah warna secara global: tangan manusia memegang buket, meja kayu, boneka beruang toga wisuda, dan kertas pembungkus ikut terseret menjadi warna ungu, biru, atau hijau alien."
+  - "Kertas pembungkus buket matahari di foto tidak cocok dengan pilihan Step 3 (misal memilih Minimalist Clean Oat namun foto menampilkan kertas biru terang atau ungu)."
+  - "Thumbnail kelengkapan paket yang dipilih (kemasan delivery, kartu ucapan, aksesori) di panel preview bawah kanvas berukuran kecil (36-40px) sehingga calon pembeli tidak dapat melihat detail fisik material secara utuh."
+root_cause:
+  - "Fungsi sharp.modulate({ hue }) diaplikasikan pada seluruh frame 100% piksel foto flower-sunflower-bear.jpg tanpa segmentasi atau proteksi objek non-bunga."
+  - "Komponen preview studio belum memiliki dialog Lightbox interaktif untuk menampilkan gambar beresolusi tinggi beserta spesifikasi bahan kelengkapan paket."
+solution:
+  - "Mengecualikan buket bunga matahari dari modulasi hue global (sharp.modulate), menjaga kelopak kuning emas otentik, boneka toga cokelat alami, dan kulit tangan manusia 100% natural."
+  - "Menerapkan overlay framing kertas wrapping terpisah (Korean Pink, Lilac Velvet, Clean Oat) dan pita ribbon secara presisi."
+  - "Meregenerasi ke-48 kombinasi foto buket bunga matahari (sun-*-*-*.jpg)."
+  - "Membangun Lightbox Modal (StudioDetailModal) dengan foto ukuran besar resolusi 800x800, badge kategori & harga, paragraf deskripsi material, serta daftar spesifikasi/keunggulan fisik."
+  - "Menyematkan interaktivitas klik dan zoom badge (ZoomIn) pada kartu preview poin 5-7 dan tombol opsi Step 5, 6, 7."
+  - "Menaikkan ASSET_VERSION = 'v=5' untuk cache busting universal."
+verification:
+  - "npm run type-check di apps/web lolos dengan 0 error."
+  - "npm run type-check di apps/api lolos dengan 0 error."
+  - "npm run test:unit di apps/api lolos 84/84 tests (100% pass)."

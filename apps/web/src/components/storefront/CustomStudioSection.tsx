@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, MessageCircle, ShoppingBag, Check, CheckCircle2, Clock, Package, Mail, Gift } from 'lucide-react';
+import { Sparkles, MessageCircle, ShoppingBag, Check, CheckCircle2, Clock, Package, Mail, Gift, ZoomIn, Eye, X } from 'lucide-react';
 import { useCartStore } from '@/stores/useCartStore';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { getThemeCopy } from '@/lib/theme-copy';
@@ -63,7 +63,65 @@ interface GreetingOpt {
   imageUrl?: string;
 }
 
-const ASSET_VERSION = 'v=4';
+interface StudioDetailModalData {
+  id: string;
+  name: string;
+  category: 'packaging' | 'greeting' | 'addon';
+  categoryTitle: string;
+  price: number;
+  imageUrl: string;
+  icon?: string;
+  desc: string;
+  features: string[];
+}
+
+const DETAIL_METADATA: Record<string, { desc: string; features: string[] }> = {
+  // PACKAGING
+  standard: {
+    desc: 'Selongsong plastik florist polypropylene 60 mikron bening tebal dengan lubang sirkulasi udara mikro. Praktis, rapi, dan menjaga buket tetap higienis dari debu jalanan.',
+    features: ['Plastik Polypropylene 60µm tebal & lentur', 'Water-resistant & anti debu kotoran', 'Tali pengikat minimalis florist'],
+  },
+  mika_box: {
+    desc: 'Hardbox kokoh premium dengan jendela mika crystal-clear transparan 0.3mm dan aksen lis gold foil mewah. Buket kawat bulu dapat dipajang indah tanpa perlu dikeluarkan dari kotaknya.',
+    features: ['Hardbox karton tebal 2mm tahan benturan', 'Jendela mika kristal 0.3mm jernih anti gores', 'Lis gold foil elegan & pita segel eksklusif'],
+  },
+  pvc_bag: {
+    desc: 'Tas jinjing aesthetic berbahan PVC transparan tebal dengan kancing jepit kokoh dan tali pegangan lembut. Sangat populer untuk sesi foto wisuda karena praktis dijinjing ke mana pun.',
+    features: ['PVC transparan tebal 0.4mm waterproof', 'Pegangan handle kulit sintetis nyaman di tangan', 'Sangat estetik untuk foto OOTD wisuda'],
+  },
+  gold_bag: {
+    desc: 'Paper bag mewah berbahan karton putih 260gsm dengan sentuhan logo gold foil mewah dan tali pita satin tebal. Memberikan kesan kado istimewa saat diserahkan langsung kepada penerima.',
+    features: ['Karton putih art paper 260gsm kaku kokoh', 'Hotprint gold foil berkilau premium', 'Tali jinjing pita satin lebar lembut'],
+  },
+  // GREETINGS
+  print_standard: {
+    desc: 'Kartu ucapan elegan berbahan Art Carton 260gsm dengan hasil cetak teks laser beresolusi tinggi. Disertai amplop minimalis berstempel logo Chenille Atelier.',
+    features: ['Art Carton 260gsm laminasi doff halus', 'Cetak pesan ucapan personal rapi & simetris', 'Ukuran 10 x 7 cm dengan amplop minimalis'],
+  },
+  gold_foil: {
+    desc: 'Kartu ucapan prestisius berbahan Linen Paper 280gsm dengan foil emas timbul (hotprint gold foil). Berkilau mewah saat terkena pantulan cahaya, sangat cocok untuk momen spesial.',
+    features: ['Linen Paper bertekstur serat mewah 280gsm', 'Hotprint gold foil emas berkilau timbul', 'Amplop vellum premium lis emas'],
+  },
+  wax_seal: {
+    desc: 'Kartu ucapan bernuansa klasik Eropa abad pertengahan dengan segel lilin leleh (wax seal stamp) asli yang dicap tangan secara artisanal dengan lambang bunga botani.',
+    features: ['Segel lilin asli (genuine sealing wax) buatan tangan', 'Stempel cap kuningan motif botani bunga', 'Amplop vintage kraft bertekstur klasik'],
+  },
+  // ADDONS
+  led: {
+    desc: 'Lampu LED micro fairy light tembaga dengan cahaya warm glow keemasan yang menenangkan. Dililitkan rapi di antara kelopak bunga kawat bulu sehingga buket bersinar magis di malam hari.',
+    features: ['20 titik micro LED kawat tembaga elastis', 'Warna Warm White lembut & tidak panas', 'Baterai CR2032 terpasang (3 mode kedip)'],
+  },
+  bear: {
+    desc: 'Boneka beruang mini (10cm) berbulu yelvo super lembut yang mengenakan jubah wisuda hitam lengkap dengan topi toga bertali emas dan ijazah gulung mini. Diselipkan manis di puncak buket.',
+    features: ['Tinggi 10 cm dengan bulu yelvo halus premium', 'Toga wisuda, jubah hitam & gulungan ijazah', 'Jarum semat aman tersembunyi di rangkaian'],
+  },
+  pin: {
+    desc: 'Pin bros berbentuk kupu-kupu berkilauan dengan taburan permata kristal zircon sintetis. Disematkan cantik pada lipatan kertas wrapping buket dan dapat dilepas untuk dipakai sebagai aksesoris baju/hijab.',
+    features: ['Bahan logam rhodium tahan karat', 'Kristal zircon sintetis berkilau cemerlang', 'Dapat dilepas untuk aksesoris pakaian/hijab'],
+  },
+};
+
+const ASSET_VERSION = 'v=5';
 
 const FLOWERS: FlowerOpt[] = [
   { id: 'tulip', name: 'Tulip Pastel Korea', emoji: '🌷', basePrice: 120000, imageUrl: `/images/studio/flower-tulip-pastel.jpg?${ASSET_VERSION}` },
@@ -180,6 +238,52 @@ export const CustomStudioSection: React.FC = () => {
   const [selectedAddons, setSelectedAddons] = useState<string[]>(['led']);
   const [isAdding, setIsAdding] = useState(false);
   const [bouquetImageSrc, setBouquetImageSrc] = useState<string>(`/images/studio/combinations/tulip-pink-korean-satin.jpg?${ASSET_VERSION}`);
+  const [activeDetailItem, setActiveDetailItem] = useState<StudioDetailModalData | null>(null);
+
+  const openPackagingDetail = (p: PackagingOpt) => {
+    const meta = DETAIL_METADATA[p.id] || { desc: p.desc, features: [] };
+    setActiveDetailItem({
+      id: p.id,
+      name: p.name,
+      category: 'packaging',
+      categoryTitle: 'Kemasan Delivery',
+      price: p.price,
+      imageUrl: p.imageUrl || '',
+      icon: p.icon,
+      desc: meta.desc,
+      features: meta.features,
+    });
+  };
+
+  const openGreetingDetail = (g: GreetingOpt) => {
+    const meta = DETAIL_METADATA[g.id] || { desc: g.desc, features: [] };
+    setActiveDetailItem({
+      id: g.id,
+      name: g.name,
+      category: 'greeting',
+      categoryTitle: 'Sertifikat Ucapan',
+      price: g.price,
+      imageUrl: g.imageUrl || '',
+      icon: g.icon,
+      desc: meta.desc,
+      features: meta.features,
+    });
+  };
+
+  const openAddonDetail = (a: AddonOpt) => {
+    const meta = DETAIL_METADATA[a.id] || { desc: 'Aksesori pelengkap buket bunga kawat bulu.', features: [] };
+    setActiveDetailItem({
+      id: a.id,
+      name: a.name,
+      category: 'addon',
+      categoryTitle: 'Aksesori Tambahan',
+      price: a.price,
+      imageUrl: a.imageUrl || '',
+      icon: a.icon,
+      desc: meta.desc,
+      features: meta.features,
+    });
+  };
 
   // Sync bouquet combination photo whenever user selects any of the 4 core steps
   useEffect(() => {
@@ -682,6 +786,17 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                             ✓
                           </div>
                         )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openPackagingDetail(p);
+                          }}
+                          className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-lg bg-white/90 hover:bg-white text-stone-700 hover:text-theme-primary flex items-center justify-center shadow-xs transition-transform hover:scale-110 cursor-pointer"
+                          title="Klik untuk lihat detail gambar besar"
+                        >
+                          <ZoomIn className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                       <div className="text-[11px] font-bold text-theme-text-main leading-tight line-clamp-1">{p.name}</div>
                       <div className="text-[10px] text-theme-primary font-black mt-1">
@@ -713,7 +828,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                           : 'border-theme-border hover:border-theme-primary/40 bg-white'
                       }`}
                     >
-                      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200 shadow-2xs">
+                      <div className="relative w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200 shadow-2xs group-hover:scale-105 transition-transform">
                         {g.imageUrl ? (
                           <img
                             src={g.imageUrl}
@@ -723,6 +838,16 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                         ) : (
                           <div className="text-xl flex items-center justify-center w-full h-full">{g.icon}</div>
                         )}
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openGreetingDetail(g);
+                          }}
+                          className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                          title="Klik untuk lihat detail gambar besar"
+                        >
+                          <ZoomIn className="w-3.5 h-3.5" />
+                        </div>
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between mb-0.5">
@@ -760,7 +885,7 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200 shadow-2xs">
+                        <div className="relative w-9 h-9 rounded-xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200 shadow-2xs group-hover:scale-105 transition-transform">
                           {a.imageUrl ? (
                             <img
                               src={a.imageUrl}
@@ -770,6 +895,16 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                           ) : (
                             <div className="text-xl flex items-center justify-center w-full h-full">{a.icon}</div>
                           )}
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openAddonDetail(a);
+                            }}
+                            className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                            title="Klik untuk lihat detail gambar besar"
+                          >
+                            <ZoomIn className="w-3 h-3" />
+                          </div>
                         </div>
                         <div>
                           <div className="text-xs font-bold text-theme-text-main flex items-center gap-1.5">
@@ -785,12 +920,28 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                           </div>
                         </div>
                       </div>
-                      <div
-                        className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-colors ${
-                          isChecked ? 'bg-theme-primary border-theme-primary text-white' : 'border-stone-300 bg-white'
-                        }`}
-                      >
-                        {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openAddonDetail(a);
+                          }}
+                          className="px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 text-[10px] font-bold flex items-center gap-1 transition-colors"
+                          title="Lihat Foto & Keterangan Lengkap"
+                        >
+                          <ZoomIn className="w-3 h-3" />
+                          <span className="hidden sm:inline">Detail</span>
+                        </button>
+                        <div
+                          className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                            isChecked
+                              ? 'bg-theme-primary border-theme-primary text-white'
+                              : 'border-stone-300 bg-white'
+                          }`}
+                        >
+                          {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                        </div>
                       </div>
                     </div>
                   );
@@ -884,8 +1035,12 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {/* 1. Kemasan Box/Bag */}
-                  <div className="p-2 rounded-2xl bg-stone-50 border border-stone-200/80 flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-white border border-stone-200 shadow-2xs">
+                  <div
+                    onClick={() => openPackagingDetail(selectedPackaging)}
+                    className="p-2.5 rounded-2xl bg-stone-50 hover:bg-stone-100/90 border border-stone-200/80 hover:border-theme-primary/50 flex items-center gap-2.5 cursor-pointer transition-all group shadow-2xs hover:shadow-xs"
+                    title="Klik untuk lihat detail gambar & spesifikasi besar"
+                  >
+                    <div className="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-white border border-stone-200 shadow-2xs group-hover:scale-105 transition-transform">
                       {selectedPackaging.imageUrl ? (
                         <img
                           src={selectedPackaging.imageUrl}
@@ -895,10 +1050,18 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                       ) : (
                         <div className="text-base flex items-center justify-center w-full h-full">{selectedPackaging.icon}</div>
                       )}
+                      <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                        <ZoomIn className="w-3.5 h-3.5" />
+                      </div>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[8px] font-semibold text-stone-500 uppercase tracking-wider">Kemasan Delivery</div>
-                      <div className="text-xs font-bold text-stone-800 truncate">{selectedPackaging.name}</div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-[8px] font-semibold text-stone-500 uppercase tracking-wider">Kemasan Delivery</div>
+                        <span className="text-[9px] text-theme-primary font-bold flex items-center gap-0.5 opacity-80 group-hover:opacity-100">
+                          <ZoomIn className="w-2.5 h-2.5" /> Detail
+                        </span>
+                      </div>
+                      <div className="text-xs font-bold text-stone-800 truncate group-hover:text-theme-primary transition-colors">{selectedPackaging.name}</div>
                       <div className="text-[10px] text-theme-primary font-black">
                         {selectedPackaging.price === 0 ? 'Termasuk' : `+Rp ${selectedPackaging.price.toLocaleString('id-ID')}`}
                       </div>
@@ -906,8 +1069,12 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                   </div>
 
                   {/* 2. Kartu Ucapan & Seal */}
-                  <div className="p-2 rounded-2xl bg-stone-50 border border-stone-200/80 flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-white border border-stone-200 shadow-2xs">
+                  <div
+                    onClick={() => openGreetingDetail(selectedGreeting)}
+                    className="p-2.5 rounded-2xl bg-stone-50 hover:bg-stone-100/90 border border-stone-200/80 hover:border-theme-primary/50 flex items-center gap-2.5 cursor-pointer transition-all group shadow-2xs hover:shadow-xs"
+                    title="Klik untuk lihat detail gambar & spesifikasi besar"
+                  >
+                    <div className="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-white border border-stone-200 shadow-2xs group-hover:scale-105 transition-transform">
                       {selectedGreeting.imageUrl ? (
                         <img
                           src={selectedGreeting.imageUrl}
@@ -917,10 +1084,18 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                       ) : (
                         <div className="text-base flex items-center justify-center w-full h-full">{selectedGreeting.icon}</div>
                       )}
+                      <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                        <ZoomIn className="w-3.5 h-3.5" />
+                      </div>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[8px] font-semibold text-stone-500 uppercase tracking-wider">Sertifikat Ucapan</div>
-                      <div className="text-xs font-bold text-stone-800 truncate">{selectedGreeting.name}</div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-[8px] font-semibold text-stone-500 uppercase tracking-wider">Sertifikat Ucapan</div>
+                        <span className="text-[9px] text-theme-primary font-bold flex items-center gap-0.5 opacity-80 group-hover:opacity-100">
+                          <ZoomIn className="w-2.5 h-2.5" /> Detail
+                        </span>
+                      </div>
+                      <div className="text-xs font-bold text-stone-800 truncate group-hover:text-theme-primary transition-colors">{selectedGreeting.name}</div>
                       <div className="text-[10px] text-theme-primary font-black">
                         {selectedGreeting.price === 0 ? 'Gratis' : `+Rp ${selectedGreeting.price.toLocaleString('id-ID')}`}
                       </div>
@@ -945,9 +1120,11 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                         return (
                           <div
                             key={found.id}
-                            className="p-1 px-1.5 rounded-xl bg-white border border-stone-200/80 flex items-center gap-1.5 shadow-2xs"
+                            onClick={() => openAddonDetail(found)}
+                            className="p-1 px-2 rounded-xl bg-white hover:bg-stone-100/90 border border-stone-200/80 hover:border-theme-primary/50 flex items-center gap-2 shadow-2xs hover:shadow-xs cursor-pointer transition-all group"
+                            title="Klik untuk lihat detail gambar & spesifikasi besar"
                           >
-                            <div className="w-7 h-7 rounded-md overflow-hidden shrink-0 bg-stone-50 border border-stone-100">
+                            <div className="relative w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-stone-50 border border-stone-100 group-hover:scale-105 transition-transform">
                               {found.imageUrl ? (
                                 <img
                                   src={found.imageUrl}
@@ -957,9 +1134,15 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
                               ) : (
                                 <div className="text-xs flex items-center justify-center w-full h-full">{found.icon}</div>
                               )}
+                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                <ZoomIn className="w-2.5 h-2.5" />
+                              </div>
                             </div>
                             <div className="min-w-0 flex-1">
-                              <div className="text-[10px] font-bold text-stone-800 truncate">{found.name}</div>
+                              <div className="text-[10px] font-bold text-stone-800 truncate group-hover:text-theme-primary transition-colors flex items-center justify-between">
+                                <span>{found.name}</span>
+                                <ZoomIn className="w-2.5 h-2.5 text-stone-400 group-hover:text-theme-primary shrink-0 ml-1" />
+                              </div>
                               <div className="text-[8px] text-emerald-600 font-extrabold">+Rp {found.price.toLocaleString('id-ID')}</div>
                             </div>
                           </div>
@@ -1041,6 +1224,146 @@ Apakah slot antrean perangkaian masih tersedia untuk pengiriman segera? Terima k
           </div>
         </div>
       </div>
+
+      {/* LIGHTBOX MODAL DETAIL KELENGKAPAN PAKET (POIN 5-7) */}
+      {activeDetailItem && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm transition-all"
+          onClick={() => setActiveDetailItem(null)}
+        >
+          <div 
+            className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-stone-200/90 relative flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 px-5 border-b border-stone-100 flex items-center justify-between bg-stone-50/70">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-theme-primary/10 text-theme-primary text-[10px] font-black uppercase tracking-wider">
+                  {activeDetailItem.categoryTitle}
+                </span>
+                <span className="text-stone-400 text-xs">•</span>
+                <span className="text-xs font-bold text-stone-700">Detail Material Fisik</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveDetailItem(null)}
+                className="w-8 h-8 rounded-full bg-white hover:bg-stone-200/80 text-stone-500 hover:text-stone-800 flex items-center justify-center transition-colors shadow-2xs border border-stone-200 cursor-pointer"
+                aria-label="Tutup"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Content */}
+            <div className="p-5 overflow-y-auto space-y-4">
+              {/* High-Res Image Container */}
+              <div className="relative w-full aspect-square max-h-[300px] rounded-2xl overflow-hidden bg-stone-50 border border-stone-200/80 shadow-inner flex items-center justify-center p-3">
+                {activeDetailItem.imageUrl ? (
+                  <img
+                    src={activeDetailItem.imageUrl}
+                    alt={activeDetailItem.name}
+                    className="w-full h-full object-contain filter drop-shadow-md rounded-xl"
+                  />
+                ) : (
+                  <div className="text-5xl">{activeDetailItem.icon || '🎁'}</div>
+                )}
+                
+                {/* Price Badge */}
+                <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md shadow-xs border border-stone-200 text-xs font-black text-theme-primary">
+                  {activeDetailItem.price === 0 ? 'Termasuk / Gratis' : `+Rp ${activeDetailItem.price.toLocaleString('id-ID')}`}
+                </div>
+              </div>
+
+              {/* Title & Info */}
+              <div>
+                <h3 className="text-base font-black text-stone-900">{activeDetailItem.name}</h3>
+                <p className="text-xs text-stone-600 mt-1 leading-relaxed">{activeDetailItem.desc}</p>
+              </div>
+
+              {/* Features & Specs */}
+              {activeDetailItem.features && activeDetailItem.features.length > 0 && (
+                <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80 space-y-2">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-stone-500">
+                    Spesifikasi & Keunggulan:
+                  </div>
+                  <div className="space-y-1.5">
+                    {activeDetailItem.features.map((feat, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-xs text-stone-700">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                        <span className="font-medium leading-snug">{feat}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer Action */}
+            <div className="p-4 px-5 border-t border-stone-100 bg-stone-50/50 flex items-center gap-2.5">
+              {activeDetailItem.category === 'packaging' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const found = packagings.find((p) => p.id === activeDetailItem.id);
+                    if (found) setSelectedPackaging(found);
+                    setActiveDetailItem(null);
+                  }}
+                  className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                    selectedPackaging.id === activeDetailItem.id
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-theme-primary hover:bg-theme-primary/90 text-white shadow-xs'
+                  }`}
+                >
+                  {selectedPackaging.id === activeDetailItem.id ? '✓ Kemasan Ini Sedang Dipilih' : 'Gunakan Kemasan Ini'}
+                </button>
+              )}
+
+              {activeDetailItem.category === 'greeting' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const found = greetings.find((g) => g.id === activeDetailItem.id);
+                    if (found) setSelectedGreeting(found);
+                    setActiveDetailItem(null);
+                  }}
+                  className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                    selectedGreeting.id === activeDetailItem.id
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-theme-primary hover:bg-theme-primary/90 text-white shadow-xs'
+                  }`}
+                >
+                  {selectedGreeting.id === activeDetailItem.id ? '✓ Kartu Ini Sedang Dipilih' : 'Gunakan Kartu Ini'}
+                </button>
+              )}
+
+              {activeDetailItem.category === 'addon' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleAddon(activeDetailItem.id);
+                    setActiveDetailItem(null);
+                  }}
+                  className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                    selectedAddons.includes(activeDetailItem.id)
+                      ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs'
+                      : 'bg-theme-primary hover:bg-theme-primary/90 text-white shadow-xs'
+                  }`}
+                >
+                  {selectedAddons.includes(activeDetailItem.id) ? 'Hapus Aksesori Ini' : '+ Tambahkan Aksesori Ini'}
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setActiveDetailItem(null)}
+                className="py-2.5 px-4 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 font-bold text-xs transition-colors cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

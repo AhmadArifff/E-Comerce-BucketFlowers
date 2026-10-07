@@ -172,6 +172,13 @@
       "prd_sections": ["Seksi 2", "Seksi 15", "Seksi 40"],
       "status": "VERIFIED_PASS",
       "verified_at": "2026-10-07"
+    },
+    {
+      "id": "M25_STUDIO_PACKAGE_DETAIL_LIGHTBOX_AND_SUNFLOWER_NATURAL_FIX",
+      "title": "Modal Lightbox Detail Gambar Besar Kelengkapan Paket (Kemasan, Kartu, Aksesori) & Perbaikan Warna Alami Bunga Matahari Otentik Bebas Alien Bleed (Cache Buster v5)",
+      "prd_sections": ["Seksi 2", "Seksi 15", "Seksi 40"],
+      "status": "VERIFIED_PASS",
+      "verified_at": "2026-10-07"
     }
   ],
   "established_constraints": [
@@ -208,7 +215,8 @@
     "Photorealistic Craft Staging & Approval Mandate: Seluruh opsi kustomisasi studio dan testimoni lookbook wajib menggunakan aset foto fisik kerajinan kawat bulu beresolusi tinggi, di-staging secara lokal terlebih dahulu untuk inspeksi visual pengguna di http://localhost:3000, dan HANYA diunggah ke Supabase Storage / disinkronkan ke PostgreSQL setelah persetujuan eksplisit pengguna.",
     "Clean Core Bouquet & Package Bundle Separation: Studio kustomisasi memisahkan preview buket utama (Bunga, Nuansa Kawat Beludru, Kertas Wrapping, Pita Ribbon) sebagai foto buket utuh yang bersih dan elegan (336 variasi kombinasi foto resolusi tinggi), dengan panel visualizer kelengkapan paket (Kemasan delivery, Kartu ucapan & segel, serta Aksesori tambahan) di bawah kanvas berfoto objek fisik mandiri tanpa stiker/sayap CSS melayang yang bertabrakan di atas buket.",
     "Zero Text Overlay & Consistent Upright Pose Mandate: Seluruh foto kombinasi buket studio kustomisasi WAJIB 100% murni foto bersih tanpa watermark teks, pill keterangan warna, atau badge brand apa pun di atas gambar; sudut kamera seluruh buket konsisten tegak lurus menghadap depan (upright front-facing portrait) mengacu pada patokan buket bunga matahari; opsi wrapping di Step 3 wajib menampilkan foto material fisik lembaran kertas florist; kartu ucapan berformat sertifikat kaligrafi elok dengan ornamen botani dan wax seal; serta seluruh thumbnail kemasan, kartu, dan aksesori berukuran ramping/kompak (36-40px) agar fokus estetika tetap pada keindahan buket utama.",
-    "Authentic Wrapping Swatch & Chenille Craft Integrity: Step 3 Kertas Wrapping studio menampilkan foto fisik lembaran kertas florist berlipat sudut segitiga dua warna (dual-tone folded corner flap), varian tulip berpose tegak vertikal simetris, varian lavender menampilkan kawat bulu chenille asli ungu/lilac dengan tangkai hijau (bukan mawar/peony atau tulip diwarnai), seluruh 336 foto kombinasi dihasilkan dari base fisik tegak bersih tanpa teks, serta seluruh URL aset studio menyertakan parameter cache-busting v=4 guna menjamin pembaruan instan pada browser klien."
+    "Authentic Wrapping Swatch & Chenille Craft Integrity: Step 3 Kertas Wrapping studio menampilkan foto fisik lembaran kertas florist berlipat sudut segitiga dua warna (dual-tone folded corner flap), varian tulip berpose tegak vertikal simetris, varian lavender menampilkan kawat bulu chenille asli ungu/lilac dengan tangkai hijau (bukan mawar/peony atau tulip diwarnai), seluruh 336 foto kombinasi dihasilkan dari base fisik tegak bersih tanpa teks, serta seluruh URL aset studio menyertakan parameter cache-busting v=4 guna menjamin pembaruan instan pada browser klien.",
+    "Authentic Sunflower & Package Detail Lightbox Mandate: Buket bunga matahari kawat bulu mempertahankan warna kelopak kuning emas otentik, boneka toga cokelat alami, dan warna kulit tangan manusia tanpa modulasi hue global yang mendistorsi warna; kertas wrapping disesuaikan secara presisi mengikuti pilihan Step 3 (Korean Pink, Lilac Velvet, Clean Oat); serta kelengkapan paket opsional (kemasan delivery, kartu ucapan & segel, aksesori tambahan) dilengkapi interaktivitas klik untuk membuka Detail Lightbox Modal dengan foto resolusi tinggi 800x800, badge harga, dan rincian spesifikasi fisik material."
   ],
   "next_recommended_actions": [
     "Prioritas 1: SELESAI (Form ulasan bintang 1-5, upload foto buket, API /api/v1/reviews, & sync dinamis LookbookSection)",
@@ -227,8 +235,9 @@
     "Staging Aset Foto Kerajinan Kawat Bulu Beresolusi Tinggi & Eliminasi Total AI Slop: SELESAI DITAMPILKAN DI STOREFRONT & SIAP DITINJAU PENGGUNA (7 Opsi Bunga Studio Berfoto, Live Canvas Preview Realistis, 3 Foto Testimoni Lookbook, Chip Filter Ready Stock Bebas Petir, 0 Error TypeScript, 84 Tests Lolos)",
     "Pemisahan Visual Buket Utama & Package Bundle Visualizer: SELESAI & AKTIF DI STOREFRONT (Foto Buket Bersih dengan 336 Variasi Kombinasi Nyata, 10 Foto Objek Mandiri untuk Kemasan/Kartu/Addons, 0 Error TypeScript, 84 Unit Tests Lolos)",
     "Studio Kustomisasi Bersih Tanpa Teks & Sertifikat Kaligrafi Elok: SELESAI & TERVERIFIKASI (Zero Text Overlay pada 336 Foto Kombinasi, Pose Tegak Konsisten Patokan Matahari, Foto Fisik Kertas Wrapping di Step 3, Kartu Sertifikat Kaligrafi Elok Anti-AI Slop, Thumbnail Opsional Ramping 36-40px, 0 Error TypeScript, 84 Unit Tests Lolos)",
-    "Pembaruan Foto Kertas Wrapping Lipatan Sudut Dual-Tone & Lavender Kawat Bulu Otentik (Milestone M24): SELESAI & TERVERIFIKASI (3 Swatch Kertas Lipatan Sudut Sesuai Patokan Pengguna, Tulip Tegak Lurus Simetris, Lavender Chenille Murni Berbulu, 336 Kombinasi Diperbarui dengan Base Tegak, ASSET_VERSION v=4 Cache Buster Universal, 0 TypeScript Errors, 84/84 Unit Tests Lolos)"
+    "Pembaruan Foto Kertas Wrapping Lipatan Sudut Dual-Tone & Lavender Kawat Bulu Otentik (Milestone M24): SELESAI & TERVERIFIKASI (3 Swatch Kertas Lipatan Sudut Sesuai Patokan Pengguna, Tulip Tegak Lurus Simetris, Lavender Chenille Murni Berbulu, 336 Kombinasi Diperbarui dengan Base Tegak, ASSET_VERSION v=4 Cache Buster Universal, 0 TypeScript Errors, 84/84 Unit Tests Lolos)",
+    "Modal Lightbox Detail Kelengkapan Paket & Perbaikan Warna Alami Bunga Matahari (Milestone M25): SELESAI & TERVERIFIKASI (Detail Lightbox Modal dengan Foto Besar 800x800 & Spesifikasi Fisik, Eliminasi Alien Hue Bleed pada Bunga Matahari, Boneka & Tangan 100% Alami, Kertas Wrapping Akurat Sesuai Step 3, ASSET_VERSION v=5 Cache Buster Universal, 0 TypeScript Errors, 84/84 Unit Tests Lolos)"
   ],
-  "last_updated": "2026-10-07T07:25:00+07:00"
+  "last_updated": "2026-10-07T08:18:00+07:00"
 }
 
